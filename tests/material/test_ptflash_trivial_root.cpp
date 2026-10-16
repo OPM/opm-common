@@ -109,6 +109,8 @@ class ExposedPtFlash : public PtFlash
 {
 public:
     using PtFlash::flash_2ph;
+    using PtFlash::flashScalar_;
+    using PtFlash::jacobianState_;
     using PtFlash::phasesCoincide_;
 };
 
@@ -564,6 +566,33 @@ BOOST_AUTO_TEST_CASE(RelabelledSplitKeepsEquilibriumAtPhasePressures)
                                       - 1.0,
                                   1.e-6);
             }
+        }
+    }
+}
+
+// At unequal phase pressures the relabelled split is solved again, and the
+// Newton Jacobian of that solve is the one returned with it.
+BOOST_AUTO_TEST_CASE(RelabelledSplitReturnsTheJacobianOfItsSolve)
+{
+    constexpr Scalar z[numComponents] = {0.76524, 0.16825, 0.06651};
+    constexpr Scalar nearUnitK[numComponents] = {0.99, 1.01, 1.02};
+    for (const auto method : {PTFlashMethod::Newton, PTFlashMethod::SsiNewton}) {
+        BOOST_TEST_CONTEXT("method " << static_cast<int>(method))
+        {
+            ScalarFluidState fs;
+            fs.setPressure(FluidSystem::oilPhaseIdx, 135.42e5);
+            fs.setPressure(FluidSystem::gasPhaseIdx, 136.42e5);
+            fs.setTemperature(394.46);
+            for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+                fs.setMoleFraction(compIdx, z[compIdx]);
+                fs.setKvalue(compIdx, nearUnitK[compIdx]);
+            }
+            fs.setLvalue(0.5);
+            const auto result
+                = ExposedPtFlash::flashScalar_(fs, method, flashTolerance, EOSType::PR, 0);
+            BOOST_REQUIRE(!result.single_phase);
+            BOOST_REQUIRE(result.newton_jacobian.has_value());
+            BOOST_CHECK(result.newton_jacobian->state == ExposedPtFlash::jacobianState_(fs));
         }
     }
 }
