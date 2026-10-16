@@ -68,8 +68,8 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
                       "Saturated PVTG table must have atleast two rows");
         }
 
-        auto& gasmu = gasMu_[regionIdx];
-        auto& invGasB = inverseGasB_[regionIdx];
+        auto& gasmu = gasMuBuilder_[regionIdx];
+        auto& invGasB = inverseGasBBuilder_[regionIdx];
         auto& oilVaporizationFac = saturatedOilVaporizationFactorTable_[regionIdx];
 
         oilVaporizationFac.setXYArrays(saturatedTable.numRows(),
@@ -170,8 +170,8 @@ extendPvtgTable_(unsigned regionIdx,
     std::vector<double> gasBArray = curTable.getColumn("BG").vectorCopy();
     std::vector<double> gasMuArray = curTable.getColumn("MUG").vectorCopy();
 
-    auto& invGasB = inverseGasB_[regionIdx];
-    auto& gasmu = gasMu_[regionIdx];
+    auto& invGasB = inverseGasBBuilder_[regionIdx];
+    auto& gasmu = gasMuBuilder_[regionIdx];
 
     for (std::size_t newRowIdx = 1; newRowIdx < masterTable.numRows(); ++newRowIdx) {
         const auto& RVColumn = masterTable.getColumn("RV");
@@ -217,11 +217,13 @@ void WetGasPvt<Scalar>::setNumRegions(std::size_t numRegions)
 {
     oilReferenceDensity_.resize(numRegions);
     gasReferenceDensity_.resize(numRegions);
-    inverseGasB_.resize(numRegions, TabulatedTwoDFunction{TabulatedTwoDFunction::InterpolationPolicy::RightExtreme});
+    inverseGasBBuilder_.resize(numRegions, TabulatedTwoDFunctionBuilder{TabulatedTwoDFunction::InterpolationPolicy::RightExtreme});
+    gasMuBuilder_.resize(numRegions, TabulatedTwoDFunctionBuilder{TabulatedTwoDFunction::InterpolationPolicy::RightExtreme});
+    inverseGasB_.resize(numRegions);
     inverseGasBMu_.resize(numRegions, TabulatedTwoDFunction{TabulatedTwoDFunction::InterpolationPolicy::RightExtreme});
     inverseSaturatedGasB_.resize(numRegions);
     inverseSaturatedGasBMu_.resize(numRegions);
-    gasMu_.resize(numRegions, TabulatedTwoDFunction{TabulatedTwoDFunction::InterpolationPolicy::RightExtreme});
+    gasMu_.resize(numRegions);
     saturatedOilVaporizationFactorTable_.resize(numRegions);
     saturationPressure_.resize(numRegions);
 }
@@ -242,7 +244,7 @@ void WetGasPvt<Scalar>::
 setSaturatedGasFormationVolumeFactor(unsigned regionIdx,
                                      const SamplingPoints& samplePoints)
 {
-    auto& invGasB = inverseGasB_[regionIdx];
+    auto& invGasB = inverseGasBBuilder_[regionIdx];
 
     const auto& RvTable = saturatedOilVaporizationFactorTable_[regionIdx];
 
@@ -312,13 +314,13 @@ setSaturatedGasViscosity(unsigned regionIdx,
     for (std::size_t RvIdx = 0; RvIdx < nRv; ++RvIdx) {
         Scalar Rv = RvMin + (RvMax - RvMin)*RvIdx/nRv;
 
-        gasMu_[regionIdx].appendXPos(Rv);
+        gasMuBuilder_[regionIdx].appendXPos(Rv);
 
         for (std::size_t pIdx = 0; pIdx < nP; ++pIdx) {
             Scalar pg = poMin + (poMax - poMin)*pIdx/nP;
             Scalar mug = mugTable.eval(pg, /*extrapolate=*/true);
 
-            gasMu_[regionIdx].appendSamplePoint(RvIdx, pg, mug);
+            gasMuBuilder_[regionIdx].appendSamplePoint(RvIdx, pg, mug);
         }
     }
 }
@@ -327,41 +329,42 @@ template<class Scalar>
 void WetGasPvt<Scalar>::initEnd()
 {
     // calculate the final 2D functions which are used for interpolation.
-    std::size_t regions = gasMu_.size();
+    std::size_t regions = gasMuBuilder_.size();
     for (unsigned regionIdx = 0; regionIdx < regions; ++ regionIdx) {
-        // calculate the table which stores the inverse of the product of the gas
-        // formation volume factor and the gas viscosity
-        const auto& gasmu = gasMu_[regionIdx];
-        const auto& invGasB = inverseGasB_[regionIdx];
+        auto& gasmu = gasMu_[regionIdx] = std::move(gasMuBuilder_[regionIdx]).build();
+        auto& invGasB = inverseGasB_[regionIdx] = std::move(inverseGasBBuilder_[regionIdx]).build();
         assert(gasmu.numX() == invGasB.numX());
 
         auto& invGasBMu = inverseGasBMu_[regionIdx];
         auto& invSatGasB = inverseSaturatedGasB_[regionIdx];
         auto& invSatGasBMu = inverseSaturatedGasBMu_[regionIdx];
 
+        TabulatedTwoDFunctionBuilder invGasBMuBuilder{invGasBMu.interpolationGuide()};
+
         std::vector<Scalar> satPressuresArray;
         std::vector<Scalar> invSatGasBArray;
         std::vector<Scalar> invSatGasBMuArray;
         for (std::size_t pIdx = 0; pIdx < gasmu.numX(); ++pIdx) {
-            invGasBMu.appendXPos(gasmu.xAt(pIdx));
+            invGasBMuBuilder.appendXPos(gasmu.xAt(pIdx));
 
             assert(gasmu.numY(pIdx) == invGasB.numY(pIdx));
 
             std::size_t numRv = gasmu.numY(pIdx);
             for (std::size_t rvIdx = 0; rvIdx < numRv; ++rvIdx)
-                invGasBMu.appendSamplePoint(pIdx,
-                                            gasmu.yAt(pIdx, rvIdx),
-                                            invGasB.valueAt(pIdx, rvIdx)
-                                            / gasmu.valueAt(pIdx, rvIdx));
+                invGasBMuBuilder.appendSamplePoint(pIdx,
+                                                   gasmu.yAt(pIdx, rvIdx),
+                                                   invGasB.valueAt(pIdx, rvIdx)
+                                                   / gasmu.valueAt(pIdx, rvIdx));
 
             // the sampling points in UniformXTabulated2DFunction are always sorted
             // in ascending order. Thus, the value for saturated gas is the last one
             // (i.e., the one with the largest Rv value)
             satPressuresArray.push_back(gasmu.xAt(pIdx));
             invSatGasBArray.push_back(invGasB.valueAt(pIdx, numRv - 1));
-            invSatGasBMuArray.push_back(invGasBMu.valueAt(pIdx, numRv - 1));
+            invSatGasBMuArray.push_back(invGasBMuBuilder.valueAt(pIdx, numRv - 1));
         }
 
+        invGasBMu = std::move(invGasBMuBuilder).build();
         invSatGasB.setXYContainers(satPressuresArray, invSatGasBArray);
         invSatGasBMu.setXYContainers(satPressuresArray, invSatGasBMuArray);
 

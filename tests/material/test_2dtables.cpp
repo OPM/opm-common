@@ -35,6 +35,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <opm/material/common/UniformXTabulated2DFunction.hpp>
+#include <opm/material/common/UniformXTabulated2DFunctionBuilder.hpp>
 #include <opm/material/common/UniformTabulated2DFunction.hpp>
 #include <opm/material/common/IntervalTabulated2DFunction.hpp>
 
@@ -92,7 +93,7 @@ struct Test
         Scalar yMin = -1/2.0;
         Scalar yMax = 1/3.0;
         unsigned n = 40;
-        Opm::UniformXTabulated2DFunction<Scalar> tab(Opm::UniformXTabulated2DFunction<Scalar>::InterpolationPolicy::Vertical);
+        Opm::UniformXTabulated2DFunctionBuilder<Scalar> tab(Opm::UniformXTabulated2DFunction<Scalar>::InterpolationPolicy::Vertical);
         for (unsigned i = 0; i < m; ++i) {
             Scalar x = xMin + Scalar(i)/(m - 1) * (xMax - xMin);
             tab.appendXPos(x);
@@ -102,7 +103,7 @@ struct Test
             }
         }
 
-        return tab;
+        return std::move(tab).build();
     }
 
 
@@ -117,7 +118,7 @@ struct Test
         Scalar yMin = - 4.0;
         Scalar yMax = 5.0;
 
-        Opm::UniformXTabulated2DFunction<Scalar> tab(Opm::UniformXTabulated2DFunction<Scalar>::InterpolationPolicy::Vertical);
+        Opm::UniformXTabulated2DFunctionBuilder<Scalar> tab(Opm::UniformXTabulated2DFunction<Scalar>::InterpolationPolicy::Vertical);
 
         for (unsigned i = 0; i < m; ++i) {
             Scalar x = xMin + Scalar(i)/(m - 1) * (xMax - xMin);
@@ -131,7 +132,7 @@ struct Test
             }
         }
 
-        return tab;
+        return std::move(tab).build();
     }
 
 

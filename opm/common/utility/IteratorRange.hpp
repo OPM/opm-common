@@ -36,7 +36,8 @@ struct iterator_range_pod {
     OPM_HOST_DEVICE iterator_range_pod(const DataType* begin, const DataType* end) : begin_(begin), end_(end) {}
     iterator_range_pod() = default;
 
-    OPM_HOST_DEVICE size_t size() const { return std::distance(begin_,end_); }
+    // operator- (not std::distance): std::distance's generic fallback isn't device-portable for GpuView::iterator.
+    OPM_HOST_DEVICE size_t size() const { return static_cast<size_t>(end_ - begin_); }
     OPM_HOST_DEVICE bool empty() const { return begin_ == end_; }
     OPM_HOST_DEVICE bool operator==(const iterator_range_pod<DataType>& rhs) const
     { return (begin_ == rhs.begin_) && (end_ == rhs.end_); }
@@ -57,13 +58,17 @@ struct iterator_range {
     OPM_HOST_DEVICE iterator_range(Iter begin, Iter end) : begin_(begin), end_(end) {}
     iterator_range() = default;
 
-    OPM_HOST_DEVICE size_t size() const { return std::distance(begin_,end_); }
+    // operator- (not std::distance): std::distance's generic fallback isn't device-portable for GpuView::iterator.
+    OPM_HOST_DEVICE size_t size() const { return static_cast<size_t>(end_ - begin_); }
     OPM_HOST_DEVICE bool empty() const { return begin_ == end_; }
     OPM_HOST_DEVICE bool operator==(const iterator_range<Iter>& rhs) const
     { return (begin_ == rhs.begin_) && (end_ == rhs.end_); }
 
     OPM_HOST_DEVICE const typename Iter::value_type& operator[](int idx) const
     { return *(begin_+ idx); }
+
+    OPM_HOST_DEVICE const typename Iter::value_type& front() const { return *begin_; }
+    OPM_HOST_DEVICE const typename Iter::value_type& back() const { return *(end_ - 1); }
 
     OPM_HOST_DEVICE Iter begin() const { return begin_; }
     OPM_HOST_DEVICE Iter end() const { return end_; }
@@ -77,7 +82,8 @@ struct mutable_iterator_range {
     OPM_HOST_DEVICE mutable_iterator_range(Iter begin, Iter end) : begin_(begin), end_(end) {}
     mutable_iterator_range() = default;
 
-    OPM_HOST_DEVICE size_t size() const { return std::distance(begin_,end_); }
+    // operator- (not std::distance): std::distance's generic fallback isn't device-portable for GpuView::iterator.
+    OPM_HOST_DEVICE size_t size() const { return static_cast<size_t>(end_ - begin_); }
     OPM_HOST_DEVICE bool empty() const { return begin_ == end_; }
     OPM_HOST_DEVICE bool operator==(const Iter& rhs) const
     { return (begin_ == rhs.begin_) && (end_ == rhs.end_); }
