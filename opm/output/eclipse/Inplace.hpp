@@ -81,6 +81,9 @@ public:
         BiofilmMass = 37,
         CalciteMass = 38,
         WaterMass = 39,
+
+        // Must be the last element of the enum!
+        NumberOfEnumerators
     };
 
     /// Create non-defaulted object suitable for testing the serialisation
