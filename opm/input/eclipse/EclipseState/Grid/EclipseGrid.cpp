@@ -2513,14 +2513,17 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         initializeLGRObjectIndices(0);
         //parse fatherLGRObjbect Indices to children
         propagateParentIndicesToLGRChildren(0);
-        // initialize the LGR tree indices for each refined cell.
-        initializeLGRTreeIndices();
-        // parse the reference indices to object in the global level.
-        parseGlobalReferenceToChildren();
         // initialize the host cells for each LGR cell.
         // because the standard algorithm is based on topological information
         // it does not need for the refinement information to be parsed.
         init_children_host_cells();
+        // the cells of an LGR are active where their host cell is; before the
+        // tree indices, which count the active LGR cells.
+        propagateACTNUMToLGRChildren();
+        // initialize the LGR tree indices for each refined cell.
+        initializeLGRTreeIndices();
+        // parse the reference indices to object in the global level.
+        parseGlobalReferenceToChildren();
         // initialize CPG refinement based parents COORD and ZCORN
         perform_refinement();
 
@@ -2564,9 +2567,14 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
             if (!(i_list.size() == j_list.size()) && (j_list.size() == k_list.size()) ){
                  throw std::invalid_argument("Sizes are not compatible.");
             }
-            std::vector<std::size_t> global_ind_active(i_list.size());
+            // Inactive host cells have no active index; their LGR cells are
+            // inactive too (see init_lgr_cells()).
+            std::vector<std::size_t> global_ind_active;
+            global_ind_active.reserve(i_list.size());
             for (std::size_t index = 0; index < i_list.size(); index++) {
-                global_ind_active[index] = this->getActiveIndex(i_list[index],j_list[index],k_list[index]);
+                if (this->cellActive(i_list[index], j_list[index], k_list[index])) {
+                    global_ind_active.push_back(this->getActiveIndex(i_list[index],j_list[index],k_list[index]));
+                }
             }
             return global_ind_active;
         };
@@ -2591,24 +2599,28 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
                 lgr_children_cells.back().create_lgr_cells_tree(lgr_input);
             }
         }
+        // Order the LGRs by the Cartesian index of their first host cell,
+        // which exists whether that host cell is active or not.
+        const auto first_host = [this](const EclipseGridLGR& cell)
+        {
+            const auto& [i, j, k] = cell.get_low_fatherIJK();
+            return this->getGlobalIndex(i, j, k);
+        };
         EclipseGridLGR::vec_size_t father_label_sorting(lgr_children_cells.size(),0);
         m_print_order_lgr_cells.resize(lgr_children_cells.size());
         std::iota(m_print_order_lgr_cells.begin(), m_print_order_lgr_cells.end(), 0); //
-        std::ranges::transform(lgr_children_cells, father_label_sorting.begin(),
-                               [](const auto& cell) { return cell.get_father_global()[0]; });
+        std::ranges::transform(lgr_children_cells, father_label_sorting.begin(), first_host);
 
         std::ranges::sort(m_print_order_lgr_cells,
                           [&](std::size_t i1, std::size_t i2)
                           { return father_label_sorting[i1] < father_label_sorting[i2]; });
 
-        std::ranges::sort(lgr_children_cells,
-                          [](const EclipseGridLGR& a, const EclipseGridLGR& b)
-                          { return a.get_father_global()[0] < b.get_father_global()[0]; });
+        std::ranges::sort(lgr_children_cells, std::less{}, first_host);
 
         lgr_children_labels.reserve(lgr_children_cells.size());
         std::ranges::transform(lgr_children_cells, std::back_inserter(lgr_children_labels),
                                [](const auto& it) { return it.lgr_label; });
-        lgr_active_index.resize(lgr_children_cells.size(),0);
+        lgr_active_index.reserve(lgr_children_cells.size());
     }
 
     void EclipseGrid::initializeLGRTreeIndices(){
@@ -2624,17 +2636,18 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         std::vector<std::size_t> lgr_level_numbering_counting(getNumActive(),1);
         lgr_level_active_map.resize(getNumActive(),0);
         for (const auto& cell:lgr_children_cells) {
-            set_map_scalar(cell.getFatherGlobalID(), cell.getTotalActiveLGR());
+            // An LGR whose host cells are all inactive has no active cells to number.
+            if (!cell.getFatherGlobalID().empty()) {
+                set_map_scalar(cell.getFatherGlobalID(), cell.getTotalActiveLGR());
+            }
         }
         std::vector<std::size_t> bottom_lgr_cells;
-        std::size_t index = 0;
         for (const auto& [key, value] : num_lgr_children_cells) {
             const std::size_t head_lgr_cell = key[0];
             lgr_level_numbering_counting[head_lgr_cell] = value;
-            lgr_active_index[index] = head_lgr_cell;
+            lgr_active_index.push_back(head_lgr_cell);
             bottom_lgr_cells.insert(bottom_lgr_cells.end(), key.begin() + 1, key.end());
             set_vec_value(lgr_level_numbering_counting, bottom_lgr_cells, 0);
-            index++;
         }
         std::partial_sum(lgr_level_numbering_counting.begin(), lgr_level_numbering_counting.end(),
                          lgr_level_active_map.begin());
@@ -2646,11 +2659,16 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
     }
 
     void EclipseGrid::parseGlobalReferenceToChildren(){
-       for (std::size_t index = 0; index < lgr_children_cells.size(); index++)
+       for (auto& lgr_cell : lgr_children_cells)
         {
-            lgr_children_cells[index].set_lgr_global_counter(lgr_level_active_map[lgr_active_index[index]] +
-                                                             this->lgr_global_counter);
-            lgr_children_cells[index].parseGlobalReferenceToChildren();
+            // The LGR cells are numbered from their first active host cell.
+            const auto& host_cells = lgr_cell.getFatherGlobalID();
+            if (host_cells.empty()) {
+                continue;
+            }
+            lgr_cell.set_lgr_global_counter(lgr_level_active_map[host_cells.front()] +
+                                            this->lgr_global_counter);
+            lgr_cell.parseGlobalReferenceToChildren();
         }
     }
 
