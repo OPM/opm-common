@@ -396,6 +396,7 @@ public:
         serializer(production_properties);
         serializer(m_topup_phase);
         serializer(m_gpmaint);
+        serializer(m_choke_group);
         serializer(m_is_slave_production_group);
         serializer(m_is_slave_injection_group);
     }

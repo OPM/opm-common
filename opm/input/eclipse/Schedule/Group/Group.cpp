@@ -393,6 +393,7 @@ Group Group::serializationTestObject()
     result.production_properties = GroupProductionProperties::serializationTestObject();
     result.m_topup_phase = Phase::OIL;
     result.m_gpmaint = GPMaint::serializationTestObject();
+    result.m_choke_group = "test7";
 
     return result;
 }
@@ -1536,6 +1537,7 @@ bool Group::operator==(const Group& data) const
         && (this->m_topup_phase == data.m_topup_phase)
         && (this->injection_properties == data.injection_properties)
         && (this->m_gpmaint == data.m_gpmaint)
+        && (this->m_choke_group == data.m_choke_group)
         && (this->productionProperties() == data.productionProperties())
         && (this->m_is_slave_production_group == data.m_is_slave_production_group)
         && (this->m_is_slave_injection_group == data.m_is_slave_injection_group)
