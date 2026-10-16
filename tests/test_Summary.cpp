@@ -1856,6 +1856,75 @@ BOOST_AUTO_TEST_CASE(well_control_mode_drawdown)
     BOOST_CHECK_CLOSE(ecl_sum_get_well_var(res.get(), 1, "W_2", "WMCTL"),  4.0, 1.0e-5);
 }
 
+BOOST_AUTO_TEST_CASE(well_control_mode_group_target)
+{
+    setup cfg("test_summary_wmctl_group_target");
+
+    // Wells under group control report the rate which the group target
+    // controls, as a negative value.
+    {
+        auto& ctrl = cfg.wells["W_1"].current_control;
+        ctrl.isProducer       = true;
+        ctrl.prod             = ::Opm::Well::ProducerCMode::GRUP;
+        ctrl.groupTargetProd  = ::Opm::Well::ProducerCMode::WRAT;
+        ctrl.controllingGroup = "G_1";
+    }
+
+    // No group target known for W_2.
+    {
+        auto& ctrl = cfg.wells["W_2"].current_control;
+        ctrl.isProducer = true;
+        ctrl.prod       = ::Opm::Well::ProducerCMode::GRUP;
+    }
+
+    // W_3 is a water injector, W_6 a gas injector.
+    {
+        auto& ctrl = cfg.wells["W_3"].current_control;
+        ctrl.isProducer       = false;
+        ctrl.inj              = ::Opm::Well::InjectorCMode::GRUP;
+        ctrl.groupTargetInj   = ::Opm::Well::InjectorCMode::RATE;
+        ctrl.controllingGroup = "FIELD";
+    }
+
+    {
+        auto& ctrl = cfg.wells["W_6"].current_control;
+        ctrl.isProducer       = false;
+        ctrl.inj              = ::Opm::Well::InjectorCMode::GRUP;
+        ctrl.groupTargetInj   = ::Opm::Well::InjectorCMode::RESV;
+        ctrl.controllingGroup = "G_2";
+    }
+
+    auto st = SummaryState {
+        TimeService::now(), cfg.es.runspec().udqParams().undefinedValue()
+    };
+
+    auto writer = out::Summary {
+        cfg.config, cfg.es, cfg.grid, cfg.schedule, cfg.name
+    };
+
+    auto values = out::Summary::DynamicSimulatorState{};
+
+    values.well_solution = &cfg.wells;
+    values.wbp = &cfg.wbp;
+    values.group_and_nwrk_solution = &cfg.grp_nwrk;
+
+    for (auto rptStep = 0; rptStep < 3; ++rptStep) {
+        writer.eval(rptStep, rptStep*day, values, st);
+        writer.add_timestep(st, rptStep, rptStep, false);
+    }
+
+    writer.write();
+
+    const auto res = readsum(cfg.name);
+
+    // -2 == water rate, -1 == group control with unknown target rate, -2
+    // == water injection rate, -5 == reservoir volume rate.
+    BOOST_CHECK_CLOSE(ecl_sum_get_well_var(res.get(), 1, "W_1", "WMCTL"), -2.0, 1.0e-5);
+    BOOST_CHECK_CLOSE(ecl_sum_get_well_var(res.get(), 1, "W_2", "WMCTL"), -1.0, 1.0e-5);
+    BOOST_CHECK_CLOSE(ecl_sum_get_well_var(res.get(), 1, "W_3", "WMCTL"), -2.0, 1.0e-5);
+    BOOST_CHECK_CLOSE(ecl_sum_get_well_var(res.get(), 1, "W_6", "WMCTL"), -5.0, 1.0e-5);
+}
+
 BOOST_AUTO_TEST_CASE(udq_keywords)
 {
     setup cfg("test_summary_udq");
@@ -3833,6 +3902,19 @@ BOOST_AUTO_TEST_CASE(READ_WRITE_WELLDATA)
 {
             Opm::data::Wells wellRates = result_wells();
 
+            {
+                auto& curr = wellRates["W_2"].current_control;
+                curr.prod = ::Opm::Well::ProducerCMode::GRUP;
+                curr.groupTargetProd = ::Opm::Well::ProducerCMode::WRAT;
+                curr.controllingGroup = "G_1";
+            }
+
+            {
+                auto& curr = wellRates["W_6"].current_control;
+                curr.groupTargetInj = ::Opm::Well::InjectorCMode::RESV;
+                curr.controllingGroup = "G_2";
+            }
+
             MessageBuffer buffer;
             wellRates.write(buffer);
 
@@ -3861,6 +3943,17 @@ BOOST_AUTO_TEST_CASE(READ_WRITE_WELLDATA)
             BOOST_CHECK_MESSAGE(!curr.isProducer, "W_6 must be an injector");
             BOOST_CHECK_MESSAGE(curr.prod == ::Opm::Well::ProducerCMode::CMODE_UNDEFINED, "W_6 must have an undefined producer control");
             BOOST_CHECK_MESSAGE(curr.inj == ::Opm::Well::InjectorCMode::GRUP, "W_6 must be on GRUP control");
+            BOOST_CHECK_MESSAGE(curr.groupTargetInj == ::Opm::Well::InjectorCMode::RESV,
+                                "W_6 must be on a reservoir rate group target");
+            BOOST_CHECK_EQUAL(curr.controllingGroup, "G_2");
+
+            const auto& curr2 = W2.current_control;
+            BOOST_CHECK_MESSAGE(curr2.prod == ::Opm::Well::ProducerCMode::GRUP, "W_2 must be on GRUP control");
+            BOOST_CHECK_MESSAGE(curr2.groupTargetProd == ::Opm::Well::ProducerCMode::WRAT,
+                                "W_2 must be on a water rate group target");
+            BOOST_CHECK_EQUAL(curr2.controllingGroup, "G_1");
+            BOOST_CHECK_MESSAGE(curr2 == wellRates.at("W_2").current_control,
+                                "W_2 must have the same current control after read/write");
 
             BOOST_CHECK_MESSAGE(W2.dynamicStatus == ::Opm::Well::Status::OPEN,
                                 "W_2 must be dynamically open (dynamicStatus == OPEN)");
