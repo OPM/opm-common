@@ -637,4 +637,16 @@ namespace Opm::ML
     template class NNModel<Opm::DenseAd::Evaluation<double, 1>>;
     template class Tensor<Opm::DenseAd::Evaluation<double, 1>>;
 
+    template class NNLayerActivation<float>;
+    template class NNLayerActivation<double>;
+
+    template class NNLayerDense<float>;
+    template class NNLayerDense<double>;
+
+    template class NNLayerScaling<float>;
+    template class NNLayerScaling<double>;
+
+    template class NNLayerUnScaling<float>;
+    template class NNLayerUnScaling<double>;
+
 } // namespace Opm::ML
