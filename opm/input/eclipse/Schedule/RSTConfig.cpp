@@ -417,8 +417,21 @@ void RSTConfig::handleRPTSOL(const DeckKeyword&  keyword,
     // typical cases.  Older style integer controls are however only
     // partially handled and we may choose to refine this logic by
     // introducing predicates specific to the RPTSOL keyword later.
+    //
+    // Compositional runs also accept the restart mnemonics that exist only
+    // for compositional runs.
+    auto isCompositionalOnlyMnemonic = RPTKeywordNormalisation::MnemonicPredicate{};
+    if (this->compositional) {
+        isCompositionalOnlyMnemonic =
+            [isCompositionalRstMnemonic = IsRptRstSchedMnemonic{true},
+             isBaseRstMnemonic          = IsRptRstSchedMnemonic{false}]
+            (const std::string& mnemonic)
+        { return isCompositionalRstMnemonic(mnemonic) && !isBaseRstMnemonic(mnemonic); };
+    }
+
     auto mnemonics =
-        asMap(normaliseRptSchedKeyword(keyword, parseContext, errors));
+        asMap(normaliseRptSchedKeyword(keyword, parseContext, errors,
+                                       isCompositionalOnlyMnemonic));
 
     const auto restart = extract(mnemonics, "RESTART");
     const auto request_restart =
