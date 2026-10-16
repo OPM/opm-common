@@ -3,6 +3,9 @@
   "sections": [
     "PROPS"
   ],
+  "requires": [
+    "VAPOIL"
+  ],
   "num_tables": {
     "keyword": "TABDIMS",
     "item": "NTPVT"
