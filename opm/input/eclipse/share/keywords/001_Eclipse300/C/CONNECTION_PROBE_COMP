@@ -1,0 +1,33 @@
+{
+  "name": "CONNECTION_PROBE_COMP",
+  "sections": [
+    "SUMMARY"
+  ],
+  "deck_names": [
+    "CZMF",
+    "CKFR",
+    "CKFT"
+  ],
+  "items": [
+    {
+      "name": "WELL",
+      "value_type": "STRING"
+    },
+    {
+      "name": "I",
+      "value_type": "INT"
+    },
+    {
+      "name": "J",
+      "value_type": "INT"
+    },
+    {
+      "name": "K",
+      "value_type": "INT"
+    },
+    {
+      "name": "COMP_NUM",
+      "value_type": "INT"
+    }
+  ]
+}
