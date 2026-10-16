@@ -155,9 +155,9 @@ BOOST_AUTO_TEST_CASE( RestartConfig2 ) {
 
     const auto keywords0 = schedule.rst_keywords(0);
     const std::map<std::string, int> expected0 = {
-        {"BG", 1},
-        {"BO", 1},
-        {"BW", 1},
+        {"1OVERBG", 1},
+        {"1OVERBO", 1},
+        {"1OVERBW", 1},
         {"KRG", 1},
         {"KRO", 1},
         {"KRW", 1},
@@ -171,14 +171,15 @@ BOOST_AUTO_TEST_CASE( RestartConfig2 ) {
         {"NORST", 1},
     };
 
-    for (const auto& [kw, num] : expected0)
+    for (const auto& [kw, num] : expected0) {
         BOOST_CHECK_EQUAL( keywords0.at(kw), num );
+    }
 
     const auto keywords1 = schedule.rst_keywords(1);
     const std::map<std::string, int> expected1 = {
-        {"BG", 1},
-        {"BO", 1},
-        {"BW", 1},
+        {"1OVERBG", 1},
+        {"1OVERBO", 1},
+        {"1OVERBW", 1},
         {"KRG", 1},
         {"KRO", 1},
         {"KRW", 1},
@@ -198,8 +199,9 @@ BOOST_AUTO_TEST_CASE( RestartConfig2 ) {
         {"CONV", 10},
     };
 
-    for (const auto& [kw, num] : expected1)
+    for (const auto& [kw, num] : expected1) {
         BOOST_CHECK_EQUAL( keywords1.at(kw), num );
+    }
 
     BOOST_CHECK_EQUAL(expected1.size(), keywords1.size());
 

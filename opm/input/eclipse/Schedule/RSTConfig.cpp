@@ -148,6 +148,7 @@ namespace {
     std::vector<std::string> rptRstBaseMnemonics()
     {
         return {
+            "1OVERBG",  "1OVERBO",  "1OVERBW",
             "ACIP",     "ACIS",     "ALLPROPS", "BASIC",    "BG",       "BO",
             "BW",       "CELLINDX", "COMPRESS", "CONV",     "DEN",      "DENG",
             "DENO",     "DENW",     "DRAIN",    "DRAINAGE", "DYNREG",   "FIP",
@@ -167,6 +168,7 @@ namespace {
     std::vector<std::string> rptRstCompositionalMnemonics()
     {
         return {
+            "1OVERBG",  "1OVERBO",  "1OVERBW",
             "AIM",      "ALSTML",   "ALSURF",   "AMF",      "AQPH",    "AQSP",
             "AREAC",    "ASPADS",   "ASPDOT",   "ASPENT",   "ASPFLO",  "ASPFLT",
             "ASPFRD",   "ASPKDM",   "ASPLIM",   "ASPLUG",   "ASPRET",  "ASPREW",
@@ -235,10 +237,10 @@ namespace {
         mnemonics.erase(allprops_iter);
 
         for (const auto& kw : {
-                "BG"  , "BO"  , "BW"  ,
-                "KRG" , "KRO" , "KRW" ,
-                "VOIL", "VGAS", "VWAT",
-                "DEN" ,
+                "1OVERBG", "1OVERBO", "1OVERBW",
+                "KRG"    , "KRO"    , "KRW"    ,
+                "VOIL"   , "VGAS"   , "VWAT"   ,
+                "DEN"    ,
             })
         {
             mnemonics.insert_or_assign(kw, value);
