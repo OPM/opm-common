@@ -94,11 +94,12 @@ list(APPEND _tmp_output
 )
 
 set(GEN_DEPS ${_tmp_output})
+set(_copy_headers_python_args)
 if (OPM_ENABLE_PYTHON)
   list(APPEND genkw_argv ${PROJECT_BINARY_DIR}/tmp_gen/builtin_pybind11.cpp)
   list(APPEND _tmp_output ${PROJECT_BINARY_DIR}/tmp_gen/builtin_pybind11.cpp)
-  list(APPEND _target_output ${PROJECT_BINARY_DIR}/python/cxx/builtin_pybind11.cpp)
-  list(APPEND GEN_DEPS copy_python)
+  list(APPEND _target_output ${OPM_COMMON_GENERATED_DIR}/python/cxx/builtin_pybind11.cpp)
+  set(_copy_headers_python_args -DPYTHON_CXX_DIR=${OPM_COMMON_GENERATED_DIR}/python/cxx)
 endif()
 
 add_custom_command(
@@ -119,5 +120,6 @@ add_custom_command(
   COMMAND
     ${CMAKE_COMMAND}
     -DBASE_DIR=${PROJECT_BINARY_DIR}
+    ${_copy_headers_python_args}
     -P ${PROJECT_SOURCE_DIR}/CopyHeaders.cmake
 )
