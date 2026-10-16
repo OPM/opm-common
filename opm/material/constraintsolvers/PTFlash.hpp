@@ -174,18 +174,14 @@ public:
      *    new stability test from Wilson estimates and at most one retry; and
      * -# for a single-phase mixture, the phase label.
      *
-     * \note This is public and called from outside the class; the trailing
-     *       underscore is a leftover and should be dropped when its callers
-     *       can be renamed along with it.
-     *
      * \return Whether the mixture is single-phase.
      */
     template <typename FluidState>
-    static bool flash_solve_scalar_(FluidState& fluid_state,
-                                    PTFlashMethod twoPhaseMethod,
-                                    const Scalar flash_tolerance,
-                                    const EOSType& eos_type,
-                                    const int verbosity = 0)
+    static bool flash_solve_scalar(FluidState& fluid_state,
+                                   PTFlashMethod twoPhaseMethod,
+                                   const Scalar flash_tolerance,
+                                   const EOSType& eos_type,
+                                   const int verbosity = 0)
     {
         return flashScalar_(fluid_state, twoPhaseMethod, flash_tolerance, eos_type, verbosity)
             .single_phase;
@@ -212,7 +208,7 @@ protected:
         std::optional<NewtonJacobian> newton_jacobian;
     };
 
-    //! flash_solve_scalar_(), also returning the composition Jacobian when
+    //! flash_solve_scalar(), also returning the composition Jacobian when
     //! Newton finished the split.
     template <typename FluidState>
     static ScalarFlashResult flashScalar_(FluidState& fluid_state,
@@ -766,7 +762,7 @@ protected:
         }
 
         // A finite L outside [0, 1] is a valid negative-flash result and is
-        // classified as single-phase by flash_solve_scalar_().
+        // classified as single-phase by flashScalar_().
         if (!std::isfinite(Opm::getValue(L_scalar))
             || !phaseCompositionsArePhysical_(fluid_state_scalar)) {
             OPM_THROW_NOLOG(
