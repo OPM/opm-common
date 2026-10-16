@@ -33,6 +33,7 @@
 #include <opm/material/Constants.hpp>
 #include <opm/material/common/MathToolbox.hpp>
 #include <opm/material/common/UniformXTabulated2DFunction.hpp>
+#include <opm/material/common/UniformXTabulated2DFunctionBuilder.hpp>
 #include <opm/material/common/Tabulated1DFunction.hpp>
 
 #include <cstddef>
@@ -54,6 +55,7 @@ class DryHumidGasPvt
 
 public:
     using TabulatedTwoDFunction = UniformXTabulated2DFunction<Scalar>;
+    using TabulatedTwoDFunctionBuilder = UniformXTabulated2DFunctionBuilder<Scalar>;
     using TabulatedOneDFunction = Tabulated1DFunction<Scalar>;
 
     /*!
@@ -402,6 +404,8 @@ private:
 
     std::vector<Scalar> gasReferenceDensity_{};
     std::vector<Scalar> waterReferenceDensity_{};
+    std::vector<TabulatedTwoDFunctionBuilder> inverseGasBBuilder_{};
+    std::vector<TabulatedTwoDFunctionBuilder> gasMuBuilder_{};
     std::vector<TabulatedTwoDFunction> inverseGasB_{};
     std::vector<TabulatedOneDFunction> inverseSaturatedGasB_{};
     std::vector<TabulatedTwoDFunction> gasMu_{};
