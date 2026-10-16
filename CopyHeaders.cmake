@@ -6,10 +6,12 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E copy_if_different
                         ${BASE_DIR}/tmp_gen/TestKeywords.cpp
                         ${BASE_DIR}/TestKeywords.cpp)
 
-if (EXISTS ${BASE_DIR}/python/cxx)
+# PYTHON_CXX_DIR is only passed when the Python bindings are enabled.
+if (PYTHON_CXX_DIR)
+  file(MAKE_DIRECTORY ${PYTHON_CXX_DIR})
   execute_process(COMMAND ${CMAKE_COMMAND} -E copy_if_different
                           ${BASE_DIR}/tmp_gen/builtin_pybind11.cpp
-                          ${BASE_DIR}/python/cxx/builtin_pybind11.cpp)
+                          ${PYTHON_CXX_DIR}/builtin_pybind11.cpp)
 endif()
 
 execute_process(COMMAND ${CMAKE_COMMAND} -E copy_if_different
