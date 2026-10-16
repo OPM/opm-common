@@ -93,27 +93,6 @@ class PTFlash
     static constexpr Scalar substitutionTolerance = 1e-10;
     static constexpr Scalar trivialSolutionTolerance = 1e-5;
 
-protected:
-    static constexpr std::size_t numFlashUnknowns = numMisciblePhases * numMiscibleComponents + 1;
-    // x, y and L, then both phase pressures and the temperature.
-    using JacobianState = std::array<Scalar, numFlashUnknowns + 3>;
-
-    //! The composition Jacobian dF/d(x, y, L) where newtonComposition_()
-    //! converged, and the state it was assembled at.
-    struct NewtonJacobian
-    {
-        Dune::FieldMatrix<Scalar, numFlashUnknowns, numFlashUnknowns> jacobian;
-        JacobianState state;
-    };
-
-    //! A scalar flash result, with the composition Jacobian when Newton
-    //! finished the split.
-    struct ScalarFlashResult
-    {
-        bool single_phase;
-        std::optional<NewtonJacobian> newton_jacobian;
-    };
-
 public:
     /*!
      * \brief Calculates the fluid state from the global mole fractions of the components and the phase pressures
@@ -198,18 +177,38 @@ public:
      * \return Whether the mixture is single-phase.
      */
     template <typename FluidState>
-    static bool flash_solve_scalar_(FluidState& fluid_state,
-                                    PTFlashMethod twoPhaseMethod,
-                                    const Scalar flash_tolerance,
-                                    const EOSType& eos_type,
-                                    const int verbosity = 0)
+    static bool flash_solve_scalar(FluidState& fluid_state,
+                                   PTFlashMethod twoPhaseMethod,
+                                   const Scalar flash_tolerance,
+                                   const EOSType& eos_type,
+                                   const int verbosity = 0)
     {
         return flashScalar_(fluid_state, twoPhaseMethod, flash_tolerance, eos_type, verbosity)
             .single_phase;
     }
 
 protected:
-    //! flash_solve_scalar_(), also returning the composition Jacobian when
+    static constexpr std::size_t numFlashUnknowns = numMisciblePhases * numMiscibleComponents + 1;
+    // x, y and L, then both phase pressures and the temperature.
+    using JacobianState = std::array<Scalar, numFlashUnknowns + 3>;
+
+    //! The composition Jacobian dF/d(x, y, L) where newtonComposition_()
+    //! converged, and the state it was assembled at.
+    struct NewtonJacobian
+    {
+        Dune::FieldMatrix<Scalar, numFlashUnknowns, numFlashUnknowns> jacobian;
+        JacobianState state;
+    };
+
+    //! A scalar flash result, with the composition Jacobian when Newton
+    //! finished the split.
+    struct ScalarFlashResult
+    {
+        bool single_phase;
+        std::optional<NewtonJacobian> newton_jacobian;
+    };
+
+    //! flash_solve_scalar(), also returning the composition Jacobian when
     //! Newton finished the split.
     template <typename FluidState>
     static ScalarFlashResult flashScalar_(FluidState& fluid_state,
@@ -347,7 +346,6 @@ protected:
         return {is_single_phase, newton_jacobian};
     }
 
-public:
     template <class Vector, class FlashFluidState>
     static typename Vector::field_type li_single_phase_label_(const FlashFluidState& fluid_state, const Vector& z, int verbosity)
     {
@@ -479,8 +477,6 @@ public:
             }
         }
     }
-
-protected:
 
     template <class ComponentVector>
     static Scalar trivialSolutionMeasure_(const ComponentVector& equilibrium_ratios)
@@ -766,7 +762,7 @@ protected:
         }
 
         // A finite L outside [0, 1] is a valid negative-flash result and is
-        // classified as single-phase by flash_solve_scalar_().
+        // classified as single-phase by flashScalar_().
         if (!std::isfinite(Opm::getValue(L_scalar))
             || !phaseCompositionsArePhysical_(fluid_state_scalar)) {
             OPM_THROW_NOLOG(
