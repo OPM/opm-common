@@ -981,6 +981,9 @@ BOOST_AUTO_TEST_CASE(WELOPEN) {
                 " 'OP_1'  9  9   3   9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
                 " 'OP_1'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 / \n"
                 "/\n"
+                "WCONPROD \n"
+                " 'OP_1'  'SHUT'  'BHP'  5*  100.0 /\n"
+                "/\n"
                 "WELOPEN \n"
                 " 'OP_1'  'OPEN' /\n"
                 "/\n"
@@ -1014,10 +1017,18 @@ BOOST_AUTO_TEST_CASE(WELOPEN) {
 
 
 BOOST_AUTO_TEST_CASE(WellTypeTest) {
-    BOOST_CHECK_THROW(Opm::WellType(0, 3), std::invalid_argument);
+    BOOST_CHECK_THROW(Opm::WellType(-1, 3), std::invalid_argument);
     BOOST_CHECK_THROW(Opm::WellType(5, 3), std::invalid_argument);
     BOOST_CHECK_THROW(Opm::WellType(3, 0), std::invalid_argument);
     BOOST_CHECK_THROW(Opm::WellType(3, 5), std::invalid_argument);
+
+    // Well type 0: the well has not been given a control mode.
+    BOOST_CHECK(Opm::WellType::producer(0));
+    Opm::WellType wt0(0,2);
+    BOOST_CHECK(wt0.producer());
+    BOOST_CHECK_EQUAL(wt0.ecl_wtype(), 1);
+    BOOST_CHECK_EQUAL(wt0.ecl_phase(), 2);
+    BOOST_CHECK(wt0.preferred_phase() == Phase::WATER);
 
     Opm::WellType wt1(1,1);
     BOOST_CHECK(wt1.producer());

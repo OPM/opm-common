@@ -31,6 +31,10 @@ COMPDAT
      ' W_1 '   10   32    1    1      ' OPEN '  1*    118.457      0.216  12025.229  2*         'Z'     24.860 /
 /
 
+WCONPROD
+  'W_1'  'SHUT'  'BHP'  5*  100.0 /
+/
+
 WELOPEN
   'W_1'  'OPEN' 5* /
 /
