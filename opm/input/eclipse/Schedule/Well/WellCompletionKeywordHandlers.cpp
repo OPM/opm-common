@@ -106,6 +106,10 @@ void handleCOMPDATX(HandlerContext&    handlerContext,
         const auto is_connected = !well.getConnections().empty()
             || !connections->empty();
 
+        if (!well.getConnections().empty() || !connections->empty()) {
+            handlerContext.well_connected(wname);
+        }
+
         if (well.updateConnections(std::move(connections), handlerContext.grid)) {
             auto wdfac = std::make_shared<WDFAC>(well.getWDFAC());
             wdfac->updateWDFACType(well.getConnections());
