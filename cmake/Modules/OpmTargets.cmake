@@ -108,7 +108,7 @@ function(opm_add_library)
     target_include_directories(${PARAM_TARGET}
       BEFORE
       PUBLIC
-        $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}>
+        $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/generated/include>
     )
   endif()
 

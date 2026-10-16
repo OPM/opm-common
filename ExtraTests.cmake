@@ -8,7 +8,7 @@ if (Boost_UNIT_TEST_FRAMEWORK_FOUND)
     EXE_TARGET
       TestKeywords
     SOURCES
-      ${PROJECT_BINARY_DIR}/TestKeywords.cpp
+      ${PROJECT_BINARY_DIR}/generated/TestKeywords.cpp
     LIBRARIES
       ${TEST_LIBS}
   )
