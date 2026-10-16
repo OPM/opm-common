@@ -1422,6 +1422,100 @@ DATES
     BOOST_CHECK_EQUAL(rst.basic.value_or(-1), 2);
 }
 
+BOOST_AUTO_TEST_CASE(SOLUTION_RPTRST_Mnemonics_Persist) {
+    const std::string data = R"(
+SOLUTION
+RPTRST
+BASIC=2 KRW FLORES NORST=1 /
+SCHEDULE
+DATES
+ 22 MAY 1981 /
+ 23 MAY 1981 /
+/
+)";
+
+    const auto sched = make_schedule(data);
+
+    const auto expected = { "FLORES", "KRW", "NORST" };
+    for (const std::size_t step : { 0, 1, 2 }) {
+        BOOST_TEST_MESSAGE("Report step " << step);
+        BOOST_CHECK(sched.write_rst_file(step));
+
+        const auto kw_list = filter_keywords(sched.rst_keywords(step));
+        BOOST_CHECK_EQUAL_COLLECTIONS(expected.begin(), expected.end(),
+                                      kw_list.begin(), kw_list.end());
+    }
+
+    BOOST_CHECK_EQUAL(sched[1].rst_config().norst.value_or(0), 1);
+}
+
+BOOST_AUTO_TEST_CASE(SOLUTION_RPTRST_Mnemonics_Persist_With_RPTSOL) {
+    const std::string data = R"(
+SOLUTION
+RPTRST
+BASIC=2 KRW FLORES FIP /
+RPTSOL
+RESTART=2 FIP=3 SWAT /
+SCHEDULE
+DATES
+ 22 MAY 1981 /
+ 23 MAY 1981 /
+/
+)";
+
+    const auto sched = make_schedule(data);
+
+    const auto expected0 = { "FIP", "FLORES", "KRW", "SWAT" };
+    const auto kw_list0 = filter_keywords(sched.rst_keywords(0));
+    BOOST_CHECK_EQUAL_COLLECTIONS(expected0.begin(), expected0.end(),
+                                  kw_list0.begin(), kw_list0.end());
+
+    const auto expected = { "FIP", "FLORES", "KRW" };
+    for (const std::size_t step : { 1, 2 }) {
+        BOOST_TEST_MESSAGE("Report step " << step);
+        const auto kw_list = filter_keywords(sched.rst_keywords(step));
+        BOOST_CHECK_EQUAL_COLLECTIONS(expected.begin(), expected.end(),
+                                      kw_list.begin(), kw_list.end());
+    }
+}
+
+
+BOOST_AUTO_TEST_CASE(RPTSCHED_INTEGER_RESTART_EQ_0_Keeps_Mnemonics) {
+    const std::string data = R"(
+SCHEDULE
+RPTRST
+BASIC=2 KRW FLORES FIP RK /
+DATES
+ 22 MAY 1981 /
+/
+RPTSCHED
+6*1 0 50*0 /
+DATES
+ 23 MAY 1981 /
+/
+RPTSCHED
+RESTART=2 /
+DATES
+ 24 MAY 1981 /
+/
+)";
+
+    const auto sched = make_schedule(data);
+
+    BOOST_CHECK( sched.write_rst_file(1));
+    BOOST_CHECK(!sched.write_rst_file(2));
+    BOOST_CHECK( sched.write_rst_file(3));
+
+    for (const std::size_t step : { 1, 2, 3 }) {
+        BOOST_TEST_MESSAGE("Report step " << step);
+        const auto& kws = sched.rst_keywords(step);
+        for (const auto* kw : { "FIP", "FLORES", "KRW", "RK" }) {
+            const auto it = kws.find(kw);
+            BOOST_CHECK_MESSAGE((it != kws.end()) && (it->second > 0),
+                                "Restart mnemonic " << kw << " must persist");
+        }
+    }
+}
 
 BOOST_AUTO_TEST_CASE(RESTART_EQ_0) {
     const std::string data =  R"(

@@ -157,6 +157,9 @@
    - To stop writing an individual keyword without turning off
      restart output, set its value to zero, e.g., KRW=0.
 
+   - RPTSCHED, including RESTART=0, never cancels mnemonics requested
+     by RPTRST.  RESTART=0 only turns off restart output.
+
   With these rules the final restart files above will *not* contain
   KRO, KRW and KRG.  Note that the integer form 'RPTRST 0 /' with
   fewer than 27 items leaves BASIC unchanged.

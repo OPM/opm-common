@@ -431,17 +431,17 @@ void RSTConfig::handleRPTSOL(const DeckKeyword&  keyword,
     if (request_restart) {
         // RPTSOL's RESTART flag is set.  Internalise new flags, as
         // "SOLUTION" only properties, from 'mnemonics'.
-        this->keywords.swap(mnemonics);
-        for (const auto& kw : this->keywords) {
-            this->solution_only_keywords.insert(kw.first);
-        }
-
         for (const auto& [key, value] : mnemonics) {
-            // Note: Using emplace() after swap() means that the mnemonics
-            // from RPTSOL overwrite those that might already have been
-            // present in 'keywords'.  Recall that emplace() will not insert
-            // a new element with the same key as an existing element.
-            this->keywords.emplace(key, value);
+            const auto rptrst = this->keywords.find(key);
+            if ((rptrst != this->keywords.end()) && (rptrst->second > 0) &&
+                ! this->solution_only_keywords.contains(key))
+            {
+                // Already requested by RPTRST; must persist into SCHEDULE.
+                continue;
+            }
+
+            this->keywords.insert_or_assign(key, value);
+            this->solution_only_keywords.insert(key);
         }
     }
 }
@@ -533,7 +533,10 @@ void RSTConfig::handleRPTSCHED(const DeckKeyword&  keyword,
     }
 
     for (const auto& [kw, num] : mnemonics) {
-        this->keywords.insert_or_assign(kw, num);
+        // Zero-valued RPTSCHED controls only affect the PRINT file.
+        if (num > 0) {
+            this->keywords.insert_or_assign(kw, num);
+        }
     }
 }
 

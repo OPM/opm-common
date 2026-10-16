@@ -192,7 +192,6 @@ BOOST_AUTO_TEST_CASE( RestartConfig2 ) {
         {"NORST", 1},
         {"FIP", 3},
         {"WELSPECS", 1},
-        {"WELLS", 0},
         {"NEWTON", 1},
         {"SUMMARY", 1},
         {"CPU", 1},
