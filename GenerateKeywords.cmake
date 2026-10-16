@@ -39,7 +39,7 @@ opm_add_executable(
     fmt::fmt
     cjson
 )
-target_include_directories(genkw PRIVATE ${PROJECT_BINARY_DIR})
+target_include_directories(genkw PRIVATE ${PROJECT_BINARY_DIR}/generated/include)
 if(FNMATCH_H_FOUND)
   target_compile_definitions(genkw PRIVATE HAVE_FNMATCH_H=1)
 endif()
@@ -56,7 +56,7 @@ configure_file(opm/input/eclipse/keyword_list.argv.in keyword_list.argv)
 # Generate keyword source
 
 set(genkw_argv
-  keyword_list.argv
+  ${PROJECT_BINARY_DIR}/keyword_list.argv
   ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords
   ${PROJECT_BINARY_DIR}/tmp_gen/ParserInit.cpp
   ${PROJECT_BINARY_DIR}/tmp_gen/include/
@@ -73,31 +73,32 @@ foreach (name A B C D E F G H I J K L M N O P Q R S T U V W X Y Z)
     ${PROJECT_BINARY_DIR}/tmp_gen/include/opm/input/eclipse/Parser/ParserKeywords/ParserInit${name}.hpp
   )
   list(APPEND _target_output
-    ${PROJECT_BINARY_DIR}/ParserKeywords/${name}.cpp
-    ${PROJECT_BINARY_DIR}/opm/input/eclipse/Parser/ParserKeywords/${name}.hpp
-    ${PROJECT_BINARY_DIR}/ParserKeywords/ParserInit${name}.cpp
-    ${PROJECT_BINARY_DIR}/ParserKeywords/Builtin${name}.cpp
-    ${PROJECT_BINARY_DIR}/opm/input/eclipse/Parser/ParserKeywords/ParserInit${name}.hpp
+    ${PROJECT_BINARY_DIR}/generated/ParserKeywords/${name}.cpp
+    ${PROJECT_BINARY_DIR}/generated/include/opm/input/eclipse/Parser/ParserKeywords/${name}.hpp
+    ${PROJECT_BINARY_DIR}/generated/ParserKeywords/ParserInit${name}.cpp
+    ${PROJECT_BINARY_DIR}/generated/include/opm/input/eclipse/Parser/ParserKeywords/ParserInit${name}.hpp
+    ${PROJECT_BINARY_DIR}/generated/ParserKeywords/Builtin${name}.cpp
   )
 endforeach()
 
 foreach(name TestKeywords.cpp ParserInit.cpp)
-  list(APPEND _target_output ${PROJECT_BINARY_DIR}/${name})
+  list(APPEND _target_output ${PROJECT_BINARY_DIR}/generated/${name})
   list(APPEND _tmp_output ${PROJECT_BINARY_DIR}/tmp_gen/${name})
 endforeach()
 
 list(APPEND _target_output
-  ${PROJECT_BINARY_DIR}/opm/input/eclipse/Parser/ParserKeywords/Builtin.hpp
+  ${PROJECT_BINARY_DIR}/generated/include/opm/input/eclipse/Parser/ParserKeywords/Builtin.hpp
 )
 list(APPEND _tmp_output
   ${PROJECT_BINARY_DIR}/tmp_gen/include/opm/input/eclipse/Parser/ParserKeywords/Builtin.hpp
 )
 
 set(GEN_DEPS ${_tmp_output})
+set(_copy_headers_python_args)
 if (OPM_ENABLE_PYTHON)
   list(APPEND genkw_argv ${PROJECT_BINARY_DIR}/tmp_gen/builtin_pybind11.cpp)
   list(APPEND _tmp_output ${PROJECT_BINARY_DIR}/tmp_gen/builtin_pybind11.cpp)
-  list(APPEND _target_output ${PROJECT_BINARY_DIR}/python/cxx/builtin_pybind11.cpp)
+  list(APPEND _target_output ${PROJECT_BINARY_DIR}/generated/python/cxx/builtin_pybind11.cpp)
   list(APPEND GEN_DEPS copy_python)
 endif()
 
@@ -119,5 +120,6 @@ add_custom_command(
   COMMAND
     ${CMAKE_COMMAND}
     -DBASE_DIR=${PROJECT_BINARY_DIR}
+    -DOPM_ENABLE_PYTHON=${OPM_ENABLE_PYTHON}
     -P ${PROJECT_SOURCE_DIR}/CopyHeaders.cmake
 )

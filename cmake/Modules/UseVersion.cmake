@@ -15,6 +15,8 @@
 
 message("-- Writing version information to local header project-version.h")
 
+file (MAKE_DIRECTORY "${PROJECT_BINARY_DIR}/generated/include")
+
 option(OPM_USE_BUILD_TIMESTAMP "Add build timestamps?" ON)
 if(OPM_USE_BUILD_TIMESTAMP)
   string (TIMESTAMP build_timestamp "%Y-%m-%d at %H:%M:%S hrs")
@@ -25,7 +27,7 @@ set(OPM_BINARY_PACKAGE_VERSION "" CACHE STRING
   "Version of the binary Linux package built (will be printed in PRT file of flow if not empty)")
 string(LENGTH "${OPM_BINARY_PACKAGE_VERSION}" _BINARY_PACKAGE_VERSION_LENGTH)
 if (cmake_build_type_upper_ MATCHES DEBUG)
-  file (WRITE "${PROJECT_BINARY_DIR}/project-version.h"
+  file (WRITE "${PROJECT_BINARY_DIR}/generated/include/project-version.h"
         "#ifndef OPM_GENERATED_OPM_VERSION_HEADER_INCLUDED\n"
         "#define OPM_GENERATED_OPM_VERSION_HEADER_INCLUDED\n"
         "#define PROJECT_VERSION_NAME \"${${project}_LABEL}\"\n"
@@ -48,7 +50,7 @@ else ()
     else()
       set(_PROJECT_VERSION_HASH "unknown git version")
     endif()
-    file (WRITE "${PROJECT_BINARY_DIR}/project-version.h"
+    file (WRITE "${PROJECT_BINARY_DIR}/generated/include/project-version.h"
       "#ifndef OPM_GENERATED_OPM_VERSION_HEADER_INCLUDED\n"
       "#define OPM_GENERATED_OPM_VERSION_HEADER_INCLUDED\n"
       "#define PROJECT_VERSION_NAME \"${${project}_LABEL}\"\n"
@@ -77,24 +79,23 @@ else ()
     endif ()
   endif ()
 endif ()
-
 # Write header file with build timestamp
-file (WRITE "${PROJECT_BINARY_DIR}/project-timestamp.h"
+file (WRITE "${PROJECT_BINARY_DIR}/generated/include/project-timestamp.h"
   "#ifndef OPM_GENERATED_OPM_TIMESTAMP_HEADER_INCLUDED\n"
   "#define OPM_GENERATED_OPM_TIMESTAMP_HEADER_INCLUDED\n")
 if (_BINARY_PACKAGE_VERSION_LENGTH EQUAL 0 AND OPM_USE_BUILD_TIMESTAMP)
-  file(APPEND "${PROJECT_BINARY_DIR}/project-timestamp.h"
+  file(APPEND "${PROJECT_BINARY_DIR}/generated/include/project-timestamp.h"
 "#define BUILD_TIMESTAMP \"${build_timestamp}\"\n")
 endif()
 if (_BINARY_PACKAGE_VERSION_LENGTH GREATER 0)
-  file(APPEND "${PROJECT_BINARY_DIR}/project-timestamp.h"
+  file(APPEND "${PROJECT_BINARY_DIR}/generated/include/project-timestamp.h"
        "// Build timestamp disabled for binary package\n")
 endif()
 if (NOT OPM_USE_BUILD_TIMESTAMP)
-  file(APPEND "${PROJECT_BINARY_DIR}/project-timestamp.h"
+  file(APPEND "${PROJECT_BINARY_DIR}/generated/include/project-timestamp.h"
        "// Build timestamp disabled in build system\n")
 endif()
-file(APPEND "${PROJECT_BINARY_DIR}/project-timestamp.h"
+file(APPEND "${PROJECT_BINARY_DIR}/generated/include/project-timestamp.h"
   "#endif // OPM_GENERATED_OPM_TIMESTAMP_HEADER_INCLUDED\n")
 
 # safety precaution: check that we don't have version number mismatch.
