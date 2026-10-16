@@ -30,13 +30,13 @@
       "name": "TRGDDRS",
       "value_type": "DOUBLE",
       "dimension": "GasDissolutionFactor",
-      "default": 0.0
+      "default": 1.0
     },
     {
       "name": "TRGDDRV",
       "value_type": "DOUBLE",
       "dimension": "OilDissolutionFactor",
-      "default": 0.0
+      "default": 0.0001
     }
   ]
 }
