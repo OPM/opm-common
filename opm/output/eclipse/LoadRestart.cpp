@@ -24,6 +24,8 @@
 
 #include <opm/output/eclipse/RestartIO.hpp>
 
+#include <opm/common/OpmLog/OpmLog.hpp>
+
 #include <opm/io/eclipse/ERst.hpp>
 #include <opm/io/eclipse/RestartFileView.hpp>
 
@@ -68,6 +70,8 @@
 #include <initializer_list>
 #include <map>
 #include <memory>
+#include <optional>
+#include <ranges>
 #include <span>
 #include <stdexcept>
 #include <string>
@@ -1281,39 +1285,124 @@ namespace {
         return aquifers;
     }
 
+    // Tracer totals in the restart file that this run restores.
+    struct TracerTotals
+    {
+        // Number of elements per tracer quantity in the file's XWEL and
+        // XGRP records.
+        std::size_t numElems{};
+
+        // Whether to restore the temperature totals.
+        bool temp{false};
+
+        // Number of tracers to restore, from the start of TRACER.
+        std::size_t numTracers{};
+
+        bool empty() const { return !this->temp && (this->numTracers == 0); }
+    };
+
+    // Number of elements per tracer quantity in the restart file's XWEL and
+    // XGRP records, if their widths fit the current layout.  XWEL holds five
+    // tracer quantities and two more items, XGRP holds four quantities.
+    std::optional<std::size_t> tracerElemsPerQuantity(const std::vector<int>& intehead)
+    {
+        const auto xwelItems = intehead[VI::intehead::NXWELZ]
+            - static_cast<int>(VI::XWell::index::TracerOffset);
+        const auto xgrpItems = intehead[VI::intehead::NXGRPZ]
+            - static_cast<int>(VI::XGroup::index::TracerOffset);
+
+        if ((xgrpItems < 0) || (xgrpItems % 4 != 0)) {
+            return std::nullopt;
+        }
+
+        const auto numElems = xgrpItems / 4;
+        if (xwelItems != 5*numElems + ((numElems > 0) ? 2 : 0)) {
+            return std::nullopt;
+        }
+
+        return static_cast<std::size_t>(numElems);
+    }
+
+    // Tracers are only appended to TRACER between runs, so the tracers whose
+    // concentrations the restart file holds lead this run's list, and their
+    // totals keep their positions in the file's XWEL and XGRP records.
+    TracerTotals tracerTotalsToRestore(const bool                         isTemp,
+                                       const Opm::TracerConfig&           tracer_config,
+                                       const Opm::EclIO::RestartFileView& rst_view)
+    {
+        const auto inFile = [&rst_view](const auto& tracer)
+        {
+            return rst_view.hasKeyword<double>(tracer.fname())
+                || rst_view.hasKeyword<float>(tracer.fname());
+        };
+
+        const auto stored = std::ranges::subrange {
+            tracer_config.begin(), std::ranges::find_if_not(tracer_config, inFile)
+        };
+
+        if (!isTemp && stored.empty()) {
+            return {};
+        }
+
+        const auto hasSolution = [dgas = tracer_config.supportsSolutionGasTracer(),
+                                  voil = tracer_config.supportsVaporisedOilTracer()]
+            (const auto& tracer)
+        {
+            return (dgas && tracer.phase == Opm::Phase::GAS)
+                || (voil && tracer.phase == Opm::Phase::OIL);
+        };
+
+        const auto count = [&stored](const Opm::Phase phase)
+        {
+            return std::ranges::count_if(stored, [phase](const auto& tracer)
+                                         { return tracer.phase == phase; });
+        };
+
+        const auto numElems = static_cast<std::size_t>(isTemp)
+            + stored.size() + static_cast<std::size_t>(std::ranges::count_if(stored, hasSolution));
+
+        // Files written before INTEHEAD held the water and gas tracer
+        // counts use an older layout, which the widths do not always reveal.
+        const auto& intehead = rst_view.intehead();
+        const auto fileElems = tracerElemsPerQuantity(intehead);
+        if (! fileElems.has_value() || (*fileElems < numElems) ||
+            (intehead[VI::intehead::MaxWatTracers] < count(Opm::Phase::WATER)) ||
+            (intehead[VI::intehead::MaxGasTracers] < count(Opm::Phase::GAS)))
+        {
+            Opm::OpmLog::warning("Restart file tracer layout is not recognised; "
+                                 "well and group tracer totals are not restored");
+            return {};
+        }
+
+        return { *fileElems, isTemp, stored.size() };
+    }
+
     template <typename UpdateCumulative>
     void assign_tracer_cumulatives(const std::size_t        cumulativeOffset,
                                    std::string_view         cumulativeType,
-                                   const bool               isTemp,
-                                   const Opm::Tracers&      tracer_dims,
+                                   const TracerTotals&      trcTotals,
                                    const Opm::TracerConfig& tracer_config,
                                    std::span<const double>  trcCumulatives,
                                    UpdateCumulative&&       updateCumulative)
     {
-        assert (isTemp || !tracer_config.empty());
+        assert (! trcTotals.empty());
 
         const auto dgas = tracer_config.supportsSolutionGasTracer();
         const auto voil = tracer_config.supportsVaporisedOilTracer();
 
-        // Tracer production/injection totals
-        const auto num_cumulative_elems = (isTemp ? 1 : 0)
-            +              tracer_dims.water_tracers()
-            + (1 + dgas) * tracer_dims.gas_tracers()
-            + (1 + voil) * tracer_dims.oil_tracers();
-
         for (auto qtyIdx = cumulativeOffset; const auto type : cumulativeType) {
             auto nextCumulative = [idx = std::size_t{0},
-                                   values = trcCumulatives.subspan(qtyIdx++ * num_cumulative_elems,
-                                                                   num_cumulative_elems)]() mutable
+                                   values = trcCumulatives.subspan(qtyIdx++ * trcTotals.numElems,
+                                                                   trcTotals.numElems)]() mutable
             {
                  return values[idx++];
             };
 
-            if (isTemp) {
+            if (trcTotals.temp) {
                 updateCumulative(type, "HEA", nextCumulative());
             }
 
-            for (const auto& tracer : tracer_config) {
+            for (const auto& tracer : tracer_config | std::views::take(trcTotals.numTracers)) {
                 if (tracer.phase == Opm::Phase::WATER) {
                     updateCumulative(type, tracer.name, nextCumulative());
                 }
@@ -1335,8 +1424,7 @@ namespace {
 
     void assign_well_tracer_cumulatives(const std::string&       well,
                                         const std::size_t        wellID,
-                                        const bool               isTemp,
-                                        const Opm::Tracers&      tracer_dims,
+                                        const TracerTotals&      trcTotals,
                                         const Opm::TracerConfig& tracer_config,
                                         const WellVectors&       wellData,
                                         Opm::SummaryState&       smry)
@@ -1346,7 +1434,7 @@ namespace {
 
         // Well tracer cumulatives start at offset 1 (rates are at offset zero)
         // and are in the order of production/injection totals, i.e., "P" then "I".
-        assign_tracer_cumulatives(1, "PI", isTemp, tracer_dims, tracer_config,
+        assign_tracer_cumulatives(1, "PI", trcTotals, tracer_config,
                                   tracerCumulatives,
                                   [&smry, &well](const char       type,
                                                  std::string_view tracerName,
@@ -1358,8 +1446,7 @@ namespace {
 
     void assign_group_tracer_cumulatives(const std::string&       group,
                                          const std::size_t        groupID,
-                                         const bool               isTemp,
-                                         const Opm::Tracers&      tracer_dims,
+                                         const TracerTotals&      trcTotals,
                                          const Opm::TracerConfig& tracer_config,
                                          const GroupVectors&      groupData,
                                          Opm::SummaryState&       smry)
@@ -1369,7 +1456,7 @@ namespace {
 
         // Group tracer cumulatives start at offset 2 (rates are at offsets zero and one)
         // and appear in the order of injection/production totals, i.e., "I" then "P".
-        assign_tracer_cumulatives(2, "IP", isTemp, tracer_dims, tracer_config,
+        assign_tracer_cumulatives(2, "IP", trcTotals, tracer_config,
                                   tracerCumulatives,
                                   [&smry, &group](const char       type,
                                                   std::string_view tracerName,
@@ -1387,8 +1474,7 @@ namespace {
 
     void assign_well_cumulatives(const std::string&       well,
                                  const std::size_t        wellID,
-                                 const bool               isTemp,
-                                 const Opm::Tracers&      tracer_dims,
+                                 const TracerTotals&      trcTotals,
                                  const Opm::TracerConfig& tracer_config,
                                  const WellVectors&       wellData,
                                  Opm::SummaryState&       smry)
@@ -1441,10 +1527,9 @@ namespace {
         smry.update_well_var(well, "WWITH", xwel[VI::XWell::index::HistWatInjTotal]);
         smry.update_well_var(well, "WGITH", xwel[VI::XWell::index::HistGasInjTotal]);
 
-        if (isTemp || !tracer_config.empty()) {
+        if (! trcTotals.empty()) {
             assign_well_tracer_cumulatives(well, wellID,
-                                           isTemp,
-                                           tracer_dims,
+                                           trcTotals,
                                            tracer_config,
                                            wellData, smry);
         }
@@ -1452,8 +1537,7 @@ namespace {
 
     void assign_group_cumulatives(const std::string&       group,
                                   const std::size_t        groupID,
-                                  const bool               isTemp,
-                                  const Opm::Tracers&      tracer_dims,
+                                  const TracerTotals&      trcTotals,
                                   const Opm::TracerConfig& tracer_config,
                                   const GroupVectors&      groupData,
                                   Opm::SummaryState&       smry)
@@ -1522,10 +1606,9 @@ namespace {
         update("GCT",  xgrp[VI::XGroup::index::GasConsumptionTotal]);
         update("GIMT", xgrp[VI::XGroup::index::GasImportTotal]);
 
-        if (isTemp || !tracer_config.empty()) {
+        if (! trcTotals.empty()) {
             assign_group_tracer_cumulatives(group, groupID,
-                                            isTemp,
-                                            tracer_dims,
+                                            trcTotals,
                                             tracer_config,
                                             groupData, smry);
         }
@@ -1677,8 +1760,8 @@ namespace {
     {
         const auto  sim_step    = rst_view->simStep();
         const auto& intehead    = rst_view->intehead();
-        const auto  isTemp      = schedule.runspec().temp();
-        const auto& tracer_dims = schedule.runspec().tracers();
+        const auto  trcTotals   = tracerTotalsToRestore(schedule.runspec().temp(),
+                                                        tracer_config, *rst_view);
 
         smry.update_elapsed(schedule.seconds(rst_view->reportStep()));
 
@@ -1690,8 +1773,8 @@ namespace {
             for (auto nWells = wells.size(), wellID = 0*nWells;
                  wellID < nWells; ++wellID)
             {
-                assign_well_cumulatives(wells[wellID], wellID, isTemp,
-                                        tracer_dims, tracer_config,
+                assign_well_cumulatives(wells[wellID], wellID, trcTotals,
+                                        tracer_config,
                                         wellData, smry);
             }
         }
@@ -1719,8 +1802,8 @@ namespace {
                     ? groupData.maxGroups() // NGMAXZ -- Item 3 of WELLDIMS
                     : std::max(group.insert_index(), std::size_t{1}) - 1;
 
-                assign_group_cumulatives(gname, groupOrderIx, isTemp,
-                                         tracer_dims, tracer_config,
+                assign_group_cumulatives(gname, groupOrderIx, trcTotals,
+                                         tracer_config,
                                          groupData, smry);
             }
         }
