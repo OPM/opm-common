@@ -52,10 +52,12 @@
 #include <dune/common/classname.hh>
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstddef>
 #include <limits>
 #include <numeric>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
@@ -91,6 +93,27 @@ class PTFlash
     static constexpr Scalar substitutionTolerance = 1e-10;
     static constexpr Scalar trivialSolutionTolerance = 1e-5;
 
+protected:
+    static constexpr std::size_t numFlashUnknowns = numMisciblePhases * numMiscibleComponents + 1;
+    // x, y and L, then both phase pressures and the temperature.
+    using JacobianState = std::array<Scalar, numFlashUnknowns + 3>;
+
+    //! The composition Jacobian dF/d(x, y, L) where newtonComposition_()
+    //! converged, and the state it was assembled at.
+    struct NewtonJacobian
+    {
+        Dune::FieldMatrix<Scalar, numFlashUnknowns, numFlashUnknowns> jacobian;
+        JacobianState state;
+    };
+
+    //! A scalar flash result, with the composition Jacobian when Newton
+    //! finished the split.
+    struct ScalarFlashResult
+    {
+        bool single_phase;
+        std::optional<NewtonJacobian> newton_jacobian;
+    };
+
 public:
     /*!
      * \brief Calculates the fluid state from the global mole fractions of the components and the phase pressures
@@ -121,8 +144,8 @@ public:
 
         scalar_state.setTemperature(Opm::getValue(fluid_state.temperature(0)));
 
-        const auto is_single_phase = flash_solve_scalar_(
-            scalar_state, twoPhaseMethod, flash_tolerance, eos_type, verbosity);
+        const auto [is_single_phase, newton_jacobian]
+            = flashScalar_(scalar_state, twoPhaseMethod, flash_tolerance, eos_type, verbosity);
 
         // Transfer the converged values before reconstructing their derivatives.
         for (int compIdx=0; compIdx<numComponents; ++compIdx){
@@ -132,7 +155,7 @@ public:
             fluid_state.setMoleFraction(gasPhaseIdx, compIdx, vapour_mole_fraction);
         }
 
-        updateDerivatives_(scalar_state, fluid_state, eos_type, is_single_phase);
+        updateDerivatives_(scalar_state, fluid_state, eos_type, is_single_phase, newton_jacobian);
 
         return is_single_phase;
     } //end solve
@@ -181,6 +204,21 @@ public:
                                     const EOSType& eos_type,
                                     const int verbosity = 0)
     {
+        return flashScalar_(fluid_state, twoPhaseMethod, flash_tolerance, eos_type, verbosity)
+            .single_phase;
+    }
+
+protected:
+    //! flash_solve_scalar_(), also returning the composition Jacobian when
+    //! Newton finished the split.
+    template <typename FluidState>
+    static ScalarFlashResult flashScalar_(FluidState& fluid_state,
+                                          PTFlashMethod twoPhaseMethod,
+                                          const Scalar flash_tolerance,
+                                          const EOSType& eos_type,
+                                          const int verbosity)
+    {
+        std::optional<NewtonJacobian> newton_jacobian;
         // States without a physical two-phase fraction require stability
         // analysis. Every completed split is classified below.
         bool is_single_phase = false;
@@ -211,10 +249,11 @@ public:
         // Update the composition if cell is two-phase
         if (!is_single_phase) {
             const auto try_solve_split = [&](const auto& on_failure) {
+                newton_jacobian.reset();
                 try {
                     L_scalar = RachfordRice::solve(K_scalar, z_scalar, verbosity);
-                    flash_2ph(z_scalar, twoPhaseMethod, K_scalar, L_scalar, fluid_state,
-                              flash_tolerance, eos_type, verbosity);
+                    newton_jacobian = flash_2ph(z_scalar, twoPhaseMethod, K_scalar, L_scalar,
+                                                fluid_state, flash_tolerance, eos_type, verbosity);
                     return true;
                 }
                 catch (const NumericalProblem& error) {
@@ -294,6 +333,7 @@ public:
             }
         }
         if (is_single_phase) {
+            newton_jacobian.reset();
             for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
                 fluid_state.setMoleFraction(gasPhaseIdx, compIdx, z_scalar[compIdx]);
                 fluid_state.setMoleFraction(oilPhaseIdx, compIdx, z_scalar[compIdx]);
@@ -304,9 +344,10 @@ public:
             }
         }
         fluid_state.setLvalue(L_scalar);
-        return is_single_phase;
+        return {is_single_phase, newton_jacobian};
     }
 
+public:
     template <class Vector, class FlashFluidState>
     static typename Vector::field_type li_single_phase_label_(const FlashFluidState& fluid_state, const Vector& z, int verbosity)
     {
@@ -641,16 +682,18 @@ protected:
 
     /*!
      * \brief The two-phase compositions by the requested method.
+     *
+     * \return The composition Jacobian when Newton finished the solve.
      */
     template <class FluidState, class ComponentVector>
-    static void flash_2ph(const ComponentVector& z_scalar,
+    static auto flash_2ph(const ComponentVector& z_scalar,
                           PTFlashMethod flash_2p_method,
                           ComponentVector& K_scalar,
                           typename FluidState::ValueType& L_scalar,
                           FluidState& fluid_state_scalar,
                           const Scalar flash_tolerance,
                           const EOSType& eos_type,
-                          int verbosity = 0) {
+                          int verbosity = 0) -> std::optional<NewtonJacobian> {
         if (verbosity >= 1) {
             OpmLog::debug(fmt::format("Cell is two-phase! Solve Rachford-Rice with initial K = [{}]",
                                      fmt::join(K_scalar, " ")));
@@ -658,12 +701,15 @@ protected:
 
         // Calculate composition using nonlinear solver
         bool converged = false;
+        std::optional<NewtonJacobian> newton_jacobian;
         switch (flash_2p_method) {
         case PTFlashMethod::Newton:
             if (verbosity >= 1) {
                 OpmLog::debug("Calculate composition using Newton.");
             }
-            converged = newtonComposition_(K_scalar, L_scalar, fluid_state_scalar, z_scalar, flash_tolerance, eos_type, verbosity);
+            newton_jacobian = newtonComposition_(K_scalar, L_scalar, fluid_state_scalar, z_scalar,
+                                                 flash_tolerance, eos_type, verbosity);
+            converged = true;
             break;
 
         case PTFlashMethod::Ssi:
@@ -696,8 +742,10 @@ protected:
                     converged = successiveSubstitutionComposition_(K_scalar, L_scalar, fluid_state_scalar, z_scalar, false, flash_tolerance, eos_type, verbosity);
                 };
                 try {
-                    converged = newtonComposition_(K_scalar, L_scalar, fluid_state_scalar,
-                                                   z_scalar, flash_tolerance, eos_type, verbosity);
+                    newton_jacobian = newtonComposition_(K_scalar, L_scalar, fluid_state_scalar,
+                                                         z_scalar, flash_tolerance, eos_type,
+                                                         verbosity);
+                    converged = true;
                 }
                 catch (const NumericalProblem& error) {
                     fall_back_to_ssi(error);
@@ -728,6 +776,7 @@ protected:
                             Opm::getValue(L_scalar),
                             ptFlashMethodToString(flash_2p_method)));
         }
+        return newton_jacobian;
     }
 
     template <class FlashFluidState>
@@ -804,16 +853,19 @@ protected:
      *     \sum_i x_i - \sum_i y_i = 0. \f]
      *
      * The Jacobian comes from automatic differentiation of the residuals in
-     * the unknowns.
+     * the unknowns. The convergence test follows its assembly, so the
+     * Jacobian returned belongs to the converged state.
+     *
+     * \throws NumericalProblem when Newton does not converge.
      */
     template <class FlashFluidState, class ComponentVector>
-    static bool newtonComposition_(ComponentVector& K,
+    static auto newtonComposition_(ComponentVector& K,
                                    typename FlashFluidState::ValueType& L,
                                    FlashFluidState& fluid_state,
                                    const ComponentVector& z,
                                    const Scalar tolerance,
                                    const EOSType& eos_type,
-                                   int verbosity)
+                                   int verbosity) -> NewtonJacobian
     {
         constexpr std::size_t num_equations = numMisciblePhases * numMiscibleComponents + 1;
         constexpr std::size_t num_unknowns = numMisciblePhases * numMiscibleComponents + 1;
@@ -994,7 +1046,7 @@ protected:
         }
         L = Opm::getValue(liquid_fraction);
         fluid_state.setLvalue(L);
-        return converged;
+        return {jacobian, jacobianState_(fluid_state)};
     }
 
     /*!
@@ -1061,6 +1113,88 @@ protected:
         }
     }
 
+    //! The values the composition Jacobian depends on.
+    template <class FlashFluidState>
+    static JacobianState jacobianState_(const FlashFluidState& fluid_state)
+    {
+        JacobianState state{};
+        for (unsigned compIdx = 0; compIdx < numMiscibleComponents; ++compIdx) {
+            state[compIdx] = Opm::getValue(fluid_state.moleFraction(oilPhaseIdx, compIdx));
+            state[compIdx + numMiscibleComponents]
+                = Opm::getValue(fluid_state.moleFraction(gasPhaseIdx, compIdx));
+        }
+        // L is the last flash unknown, as in newtonComposition_().
+        constexpr std::size_t liquid_fraction_idx = numFlashUnknowns - 1;
+        state[liquid_fraction_idx] = Opm::getValue(fluid_state.L());
+        state[liquid_fraction_idx + 1] = Opm::getValue(fluid_state.pressure(oilPhaseIdx));
+        state[liquid_fraction_idx + 2] = Opm::getValue(fluid_state.pressure(gasPhaseIdx));
+        state[liquid_fraction_idx + 3] = Opm::getValue(fluid_state.temperature(0));
+        return state;
+    }
+
+    /*!
+     * \brief The Jacobian of the newtonComposition_() residuals in
+     *        \f$\mathbf u = (\mathbf x, \mathbf y, L)\f$ at a scalar state.
+     */
+    template <typename FlashFluidStateScalar>
+    static Dune::FieldMatrix<Scalar, numFlashUnknowns, numFlashUnknowns>
+    compositionJacobian_(const FlashFluidStateScalar& fluid_state_scalar, const EOSType& eos_type)
+    {
+        constexpr std::size_t num_equations = numFlashUnknowns;
+        constexpr std::size_t num_flash_unknowns = numFlashUnknowns;
+        using UnknownEval = Opm::DenseAd::Evaluation<double, num_flash_unknowns>;
+        using ScalarComponentVector = Dune::FieldVector<double, numComponents>;
+        using UnknownFluidState = Opm::CompositionalFluidState<UnknownEval, FluidSystem>;
+
+        UnknownFluidState unknown_derivative_state;
+        // The overall composition enters the residual but not its Jacobian.
+        ScalarComponentVector overall_composition;
+        for (unsigned  comp_idx = 0; comp_idx < numComponents; ++comp_idx) {
+            overall_composition[comp_idx]
+                = Opm::getValue(fluid_state_scalar.moleFraction(comp_idx));
+        }
+        for (unsigned comp_idx = 0; comp_idx < numComponents; ++comp_idx) {
+            const auto liquid_mole_fraction
+                = UnknownEval(fluid_state_scalar.moleFraction(oilPhaseIdx, comp_idx), comp_idx);
+            unknown_derivative_state.setMoleFraction(oilPhaseIdx, comp_idx, liquid_mole_fraction);
+            const unsigned idx = comp_idx + numComponents;
+            const auto vapour_mole_fraction
+                = UnknownEval(fluid_state_scalar.moleFraction(gasPhaseIdx, comp_idx), idx);
+            unknown_derivative_state.setMoleFraction(gasPhaseIdx, comp_idx, vapour_mole_fraction);
+            unknown_derivative_state.setKvalue(comp_idx,
+                                               vapour_mole_fraction / liquid_mole_fraction);
+        }
+        const auto liquid_fraction = UnknownEval(fluid_state_scalar.L(), num_flash_unknowns - 1);
+        unknown_derivative_state.setLvalue(liquid_fraction);
+        unknown_derivative_state.setPressure(oilPhaseIdx, fluid_state_scalar.pressure(oilPhaseIdx));
+        unknown_derivative_state.setPressure(gasPhaseIdx, fluid_state_scalar.pressure(gasPhaseIdx));
+        unknown_derivative_state.setTemperature(fluid_state_scalar.temperature(0));
+
+        using UnknownParamCache = typename FluidSystem::template ParameterCache<UnknownEval>;
+        UnknownParamCache unknown_param_cache(eos_type);
+        for (unsigned phase_idx = 0; phase_idx < numMisciblePhases; ++phase_idx) {
+            unknown_param_cache.updatePhase(unknown_derivative_state, phase_idx);
+            for (unsigned comp_idx = 0; comp_idx < numComponents; ++comp_idx) {
+                UnknownEval fugacity_coefficient = FluidSystem::fugacityCoefficient(
+                    unknown_derivative_state, unknown_param_cache, phase_idx, comp_idx);
+                unknown_derivative_state.setFugacityCoefficient(
+                    phase_idx, comp_idx, fugacity_coefficient);
+            }
+        }
+
+        using UnknownResidual = Dune::FieldVector<Scalar, num_equations>;
+        using UnknownJacobian = Dune::FieldMatrix<Scalar, num_equations, num_flash_unknowns>;
+        UnknownResidual unknown_residual;
+        UnknownJacobian unknown_jacobian;
+
+        assembleNewton_<UnknownFluidState,
+                        ScalarComponentVector,
+                        num_flash_unknowns,
+                        num_equations>(
+            unknown_derivative_state, overall_composition, unknown_jacobian, unknown_residual);
+        return unknown_jacobian;
+    }
+
     /*!
      * \brief Gives the converged flash result the derivatives of the caller.
      *
@@ -1072,10 +1206,11 @@ protected:
     static void updateDerivatives_(const FlashFluidStateScalar& fluid_state_scalar,
                                    FluidState& fluid_state,
                                    const EOSType& eos_type,
-                                   bool is_single_phase)
+                                   bool is_single_phase,
+                                   const std::optional<NewtonJacobian>& newton_jacobian)
     {
         if (!is_single_phase) {
-            updateDerivativesTwoPhase_(fluid_state_scalar, fluid_state, eos_type);
+            updateDerivativesTwoPhase_(fluid_state_scalar, fluid_state, eos_type, newton_jacobian);
         } else {
             updateDerivativesSinglePhase_(fluid_state_scalar, fluid_state);
         }
@@ -1093,12 +1228,14 @@ protected:
      *       \frac{\partial F}{\partial \mathbf s}, \f]
      *
      * and the chain rule through the caller's derivatives of \f$\mathbf s\f$
-     * gives those of \f$\mathbf u\f$.
+     * gives those of \f$\mathbf u\f$. A Newton solve that converged at exactly
+     * this state already assembled \f$\partial F / \partial \mathbf u\f$.
      */
     template <typename FlashFluidStateScalar, typename FluidState>
     static void updateDerivativesTwoPhase_(const FlashFluidStateScalar& fluid_state_scalar,
                                            FluidState& fluid_state,
-                                           const EOSType& eos_type)
+                                           const EOSType& eos_type,
+                                           const std::optional<NewtonJacobian>& newton_jacobian)
     {
         using InputEval = typename FluidState::ValueType;
         using ComponentVector = Dune::FieldVector<InputEval, numComponents>;
@@ -1173,57 +1310,12 @@ protected:
         assembleNewton_<StateFluidState, StateComponentVector, num_state_variables, num_equations>(
             state_derivative_state, state_composition, state_jacobian, state_residual);
 
-        // Evaluate the same residual with u = (x, y, L) as independent AD
-        // variables while holding s fixed. This gives the unknown Jacobian dF/du.
-        constexpr std::size_t num_flash_unknowns = numMisciblePhases * numMiscibleComponents + 1;
-        using UnknownEval = Opm::DenseAd::Evaluation<double, num_flash_unknowns>;
-        using ScalarComponentVector = Dune::FieldVector<double, numComponents>;
-        using UnknownFluidState = Opm::CompositionalFluidState<UnknownEval, FluidSystem>;
-
-        UnknownFluidState unknown_derivative_state;
-        ScalarComponentVector overall_composition;
-        for (unsigned  comp_idx = 0; comp_idx < numComponents; ++comp_idx) {
-            overall_composition[comp_idx] = Opm::getValue(z[comp_idx]);
-        }
-        for (unsigned comp_idx = 0; comp_idx < numComponents; ++comp_idx) {
-            const auto liquid_mole_fraction
-                = UnknownEval(fluid_state_scalar.moleFraction(oilPhaseIdx, comp_idx), comp_idx);
-            unknown_derivative_state.setMoleFraction(oilPhaseIdx, comp_idx, liquid_mole_fraction);
-            const unsigned idx = comp_idx + numComponents;
-            const auto vapour_mole_fraction
-                = UnknownEval(fluid_state_scalar.moleFraction(gasPhaseIdx, comp_idx), idx);
-            unknown_derivative_state.setMoleFraction(gasPhaseIdx, comp_idx, vapour_mole_fraction);
-            unknown_derivative_state.setKvalue(comp_idx,
-                                               vapour_mole_fraction / liquid_mole_fraction);
-        }
-        const auto liquid_fraction = UnknownEval(fluid_state_scalar.L(), num_flash_unknowns - 1);
-        unknown_derivative_state.setLvalue(liquid_fraction);
-        unknown_derivative_state.setPressure(oilPhaseIdx, fluid_state_scalar.pressure(oilPhaseIdx));
-        unknown_derivative_state.setPressure(gasPhaseIdx, fluid_state_scalar.pressure(gasPhaseIdx));
-        unknown_derivative_state.setTemperature(fluid_state_scalar.temperature(0));
-
-        using UnknownParamCache = typename FluidSystem::template ParameterCache<UnknownEval>;
-        UnknownParamCache unknown_param_cache(eos_type);
-        for (unsigned phase_idx = 0; phase_idx < numMisciblePhases; ++phase_idx) {
-            unknown_param_cache.updatePhase(unknown_derivative_state, phase_idx);
-            for (unsigned comp_idx = 0; comp_idx < numComponents; ++comp_idx) {
-                UnknownEval fugacity_coefficient = FluidSystem::fugacityCoefficient(
-                    unknown_derivative_state, unknown_param_cache, phase_idx, comp_idx);
-                unknown_derivative_state.setFugacityCoefficient(
-                    phase_idx, comp_idx, fugacity_coefficient);
-            }
-        }
-
-        using UnknownResidual = Dune::FieldVector<Scalar, num_equations>;
-        using UnknownJacobian = Dune::FieldMatrix<Scalar, num_equations, num_flash_unknowns>;
-        UnknownResidual unknown_residual;
-        UnknownJacobian unknown_jacobian;
-
-        assembleNewton_<UnknownFluidState,
-                        ScalarComponentVector,
-                        num_flash_unknowns,
-                        num_equations>(
-            unknown_derivative_state, overall_composition, unknown_jacobian, unknown_residual);
+        // dF/du, from the Newton solve if it converged at exactly this state.
+        using UnknownJacobian = Dune::FieldMatrix<Scalar, num_equations, numFlashUnknowns>;
+        UnknownJacobian unknown_jacobian
+            = (newton_jacobian && newton_jacobian->state == jacobianState_(fluid_state_scalar))
+            ? newton_jacobian->jacobian
+            : compositionJacobian_(fluid_state_scalar, eos_type);
 
         // DUNE 2.6 cannot solve directly with a matrix right-hand side, so form
         // the inverse explicitly before multiplying the state Jacobian.
