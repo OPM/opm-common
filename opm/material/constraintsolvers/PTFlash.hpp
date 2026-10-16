@@ -374,7 +374,8 @@ protected:
                                        fluid_state,
                                        flash_tolerance,
                                        eos_type,
-                                       verbosity);
+                                       verbosity,
+                                       newton_jacobian);
         }
         fluid_state.setLvalue(L_scalar);
         return {is_single_phase, newton_jacobian};
@@ -404,6 +405,8 @@ protected:
      * labels single phases also decides which phase is the liquid here.
      * With unequal phase pressures the swapped phases were in equilibrium at
      * each other's pressure, so the split is solved again from them.
+     * \p newton_jacobian is cleared when the phases are swapped and replaced by
+     * the Jacobian of the solve that follows.
      */
     template <class FlashFluidState, class ComponentVector>
     static void keepHeavierPhaseInOilSlot_(const ComponentVector& z,
@@ -413,7 +416,8 @@ protected:
                                            FlashFluidState& fluid_state,
                                            const Scalar flash_tolerance,
                                            const EOSType& eos_type,
-                                           int verbosity)
+                                           int verbosity,
+                                           std::optional<NewtonJacobian>& newton_jacobian)
     {
         const auto phaseTemperature = [&fluid_state](int phaseIdx) {
             return liPseudoCriticalTemperature_([&fluid_state, phaseIdx](int compIdx) {
@@ -430,6 +434,7 @@ protected:
             fluid_state.setMoleFraction(oilPhaseIdx, compIdx, liquid_mole_fraction);
         }
         L = 1 - L;
+        newton_jacobian.reset();
         for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
             const auto liquid_mole_fraction = fluid_state.moleFraction(oilPhaseIdx, compIdx);
             K[compIdx] = liquid_mole_fraction > 0
@@ -445,7 +450,8 @@ protected:
         if (fluid_state.pressure(oilPhaseIdx) == fluid_state.pressure(gasPhaseIdx)) {
             return;
         }
-        flash_2ph(z, method, K, L, fluid_state, flash_tolerance, eos_type, verbosity);
+        newton_jacobian = flash_2ph(z, method, K, L, fluid_state, flash_tolerance, eos_type,
+                                    verbosity);
         if (!(L > 0 && L < 1) || phasesCoincide_(fluid_state)) {
             OPM_THROW_NOLOG(NumericalProblem,
                             "The relabelled split did not stay two-phase when solved again "
