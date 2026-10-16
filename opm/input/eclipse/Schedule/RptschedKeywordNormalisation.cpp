@@ -162,9 +162,16 @@ namespace {
 Opm::RPTKeywordNormalisation::MnemonicMap
 Opm::normaliseRptSchedKeyword(const DeckKeyword&  kw,
                               const ParseContext& parseContext,
-                              ErrorGuard&         errors)
+                              ErrorGuard&         errors,
+                              const RPTKeywordNormalisation::MnemonicPredicate& alsoAccept)
 {
+    auto isMnemonic = [isRptSched = IsRptSchedMnemonic{}, &alsoAccept]
+        (const std::string& mnemonic)
+    {
+        return isRptSched(mnemonic) || (alsoAccept && alsoAccept(mnemonic));
+    };
+
     return RPTKeywordNormalisation {
-        makeIntegerControlHandler(), IsRptSchedMnemonic{}
+        makeIntegerControlHandler(), isMnemonic
     }.normaliseKeyword(kw, parseContext, errors);
 }
