@@ -273,13 +273,19 @@ namespace Opm {
 
         const auto& conf = config.get(wname);
 
-        int num_test = conf.num_test + 1;
+        int num_attempt = 0;
         int close_reason = 0;
         const auto& state_iter = this->wells.find(wname);
         if (state_iter != this->wells.end()) {
-            num_test -= state_iter->second.num_attempt;
+            num_attempt = state_iter->second.num_attempt;
             close_reason = state_iter->second.int_reason();
         }
+
+        // Zero if there is no limit, otherwise one more than the number of
+        // tests left.
+        int num_test = 0;
+        if (conf.num_test != 0)
+            num_test = std::max(conf.num_test - num_attempt, 0) + 1;
 
         return RestartWell(wname, conf.test_interval, num_test, conf.startup_time, conf.ecl_reasons(), close_reason);
     }
