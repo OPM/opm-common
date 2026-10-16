@@ -163,6 +163,8 @@ public:
      * \brief The isothermal flash on a scalar fluid state, without derivatives.
      *
      * The stages are:
+     * -# a feed with a single present component is single-phase and takes
+     *    the label of its EoS root of lower Gibbs energy;
      * -# a stability test when the state does not already carry a two-phase
      *    split (\f$L \le 0\f$ or \f$L \ge 1\f$), which either declares the
      *    mixture single-phase or returns starting equilibrium ratios;
@@ -228,6 +230,20 @@ protected:
         for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
             K_scalar[compIdx] = fluid_state.K(compIdx);
             z_scalar[compIdx] = fluid_state.moleFraction(compIdx);
+        }
+
+        // A single component cannot split into phases of different
+        // composition. The stability trials would only compare its two EoS
+        // roots, and one of them always looks unstable.
+        if (std::count_if(z_scalar.begin(), z_scalar.end(), [](const Scalar z) { return z > 0; })
+            == 1) {
+            for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+                fluid_state.setMoleFraction(gasPhaseIdx, compIdx, z_scalar[compIdx]);
+                fluid_state.setMoleFraction(oilPhaseIdx, compIdx, z_scalar[compIdx]);
+            }
+            fluid_state.setLvalue(
+                singleComponentPhaseLabel_(fluid_state, z_scalar, eos_type, verbosity));
+            return {true, std::nullopt};
         }
 
         // Here, a cold start means there is no usable previous two-phase split
@@ -396,6 +412,56 @@ protected:
             }
         }
 
+        return L;
+    }
+
+    /*!
+     * \brief The phase label of a feed with a single present component.
+     *
+     * The component is in the phase of lower Gibbs energy, i.e. of the lower
+     * fugacity, with each label at the pressure of its slot. Where the cubic
+     * has one root at both pressures, Li's criterion decides as for a mixture.
+     */
+    template <class FlashFluidState, class Vector>
+    static typename Vector::field_type singleComponentPhaseLabel_(
+        const FlashFluidState& fluid_state, const Vector& z, const EOSType& eos_type, int verbosity)
+    {
+        using ParamCache =
+            typename FluidSystem::template ParameterCache<typename FlashFluidState::ValueType>;
+        // Both labels take the only root of the cubic at the pressure of a slot.
+        const auto has_single_root = [&fluid_state, &eos_type](const unsigned phaseIdx) {
+            auto state = fluid_state;
+            state.setPressure(oilPhaseIdx, fluid_state.pressure(phaseIdx));
+            state.setPressure(gasPhaseIdx, fluid_state.pressure(phaseIdx));
+            ParamCache param_cache(eos_type);
+            param_cache.updatePhase(state, oilPhaseIdx);
+            param_cache.updatePhase(state, gasPhaseIdx);
+            return param_cache.molarVolume(oilPhaseIdx) == param_cache.molarVolume(gasPhaseIdx);
+        };
+        if (has_single_root(oilPhaseIdx) && has_single_root(gasPhaseIdx)) {
+            return li_single_phase_label_(fluid_state, z, verbosity);
+        }
+
+        ParamCache param_cache(eos_type);
+        param_cache.updatePhase(fluid_state, oilPhaseIdx);
+        param_cache.updatePhase(fluid_state, gasPhaseIdx);
+        unsigned compIdx = 0;
+        while (!(z[compIdx] > 0)) {
+            ++compIdx;
+        }
+        const auto liquid_fugacity
+            = FluidSystem::fugacityCoefficient(fluid_state, param_cache, oilPhaseIdx, compIdx)
+            * fluid_state.pressure(oilPhaseIdx);
+        const auto vapour_fugacity
+            = FluidSystem::fugacityCoefficient(fluid_state, param_cache, gasPhaseIdx, compIdx)
+            * fluid_state.pressure(gasPhaseIdx);
+        const typename Vector::field_type L = liquid_fugacity < vapour_fugacity ? 1.0 : 0.0;
+        if (verbosity >= 1) {
+            OpmLog::debug(fmt::format("Component {} alone is single-phase with L = {}, the "
+                                      "phase of lower Gibbs energy",
+                                      compIdx,
+                                      L));
+        }
         return L;
     }
 
