@@ -157,10 +157,14 @@ private:
     /// \param[in] conditions The condition data (i.e., the [ISZ]ACN arrays).
     ///
     /// \param[in] zlact The action block keywords.
+    ///
+    /// \param[in] xact The SACT items in double precision, as OPM writes
+    /// them to XACT.  Empty if the restart file has no XACT array.
     void add_actions(const Parser&                parser,
                      ActionData<float>            actions,
                      ActionData<double>           conditions,
-                     std::span<const std::string> zlact);
+                     std::span<const std::string> zlact,
+                     std::span<const double>      xact);
 
     void add_wlist(const std::vector<std::string>& zwls,
                    const std::vector<int>& iwls);
@@ -186,10 +190,13 @@ private:
     ///
     /// \param[in] actionArrays The action data (i.e., the [ISZ]ACT arrays).
     ///
+    /// \param[in] xact The \p index-th action's XACT items, or empty.
+    ///
     /// \param[in] index The action index.
     ///
     /// \param[in] conditions The restored conditions for the \p index-th action.
     void create_action(ActionData<float>                   actionArrays,
+                       std::span<const double>             xact,
                        std::size_t                         index,
                        std::vector<RstAction::Condition>&& conditions);
 

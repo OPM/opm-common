@@ -100,14 +100,15 @@ namespace {
 
         namespace sACT {
 
-        Opm::RestartIO::Helpers::WindowedArray<float>
+        template <typename T>
+        Opm::RestartIO::Helpers::WindowedArray<T>
         allocate(const std::size_t num_actions)
         {
-            using WV = Opm::RestartIO::Helpers::WindowedArray<float>;
+            using WV = Opm::RestartIO::Helpers::WindowedArray<T>;
 
             return WV {
-                WV::NumWindows{ std::max(num_actions, std::size_t{1}) },
-                WV::WindowSize{ Opm::RestartIO::Helpers::entriesPerSACT() }
+                typename WV::NumWindows{ std::max(num_actions, std::size_t{1}) },
+                typename WV::WindowSize{ Opm::RestartIO::Helpers::entriesPerSACT() }
             };
         }
 
@@ -128,6 +129,21 @@ namespace {
             using Seconds = std::chrono::duration<double>;
             sAct[4] = (state.run_count(actx) > 0)
                 ? units.from_si(M::time, Seconds { state.run_time(actx) - start_time }.count())
+                : 0.;
+        }
+
+        // XACT: items [3] and [4] in seconds and double precision, which
+        // restore exactly where single precision days cannot.
+        template <class XACTArray>
+        void preciseContrib(const Opm::Action::ActionX& actx,
+                            const Opm::Action::State& state,
+                            Opm::time_point start_time,
+                            XACTArray& xAct)
+        {
+            using Seconds = std::chrono::duration<double>;
+            xAct[3] = actx.min_wait();
+            xAct[4] = (state.run_count(actx) > 0)
+                ? Seconds { state.run_time(actx) - start_time }.count()
                 : 0.;
         }
 
@@ -1010,7 +1026,8 @@ AggregateActionxData(std::span<const Action::ActionX>      actions,
                      const SummaryState&                   st,
                      const AggregateActionxRuntimeContext& runtime)
     : iACT_ (iACT::allocate(actions.size()))
-    , sACT_ (sACT::allocate(actions.size()))
+    , sACT_ (sACT::allocate<float>(actions.size()))
+    , xACT_ (sACT::allocate<double>(actions.size()))
     , zACT_ (zACT::allocate(actions.size()))
     , zLACT_(zLACT::allocate(actions.size(), maxInputLines(actions), actdims))
     , iACN_ (iACN::allocate(actions.size(), actdims))
@@ -1030,6 +1047,11 @@ AggregateActionxData(std::span<const Action::ActionX>      actions,
                                 runtime.startTime,
                                 runtime.units,
                                 s_act);
+
+            auto x_act = this->xACT_[act_ind];
+            sACT::preciseContrib(action, action_state,
+                                 runtime.startTime,
+                                 x_act);
         }
 
         {
