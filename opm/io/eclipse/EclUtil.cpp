@@ -105,6 +105,14 @@ bool Opm::EclIO::isFormatted(const std::filesystem::path& filename)
                               "does not contain extension", filename.string()));
     }
 
+    // A sector boundary file is binary, despite opening with the letter that
+    // otherwise marks a formatted file, and so are its numbered forms such as
+    // .FLUX0002. The formatted spelling is .FFLUX, which the rule below still
+    // catches.
+    if (ext.string().rfind(".FLUX", 0) == 0) {
+        return false;
+    }
+
     return (ext != ".GRID")
         && (ext.string().find_first_of("ABCFGH", 1) == std::string::size_type{1});
 }

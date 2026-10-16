@@ -303,6 +303,7 @@ int main(int argc, char **argv)
     const std::map<std::string, std::string> to_formatted {
         {".EGRID" , ".FEGRID" },
         {".ESMRY" , ".FESMRY" },
+        {".FLUX"  , ".FFLUX"  },
         {".GRID"  , ".FGRID"  },
         {".INIT"  , ".FINIT"  },
         {".INSPEC", ".FINSPEC"},
@@ -317,6 +318,7 @@ int main(int argc, char **argv)
     const std::map<std::string, std::string> to_binary {
         {".FEGRID" , ".EGRID" },
         {".FESMRY" , ".ESMRY" },
+        {".FFLUX"  , ".FLUX"  },
         {".FGRID"  , ".GRID"  },
         {".FINIT"  , ".INIT"  },
         {".FINSPEC", ".INSPEC"},
