@@ -182,7 +182,7 @@ LgrCollection read_lgr(const std::string& deck_string,
     Opm::EclipseGrid eclipse_grid(GridDims(nx,ny,nz));
     Opm::Deck deck = parser.parseString(deck_string);
     const Opm::GRIDSection gridSection ( deck );
-    return LgrCollection(gridSection, eclipse_grid);
+    return LgrCollection(gridSection, eclipse_grid, deck);
 }
 
 std::pair<std::vector<double>, std::vector<double>>

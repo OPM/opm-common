@@ -22,6 +22,7 @@
 #include <opm/common/utility/OpmInputError.hpp>
 
 #include <opm/input/eclipse/EclipseState/Grid/Box.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/Carfin.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FieldData.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/Keywords.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/SatfuncPropertyInitializers.hpp>
@@ -53,6 +54,7 @@ namespace Opm {
 
 class Deck;
 class EclipseGrid;
+class EclipseGridLGR;
 class NumericalAquifers;
 
 namespace Fieldprops
@@ -535,6 +537,16 @@ public:
     /// Special case constructor used to process ACTNUM only.
     FieldProps(const Deck& deck, const EclipseGrid& grid);
 
+    /// The values a CARFIN block gives its refined cells: each starts from its
+    /// father's final value and the block's GRID keywords then apply in the
+    /// LGR's local indices. Only arrays the block changes are returned.
+    static Carfin::BlockValues lgrBlockValues(const FieldProps& father,
+                                              const EclipseGridLGR& lgr,
+                                              const DeckView& block);
+
+    /// Whether a GRID-section keyword is one FieldProps acts on.
+    static bool isGridPropertyKeyword(const std::string& name);
+
     void reset_actnum(const std::vector<int>& actnum);
 
     void prune_global_for_schedule_run();
@@ -689,6 +701,10 @@ public:
     std::size_t global_size;
 
     void handle_schedule_keywords(const std::vector<DeckKeyword>& keywords);
+    void apply_tran(const std::string& keyword,
+                    const std::vector<int>& actionIndex,
+                    std::vector<double>& data) const;
+    std::set<Fieldprops::ScalarOperation> tran_operations(const std::string& keyword) const;
     bool tran_active(const std::string& keyword) const;
     void apply_tran(const std::string& keyword, std::vector<double>& data);
     void apply_tranz_global(const std::vector<std::size_t>& indices, std::vector<double>& data) const;
@@ -714,6 +730,10 @@ public:
 private:
     void processMULTREGP(const Deck& deck);
     void scanGRIDSection(const GRIDSection& grid_section);
+    void scanGridKeywords(const DeckView& keywords);
+
+    /// An LGR's properties seeded from its father's, for lgrBlockValues().
+    FieldProps(const FieldProps& father, const EclipseGridLGR& lgr);
     void scanGRIDSectionOnlyACTNUM(const GRIDSection& grid_section);
     void initialize_depth_from_grid();
     void scanEDITSection(const EDITSection& edit_section);

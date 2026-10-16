@@ -73,6 +73,7 @@ namespace Opm {
         result.m_isDataKeyword = true;
         result.m_slashTerminated = true;
         result.m_isDoubleRecordKeyword = true;
+        result.m_lgrScope = "LGR1";
 
         return result;
     }
@@ -253,6 +254,14 @@ namespace Opm {
 
     const std::string& DeckKeyword::name() const {
         return m_keywordName;
+    }
+
+    const std::string& DeckKeyword::lgrScope() const {
+        return m_lgrScope;
+    }
+
+    void DeckKeyword::setLgrScope(const std::string& lgrName) {
+        m_lgrScope = lgrName;
     }
 
     std::size_t DeckKeyword::size() const {

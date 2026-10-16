@@ -118,6 +118,16 @@ namespace Opm::RestartIO {
                       const std::vector<RestartKey>& extra_keys = {});
 
 
+    /// One solution per grid of a restart step: the global grid first, then
+    /// each LGR in the order the deck declares them. For a grid without LGRs
+    /// this is the same single solution load_solution_only() returns.
+    std::vector<data::Solution>
+    load_solution_only_levels(const std::string&             filename,
+                              int                            report_step,
+                              const std::vector<RestartKey>& solution_keys,
+                              const EclipseState&            es,
+                              const EclipseGrid&             grid);
+
     data::Solution load_solution_only(const std::string&             filename,
                                       int                            report_step,
                                       const std::vector<RestartKey>& solution_keys,

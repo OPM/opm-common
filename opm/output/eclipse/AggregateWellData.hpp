@@ -90,6 +90,14 @@ namespace Opm::RestartIO::Helpers {
                                        const std::size_t   sim_step,
                                        const data::Wells&  xw,
                                        const SummaryState& smry,
+                                       const std::string&  lgr_tag,
+                                       const int           lgr_number);
+
+        void captureDynamicWellDataLGR(const Schedule&     sched,
+                                       const TracerConfig& tracer,
+                                       const std::size_t   sim_step,
+                                       const data::Wells&  xw,
+                                       const SummaryState& smry,
                                        const std::string&  lgr_tag);
 
         /// Retrieve Integer Well Data Array.

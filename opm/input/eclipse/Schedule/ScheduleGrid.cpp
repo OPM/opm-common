@@ -30,6 +30,7 @@
 #include <cstddef>
 #include <functional>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include <fmt/format.h>
@@ -129,6 +130,16 @@ Opm::ScheduleGrid::get_cell(const std::size_t i,
 const Opm::EclipseGrid* Opm::ScheduleGrid::get_grid() const
 {
     return this->grid;
+}
+
+std::optional<std::string> Opm::ScheduleGrid::get_lgr_label(const int lgr_grid_number) const
+{
+    for (const auto& [name, idx] : this->label_to_index.get()) {
+        if (static_cast<int>(idx) == lgr_grid_number) {
+            return name;
+        }
+    }
+    return std::nullopt;
 }
 
 int Opm::ScheduleGrid::get_lgr_grid_number(const std::optional<std::string>& lgr_label) const
@@ -298,6 +309,18 @@ populate_props_lgr(const std::string& tag, CompletedCells::Cell& cell) const
     props.active_index = lgr_grid.getActiveIndex(cell.i, cell.j, cell.k);
 
     populate(*this->fp, father_active_index, props);
+
+    // The block's own values, where it gives the refined cell any.
+    for (auto [keyword, value] : { std::pair { "PERMX", &props.permx },
+                                   std::pair { "PERMY", &props.permy },
+                                   std::pair { "PERMZ", &props.permz },
+                                   std::pair { "PORO",  &props.poro },
+                                   std::pair { "NTG",   &props.ntg } })
+    {
+        if (const auto* own = this->fp->lgr_double(tag, keyword)) {
+            *value = (*own)[cell.global_index];
+        }
+    }
 }
 
 const Opm::NumericalAquiferCell*

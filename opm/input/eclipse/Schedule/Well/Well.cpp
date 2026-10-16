@@ -70,6 +70,7 @@
 #include <memory>
 #include <optional>
 #include <stdexcept>
+#include <set>
 #include <string>
 #include <utility>
 #include <vector>
@@ -1076,9 +1077,22 @@ bool Well::updateAutoShutin(const bool auto_shutin)
 }
 
 
+bool Well::hasConnectionsInLgr(const int lgr_grid_number) const
+{
+    if (this->connections == nullptr) {
+        return false;
+    }
+    return std::any_of(this->connections->begin(), this->connections->end(),
+                       [lgr_grid_number](const Connection& c)
+                       { return c.get_lgr_level() == lgr_grid_number; });
+}
+
 bool Well::updateConnections(std::shared_ptr<WellConnections> connections_arg, bool force)
 {
     connections_arg->order();
+
+    // Connections may lie in several LGRs: each carries its own grid number
+    // and the simulator resolves it against that grid.
 
     if (force || (*this->connections != *connections_arg)) {
         this->connections = std::move(connections_arg);
@@ -1094,7 +1108,9 @@ bool Well::updateConnections(std::shared_ptr<WellConnections> connections_arg, c
 
     if (this->pvt_table == 0 && !this->connections->empty()) {
         const auto& lowest = this->connections->lowest();
-        const auto& props = grid.get_cell(lowest.getI(), lowest.getJ(), lowest.getK(), get_lgr_well_tag()).props;
+        // The connection's own grid: an LGR well may also be completed in the global grid.
+        const auto& props = grid.get_cell(lowest.getI(), lowest.getJ(), lowest.getK(),
+                                          grid.get_lgr_label(lowest.get_lgr_level())).props;
         this->pvt_table = props->pvtnum;
         update = true;
     }

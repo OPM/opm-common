@@ -1752,6 +1752,8 @@ bool parseState( ParserState& parserState, const Parser& parser, ErrorGuard& err
         if (ignore.size() > 0)
             cleanup_deck_keyword_list(parserState, ignore);
 
+        parserState.deck.scopeLgrBlockKeywords();
+
         return std::move( parserState.deck );
     }
 
@@ -1780,6 +1782,7 @@ bool parseState( ParserState& parserState, const Parser& parser, ErrorGuard& err
         ParserState parserState( this->codeKeywords(), parseContext, errors, this->m_python );
         parserState.loadString( data );
         parseState( parserState, *this, errors );
+        parserState.deck.scopeLgrBlockKeywords();
         return std::move( parserState.deck );
     }
 

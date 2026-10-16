@@ -1,0 +1,15 @@
+{
+  "name": "LGRPILLR",
+  "sections": [
+    "GRID"
+  ],
+  "size": 1,
+  "items": [
+    {
+      "item": 1,
+      "name": "MODE",
+      "value_type": "STRING",
+      "default": "COLUMN"
+    }
+  ]
+}

@@ -389,14 +389,54 @@ namespace {
         initFile.write("PORV", singlePrecision(porv));
     }
 
+    // PORV is the one INIT array that is Cartesian-sized on the main grid, so
+    // here too: one entry per refined Cartesian cell, addressed through the
+    // father's Cartesian index.  Refined cells under an inactive father pick up
+    // that father's zero pore volume.
+    //
+    // A refined cell takes its share of the father's pore volume by volume, not
+    // by count: graded refinement (N*FIN/H*FIN) makes the children of one father
+    // differ in size, and an equal split would put pore volume in the wrong
+    // cells (and not even conserve it against the father).
     void writePoreVolumeLGRCell(const   std::vector<double>&            porv,
-                                const   std::vector<int>&               global_fathers,
-                                const               int                 volume_prop,
+                                const   std::vector<int>&               cartesian_fathers,
+                                const ::Opm::EclipseGrid&               grid,
+                                const ::Opm::EclipseGridLGR&            lgr_grid,
+                                const ::Opm::FieldPropsManager&         fp,
                                       ::Opm::EclIO::OutputStream::Init& initFile)
 
     {
-        auto local_porv = VectorUtil::filterArray(porv, global_fathers);
-        VectorUtil::scalarVectorOperation(static_cast<double>(volume_prop), local_porv,  std::divides<double>{});
+        auto local_porv = VectorUtil::filterArray(porv, cartesian_fathers);
+
+        // A block's own PORO, NTG or MULTPV scale the share, as in the simulator.
+        auto ratio = [&](const std::size_t cell) {
+            double r = 1.0;
+            for (const auto* name : { "PORO", "NTG", "MULTPV" }) {
+                const auto* own = fp.lgr_double(lgr_grid.get_lgr_tag(), name);
+                if (own == nullptr) {
+                    continue;
+                }
+                const auto inherited = fp.has_double(name)
+                    ? fp.get_double(name)[grid.activeIndex(cartesian_fathers[cell])] : 1.0;
+                r = (inherited > 0.0) ? r * ((*own)[cell] / inherited) : 0.0;
+            }
+            return r;
+        };
+
+        for (auto cell = 0*local_porv.size(); cell < local_porv.size(); ++cell) {
+            if (!lgr_grid.cellActive(cell)) {
+                local_porv[cell] = 0.0;  // the block's MINPV or ACTNUM removed it
+                continue;
+            }
+            if (local_porv[cell] == 0.0) {
+                continue;               // inactive father: nothing to share out
+            }
+            const auto fatherVolume = grid.getCellVolume(cartesian_fathers[cell]);
+            local_porv[cell] *= (fatherVolume > 0.0)
+                ? (lgr_grid.getCellVolume(cell) / fatherVolume) * ratio(cell)
+                : 0.0;
+        }
+
         initFile.write("PORV", singlePrecision(local_porv));
     }
 
@@ -417,6 +457,10 @@ namespace {
         fp.get_int("FIPNUM");
 
         for (const auto& keyword : fp.keys<int>()) {
+            // OPM extensions such as STRESSEQUILNUM exceed the 8-character array name.
+            if (keyword.size() > 8) {
+                continue;
+            }
             initFile.write(keyword, fp.get_int(keyword));
         }
     }
@@ -435,6 +479,9 @@ namespace {
         const auto& fp = es.globalFieldProps();
 
         for (const auto& keyword : fp.keys<int>()) {
+            if (keyword.size() > 8) {
+                continue;
+            }
             auto data = fp.get_int(keyword);
             initFile.write(keyword, VectorUtil::filterArray(data,active_fathers));
         }
@@ -471,10 +518,7 @@ namespace {
     void writeGridGeometryLGRCell(const ::Opm::EclipseGrid&         grid,
                                   const ::Opm::EclipseGridLGR&      lgr_grid,
                                   const ::Opm::UnitSystem&          units,
-                                        ::Opm::EclIO::OutputStream::Init& initFile,
-                                  const                  int        nx,
-                                  const                  int        ny,
-                                  const                  int        nz)
+                                        ::Opm::EclIO::OutputStream::Init& initFile)
     {
         const auto length = ::Opm::UnitSystem::measure::length;
         auto convert_length = [&units](std::vector<float>& depth)
@@ -488,14 +532,15 @@ namespace {
         auto dz    = std::vector<float>{};  dz   .reserve(nAct);
         auto depth = singlePrecision(lgr_grid.getLGRCell_all_depth(grid));
 
+        // Straight from the refined cell, rather than the father's dimensions
+        // over a subdivision count: the children of one father differ in size
+        // once the box is graded.
         for (auto cell = 0*nAct; cell < nAct; ++cell) {
-            const auto local_global_cell = lgr_grid.getGlobalIndex(cell);
-            const auto globCell = grid.getLGR_father(local_global_cell, lgr_grid.get_lgr_tag());
-            const auto& dims     = grid.getCellDims(globCell);
+            const auto& dims = lgr_grid.getCellDims(lgr_grid.getGlobalIndex(cell));
 
-            dx   .push_back(units.from_si(length, dims[0])/nx);
-            dy   .push_back(units.from_si(length, dims[1])/ny);
-            dz   .push_back(units.from_si(length, dims[2])/nz);
+            dx   .push_back(units.from_si(length, dims[0]));
+            dy   .push_back(units.from_si(length, dims[1]));
+            dz   .push_back(units.from_si(length, dims[2]));
         }
 
         convert_length(depth);
@@ -559,6 +604,7 @@ namespace {
     void writeCellPropertiesValuesOnlyLGRCell(const Properties&               propList,
                                               const ::Opm::FieldPropsManager& fp,
                                               const std::vector<int>&         active_fathers,
+                                              const ::Opm::EclipseGridLGR*    lgr_grid,
                                               WriteVector&&                   write)
     {
         for (const auto& prop : propList) {
@@ -568,6 +614,13 @@ namespace {
 
             auto data = VectorUtil::filterArray(fp.get_double(prop.name),
                                                                    active_fathers);
+            const auto* own = (lgr_grid == nullptr) ? nullptr
+                : fp.lgr_double(lgr_grid->get_lgr_tag(), prop.name);
+            if (own != nullptr) {
+                for (auto cell = 0*data.size(); cell < data.size(); ++cell) {
+                    data[cell] = (*own)[lgr_grid->getGlobalIndex(cell)];
+                }
+            }
             write(prop, std::move(data));
         }
     }
@@ -616,7 +669,8 @@ namespace {
                                           const ::Opm::UnitSystem&             units,
                                           const bool                           needDflt,
                                           ::Opm::EclIO::OutputStream::Init&    initFile,
-                                          const std::vector<int>&              active_fathers)
+                                          const std::vector<int>&              active_fathers,
+                                          const ::Opm::EclipseGridLGR*         lgr_grid = nullptr)
     {
         if (needDflt) {
             writeCellDoublePropertiesWithDefaultFlagLGRCell(propList, fp, active_fathers,
@@ -641,7 +695,7 @@ namespace {
             });
         }
         else {
-            writeCellPropertiesValuesOnlyLGRCell(propList, fp, active_fathers,
+            writeCellPropertiesValuesOnlyLGRCell(propList, fp, active_fathers, lgr_grid,
                 [&units, &initFile](const CellProperty&   prop,
                                     std::vector<double>&& value)
             {
@@ -654,7 +708,8 @@ namespace {
     void writeDoubleCellProperties(const ::Opm::EclipseState&        es,
                                    const ::Opm::UnitSystem&          units,
                                    ::Opm::EclIO::OutputStream::Init& initFile,
-                                   std::optional<std::reference_wrapper<const std::vector<int>>> active_fathers = std::nullopt)
+                                   std::optional<std::reference_wrapper<const std::vector<int>>> active_fathers = std::nullopt,
+                                   const ::Opm::EclipseGridLGR*      lgr_grid = nullptr)
     {
         const auto doubleKeywords = Properties {
             // do not reorder the fields below
@@ -689,7 +744,8 @@ namespace {
         }
         else
         {
-            writeDoubleCellPropertiesLGRCell(doubleKeywords, fp, units, false, initFile, active_fathers.value());
+            writeDoubleCellPropertiesLGRCell(doubleKeywords, fp, units, false, initFile,
+                                             active_fathers.value(), lgr_grid);
         }
     }
 
@@ -802,6 +858,71 @@ namespace {
         }
     }
 
+    // The endpoint-scaling arrays for each LGR.  A refined cell inherits its
+    // father coarse cell's endpoints, which is the same active_fathers mapping
+    // writeLGRLocalProperties already uses for SATNUM and the rest, so this is
+    // the global block filtered onto the refined cells.  Written as its own
+    // LGR ... LGRSGONE section after the global block, matching the reference
+    // layout; without it a refined grid's INIT has no saturation endpoints at
+    // all and a post-processor silently falls back to the unscaled table.
+    void writeSatFuncScalingLGR(const ::Opm::EclipseState&        es,
+                                const ::Opm::EclipseGrid&         grid,
+                                const ::Opm::Schedule&            schedule,
+                                const ::Opm::UnitSystem&          units,
+                                ::Opm::EclIO::OutputStream::Init& initFile)
+    {
+        if (! grid.is_lgr()) {
+            return;
+        }
+
+        const auto epsVectors = ScalingVectors{}
+            .withHysteresis(es.runspec().hysterPar().active())
+            .collect       (es.runspec().phases());
+
+        const auto& propList = epsVectors.getVectors();
+        const auto  filleps  = es.cfg().init().filleps();
+
+        // Like the main grid: without FILLEPS, only endpoint arrays the deck defines.
+        if (!filleps && std::ranges::none_of(propList, [&es](const auto& prop)
+                { return es.globalFieldProps().has_double(prop.name); }))
+        {
+            return;
+        }
+
+        // With FILLEPS every endpoint array is written whether the deck defined
+        // it or not, so materialise the auto-created ones on a copy first --
+        // downstream users of FieldPropsManager must not see arrays created for
+        // output only.  Without it, only what the deck defined is written, with
+        // the sentinel for defaulted elements.
+        auto fp_copy = es.globalFieldProps();
+        if (filleps) {
+            for (const auto& prop : propList) {
+                if (prop.supports_auto_create) {
+                    fp_copy.get_double(prop.name);
+                }
+            }
+        }
+
+        bool any = false;
+        for (const ::Opm::EclipseGridLGR& lgr_grid : grid.lgrsInPrintOrder()) {
+            const auto active_fathers = lgr_grid.getLGRCell_active_father(grid);
+            // The header numbers the LGR by its deck position, nested ones
+            // included, not by its position among the top-level blocks.
+            const auto deckIdx = grid.get_lgr_cell_index(lgr_grid.get_lgr_tag());
+
+            any = true;
+            writeInitFileHeaderLGRCell(es, lgr_grid, schedule, initFile,
+                                       static_cast<int>(deckIdx) + 1, false);
+            writeDoubleCellPropertiesLGRCell(propList, fp_copy, units,
+                                             /* needDflt = */ !filleps,
+                                             initFile, active_fathers);
+        }
+
+        if (any) {
+            initFile.message("LGRSGONE");
+        }
+    }
+
     void writeNonNeighbourConnections(const std::vector<::Opm::NNCdata>& nnc,
                                       const ::Opm::UnitSystem&           units,
                                       ::Opm::EclIO::OutputStream::Init&  initFile)
@@ -895,26 +1016,21 @@ namespace {
             // positional grid/section pairing in post-processors (ResInsight).
             // The simulator-provided per-LGR data (simProps) follows the deck
             // order, so it is addressed via the label's deck index.
-            for (std::size_t index : grid.get_print_order_lgr())
+            for (const ::Opm::EclipseGridLGR& lgr_grid : grid.lgrsInPrintOrder())
             {
-                const ::Opm::EclipseGridLGR& lgr_grid = grid.getLGRCell(index);
                 const auto lgr_label = lgr_grid.get_lgr_tag();
                 const auto deckIdx = grid.get_lgr_cell_index(lgr_label);
-                const std::array<int,3> subdivisions = grid.getCellSubdivisionRatioLGR(lgr_label);
-                std::vector<int> global_fathers = lgr_grid.getLGRCell_global_father(grid);
-                // The father of each active LGR cell as an active index of the
-                // main grid, for the arrays that hold one value per active cell.
-                std::vector<int> active_fathers(lgr_grid.getNumActive());
-                for (std::size_t cell = 0; cell < active_fathers.size(); ++cell) {
-                    const auto father = global_fathers[lgr_grid.getGlobalIndex(cell)];
-                    active_fathers[cell] = static_cast<int>(grid.activeIndex(father));
-                }
+                // Two father mappings, and they are not interchangeable:
+                // cartesian_fathers indexes the Cartesian-sized PORV, and
+                // active_fathers the active-sized field props and simulator
+                // properties.  They coincide only when the grid is all-active.
+                std::vector<int> cartesian_fathers = lgr_grid.getLGRCell_global_father(grid);
+                std::vector<int> active_fathers = lgr_grid.getLGRCell_active_father(grid);
                 writeInitFileHeaderLGRCell(es, lgr_grid, schedule, initFile, deckIdx+1);
-                writePoreVolumeLGRCell(porv, global_fathers,
-                subdivisions[0]*subdivisions[1]*subdivisions[2], initFile);
-                writeGridGeometryLGRCell(grid, lgr_grid, units, initFile,
-                                subdivisions[0], subdivisions[1], subdivisions[2]);
-                writeDoubleCellProperties(es, units, initFile, active_fathers);
+                writePoreVolumeLGRCell(porv, cartesian_fathers, grid, lgr_grid,
+                                       es.globalFieldProps(), initFile);
+                writeGridGeometryLGRCell(grid, lgr_grid, units, initFile);
+                writeDoubleCellProperties(es, units, initFile, active_fathers, &lgr_grid);
                 const auto& simProp = fullProperties ? simProps[deckIdx + 1] : simProps[0];
                 writeSimulatorPropertiesLGRCell(fullProperties ? lgr_grid : grid, simProp, initFile, active_fathers, fullProperties);
                 {
@@ -1021,11 +1137,11 @@ namespace {
         // LGRs with no NNC involvement at all are skipped entirely.
         // LGRSGONE is only written if at least one LGR block was written.
         bool anyLGRNNCWritten = false;
-        for (std::size_t index : grid.get_print_order_lgr()) {
-            // The LGR grids in their EGRID order, as in writeLGRLocalProperties();
-            // the NNC collection numbers them by their deck index.
-            const Opm::EclipseGridLGR& lgr_grid = grid.getLGRCell(index);
-            const std::size_t lgr_grid_index = grid.get_lgr_cell_index(lgr_grid.get_lgr_tag()) + 1;  // 0 == global in NNCCollection
+        for (const Opm::EclipseGridLGR& lgr_grid : grid.lgrsInPrintOrder()) {
+            const auto lgr_label = lgr_grid.get_lgr_tag();
+            // 0 == global in NNCCollection; an LGR is keyed by its deck number,
+            // nested ones included, not by its position among the top-level blocks.
+            const std::size_t lgr_grid_index = grid.get_lgr_cell_index(lgr_label) + 1;
 
             if (!nnc_col.hasNNCForGrid(lgr_grid_index))
                 continue;
@@ -1146,6 +1262,8 @@ void Opm::InitIO::write(const ::Opm::EclipseState&                  es,
     writeTableData(es, units, initFile);
 
     writeSatFuncScaling(es, units, initFile);
+
+    writeSatFuncScalingLGR(es, grid, schedule, units, initFile);
 
     // Aquifers
     // TODO: LGR-specific aquifer support planned for upcoming versions

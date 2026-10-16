@@ -65,6 +65,7 @@
 #include <cassert>
 #include <cmath>
 #include <cstddef>
+#include <set>
 #include <cstring>
 #include <exception>
 #include <iostream>
@@ -122,19 +123,59 @@ namespace {
         }
     }
 
+    // A well belongs to an LGR's section when it is tagged with that LGR or
+    // has a connection in it; a well completed across several LGRs appears in
+    // each of their sections. Its index in the section is its position among
+    // the section's wells, the order IWEL and ICON share.
     template <typename WellOp>
     void wellLoop(const std::vector<std::string>& wells,
                   const Opm::Schedule&            sched,
                   const std::size_t               simStep,
                   const std::string&              lgrTag,
+                  const int                       lgrNumber,
                   WellOp&&                        wellOp)
     {
+        std::size_t wellID = 0;
         for (const auto& wname : wells) {
             const auto& well = sched.getWell(wname, simStep);
-            if (well.get_lgr_well_tag().value_or("") != lgrTag) {
-                continue; // skip wells not in the specified LGR
+            if ((well.get_lgr_well_tag().value_or("") != lgrTag) &&
+                !well.hasConnectionsInLgr(lgrNumber))
+            {
+                continue; // not in this LGR
             }
-            wellOp(well, well.seqIndexLGR());
+            wellOp(well, wellID++);
+        }
+    }
+
+    // Describe a well by the connections it has in one LGR: the count and the
+    // K range always, since a well completed across several LGRs must not
+    // advertise the others' connections here, and the head as well when the
+    // well is not tagged with this LGR and so has no declared head in it.
+    template <class IWellArray>
+    void headFromLgrConnections(const Opm::Well& well,
+                                const int        lgrNumber,
+                                const bool       takeHead,
+                                IWellArray&      iWell)
+    {
+        using Ix = Opm::RestartIO::Helpers::VectorItems::IWell::index;
+        int n = 0, firstK = 0, lastK = 0, I = 0, J = 0;
+        for (const auto& conn : well.getConnections()) {
+            if (conn.kind() == Opm::Connection::CTFKind::DynamicFracturing) continue;
+            if (conn.get_lgr_level() != lgrNumber) continue;
+            if (n == 0) { I = conn.getI(); J = conn.getJ(); firstK = lastK = conn.getK(); }
+            firstK = std::min(firstK, conn.getK());
+            lastK  = std::max(lastK,  conn.getK());
+            ++n;
+        }
+        iWell[Ix::NConn] = n;
+        if (n == 0) return;
+        if (takeHead) {
+            iWell[Ix::IHead] = I + 1;
+            iWell[Ix::JHead] = J + 1;
+        }
+        if (!well.isMultiSegment()) {
+            iWell[Ix::FirstK] = firstK + 1;
+            iWell[Ix::LastK]  = lastK + 1;
         }
     }
 
@@ -555,12 +596,19 @@ namespace {
             auto& J = iWell[Ix::JHead]; // One-based index.
 
             auto firstK = iWell[Ix::FirstK]; // One-based index.  Zero for MSW.
-            auto lastK  = iWell[Ix::LastK];  // One-based index.  Zero for MSW.
+            if (! well.isMultiSegment()) {
+                // The head is in the LGR: a mixed well's first connection may not be.
+                for (const auto& conn : well.getConnections()) {
+                    if (conn.get_lgr_level() > 0) {
+                        firstK = conn.getK() + 1;
+                        break;
+                    }
+                }
+            }
 
             if (! well.isMultiSegment()) {
                 // Use zero-based lookup indices for non-MS wells.
                 --firstK;
-                --lastK;
             }
 
             // Subtract one for zero-based lookup indices.
@@ -568,11 +616,34 @@ namespace {
                 .getLGR_fatherIJK(I - 1, J - 1, firstK, lgrTag);
 
             if (! well.isMultiSegment()) {
-                const auto botIJK = grid
-                    .getLGR_fatherIJK(I - 1, J - 1, lastK, lgrTag);
+                // The well may be completed in several LGRs, so take the host
+                // layer range from every connection through its own LGR rather
+                // than from the head's.
+                auto hostK = [&grid](const Opm::Connection& conn)
+                {
+                    const auto level = conn.get_lgr_level();
+                    if (level <= 0) {
+                        return conn.getK();
+                    }
 
-                iWell[Ix::FirstK] = topIJK[2] + 1;
-                iWell[Ix::LastK]  = botIJK[2] + 1;
+                    return grid.getLGR_fatherIJK(conn.getI(), conn.getJ(), conn.getK(),
+                                                 grid.get_lgr_labels_by_number(level))[2];
+                };
+
+                auto firstHostK = topIJK[2];
+                auto lastHostK  = topIJK[2];
+                for (const auto& conn : well.getConnections()) {
+                    if (conn.kind() == Opm::Connection::CTFKind::DynamicFracturing) {
+                        continue;
+                    }
+
+                    const auto k = hostK(conn);
+                    firstHostK = std::min(firstHostK, k);
+                    lastHostK  = std::max(lastHostK,  k);
+                }
+
+                iWell[Ix::FirstK] = firstHostK + 1;
+                iWell[Ix::LastK]  = lastHostK + 1;
             }
 
             I = topIJK[0] + 1;
@@ -1932,6 +2003,7 @@ captureDeclaredWellDataLGR(const Schedule&             sched,
 {
     const auto& wells = sched.wellNames(sim_step);
     const auto& step_glo = sched.glo(sim_step);
+    const int lgr_number = static_cast<int>(grid.get_lgr_cell_index(lgr_tag)) + 1;
 
     // Static contributions to IWEL array.
     {
@@ -1940,10 +2012,10 @@ captureDeclaredWellDataLGR(const Schedule&             sched,
 
         auto msWellID = std::size_t{0};
 
-        wellLoop(wells, sched,  sim_step, lgr_tag,
+        wellLoop(wells, sched,  sim_step, lgr_tag, lgr_number,
                  [&groupMapNameIndex, &msWellID,
                   &step_glo, &wtest_state, &smry,
-                  &sched, &grid, &sim_step, this]
+                  &sched, &grid, &sim_step, &lgr_tag, lgr_number, this]
                  (const Well& well, const std::size_t wellID) -> void
         {
             const auto& wtest_config = sched[sim_step].wtest_config();
@@ -1953,11 +2025,13 @@ captureDeclaredWellDataLGR(const Schedule&             sched,
 
             IWell::staticContrib(well, step_glo, wtest_config, wtest_state,
                                  smry, msWellID, groupMapNameIndex, iw, grid, false);
+            headFromLgrConnections(well, lgr_number,
+                                   well.get_lgr_well_tag().value_or("") != lgr_tag, iw);
         });
     }
 
     // Static contributions to SWEL array.
-    wellLoop(wells, sched, sim_step, lgr_tag, [&step_glo, &sim_step, &sched,
+    wellLoop(wells, sched, sim_step, lgr_tag, lgr_number, [&step_glo, &sim_step, &sched,
                                       &tracers, &wtest_state, &smry, this]
              (const Well& well, const std::size_t wellID) -> void
     {
@@ -1968,7 +2042,7 @@ captureDeclaredWellDataLGR(const Schedule&             sched,
     } );
 
     // Static contributions to XWEL array.
-    wellLoop(wells, sched, sim_step, lgr_tag, [&sched, &smry, this]
+    wellLoop(wells, sched, sim_step, lgr_tag, lgr_number, [&sched, &smry, this]
         (const Well& well, const std::size_t wellID) -> void
     {
         auto xw = this->xWell_[wellID];
@@ -1977,7 +2051,7 @@ captureDeclaredWellDataLGR(const Schedule&             sched,
     });
 
     // Static contributions to ZWEL array.
-    wellLoop(wells, sched, sim_step, lgr_tag, [&sim_step, &action_state, &sched, this]
+    wellLoop(wells, sched, sim_step, lgr_tag, lgr_number, [&sim_step, &action_state, &sched, this]
              (const Well& well, const std::size_t wellID) -> void
     {
         auto zw = this->zWell_[wellID];
@@ -1986,7 +2060,7 @@ captureDeclaredWellDataLGR(const Schedule&             sched,
     });
 
     // Static contributions to LGWELS array.
-    wellLoop(wells, sched, sim_step, lgr_tag, [this]
+    wellLoop(wells, sched, sim_step, lgr_tag, lgr_number, [this]
         (const Well& well, const std::size_t wellID) -> void
     {
         auto lgwell = this->lgWell_[wellID];
@@ -2044,12 +2118,13 @@ captureDynamicWellDataLGR(const Opm::Schedule&       sched,
                           const std::size_t          sim_step,
                           const Opm::data::Wells&    xw,
                           const ::Opm::SummaryState& smry,
-                          const std::string&         lgr_tag)
+                          const std::string&         lgr_tag,
+                          const int                  lgr_number)
 {
     const auto& wells = sched.wellNames(sim_step);
 
     // Dynamic contributions to IWEL array.
-    wellLoop(wells, sched, sim_step, lgr_tag,  [this, &xw]
+    wellLoop(wells, sched, sim_step, lgr_tag, lgr_number, [this, &xw]
         (const Well& well, const std::size_t wellID) -> void
     {
         auto iWell = this->iWell_[wellID];
@@ -2067,7 +2142,7 @@ captureDynamicWellDataLGR(const Opm::Schedule&       sched,
     });
 
     // Dynamic contributions to XWEL array.
-    wellLoop(wells, sched, sim_step, lgr_tag, [this, &sched, &tracers, &smry]
+    wellLoop(wells, sched, sim_step, lgr_tag, lgr_number, [this, &sched, &tracers, &smry]
         (const Well& well, const std::size_t wellID) -> void
     {
         auto xwell = this->xWell_[wellID];

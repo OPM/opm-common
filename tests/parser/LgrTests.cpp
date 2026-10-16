@@ -23,9 +23,11 @@
 #include <opm/input/eclipse/Parser/Parser.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/LgrCollection.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/LgrConnectionCheck.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/Carfin.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 
+#include <algorithm>
 #include <filesystem>
 #include <string>
 
@@ -520,11 +522,16 @@ SOLUTION
 SCHEDULE
 )";
 
-    // Values inside CARFIN ... ENDFIN are not supported: the input stops
-    // instead of switching off a cell of the main grid.
     Opm::Parser parser;
     Opm::Deck deck = parser.parseString(deck_string);
-    BOOST_CHECK_THROW(Opm::EclipseState{deck}, Opm::OpmInputError);
+    Opm::EclipseState state(deck);
+
+    // The block's ACTNUM removes the second refined cell.
+    const auto& lgrGrid = state.getInputGrid().getLGRCell("LGR1");
+    BOOST_CHECK_EQUAL(lgrGrid.getNumActive(), 8U);
+    BOOST_CHECK(!lgrGrid.cellActive(1));
+    const auto& removed = state.getLgrs().getLgr("LGR1").minpvRemoved();
+    BOOST_CHECK_EQUAL(std::count(removed.begin(), removed.end(), 1), 1);
 }
 
 namespace {
@@ -585,26 +592,10 @@ Opm::EclipseState lgrBlockState(const std::string& grid,
 
 } // Anonymous namespace
 
-// Values inside a local grid block (CARFIN or REFINE ... ENDFIN) are not
-// supported: the input stops instead of applying them to the main grid.
+// Values inside a REFINE ... ENDFIN block are not supported: the input stops
+// instead of applying them to the main grid.
 BOOST_AUTO_TEST_CASE(TestLGRvaluesInsideBlockStop)
 {
-    BOOST_CHECK_THROW(lgrBlockState(R"(PORO
- 27*0.30 /)"), Opm::OpmInputError);
-
-    BOOST_CHECK_THROW(lgrBlockState(R"(PERMX
- 27*500 /)"), Opm::OpmInputError);
-
-    BOOST_CHECK_THROW(lgrBlockState(R"(EQUALS
- PORO 0.30 1 1 1 1 1 1 /
-/)"), Opm::OpmInputError);
-
-    BOOST_CHECK_THROW(lgrBlockState(R"(MINPV
- 1000 /)"), Opm::OpmInputError);
-
-    BOOST_CHECK_THROW(lgrBlockState(R"(HXFIN
- 0.2 0.3 0.5 /)"), Opm::OpmInputError);
-
     BOOST_CHECK_THROW(lgrBlockState("", R"(REFINE
  'LGR1' /
 MULTPV
@@ -633,6 +624,18 @@ ENDFIN)"), Opm::OpmInputError);
     // main grid.
     const auto state = lgrBlockState("");
     BOOST_CHECK_CLOSE(state.fieldProps().get_double("PORO")[0], 0.25, 1.0e-8);
+}
+
+// A CARFIN block's values belong to its refined cells, never to the main grid.
+BOOST_AUTO_TEST_CASE(TestCARFINvaluesStayOffMainGrid)
+{
+    for (const std::string block : { "PORO\n 9*0.30 /",
+                                     "EQUALS\n PORO 0.30 1 1 1 1 1 1 /\n/",
+                                     "MINPV\n 1000 /" })
+    {
+        const auto state = lgrBlockState(block);
+        BOOST_CHECK_CLOSE(state.fieldProps().get_double("PORO")[4], 0.25, 1.0e-8);
+    }
 }
 
 // A local grid block ends with ENDFIN, before the next block and before the
@@ -756,4 +759,363 @@ ENDFIN
     // never makes an LGR cell active.
     eclipse_grid.resetACTNUM();
     BOOST_CHECK_EQUAL( eclipse_grid.getLGRCell("LGR1").getNumActive() , 9U );
+}
+
+// Every host cell of an LGR turned off after input, as MINPV can do: the LGR
+// keeps no active cell, the other LGR keeps its own.
+BOOST_AUTO_TEST_CASE(TestLGRresetACTNUMAllHostCellsOff) {
+    auto eclipse_grid = gridWithLgrs(1, R"(
+CARFIN
+'LGR1'  1  2  1  1  1  1  6  3  1 /
+ENDFIN
+CARFIN
+'LGR2'  3  3  3  3  1  1  3  3  1 /
+ENDFIN
+)");
+
+    std::vector<int> actnum(9, 1);
+    actnum[0] = 0;
+    actnum[1] = 0;
+    auto output_grid = eclipse_grid;
+    output_grid.resetACTNUM(actnum);
+
+    BOOST_CHECK_EQUAL( output_grid.getLGRCell("LGR1").getNumActive() , 0U );
+    BOOST_CHECK_EQUAL( output_grid.getLGRCell("LGR2").getNumActive() , 9U );
+}
+
+namespace {
+
+std::string blockDeck(const std::string& block)
+{
+    return R"(
+RUNSPEC
+DIMENS
+  3 3 1 /
+OIL
+GAS
+START
+16 JUN 1988 /
+GRID
+CARFIN
+'LGR1'  2  2  2  2  1  1  3  3  1 /
+)" + block + R"(
+ENDFIN
+DX
+  9*1000 /
+DY
+  9*1000 /
+DZ
+  9*20 /
+TOPS
+  9*8325 /
+PORO
+  9*0.2 /
+PERMX
+  9*100 /
+COPY
+  PERMX PERMY /
+  PERMX PERMZ /
+/
+PROPS
+REGIONS
+SOLUTION
+SCHEDULE
+)";
+}
+
+}
+
+BOOST_AUTO_TEST_CASE(TestLgrBlockValues) {
+    const auto deck = Opm::Parser{}.parseString(blockDeck(R"(
+EQUALS
+  PERMX 25 1 1 1 3 1 1 /
+/
+MULTIPLY
+  PORO 0.5 /
+/
+)"));
+    const Opm::EclipseState state(deck);
+    const auto& fp = state.fieldProps();
+
+    // Local indices: the block's column i = 1, all of j.
+    const auto* permx = fp.lgr_double("LGR1", "PERMX");
+    BOOST_REQUIRE(permx != nullptr);
+    BOOST_REQUIRE_EQUAL(permx->size(), 9U);
+    const auto host = fp.get_double("PERMX")[4];
+    for (std::size_t j = 0; j < 3; ++j) {
+        BOOST_CHECK_CLOSE((*permx)[3*j + 0], host / 4, 1e-10);
+        BOOST_CHECK_CLOSE((*permx)[3*j + 1], host, 1e-10);
+        BOOST_CHECK_CLOSE((*permx)[3*j + 2], host, 1e-10);
+    }
+
+    // MULTIPLY acts on the inherited value.
+    const auto* poro = fp.lgr_double("LGR1", "PORO");
+    BOOST_REQUIRE(poro != nullptr);
+    for (const auto value : *poro) {
+        BOOST_CHECK_CLOSE(value, 0.1, 1e-10);
+    }
+
+    // Untouched arrays are inherited, not stored.
+    BOOST_CHECK(fp.lgr_double("LGR1", "PERMY") == nullptr);
+    BOOST_CHECK(fp.lgr_double("GLOBAL", "PERMX") == nullptr);
+
+    // The global grid is not affected.
+    BOOST_CHECK_CLOSE(fp.get_double("PORO")[4], 0.2, 1e-10);
+}
+
+BOOST_AUTO_TEST_CASE(TestLgrBlockActnumEmptiesHost) {
+    const auto deck = Opm::Parser{}.parseString(blockDeck(R"(
+ACTNUM
+  9*0 /
+)"));
+    BOOST_CHECK_THROW(Opm::EclipseState{deck}, std::exception);
+}
+
+// A keyword of a CARFIN block whose values the refined cells do not take
+// stops the input, as in every other local grid block: an array the
+// simulator does not read per refined cell, MINPVV, part of an array the
+// father has no value of, and a keyword that is no array.
+BOOST_AUTO_TEST_CASE(TestLgrBlockUnappliedKeywordStops)
+{
+    for (const std::string block : { "MULTX\n 9*0.0 /",
+                                     "MINPVV\n 9*1000 /",
+                                     "FLUXNUM\n 9*2 /",
+                                     "EQUALS\n MINPVV 1000 1 3 1 1 1 1 /\n/",
+                                     "PINCH\n /" })
+    {
+        BOOST_CHECK_THROW(lgrBlockState(block), Opm::OpmInputError);
+    }
+
+    // The values the refined cells take.
+    BOOST_CHECK_NO_THROW(lgrBlockState("PORO\n 9*0.30 /\nNTG\n 9*0.5 /\nMULTPV\n 9*2.0 /"));
+}
+
+// Only a block refining the global grid gives its refined cells values of
+// their own: a nested block with a property or MINPV stops the input.
+BOOST_AUTO_TEST_CASE(TestLgrNestedBlockValuesStop)
+{
+    const auto nested = [](const std::string& block)
+    {
+        return gridWithLgrs(1, fmt::format(R"(
+CARFIN
+'LGR1'  2  2  2  2  1  1  3  3  1  1*  GLOBAL /
+ENDFIN
+CARFIN
+'LGR2'  2  2  2  2  1  1  3  3  1  1*  LGR1 /
+{}
+ENDFIN
+)", block));
+    };
+
+    BOOST_CHECK_NO_THROW(nested(""));
+    BOOST_CHECK_THROW(nested("PORO\n 9*0.30 /"), Opm::OpmInputError);
+    BOOST_CHECK_THROW(nested("MINPV\n 10 /"), Opm::OpmInputError);
+}
+
+namespace {
+
+// One column of two layers on sheared pillars; the lower layer thickens towards
+// i = 1 more than the upper one, so the two layers' host corners give different
+// refined pillar lines.
+std::vector<double> lgrPillarCoord(const int k, const std::string& mode)
+{
+    const auto deck = fmt::format(R"(RUNSPEC
+DIMENS
+ 1 1 2 /
+OIL
+WATER
+LGR
+ 1 /
+GRID
+COORD
+ 0 0 0      5 0 100
+ 100 0 0    100 8 100
+ 0 100 0    -6 100 100
+ 100 100 0  103 104 100 /
+ZCORN
+ 4*10  20 30 20 30
+ 20 30 20 30  40 70 40 70 /
+{}
+CARFIN
+'LGR1' 1 1 1 1 {} {} 2 2 1 /
+ENDFIN
+PORO
+ 2*0.25 /
+PERMX
+ 2*100 /
+COPY
+ PERMX PERMY /
+ PERMX PERMZ /
+/
+PROPS
+REGIONS
+SOLUTION
+SCHEDULE
+)", mode.empty() ? "" : fmt::format("LGRPILLR\n '{}' /", mode), k, k);
+
+    const Opm::EclipseState state(Opm::Parser{}.parseString(deck));
+    BOOST_CHECK_EQUAL(state.getLgrs().pillarsFromBoxLayer(), mode == "BOX");
+    return state.getInputGrid().getLGRCell("LGR1").getCOORD();
+}
+
+} // Anonymous namespace
+
+// LGRPILLR: refined pillars from the column's first layer by default, so boxes
+// stacked in a column share them; 'BOX' takes the box's own, as the reference.
+BOOST_AUTO_TEST_CASE(TestLgrPillarMode)
+{
+    const auto column = lgrPillarCoord(2, "");
+    BOOST_CHECK(column == lgrPillarCoord(2, "COLUMN"));
+    BOOST_CHECK(column == lgrPillarCoord(1, ""));
+    BOOST_CHECK(column != lgrPillarCoord(2, "BOX"));
+    BOOST_CHECK(lgrPillarCoord(1, "BOX") == lgrPillarCoord(1, ""));
+
+    BOOST_CHECK_THROW(lgrPillarCoord(2, "STACKED"), Opm::OpmInputError);
+}
+
+namespace {
+
+Opm::EclipseState nncNextToBox(const std::string& nnc)
+{
+    return Opm::EclipseState { Opm::Parser{}.parseString(fmt::format(R"(RUNSPEC
+DIMENS
+ 3 3 1 /
+OIL
+WATER
+LGR
+ 1 /
+GRID
+DX
+ 9*100 /
+DY
+ 9*100 /
+DZ
+ 9*10 /
+TOPS
+ 9*2000 /
+PORO
+ 9*0.25 /
+PERMX
+ 9*100 /
+COPY
+ PERMX PERMY /
+ PERMX PERMZ /
+/
+CARFIN
+'LGR1' 2 2 2 2 1 1 3 3 1 /
+ENDFIN
+NNC
+ {} 1.0 /
+/
+PROPS
+REGIONS
+SOLUTION
+SCHEDULE
+)", nnc)) };
+}
+
+} // Anonymous namespace
+
+// An explicit NNC into a refinement box is one the refined grid cannot carry.
+BOOST_AUTO_TEST_CASE(TestNncIntoLgrRefused)
+{
+    const auto refuse = [](const Opm::EclipseState& state) {
+        Opm::refuseDeckConnectionsInsideBoxes(state, state.getInputGrid().getNXYZ(),
+                                              Opm::lgrCellBoxes(state.getLgrs()));
+    };
+    BOOST_CHECK_THROW(refuse(nncNextToBox("2 2 1 3 3 1")), std::invalid_argument);
+    BOOST_CHECK_NO_THROW(refuse(nncNextToBox("1 1 1 3 3 1")));
+}
+
+// A refined cell's level-zero host follows N*FIN, not the average ratio.
+BOOST_AUTO_TEST_CASE(TestLgrLevelZeroIJKGraded)
+{
+    const Opm::EclipseState state { Opm::Parser{}.parseString(R"(RUNSPEC
+DIMENS
+ 3 3 1 /
+OIL
+WATER
+LGR
+ 1 /
+GRID
+DX
+ 9*100 /
+DY
+ 9*100 /
+DZ
+ 9*10 /
+TOPS
+ 9*2000 /
+PORO
+ 9*0.25 /
+PERMX
+ 9*100 /
+COPY
+ PERMX PERMY /
+ PERMX PERMZ /
+/
+CARFIN
+'LGR1' 1 2 1 1 1 1 5 1 1 /
+NXFIN
+ 2 3 /
+ENDFIN
+PROPS
+REGIONS
+SOLUTION
+SCHEDULE
+)") };
+    const auto& lgrs = state.getLgrs();
+    BOOST_CHECK((lgrs.levelZeroIJK(1, {1, 0, 0}) == std::array<int,3>{0, 0, 0}));
+    BOOST_CHECK((lgrs.levelZeroIJK(1, {2, 0, 0}) == std::array<int,3>{1, 0, 0}));
+    BOOST_CHECK((lgrs.levelZeroIJK(1, {4, 0, 0}) == std::array<int,3>{1, 0, 0}));
+}
+
+BOOST_AUTO_TEST_CASE(TestLgrGradedIndexList)
+{
+    // Five refined columns over two parent cells: an even split does not
+    // cover them, NXFIN 1 4 does. Every refined cell must map to the parent
+    // cell NXFIN gives it.
+    const Opm::EclipseState state { Opm::Parser{}.parseString(R"(RUNSPEC
+DIMENS
+ 3 3 1 /
+OIL
+WATER
+LGR
+ 1 /
+GRID
+DX
+ 9*100 /
+DY
+ 9*100 /
+DZ
+ 9*10 /
+TOPS
+ 9*2000 /
+PORO
+ 9*0.25 /
+PERMX
+ 9*100 /
+COPY
+ PERMX PERMY /
+ PERMX PERMZ /
+/
+CARFIN
+'LGR1' 1 2 1 1 1 1 5 1 1 /
+NXFIN
+ 1 4 /
+ENDFIN
+PROPS
+REGIONS
+SOLUTION
+SCHEDULE
+)") };
+    const auto& lgr = state.getLgrs().getLgr("LGR1");
+    const auto& cells = lgr.global_index_list();
+    BOOST_REQUIRE_EQUAL(cells.size(), 5U);
+
+    const std::array<std::size_t, 5> expectedParent { 0, 1, 1, 1, 1 };
+    for (const auto& cell : cells) {
+        BOOST_CHECK_EQUAL(cell.global_index, expectedParent[cell.data_index]);
+    }
+    BOOST_CHECK_EQUAL(lgr.index_list().size(), 5U);
 }

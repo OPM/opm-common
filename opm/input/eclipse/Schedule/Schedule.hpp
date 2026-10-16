@@ -50,6 +50,7 @@
 #include <vector>
 
 namespace Opm {
+    class LgrCollection;
     class ActiveGridCells;
     class Deck;
     class DeckKeyword;
@@ -339,6 +340,11 @@ namespace Opm {
         std::unordered_set<int> getAquiferFluxSchedule() const;
         std::vector<Well> getWells(std::size_t timeStep) const;
         std::vector<Well> getWellsatEnd() const;
+
+        /// Move COMPDAT connections that lie inside a refinement box into the
+        /// innermost LGR covering them (WellConnections::refineIntoLgrs), tagging
+        /// the well.
+        void refineConnectionsIntoLgrs(const LgrCollection& lgrs);
 
         // Get wells that have been active any time during simulation
         std::vector<Well> getActiveWellsAtEnd() const;

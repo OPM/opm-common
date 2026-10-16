@@ -21,14 +21,17 @@
 #include <opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquifers.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FieldProps.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/LgrCollection.hpp>
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
 
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 
 #include <algorithm>
 #include <cstddef>
+#include <map>
 #include <memory>
 #include <stdexcept>
+#include <type_traits>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -109,6 +112,58 @@ void FieldPropsManager::reset_actnum(const std::vector<int>& actnum) {
 bool FieldPropsManager::is_usable() const
 {
     return static_cast<bool>(this->fp);
+}
+
+Carfin::BlockValues FieldPropsManager::lgrBlockValues(const EclipseGridLGR& lgr,
+                                                      const DeckView& block) const
+{
+    return FieldProps::lgrBlockValues(*this->fp, lgr, block);
+}
+
+void FieldPropsManager::set_lgr_block_values(const LgrCollection& lgrs)
+{
+    auto values = std::make_shared<std::map<std::string, Carfin::BlockValues>>();
+    for (std::size_t i = 0; i < lgrs.size(); ++i) {
+        const auto& lgr = lgrs.getLgr(i);
+        if (!lgr.blockValues().empty()) {
+            values->emplace(lgr.NAME(), lgr.blockValues());
+        }
+    }
+    this->lgr_values = values->empty() ? nullptr : std::move(values);
+}
+
+namespace {
+template <typename T>
+const std::vector<T>*
+findLgrArray(const std::map<std::string, Carfin::BlockValues>* values,
+             const std::string& lgr, const std::string& keyword)
+{
+    if (values == nullptr) {
+        return nullptr;
+    }
+    const auto it = values->find(lgr);
+    if (it == values->end()) {
+        return nullptr;
+    }
+    const auto& arrays = [&it]() -> const auto& {
+        if constexpr (std::is_same_v<T, double>) { return it->second.doubles; }
+        else { return it->second.ints; }
+    }();
+    const auto kw = arrays.find(keyword);
+    return (kw == arrays.end()) ? nullptr : &kw->second;
+}
+}
+
+const std::vector<double>*
+FieldPropsManager::lgr_double(const std::string& lgr, const std::string& keyword) const
+{
+    return findLgrArray<double>(this->lgr_values.get(), lgr, keyword);
+}
+
+const std::vector<int>*
+FieldPropsManager::lgr_int(const std::string& lgr, const std::string& keyword) const
+{
+    return findLgrArray<int>(this->lgr_values.get(), lgr, keyword);
 }
 
 void FieldPropsManager::apply_schedule_keywords(const std::vector<DeckKeyword>& keywords) {
@@ -218,6 +273,23 @@ void FieldPropsManager::apply_tran(const std::string& keyword, std::vector<doubl
     this->fp->apply_tran(keyword, data);
 }
 
+void FieldPropsManager::apply_tran(const std::string& keyword,
+                                   const std::vector<int>& actionIndex,
+                                   std::vector<double>& tran_data) const
+{
+    this->fp->apply_tran(keyword, actionIndex, tran_data);
+}
+
+std::set<Fieldprops::ScalarOperation>
+FieldPropsManager::tran_operations(const std::string& keyword) const
+{
+    if (!this->fp) {
+        return {};
+    }
+
+    return this->fp->tran_operations(keyword);
+}
+
 void FieldPropsManager::apply_tranz_global(const std::vector<std::size_t>& indices,
                                            std::vector<double>& data) const {
     this->fp->apply_tranz_global(indices, data);
@@ -253,15 +325,32 @@ void FieldPropsManager::set_active_indices(const std::vector<int>& indices)
     fp->set_active_indices(indices);
 }
 
+namespace {
+    // std::unordered_map::at() reports only "key not found", which for these
+    // lookups leaves the caller with no idea which keyword or field is missing.
+    template <typename MapType>
+    const auto& lookup(const MapType& map, const std::string& key, std::string_view what)
+    {
+        const auto entry = map.find(key);
+        if (entry == map.end()) {
+            throw std::out_of_range {
+                fmt::format("No {} named '{}'", what, key)
+            };
+        }
+
+        return entry->second;
+    }
+} // Anonymous namespace
+
 template<class MapType>
 void apply_tran(const std::unordered_map<std::string, Fieldprops::TranCalculator>& tran,
                 const MapType& double_data,
                 std::size_t active_size,
                 const std::string& keyword, std::vector<double>& data)
 {
-    const auto& calculator = tran.at(keyword);
+    const auto& calculator = lookup(tran, keyword, "transmissibility calculator");
     for (const auto& action : calculator) {
-        const auto& action_data = double_data.at(action.field);
+        const auto& action_data = lookup(double_data, action.field, "field property");
 
         for (std::size_t index = 0; index < active_size; index++) {
 
@@ -275,13 +364,38 @@ void apply_tran(const std::unordered_map<std::string, Fieldprops::TranCalculator
 
 
 template<class MapType>
+void apply_tran(const std::unordered_map<std::string, Fieldprops::TranCalculator>& tran,
+                const MapType& double_data,
+                const std::string& keyword,
+                const std::vector<int>& actionIndex,
+                std::vector<double>& data)
+{
+    const auto& calculator = lookup(tran, keyword, "transmissibility calculator");
+    for (const auto& action : calculator) {
+        const auto& action_data = lookup(double_data, action.field, "field property");
+
+        for (std::size_t entry = 0; entry < actionIndex.size(); ++entry) {
+            const auto index = actionIndex[entry];
+            if (index < 0) {
+                continue;       // nothing in the deck speaks for this entry
+            }
+
+            if (!value::has_value(action_data.value_status[index]))
+                continue;
+
+            apply_action(action.op, action_data.data, data, index, entry);
+        }
+    }
+}
+
+template<class MapType>
 void apply_tran(const Fieldprops::TranCalculator& calculator,
                 const MapType& double_data,
                 const std::vector<std::size_t>& indices,
                 std::vector<double>& data)
 {
     for (const auto& action : calculator) {
-        const auto& action_data = double_data.at(action.field);
+        const auto& action_data = lookup(double_data, action.field, "field property");
 
         for (auto action_index = indices.begin(); action_index != indices.end();
              ++action_index)
@@ -305,6 +419,16 @@ template
 void apply_tran(const std::unordered_map<std::string, Fieldprops::TranCalculator>&,
                 const std::map<std::string, Fieldprops::FieldData<double>>&,
                 std::size_t, const std::string&, std::vector<double>&);
+
+template
+void apply_tran(const std::unordered_map<std::string, Fieldprops::TranCalculator>&,
+                const std::unordered_map<std::string, Fieldprops::FieldData<double>>&,
+                const std::string&, const std::vector<int>&, std::vector<double>&);
+
+template
+void apply_tran(const std::unordered_map<std::string, Fieldprops::TranCalculator>&,
+                const std::map<std::string, Fieldprops::FieldData<double>>&,
+                const std::string&, const std::vector<int>&, std::vector<double>&);
 
 template
 void apply_tran(const Fieldprops::TranCalculator&,
