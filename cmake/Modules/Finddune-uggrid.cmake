@@ -9,7 +9,7 @@ else()
 endif()
 
 if(dune-uggrid_FOUND)
-  target_compile_definitions(duneuggrid INTERFACE HAVE_DUNE_UGGRID=1)
+  target_compile_definitions(Dune::UGGrid INTERFACE HAVE_DUNE_UGGRID=1)
   # make version number available in config.h
   include (UseDuneVer)
   find_dune_version ("dune" "uggrid")
