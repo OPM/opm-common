@@ -213,6 +213,24 @@ public:
     { return inverseGasB_[regionIdx].eval(pressure, Rv, /*extrapolate=*/true); }
 
     /*!
+     * \brief Returns the saturated oil vaporization factor together with the
+     *        index of the table segment it was evaluated on.
+     *
+     * The segment index can be handed to the corresponding
+     * inverseFormationVolumeFactorAndViscosity() overload so that the search
+     * and the table evaluation are not repeated by that call.
+     */
+    template <class LhsEval>
+    std::pair<LhsEval, SegmentIndex>
+    saturatedOilVaporizationFactorAndSegment(unsigned regionIdx, const LhsEval& pressure) const
+    {
+        const auto segIdx =
+            this->saturatedOilVaporizationFactorTable_[regionIdx].findSegmentIndex(pressure, /*extrapolate=*/ true);
+        return { this->saturatedOilVaporizationFactorTable_[regionIdx].eval(pressure, SegmentIndex{segIdx}),
+                 SegmentIndex{segIdx} };
+    }
+
+    /*!
      * \brief Returns the formation volume factor [-] and viscosity [Pa s] of the fluid phase.
      */
     template <class FluidState, class LhsEval = typename FluidState::ValueType>
@@ -220,10 +238,27 @@ public:
     inverseFormationVolumeFactorAndViscosity(const FluidState& fluidState, unsigned regionIdx)
     {
         const LhsEval& p = decay<LhsEval>(fluidState.pressure(FluidState::gasPhaseIdx));
+        const auto [RvSat, satSegIdx] = saturatedOilVaporizationFactorAndSegment<LhsEval>(regionIdx, p);
+        return inverseFormationVolumeFactorAndViscosity<FluidState, LhsEval>(fluidState, regionIdx,
+                                                                             RvSat, satSegIdx);
+    }
+
+    /*!
+     * \brief Formation volume factor and viscosity, reusing an already
+     *        computed saturated vaporization factor and its table segment.
+     *
+     * Equivalent to the overload above; the caller must pass the values
+     * returned by saturatedOilVaporizationFactorAndSegment() for the same
+     * region and pressure.
+     */
+    template <class FluidState, class LhsEval = typename FluidState::ValueType>
+    std::pair<LhsEval, LhsEval>
+    inverseFormationVolumeFactorAndViscosity(const FluidState& fluidState, unsigned regionIdx,
+                                             const LhsEval& RvSat, SegmentIndex satSegIdx)
+    {
+        const LhsEval& p = decay<LhsEval>(fluidState.pressure(FluidState::gasPhaseIdx));
         const LhsEval& Rv = decay<LhsEval>(fluidState.Rv());
 
-        const auto satSegIdx = this->saturatedOilVaporizationFactorTable_[regionIdx].findSegmentIndex(p, /*extrapolate=*/ true);
-        const auto RvSat = this->saturatedOilVaporizationFactorTable_[regionIdx].eval(p, SegmentIndex{satSegIdx});
         const bool useSaturatedTables = (fluidState.saturation(FluidState::oilPhaseIdx) > 0.0) && (Rv >= (1.0 - 1e-10) * RvSat);
 
         if (useSaturatedTables) {
