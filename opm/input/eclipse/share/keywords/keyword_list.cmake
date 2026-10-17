@@ -1136,6 +1136,7 @@ set( keywords
      001_Eclipse300/V/VISCAQA
      001_Eclipse300/W/WELLSTRE
      001_Eclipse300/W/WELL_PROBE_COMP
+     001_Eclipse300/W/WELL_PROBE_COMP_AGGREGATE
      001_Eclipse300/W/WINJGAS
      001_Eclipse300/W/WINJOIL
      001_Eclipse300/W/WINJTEMP

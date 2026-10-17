@@ -2341,6 +2341,8 @@ WCMPR
  '*' 1 /
 /
 WHMPR
+ 'W_1' 'W_3' /
+WHMIT
 /
 BXMF
  1 1 1 2 /
@@ -2365,7 +2367,14 @@ CKFR
     BOOST_CHECK_EQUAL(wzmf.getRecord(1).getItem("COMP_NUM").get<int>(0), 2);
 
     BOOST_CHECK_EQUAL(deck["WCMPR"].back().getRecord(0).getItem("COMP_NUM").get<int>(0), 1);
-    BOOST_CHECK(deck.hasKeyword("WHMPR"));
+    const auto& whmpr = deck["WHMPR"].back();
+    BOOST_REQUIRE_EQUAL(whmpr.size(), std::size_t{1});
+    const auto& whmpr_wells = whmpr.getRecord(0).getItem("WELLS");
+    BOOST_REQUIRE_EQUAL(whmpr_wells.data_size(), std::size_t{2});
+    BOOST_CHECK_EQUAL(whmpr_wells.getTrimmedString(0), "W_1");
+    BOOST_CHECK_EQUAL(whmpr_wells.getTrimmedString(1), "W_3");
+    BOOST_CHECK_EQUAL(deck["WHMIT"].back().getRecord(0).getItem("WELLS").data_size(),
+                      std::size_t{0});
 
     const auto& bxmf = deck["BXMF"].back();
     BOOST_REQUIRE_EQUAL(bxmf.size(), std::size_t{2});

@@ -1,0 +1,20 @@
+{
+  "name": "WELL_PROBE_COMP_AGGREGATE",
+  "sections": [
+    "SUMMARY"
+  ],
+  "deck_names": [
+    "WHMPR",
+    "WHMPT",
+    "WHMIR",
+    "WHMIT"
+  ],
+  "size": 1,
+  "items": [
+    {
+      "name": "WELLS",
+      "value_type": "STRING",
+      "size_type": "ALL"
+    }
+  ]
+}
