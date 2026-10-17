@@ -353,3 +353,39 @@ BOOST_AUTO_TEST_CASE(JacobianOfAnotherStateIsNotReused)
     BOOST_CHECK(!sameFlashDerivatives(withDerivatives(swapped, converged.state, forged),
                                       withDerivatives(swapped, converged.state, std::nullopt)));
 }
+
+// Every method leaves the fugacity coefficients of the split it returns, also
+// Newton, whose state is otherwise copied value by value.
+BOOST_AUTO_TEST_CASE(SplitStoresItsFugacityCoefficients)
+{
+    for (const auto method :
+         {PTFlashMethod::Newton, PTFlashMethod::Ssi, PTFlashMethod::SsiNewton}) {
+        unsigned numTwoPhase = 0;
+        for (const auto& z : compositions) {
+            for (const auto pressure : pressures) {
+                BOOST_TEST_CONTEXT("method " << static_cast<int>(method) << ", z = (" << z[0]
+                                             << ", " << z[1] << ", " << z[2] << ") at " << pressure
+                                             << " Pa")
+                {
+                    const auto result = flash(makeState(pressure, temperature, z), method);
+                    if (!result || result->singlePhase) {
+                        continue;
+                    }
+                    ++numTwoPhase;
+                    const auto& scalar = result->scalar;
+                    FluidSystem::ParameterCache<Scalar> paramCache(eosType);
+                    for (const auto phaseIdx : {oilPhaseIdx, gasPhaseIdx}) {
+                        paramCache.updatePhase(scalar, phaseIdx);
+                        for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
+                            BOOST_CHECK_CLOSE(scalar.fugacityCoefficient(phaseIdx, compIdx),
+                                              FluidSystem::fugacityCoefficient(
+                                                  scalar, paramCache, phaseIdx, compIdx),
+                                              1e-8);
+                        }
+                    }
+                }
+            }
+        }
+        BOOST_CHECK_GT(numTwoPhase, 0u);
+    }
+}

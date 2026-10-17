@@ -1042,6 +1042,15 @@ protected:
         }
         L = Opm::getValue(liquid_fraction);
         fluid_state.setLvalue(L);
+        // The coefficients of the converged iterate belong to the returned split.
+        for (unsigned phaseIdx = 0; phaseIdx < numMisciblePhases; ++phaseIdx) {
+            for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
+                fluid_state.setFugacityCoefficient(
+                    phaseIdx,
+                    compIdx,
+                    Opm::getValue(newton_state.fugacityCoefficient(phaseIdx, compIdx)));
+            }
+        }
         return {jacobian, jacobianState_(fluid_state)};
     }
 
