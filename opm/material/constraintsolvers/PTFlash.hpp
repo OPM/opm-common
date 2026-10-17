@@ -441,21 +441,35 @@ protected:
                                       "it to L = {}",
                                       L));
         }
-        if (fluid_state.pressure(oilPhaseIdx) == fluid_state.pressure(gasPhaseIdx)) {
-            return;
+        if (fluid_state.pressure(oilPhaseIdx) != fluid_state.pressure(gasPhaseIdx)) {
+            for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+                const auto liquid_mole_fraction = fluid_state.moleFraction(oilPhaseIdx, compIdx);
+                K[compIdx] = liquid_mole_fraction > 0
+                    ? fluid_state.moleFraction(gasPhaseIdx, compIdx) / liquid_mole_fraction
+                    : 1.0;
+            }
+            newton_jacobian
+                = flash_2ph(z, method, K, L, fluid_state, flash_tolerance, eos_type, verbosity);
+            if (!(L > 0 && L < 1) || phasesCoincide_(fluid_state)) {
+                OPM_THROW_NOLOG(NumericalProblem,
+                                "The relabelled split did not stay two-phase when solved again "
+                                "at the phase pressures");
+            }
         }
-        for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
-            const auto liquid_mole_fraction = fluid_state.moleFraction(oilPhaseIdx, compIdx);
-            K[compIdx] = liquid_mole_fraction > 0
-                ? fluid_state.moleFraction(gasPhaseIdx, compIdx) / liquid_mole_fraction
-                : 1.0;
-        }
-        newton_jacobian = flash_2ph(z, method, K, L, fluid_state, flash_tolerance, eos_type,
-                                    verbosity);
-        if (!(L > 0 && L < 1) || phasesCoincide_(fluid_state)) {
-            OPM_THROW_NOLOG(NumericalProblem,
-                            "The relabelled split did not stay two-phase when solved again "
-                            "at the phase pressures");
+
+        // The stored fugacity coefficients belong to the slots before the swap,
+        // and Newton does not store those of the split it returns.
+        using ParamCache =
+            typename FluidSystem::template ParameterCache<typename FlashFluidState::ValueType>;
+        ParamCache param_cache(eos_type);
+        for (int phaseIdx = 0; phaseIdx < numMisciblePhases; ++phaseIdx) {
+            param_cache.updatePhase(fluid_state, phaseIdx);
+            for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+                fluid_state.setFugacityCoefficient(
+                    phaseIdx,
+                    compIdx,
+                    FluidSystem::fugacityCoefficient(fluid_state, param_cache, phaseIdx, compIdx));
+            }
         }
     }
 

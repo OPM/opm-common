@@ -597,6 +597,40 @@ BOOST_AUTO_TEST_CASE(RelabelledSplitReturnsTheJacobianOfItsSolve)
     }
 }
 
+// A relabelled split stores its own fugacity coefficients. The swap leaves
+// those of the old slots, and Newton stores none.
+BOOST_AUTO_TEST_CASE(RelabelledSplitStoresItsFugacityCoefficients)
+{
+    constexpr Scalar z[numComponents] = {0.76524, 0.16825, 0.06651};
+    constexpr Scalar nearUnitK[numComponents] = {0.99, 1.01, 1.02};
+    for (const Scalar gasPressure : {135.42e5, 136.42e5}) {
+        for (const auto method :
+             {PTFlashMethod::Newton, PTFlashMethod::Ssi, PTFlashMethod::SsiNewton}) {
+            BOOST_TEST_CONTEXT("method " << static_cast<int>(method) << ", gas pressure "
+                                         << gasPressure)
+            {
+                ScalarFluidState fs;
+                fs.setPressure(FluidSystem::oilPhaseIdx, 135.42e5);
+                fs.setPressure(FluidSystem::gasPhaseIdx, gasPressure);
+                fs.setTemperature(394.46);
+                for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+                    fs.setMoleFraction(compIdx, z[compIdx]);
+                    fs.setKvalue(compIdx, nearUnitK[compIdx]);
+                }
+                fs.setLvalue(0.5);
+                BOOST_REQUIRE(
+                    !PtFlash::flash_solve_scalar(fs, method, flashTolerance, EOSType::PR));
+                for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+                    BOOST_CHECK_SMALL(fs.fugacity(FluidSystem::oilPhaseIdx, compIdx)
+                                              / fs.fugacity(FluidSystem::gasPhaseIdx, compIdx)
+                                          - 1.0,
+                                      1.e-6);
+                }
+            }
+        }
+    }
+}
+
 // An absent component contributes no ratio, but the remaining equal phase
 // compositions must still be recognised as coincident.
 BOOST_AUTO_TEST_CASE(AbsentComponentDoesNotHideCoincidentPhases)
