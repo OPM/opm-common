@@ -59,6 +59,7 @@
 
 #include <fmt/format.h>
 
+#include <array>
 #include <iostream>
 #include <memory>
 
@@ -269,4 +270,65 @@ for (const auto& sample : test_methods) {
 #if BOOST_VERSION / 100000 == 1 && BOOST_VERSION / 100 % 1000 < 67
 }
 #endif
+}
+
+// flash_solve_scalar() leaves the fugacity coefficients of the compositions it
+// returns: those of the split for two phases, and those of the feed in both
+// phases for a stable mixture or a negative flash. Newton used to leave the
+// ones it started from, and a single-phase result those of an earlier state.
+BOOST_AUTO_TEST_CASE(ScalarFlashStoresFugacityCoefficients)
+{
+    using ScalarFluidState = Opm::CompositionalFluidState<Scalar, FluidSystem>;
+    using Flash = Opm::PTFlash<Scalar, FluidSystem>;
+    using ParamCache = FluidSystem::ParameterCache<Scalar>;
+
+    struct FlashCase
+    {
+        Scalar pressure;
+        Scalar temperature;
+        Scalar initialL;
+        bool singlePhase;
+    };
+    // A cold start of a two-phase and of a stable mixture, and a warm start of
+    // the stable mixture, whose split ends as a negative flash.
+    constexpr std::array cases{
+        FlashCase{10e5, 300.0, -1.0, false},
+        FlashCase{150e5, 300.0, -1.0, true},
+        FlashCase{150e5, 300.0, 0.5, true},
+    };
+    constexpr std::array<Scalar, numComponents> z{0.5, 0.3, 0.2};
+
+    for (const auto method : test_methods) {
+        for (const auto& [pressure, temperature, initialL, singlePhase] : cases) {
+            BOOST_TEST_CONTEXT(Opm::ptFlashMethodToString(method)
+                               << " at " << pressure / 1e5 << " bar and " << temperature
+                               << " K from L = " << initialL)
+            {
+                ScalarFluidState fs;
+                fs.setPressure(FluidSystem::oilPhaseIdx, pressure);
+                fs.setPressure(FluidSystem::gasPhaseIdx, pressure);
+                fs.setTemperature(temperature);
+                for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+                    fs.setMoleFraction(compIdx, z[compIdx]);
+                }
+                for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+                    fs.setKvalue(compIdx, fs.wilsonK_(compIdx));
+                }
+                fs.setLvalue(initialL);
+
+                BOOST_REQUIRE_EQUAL(Flash::flash_solve_scalar(fs, method, 1e-8, EOSType::PR),
+                                    singlePhase);
+                ParamCache paramCache(EOSType::PR);
+                for (const auto phaseIdx : {FluidSystem::oilPhaseIdx, FluidSystem::gasPhaseIdx}) {
+                    paramCache.updatePhase(fs, phaseIdx);
+                    for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+                        BOOST_CHECK_CLOSE(fs.fugacityCoefficient(phaseIdx, compIdx),
+                                          FluidSystem::fugacityCoefficient(
+                                              fs, paramCache, phaseIdx, compIdx),
+                                          1e-8);
+                    }
+                }
+            }
+        }
+    }
 }
