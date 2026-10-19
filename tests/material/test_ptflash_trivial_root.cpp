@@ -597,8 +597,8 @@ BOOST_AUTO_TEST_CASE(RelabelledSplitReturnsTheJacobianOfItsSolve)
     }
 }
 
-// A relabelled split stores its own fugacity coefficients. The swap leaves
-// those of the old slots, and Newton stores none.
+// flash_solve_scalar() returns the fugacity coefficients of a relabelled split,
+// although the swap leaves those of the old slots and Newton stores none.
 BOOST_AUTO_TEST_CASE(RelabelledSplitStoresItsFugacityCoefficients)
 {
     constexpr Scalar z[numComponents] = {0.76524, 0.16825, 0.06651};
