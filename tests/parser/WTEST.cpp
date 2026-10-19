@@ -229,6 +229,16 @@ BOOST_AUTO_TEST_CASE(WTEST_RESTART) {
     auto rst_well0 = ws.restart_well(wc, "W0");
     BOOST_CHECK(!rst_well0.has_value());
 
+    // Group economics closes wells even if no WTEST keyword exists.
+    ws.close_well("W0", WellTestConfig::Reason::GROUP, 123.0);
+    rst_well0 = ws.restart_well(wc, "W0");
+    BOOST_REQUIRE(rst_well0.has_value());
+    BOOST_CHECK_NE(rst_well0->close_reason, 0);
+    BOOST_CHECK_EQUAL(rst_well0->config_reasons, 0);
+    BOOST_CHECK_EQUAL(rst_well0->test_interval, 0.0);
+    ws.open_well("W0");
+    BOOST_CHECK(!ws.restart_well(wc, "W0").has_value());
+
     auto rst_well1 = ws.restart_well(wc, "W1");
     BOOST_CHECK(rst_well1.has_value());
     {

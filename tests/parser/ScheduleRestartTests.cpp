@@ -177,6 +177,31 @@ BOOST_AUTO_TEST_CASE(LoadRST) {
     }
 }
 
+BOOST_AUTO_TEST_CASE(RestartWellTestClosureTime)
+{
+    Parser parser;
+    const auto deck = parser.parseFile("SPE1CASE2.DATA");
+    const EclipseState es(deck);
+    auto file = std::make_shared<EclIO::ERst>("SPE1CASE2.X0060");
+    auto view = std::make_shared<EclIO::RestartFileView>(std::move(file), 60);
+    auto rst = RestartIO::RstState::load(std::move(view), es.runspec(), parser);
+    BOOST_REQUIRE(!rst.wells.empty());
+    auto& well = rst.wells.front();
+    WellTestState original;
+    original.close_well(well.name, WellTestConfig::Reason::GROUP, 123.0);
+    const auto encoded = original.restart_well(WellTestConfig{}, well.name);
+    BOOST_REQUIRE(encoded.has_value());
+    well.wtest_close_reason = encoded->close_reason;
+    rst.header.hour = 11;
+    rst.header.minute = 22;
+    rst.header.microsecond = 30 * 1000000;
+    const auto start = es.runspec().start_time();
+    WellTestState restored(start, rst);
+    BOOST_CHECK(restored.well_is_closed(well.name));
+    BOOST_CHECK_EQUAL(restored.lastTestTime(well.name), std::chrono::duration<double>(rst.header.sim_time() - start).count());
+    BOOST_CHECK_GT(restored.lastTestTime(well.name), 0.0);
+}
+
 namespace {
 
 std::tuple<Schedule, Schedule, RestartIO::RstState>
