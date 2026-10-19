@@ -30,7 +30,7 @@
 
 namespace {
 
-    void assert_dims(const std::string& name, int l1 , int l2, int nlgr, int nglobal)
+    void assert_dims(const std::string& name, int l1 , int l2, int nglobal)
     {
         if ((l1 < 0) || (l2 < 0) || (l1 > l2))
             throw std::invalid_argument(name + ": Invalid index values for lgr");
@@ -366,9 +366,9 @@ namespace Opm
                       const int nx, const int ny,
                       const int nz, const std::string& parent_name)
     {
-        assert_dims(name, i1 , i2, nx, this->m_globalGridDims_.getNX());
-        assert_dims(name, j1 , j2, ny, this->m_globalGridDims_.getNY());
-        assert_dims(name, k1 , k2, nz, this->m_globalGridDims_.getNZ());
+        assert_dims(name, i1 , i2, this->m_globalGridDims_.getNX());
+        assert_dims(name, j1 , j2, this->m_globalGridDims_.getNY());
+        assert_dims(name, k1 , k2, this->m_globalGridDims_.getNZ());
 
         this->name_grid = name;
         this->parent_name_grid = parent_name;
