@@ -463,8 +463,11 @@ DY
  27*100 /
 DZ
  27*10 /
+BOX
+ 1 3 1 3 1 1 /
 TOPS
  9*1000 /
+ENDBOX
 PORO
  27*0.2 /
 PERMX
@@ -529,8 +532,11 @@ DY
  18*100 /
 DZ
  18*10 /
+BOX
+ 1 3 1 3 1 1 /
 TOPS
  9*1000 /
+ENDBOX
 PORO
  18*0.2 /
 PERMX
