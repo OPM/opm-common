@@ -240,6 +240,23 @@ BOOST_AUTO_TEST_CASE(ExteriorDepthSurvivesTheRoundTrip)
     BOOST_CHECK(std::isnan(readBack.boundaryFaces[1].exteriorDepth));
 }
 
+BOOST_AUTO_TEST_CASE(ThermalTransmissibilitySurvivesTheRoundTrip)
+{
+    WorkArea work;
+
+    auto written = sampleData();
+    writeAll("NOTHERMAL.FLUX", false, written);
+    BOOST_CHECK_EQUAL(Opm::EclIO::FluxFile::read("NOTHERMAL.FLUX").boundaryFaces[0].thermalTransmissibility, 0.0);
+
+    written.boundaryFaces[0].thermalTransmissibility = 12.5;
+    writeAll("THERMAL.FLUX", false, written);
+    const auto readBack = Opm::EclIO::FluxFile::read("THERMAL.FLUX");
+
+    BOOST_REQUIRE_EQUAL(readBack.boundaryFaces.size(), written.boundaryFaces.size());
+    BOOST_CHECK_CLOSE(readBack.boundaryFaces[0].thermalTransmissibility, 12.5, 1.0e-10);
+    BOOST_CHECK_EQUAL(readBack.boundaryFaces[1].thermalTransmissibility, 0.0);
+}
+
 BOOST_AUTO_TEST_CASE(ThresholdPressuresSurviveTheRoundTrip)
 {
     // A defaulted THPRES entry is the largest initial potential difference

@@ -328,6 +328,7 @@ bool FluxFile::BoundaryFace::operator==(const BoundaryFace& other) const
         && (this->transmissibility == other.transmissibility)
         && (this->exteriorPvtRegion == other.exteriorPvtRegion)
         && (this->exteriorEquilRegion == other.exteriorEquilRegion)
+        && (this->thermalTransmissibility == other.thermalTransmissibility)
         && sameDepth;
 }
 
@@ -397,6 +398,10 @@ void FluxFile::Writer::writeStaticSection()
     output.write("FLXPVTN", flattenBoundary(data.boundaryFaces, &BoundaryFace::exteriorPvtRegion));
     output.write("FLXEXDP", flattenBoundary(data.boundaryFaces, &BoundaryFace::exteriorDepth));
     output.write("FLXEQLN", flattenBoundary(data.boundaryFaces, &BoundaryFace::exteriorEquilRegion));
+    if (std::ranges::any_of(data.boundaryFaces,
+                            [](const auto& face) { return face.thermalTransmissibility != 0.0; })) {
+        output.write("FLXTHTR", flattenBoundary(data.boundaryFaces, &BoundaryFace::thermalTransmissibility));
+    }
 
     if (!data.thresholdPressure.empty()) {
         output.write("FLXTHPR", data.thresholdPressure);
@@ -583,6 +588,7 @@ FluxFile::Data FluxFile::read(const std::string& filename, bool preload)
     const auto& fluxPvtn = optionalArray<int>(file, "FLXPVTN");
     const auto& fluxExDp = optionalArray<double>(file, "FLXEXDP");
     const auto& fluxEqln = optionalArray<int>(file, "FLXEQLN");
+    const auto& fluxThtr = optionalArray<double>(file, "FLXTHTR");
     for (std::size_t index = 0; index < fluxCell.size(); ++index) {
         data.boundaryFaces.push_back(BoundaryFace{fluxCell[index], fluxDir[index], fluxNnc[index],
                                                   fluxTran[index],
@@ -590,7 +596,8 @@ FluxFile::Data FluxFile::read(const std::string& filename, bool preload)
                                                   (index < fluxExDp.size())
                                                   ? fluxExDp[index]
                                                   : std::numeric_limits<double>::quiet_NaN(),
-                                                  (index < fluxEqln.size()) ? fluxEqln[index] : -1});
+                                                  (index < fluxEqln.size()) ? fluxEqln[index] : -1,
+                                                  (index < fluxThtr.size()) ? fluxThtr[index] : 0.0});
     }
 
     data.thresholdPressure = optionalArray<double>(file, "FLXTHPR");
