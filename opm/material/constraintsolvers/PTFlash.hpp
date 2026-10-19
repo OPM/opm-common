@@ -174,6 +174,9 @@ public:
      *    new stability test from Wilson estimates and at most one retry; and
      * -# for a single-phase mixture, the phase label.
      *
+     * The state also receives the fugacity coefficients of the phase
+     * compositions it returns, which are the feed for a single phase.
+     *
      * \return Whether the mixture is single-phase.
      */
     template <typename FluidState>
@@ -183,8 +186,23 @@ public:
                                    const EOSType& eos_type,
                                    const int verbosity = 0)
     {
-        return flashScalar_(fluid_state, twoPhaseMethod, flash_tolerance, eos_type, verbosity)
-            .single_phase;
+        const bool is_single_phase
+            = flashScalar_(fluid_state, twoPhaseMethod, flash_tolerance, eos_type, verbosity)
+                  .single_phase;
+        // The solve leaves those of its last evaluation, which need not be the result.
+        using ParamCache =
+            typename FluidSystem::template ParameterCache<typename FluidState::ValueType>;
+        ParamCache param_cache(eos_type);
+        for (unsigned phaseIdx = 0; phaseIdx < numMisciblePhases; ++phaseIdx) {
+            param_cache.updatePhase(fluid_state, phaseIdx);
+            for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
+                fluid_state.setFugacityCoefficient(
+                    phaseIdx,
+                    compIdx,
+                    FluidSystem::fugacityCoefficient(fluid_state, param_cache, phaseIdx, compIdx));
+            }
+        }
+        return is_single_phase;
     }
 
 protected:
