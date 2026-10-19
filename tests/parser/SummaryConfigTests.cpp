@@ -2348,6 +2348,9 @@ BXMF
  1 1 1 2 /
  1 1 3 1 /
 /
+BZMF
+ 2 3 4 1 /
+/
 CKFR
  'W_1' 1 1 3 3 /
 /
@@ -2380,6 +2383,11 @@ CKFR
     BOOST_REQUIRE_EQUAL(bxmf.size(), std::size_t{2});
     BOOST_CHECK_EQUAL(bxmf.getRecord(1).getItem("K").get<int>(0), 3);
     BOOST_CHECK_EQUAL(bxmf.getRecord(1).getItem("COMP_NUM").get<int>(0), 1);
+
+    const auto& bzmf = deck["BZMF"].back();
+    BOOST_REQUIRE_EQUAL(bzmf.size(), std::size_t{1});
+    BOOST_CHECK_EQUAL(bzmf.getRecord(0).getItem("K").get<int>(0), 4);
+    BOOST_CHECK_EQUAL(bzmf.getRecord(0).getItem("COMP_NUM").get<int>(0), 1);
 
     const auto& ckfr = deck["CKFR"].back();
     BOOST_REQUIRE_EQUAL(ckfr.size(), std::size_t{1});
