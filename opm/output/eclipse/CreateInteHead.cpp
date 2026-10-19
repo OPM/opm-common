@@ -357,7 +357,8 @@ namespace {
                      const ::Opm::Schedule& sched,
                      const std::size_t      report_step,
                      const std::size_t      lookup_step,
-                     const std::string&     lgr_tag)
+                     const std::string&     lgr_tag,
+                     const int              lgr_number)
     {
         if ((lgr_tag == "GLOBAL") or (lgr_tag.empty()))
         {
@@ -370,8 +371,12 @@ namespace {
         const auto wnames = sched.wellNames(lookup_step);
         int numWells =
             std::ranges::count_if(wnames,
-                                  [&lgr_tag, &sched = sched[lookup_step]](const auto& wname)
-                                  { return sched.wells(wname).get_lgr_well_tag().value_or("") == lgr_tag; });
+                                  [&lgr_tag, lgr_number, &sched = sched[lookup_step]](const auto& wname)
+                                  {
+                                      const auto& well = sched.wells(wname);
+                                      return (well.get_lgr_well_tag().value_or("") == lgr_tag)
+                                          || well.hasConnectionsInLgr(lgr_number);
+                                  });
 
         const auto maxPerf =
             std::max(wd.maxConnPerWell(),
@@ -806,8 +811,10 @@ createInteHead(const EclipseState& es,
         .numLocalGrids      (static_cast<int>(es.getInputGrid().get_all_lgr_labels().size()))
         .unitConventions    (es.getDeckUnitSystem())
         .wellTableDimensions(getWellTableDims(nwgmax, ngmax, rspec, sched,
-                                              report_step, lookup_step,
-                                              grid.get_lgr_tag()))
+                                              report_step, lookup_step, grid.get_lgr_tag(),
+                                              (grid.get_lgr_tag().empty() || (grid.get_lgr_tag() == "GLOBAL"))
+                                                  ? 0
+                                                  : static_cast<int>(es.getInputGrid().get_lgr_cell_index(grid.get_lgr_tag())) + 1))
         .calendarDate       (getSimulationTimePoint(sched.getStartTime(), simTime))
         .activePhases       (getActivePhases(rspec))
         .drsdt              (sched, lookup_step)

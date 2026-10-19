@@ -115,6 +115,8 @@ public:
     std::size_t seqIndexAllLGR() const { return insert_index_all_lgr; }
 
     bool is_lgr_well() const;
+    /// Whether any connection carries this LGR grid number (deck number).
+    bool hasConnectionsInLgr(int lgr_grid_number) const;
     std::optional<std::string> get_lgr_well_tag() const;
     struct WellGuideRate {
         bool available;

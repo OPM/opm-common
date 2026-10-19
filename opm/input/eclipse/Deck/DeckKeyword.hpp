@@ -55,6 +55,15 @@ namespace Opm {
         const KeywordLocation& location() const;
         DeckKeyword emptyStructuralCopy() const;
 
+        /// Name of the LGR whose CARFIN...ENDFIN block this keyword sits in,
+        /// empty for a keyword that applies to the global grid. Such a keyword
+        /// is held by the Deck but kept out of the global view and out of every
+        /// DeckSection, so the consumers that build the global grid do not see
+        /// it -- a block's MINPV must not become the field's MINPV.
+        const std::string& lgrScope() const;
+        void setLgrScope(const std::string& lgrName);
+        bool isLgrScoped() const { return !this->m_lgrScope.empty(); }
+
         std::size_t size() const;
         bool empty() const;
         void addRecord(DeckRecord&& record);
@@ -107,6 +116,7 @@ namespace Opm {
             serializer(m_isDataKeyword);
             serializer(m_slashTerminated);
             serializer(m_isDoubleRecordKeyword);
+            serializer(m_lgrScope);
         }
 
     private:
@@ -117,6 +127,7 @@ namespace Opm {
         bool m_isDataKeyword;
         bool m_slashTerminated;
         bool m_isDoubleRecordKeyword = false;
+        std::string m_lgrScope {};
     };
 }
 

@@ -437,6 +437,11 @@ public:
     /// restart file information.
     ///
     /// \return Collection of per-cell results at \p report_step.
+    /// One solution per grid: the global grid, then each LGR in deck order.
+    std::vector<data::Solution>
+    loadRestartSolutionLevels(const std::vector<RestartKey>& solution_keys,
+                              int report_step) const;
+
     data::Solution loadRestartSolution(const std::vector<RestartKey>& solution_keys,
                                        const int                      report_step) const;
 

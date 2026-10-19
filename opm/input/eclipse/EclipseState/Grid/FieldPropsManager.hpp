@@ -19,7 +19,11 @@
 #ifndef FIELDPROPS_MANAGER_HPP
 #define FIELDPROPS_MANAGER_HPP
 
+#include <opm/input/eclipse/EclipseState/Grid/Carfin.hpp>
+
+#include <map>
 #include <memory>
+#include <set>
 #include <string>
 #include <string_view>
 #include <unordered_map>
@@ -28,10 +32,14 @@
 namespace Opm {
 
 class EclipseGrid;
+class EclipseGridLGR;
 class Deck;
 class DeckKeyword;
+class DeckView;
+class LgrCollection;
 namespace Fieldprops {
 class TranCalculator;
+enum class ScalarOperation;
 template<typename T> struct FieldData;
 }
 class FieldProps;
@@ -61,6 +69,17 @@ public:
 
     /// \brief Whether we can call methods on the manager
     bool is_usable() const;
+
+    /// The values a CARFIN block gives its refined cells.
+    Carfin::BlockValues lgrBlockValues(const EclipseGridLGR& lgr, const DeckView& block) const;
+
+    /// Make the LGRs' block values available through lgr_double()/lgr_int().
+    void set_lgr_block_values(const LgrCollection& lgrs);
+
+    /// A refined cell's own value of keyword, indexed by the cell's Cartesian
+    /// index within its LGR, or nullptr when it inherits its father's.
+    const std::vector<double>* lgr_double(const std::string& lgr, const std::string& keyword) const;
+    const std::vector<int>* lgr_int(const std::string& lgr, const std::string& keyword) const;
 
     /*
      The number of cells in the fields managed by this FieldPropsManager.
@@ -240,6 +259,23 @@ public:
     */
     virtual void apply_tran(const std::string& keyword, std::vector<double>& tran_data) const;
 
+    /// Apply a TRAN* calculator through an index map.
+    ///
+    /// tran_data is not required to be one entry per active cell here:
+    /// actionIndex[i] names the active cell whose modifier applies to
+    /// tran_data[i], and a negative entry leaves that entry alone. A refined
+    /// grid needs this -- its faces outnumber the cells the deck describes, and
+    /// several of them take one coarse cell's modifier.
+    virtual void apply_tran(const std::string& keyword,
+                            const std::vector<int>& actionIndex,
+                            std::vector<double>& tran_data) const;
+
+    /// The operations a TRAN* calculator will perform. MUL, MIN and MAX carry
+    /// over to a refined face unchanged; EQUAL and ADD state an absolute
+    /// transmissibility, which does not divide among the faces a refinement
+    /// puts in a coarse face's place.
+    virtual std::set<Fieldprops::ScalarOperation> tran_operations(const std::string& keyword) const;
+
     /// \brief Apply TRANZ modifiers using global indices
     ///
     /// Needed for calculation transmissibility of NNCs over pinched out cells.
@@ -294,6 +330,7 @@ private:
     std::vector<T> get_global(const std::string& keyword) const;
 
     std::shared_ptr<FieldProps> fp;
+    std::shared_ptr<const std::map<std::string, Carfin::BlockValues>> lgr_values;
 };
 
 template<class MapType>
@@ -301,6 +338,13 @@ void apply_tran(const std::unordered_map<std::string, Fieldprops::TranCalculator
                 const MapType& double_data,
                 std::size_t active_size,
                 const std::string& keyword, std::vector<double>& data);
+
+template<class MapType>
+void apply_tran(const std::unordered_map<std::string, Fieldprops::TranCalculator>& tran,
+                const MapType& double_data,
+                const std::string& keyword,
+                const std::vector<int>& actionIndex,
+                std::vector<double>& data);
 
 template<class MapType>
 void apply_tran(const Fieldprops::TranCalculator& tranCalc,

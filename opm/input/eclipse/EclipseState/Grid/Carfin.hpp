@@ -21,6 +21,8 @@
 #include <array>
 #include <cstddef>
 #include <functional>
+#include <map>
+#include <optional>
 #include <vector>
 #include <string>
 
@@ -71,10 +73,109 @@ namespace Opm
                int nx, int ny,
                int nz);
 
+        /// How one direction of the box is subdivided.
+        ///
+        /// `counts` is NXFIN/NYFIN/NZFIN: how many refined columns each parent
+        /// cell is split into, one entry per parent cell. `widths` is
+        /// HXFIN/HYFIN/HZFIN: the relative width of each refined column, one
+        /// entry per refined column, normalised within each parent cell.
+        /// Either may be empty, meaning an equal split.
+        struct AxisGrading
+        {
+            std::vector<int> counts{};
+            std::vector<double> widths{};
+
+            bool operator==(const AxisGrading& other) const = default;
+
+            template<class Serializer>
+            void serializeOp(Serializer& serializer)
+            {
+                serializer(counts);
+                serializer(widths);
+            }
+        };
+
         static Carfin serializationTestObject();
 
         void update(const DeckRecord& deckRecord);
         void reset();
+
+        /// Attach an N*FIN / H*FIN pair for one direction. Throws if the
+        /// counts do not add up to that direction's number of refined columns,
+        /// or the widths do not number one per refined column.
+        void setGrading(std::size_t dim,
+                        std::vector<int> counts,
+                        std::vector<double> widths);
+
+        /// Whether any direction was given an explicit subdivision.
+        bool isGraded() const;
+
+        /// The block's own MINPV, if it set one. A graded block normally does:
+        /// its finest cells are far below the field's threshold, and inheriting
+        /// that threshold would delete the cells the refinement exists to make.
+        void setMinpv(double minpv);
+        const std::optional<double>& MINPV() const;
+
+        /// Refined cells the block's MINPV or ACTNUM removes, one entry per
+        /// refined Cartesian cell (1 = removed). Derived by EclipseState once the
+        /// refined geometry exists, and carried here so it reaches the grid
+        /// builder -- on every rank, since the collection is broadcast.
+        void setMinpvRemoved(std::vector<int> removed);
+        const std::vector<int>& minpvRemoved() const;
+
+        /// Property values the block's own keywords give its refined cells,
+        /// one entry per refined Cartesian cell. Only arrays that differ from
+        /// what the cells inherit from their father are kept.
+        struct BlockValues
+        {
+            std::map<std::string, std::vector<double>> doubles{};
+            std::map<std::string, std::vector<int>> ints{};
+
+            bool empty() const { return doubles.empty() && ints.empty(); }
+            bool operator==(const BlockValues&) const = default;
+
+            template<class Serializer>
+            void serializeOp(Serializer& serializer)
+            {
+                serializer(doubles);
+                serializer(ints);
+            }
+        };
+
+        void setBlockValues(BlockValues values);
+        const BlockValues& blockValues() const;
+
+        const std::array<AxisGrading, 3>& grading() const;
+
+        /// Reject a box whose refined columns cannot be distributed over its
+        /// parent cells: without N*FIN each parent cell takes the same number,
+        /// so the count must divide.
+        void validateSubdivision() const;
+
+        /// Where each refined column of one direction sits: the parent cell it
+        /// lies in (0-based within the box) and its normalised extent within
+        /// that cell. One entry per refined column. This is the whole meaning
+        /// of N*FIN/H*FIN, and the only place it is expressed.
+        struct RefinedColumns
+        {
+            std::vector<int> parentOffset{};    ///< per refined column
+            std::vector<double> fracLo{};       ///< per refined column
+            std::vector<double> fracHi{};       ///< per refined column
+            std::vector<int> firstColumn{};     ///< per parent cell
+            std::vector<int> count{};           ///< per parent cell
+
+            template<class Serializer>
+            void serializeOp(Serializer& serializer)
+            {
+                serializer(parentOffset);
+                serializer(fracLo);
+                serializer(fracHi);
+                serializer(firstColumn);
+                serializer(count);
+            }
+        };
+
+        RefinedColumns refinedColumns(std::size_t dim) const;
 
         bool isGlobal() const;
         std::size_t size() const;
@@ -107,9 +208,18 @@ namespace Opm
             serializer(m_end_offset);
             serializer(name_grid);
             serializer(parent_name_grid);
+            serializer(m_grading);
+            serializer(m_minpv);
+            serializer(m_minpv_removed);
+            serializer(m_block_values);
         }
 
     private:
+        std::array<AxisGrading, 3> m_grading{};
+        std::optional<double> m_minpv{};
+        std::vector<int> m_minpv_removed{};
+        BlockValues m_block_values{};
+
         GridDims m_globalGridDims_{};
         IsActive m_globalIsActive_{};
         ActiveIdx m_globalActiveIdx_{};

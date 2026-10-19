@@ -2999,8 +2999,10 @@ BOOST_AUTO_TEST_CASE (Declared_WellDynamicDataLGR)
     Opm::WellTestState wtest_state;
 
     awd.captureDynamicWellData(simCase.sched, simCase.es.tracer(), rptStep, xw, smry);
-    awd_lgr1.captureDynamicWellDataLGR(simCase.sched, simCase.es.tracer(), rptStep, xw, smry, "LGR1");
-    awd_lgr2.captureDynamicWellDataLGR(simCase.sched, simCase.es.tracer(), rptStep, xw, smry, "LGR2");
+    awd_lgr1.captureDynamicWellDataLGR(simCase.sched, simCase.es.tracer(), rptStep, xw, smry, "LGR1",
+                                       static_cast<int>(simCase.es.getInputGrid().get_lgr_cell_index("LGR1")) + 1);
+    awd_lgr2.captureDynamicWellDataLGR(simCase.sched, simCase.es.tracer(), rptStep, xw, smry, "LGR2",
+                                       static_cast<int>(simCase.es.getInputGrid().get_lgr_cell_index("LGR2")) + 1);
 
     // IWEL (PROD)
     {

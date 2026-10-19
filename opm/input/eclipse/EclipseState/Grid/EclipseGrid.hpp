@@ -20,6 +20,7 @@
 #ifndef OPM_PARSER_ECLIPSE_GRID_HPP
 #define OPM_PARSER_ECLIPSE_GRID_HPP
 
+#include <opm/input/eclipse/EclipseState/Grid/Carfin.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/GridDims.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/MapAxes.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/MinpvMode.hpp>
@@ -28,6 +29,7 @@
 
 #include <algorithm>
 #include <array>
+#include <functional>
 #include <cstddef>
 #include <map>
 #include <memory>
@@ -113,6 +115,11 @@ namespace Opm {
         const std::vector<std::size_t>& get_print_order_lgr () const {
           return m_print_order_lgr_cells;
         }
+        /// Every LGR below this grid, nested ones included, in the order
+        /// save_children() writes them to the EGRID: each child followed by
+        /// its own children. The INIT and restart writers follow the same
+        /// order so their sections pair with the EGRID grids.
+        std::vector<std::reference_wrapper<const EclipseGridLGR>> lgrsInPrintOrder() const;
 
         std::size_t get_lgr_cell_index(const std::string& lgr_tag) const
         {
@@ -321,6 +328,7 @@ namespace Opm {
         EclipseGridLGR& getLGRCell(std::size_t index);
         const EclipseGridLGR& getLGRCell(std::size_t index) const;
         const EclipseGridLGR& getLGRCell(const std::string& lgr_tag) const;
+        EclipseGridLGR& getLGRCell(const std::string& lgr_tag);
         int getLGR_global_father(std::size_t global_index,  const std::string& lgr_tag) const;
         int getLGR_father(std::size_t i, std::size_t j, std::size_t k, const std::string& lgr_tag) const;
         int getLGR_father(std::size_t global_index, const std::string& lgr_tag) const;
@@ -461,9 +469,32 @@ namespace Opm {
                        std::size_t nx,
                        std::size_t ny,
                        std::size_t nz,
-                       const vec_size_t& father_lgr_index,
                        const std::array<int, 3>& low_fatherIJK_,
-                       const std::array<int, 3>& up_fatherIJK_);
+                       const std::array<int, 3>& up_fatherIJK_,
+                       const std::array<Carfin::RefinedColumns, 3>& columns);
+
+        /// Derive this LGR's ACTNUM and its list of father cells from the
+        /// father's activity. Call once, after construction.
+        void inheritActiveCellsFromFather(const EclipseGrid& father);
+
+        /// Apply the block's own MINPV: a refined cell takes its share of the
+        /// father's pore volume by volume, and drops out below the threshold.
+        ///
+        /// @param fatherPorv Cartesian-sized pore volume of the father grid.
+        void applyBlockMinpv(const EclipseGrid& father,
+                             const std::vector<double>& fatherPorv,
+                             double minpv);
+
+        /// Remove the refined cells the block's own ACTNUM switches off
+        /// (Cartesian-sized, 0 = removed), as applyBlockMinpv() does.
+        void removeBlockCells(const EclipseGrid& father, const std::vector<int>& actnum);
+
+        /// Pore volume the block's MINPV removed, and the block's total.
+        double minpvRemovedPorv() const { return m_minpv_removed_porv; }
+        double minpvTotalPorv() const { return m_minpv_total_porv; }
+
+        /// Refined cells the block's MINPV or ACTNUM removed. Empty when neither did.
+        const std::vector<int>& minpvRemoved() const { return m_minpv_removed; }
         const vec_size_t& getFatherGlobalID() const;
 
         void save(Opm::EclIO::EclOutput&, const Opm::UnitSystem&) const;
@@ -482,7 +513,10 @@ namespace Opm {
         int get_hostnum(std::size_t global_index) const {return(m_hostnum[global_index]);};
 
         //parsing the father grid allows the global_father references to be given in terms of father_grid
+        /// Father Cartesian index per refined Cartesian cell (for PORV and geometry).
         std::vector<int> getLGRCell_global_father(const EclipseGrid& father_grid) const;
+        /// Father active index per active refined cell (for active-sized arrays).
+        std::vector<int> getLGRCell_active_father(const EclipseGrid& father_grid) const;
         std::vector<double> getLGRCell_all_depth (const EclipseGrid& father_grid) const;
 
         void get_label_child_to_top_father(std::vector<std::reference_wrapper<const std::string>>& list) const;
@@ -501,6 +535,14 @@ namespace Opm {
         const std::array<int,3>& get_up_fatherIJK() const{
           return up_fatherIJK;
         }
+
+        /// Where each refined column sits in its father cell, per direction:
+        /// what N*FIN/H*FIN describe, a uniform split when they are absent.
+        const std::array<Carfin::RefinedColumns, 3>& refinedColumns() const {
+          return m_columns;
+        }
+
+        void setPillarsFromBoxLayer(bool fromBox) { m_pillarsFromBoxLayer = fromBox; }
 
 
         /**
@@ -521,14 +563,25 @@ namespace Opm {
 
 
     private:
-        void init_father_global();
         void save_core(Opm::EclIO::EclOutput&, const Opm::UnitSystem&) const;
+        void throwIfHostEmptied(const EclipseGrid& father, const std::string& what) const;
+        /// Switch off the cells the block removed, keeping the others' activity.
+        void switchOffRemovedCells();
+
+
 
         std::string father_label;
         // references global on the father label
         vec_size_t father_global;
         std::array<int, 3> low_fatherIJK {};
         std::array<int, 3> up_fatherIJK {};
+        std::array<Carfin::RefinedColumns, 3> m_columns {};
+        bool m_pillarsFromBoxLayer{false};
+        double m_minpv_removed_porv{0.0};
+        double m_minpv_total_porv{0.0};
+
+        /// Per refined Cartesian cell, 1 when the block's MINPV removed it.
+        std::vector<int> m_minpv_removed {};
         std::vector<int> m_hostnum;
 
         std::vector<double> generate_refined_coord(const std::vector<double>& ,

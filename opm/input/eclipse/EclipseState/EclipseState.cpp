@@ -34,6 +34,7 @@
 #include <opm/input/eclipse/EclipseState/Grid/Fault.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FaultCollection.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FIPRegionStatistics.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/FieldProps.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/MULTREGTScanner.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/NNC.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/SatfuncPropertyInitializers.hpp>
@@ -56,10 +57,12 @@
 #include <fmt/format.h>
 #include <fmt/ranges.h>
 
+#include <algorithm>
 #include <cstddef>
 #include <filesystem>
 #include <map>
 #include <stdexcept>
+#include <set>
 #include <string>
 #include <unordered_set>
 #include <utility>
@@ -92,6 +95,33 @@ namespace {
                 };
             }
         }
+    }
+
+    // A keyword inside a CARFIN ... ENDFIN block whose values the refined
+    // cells do not take stops the input, as in every other local grid block.
+    [[noreturn]] void refuseLgrBlockKeyword(const std::string& name,
+                                            const std::string& lgrName,
+                                            const Opm::KeywordLocation& location)
+    {
+        throw Opm::OpmInputError {
+            fmt::format("{} is given for the cells of local grid {}: values "
+                        "for local grid cells are not supported.", name, lgrName),
+            location
+        };
+    }
+
+    // The keyword of the block that sets the array, or the block's first
+    // keyword when an operation such as EQUALS set it.
+    Opm::KeywordLocation blockLocation(const Opm::DeckView& block,
+                                       const std::string& name)
+    {
+        for (const auto& keyword : block) {
+            if (keyword.name() == name) {
+                return keyword.location();
+            }
+        }
+
+        return block.empty() ? Opm::KeywordLocation{} : block.begin()->location();
     }
 }
 
@@ -165,6 +195,7 @@ namespace Opm {
         }
         this->initLgrs(deck);
         this->aquifer_config.load_connections(deck, m_inputGrid);
+        this->checkNumericalAquifersOutsideLgrs();
 
         this->applyMULTXYZ();
         this->initFaults(deck);
@@ -338,14 +369,239 @@ namespace Opm {
         return m_lgrs.size() != 0;
     }
 
+    /*
+      A numerical aquifer takes over a grid cell.  A refinement box covering
+      that cell replaces it with refined cells, and nothing carries the aquifer
+      across: the cell is gone from the leaf grid, its AQUCON connection has no
+      face to sit on, and the INIT writer assumes an aquifer cell is never
+      refined (it asserts level == 0, which a release build compiles out and
+      then writes the wrong thing).  Refuse the combination instead.
+    */
+    void EclipseState::checkNumericalAquifersOutsideLgrs() const
+    {
+        if ((this->m_lgrs.size() == 0) ||
+            !this->aquifer_config.hasNumericalAquifer())
+        {
+            return;
+        }
+
+        const auto dims = this->m_inputGrid.getNXYZ();
+        for (const auto& cellId : this->aquifer_config.numericalAquifers().allAquiferCellIds()) {
+            const auto i = static_cast<int>(cellId % dims[0]);
+            const auto j = static_cast<int>((cellId / dims[0]) % dims[1]);
+            const auto k = static_cast<int>(cellId / (static_cast<std::size_t>(dims[0]) * dims[1]));
+
+            for (std::size_t n = 0; n < this->m_lgrs.size(); ++n) {
+                const auto& lgr = this->m_lgrs.getLgr(n);
+                if ((i >= lgr.I1()) && (i <= lgr.I2()) &&
+                    (j >= lgr.J1()) && (j <= lgr.J2()) &&
+                    (k >= lgr.K1()) && (k <= lgr.K2()))
+                {
+                    throw OpmInputError(fmt::format(
+                        "Numerical aquifer cell ({}, {}, {}) lies inside the refinement box "
+                        "'{}' ({}-{}, {}-{}, {}-{}). A refined cell cannot also be an aquifer "
+                        "cell: the coarse cell is not on the leaf grid, so the aquifer has "
+                        "nothing to occupy and its AQUCON connections have no face to sit on. "
+                        "Move the AQUNUM cell outside the box, or shrink the box so it does "
+                        "not cover it.",
+                        i + 1, j + 1, k + 1, lgr.NAME(),
+                        lgr.I1() + 1, lgr.I2() + 1, lgr.J1() + 1,
+                        lgr.J2() + 1, lgr.K1() + 1, lgr.K2() + 1),
+                        KeywordLocation{});
+                }
+            }
+        }
+    }
+
     void EclipseState::initLgrs(const Deck& deck) {
         if (!DeckSection::hasGRID(deck))
             return;
 
         const GRIDSection gridSection ( deck );
 
-        m_lgrs = LgrCollection(gridSection, m_inputGrid);
+        m_lgrs = LgrCollection(gridSection, m_inputGrid, deck);
+        refuseUnappliedLgrBlockKeywords(deck);
         m_inputGrid.init_lgr_cells(m_lgrs);
+        applyLgrBlockMinpv(deck);
+        applyLgrBlockValues(deck);
+    }
+
+    /*
+      A block's MINPV replaces the field's for its refined cells, and a graded
+      block normally sets one: its finest cells are orders of magnitude below the
+      field threshold, which would otherwise delete exactly the cells the
+      refinement exists to create.
+
+      Decided here, once, rather than in the grid builder, because the refined
+      geometry and the father's pore volume are both to hand -- and because the
+      answer has to be the same on both sides: the simulation grid's refined
+      levels and the LGR grids the EGRID/INIT are written from must agree on
+      which refined cells exist. It is recorded on the LGR grid, and a later
+      ACTNUM change (the output grid is the input grid with the field's MINPV
+      applied) only switches refined cells off, so the cells stay removed.
+    */
+    void EclipseState::applyLgrBlockMinpv(const Deck& deck)
+    {
+        if (this->m_lgrs.size() == 0) {
+            return;
+        }
+
+        std::optional<std::vector<double>> porv{};
+
+        for (std::size_t index = 0; index < this->m_lgrs.size(); ++index) {
+            auto& lgr = this->m_lgrs.getLgr(index);
+            if (! lgr.MINPV().has_value()) {
+                continue;
+            }
+
+            if (lgr.PARENT_NAME() != "GLOBAL") {
+                // Applied only to a block refining the global grid.
+                const auto block = deck.lgrBlock(lgr.NAME());
+                const auto minpv = std::find_if(block.begin(), block.end(), [](const auto& keyword)
+                    { return (keyword.name() == "MINPV") || (keyword.name() == "MINPORV"); });
+                refuseLgrBlockKeyword((minpv != block.end()) ? minpv->name() : std::string{"MINPV"},
+                                      lgr.NAME(),
+                                      (minpv != block.end()) ? minpv->location() : KeywordLocation{});
+            }
+
+            if (! porv.has_value()) {
+                porv = this->field_props.porv(/* global = */ true);
+            }
+
+            auto& lgrGrid = this->m_inputGrid.getLGRCell(lgr.NAME());
+            lgrGrid.applyBlockMinpv(this->m_inputGrid, porv.value(), lgr.MINPV().value());
+            lgr.setMinpvRemoved(lgrGrid.minpvRemoved());
+
+            const auto removed = std::count(lgrGrid.minpvRemoved().begin(),
+                                            lgrGrid.minpvRemoved().end(), 1);
+            if (removed > 0) {
+                // A refined cell holds its father's pore volume divided by the
+                // refinement, so a threshold meant for coarse cells deletes the
+                // fine ones wholesale. The cell count alone does not say whether
+                // that matters -- a third of the cells can be a thousandth of
+                // the volume, or most of it -- so report both.
+                const auto pvTotal = lgrGrid.minpvTotalPorv();
+                const auto pvGone  = lgrGrid.minpvRemovedPorv();
+                const auto pvFrac  = (pvTotal > 0.0) ? (100.0 * pvGone / pvTotal) : 0.0;
+
+                const auto msg = fmt::format(
+                    "CARFIN '{}': MINPV {} removed {} of {} refined cells, {:.3g}% of the "
+                    "block's pore volume.", lgr.NAME(), lgr.MINPV().value(),
+                    removed, lgrGrid.getCartesianSize(), pvFrac);
+
+                if (pvFrac > 1.0) {
+                    OpmLog::warning(msg + fmt::format(
+                        " A refined cell holds its father's pore volume divided by the "
+                        "refinement, so a threshold meant for coarse cells deletes fine "
+                        "cells the refinement exists to create. Lower the block's MINPV "
+                        "if that was not intended."));
+                }
+                else {
+                    OpmLog::info(msg);
+                }
+            }
+        }
+    }
+
+    /*
+      Property values for the refined cells: each starts from its father's and
+      the block's own keywords apply in local indices. Only those the simulator
+      reads per refined cell are taken, the others stop the input; a block
+      ACTNUM removes cells, as MINPV.
+    */
+    void EclipseState::applyLgrBlockValues(const Deck& deck)
+    {
+        static const auto honoured = std::set<std::string> {
+            "PERMX", "PERMY", "PERMZ", "PORO", "NTG", "MULTPV",
+        };
+
+        for (std::size_t index = 0; index < this->m_lgrs.size(); ++index) {
+            auto& lgr = this->m_lgrs.getLgr(index);
+            const auto block = deck.lgrBlock(lgr.NAME());
+            if (block.empty()) {
+                continue;
+            }
+
+            if (lgr.PARENT_NAME() != "GLOBAL") {
+                // Only a block refining the global grid gives its refined
+                // cells values of their own.
+                for (const auto& keyword : block) {
+                    if (FieldProps::isGridPropertyKeyword(keyword.name())) {
+                        refuseLgrBlockKeyword(keyword.name(), lgr.NAME(), keyword.location());
+                    }
+                }
+                continue;
+            }
+
+            auto& lgrGrid = this->m_inputGrid.getLGRCell(lgr.NAME());
+            auto values = this->field_props.lgrBlockValues(lgrGrid, block);
+
+            // Arrays the simulator does not take for the refined cells stop
+            // the input; the block's ACTNUM removes cells.
+            auto refuseUnhonoured = [&block, &lgr](const auto& arrays) {
+                for (const auto& array : arrays) {
+                    if ((honoured.count(array.first) == 0) && (array.first != "ACTNUM")) {
+                        refuseLgrBlockKeyword(array.first, lgr.NAME(),
+                                              blockLocation(block, array.first));
+                    }
+                }
+            };
+            refuseUnhonoured(values.doubles);
+            refuseUnhonoured(values.ints);
+
+            if (auto actnum = values.ints.find("ACTNUM"); actnum != values.ints.end()) {
+                const auto before = lgrGrid.getNumActive();
+                lgrGrid.removeBlockCells(this->m_inputGrid, actnum->second);
+                lgr.setMinpvRemoved(lgrGrid.minpvRemoved());
+                values.ints.erase(actnum);
+                OpmLog::info(fmt::format("CARFIN '{}': ACTNUM removes {} of its refined cells.",
+                                         lgr.NAME(), before - lgrGrid.getNumActive()));
+            }
+
+            if (!values.empty()) {
+                auto names = std::vector<std::string>{};
+                for (const auto& [name, data] : values.doubles) {
+                    names.push_back(name);
+                }
+                OpmLog::info(fmt::format("CARFIN '{}' gives its refined cells their own {}.",
+                                         lgr.NAME(), fmt::join(names, ", ")));
+            }
+
+            lgr.setBlockValues(std::move(values));
+        }
+
+        this->field_props.set_lgr_block_values(this->m_lgrs);
+    }
+
+    /*
+      The keywords inside a CARFIN...ENDFIN block describe the refined cells and
+      are kept out of the global grid (Deck::scopeLgrBlockKeywords). N*FIN/H*FIN
+      subdivide the box, MINPV thresholds the refined cells' pore volume, and the
+      property keywords are applied by applyLgrBlockValues(). Stop on the rest.
+    */
+    void EclipseState::refuseUnappliedLgrBlockKeywords(const Deck& deck) const
+    {
+        for (std::size_t index = 0; index < this->m_lgrs.size(); ++index) {
+            const auto& lgrName = this->m_lgrs.getLgr(index).NAME();
+            const auto block = deck.lgrBlock(lgrName);
+
+            if (block.empty()) {
+                continue;
+            }
+
+            static const auto applied = std::set<std::string> {
+                "NXFIN", "NYFIN", "NZFIN", "HXFIN", "HYFIN", "HZFIN",
+                "MINPV", "MINPORV",
+            };
+
+            for (const auto& keyword : block) {
+                if ((applied.count(keyword.name()) == 0) &&
+                    !FieldProps::isGridPropertyKeyword(keyword.name()))
+                {
+                    refuseLgrBlockKeyword(keyword.name(), lgrName, keyword.location());
+                }
+            }
+        }
     }
 
 

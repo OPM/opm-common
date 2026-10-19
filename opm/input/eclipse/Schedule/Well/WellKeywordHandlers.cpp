@@ -1464,10 +1464,31 @@ void handleWSEED(HandlerContext& handlerContext)
             .width           (record.getItem<ParserKeywords::WSEED::WIDTH> ().getSIDouble(0));
 
         for (const auto& well_name : well_names) {
-            const auto hasConn = handlerContext.state()
+            const auto& wconns = handlerContext.state()
                 .wells(well_name)
-                .getConnections()
-                .hasGlobalIndex(cellSeedIndex);
+                .getConnections();
+
+            auto hasConn = wconns.hasGlobalIndex(cellSeedIndex);
+
+            if (! hasConn) {
+                // WSEED addresses a level-zero (global-grid) cell, but
+                // connections completed inside an LGR (COMPDATL) carry
+                // LGR-local global indices.  Accept the seed if the given
+                // cell is the father (parent coarse cell) of such a
+                // connection; the fracture model applies the same
+                // father-based matching when resolving the seed.
+                hasConn = std::any_of(wconns.begin(), wconns.end(),
+                    [&grid, cellSeedIndex](const auto& conn)
+                    {
+                        if (conn.get_lgr_level() <= 0) {
+                            return false;
+                        }
+                        const auto& tag = grid->get_lgr_labels_by_number(conn.get_lgr_level());
+                        const auto father = grid->getLGR_global_father(conn.global_index(), tag);
+                        return (father >= 0)
+                            && (static_cast<std::size_t>(father) == cellSeedIndex);
+                    });
+            }
 
             if (! hasConn) { continue; }
 

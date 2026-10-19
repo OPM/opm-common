@@ -126,6 +126,16 @@ namespace Opm {
 
             void remove_keywords(int from, int to) { keywordList.erase(keywordList.begin() +from, keywordList.begin() + to); };
 
+            /// Tag the keywords bracketed by a CARFIN...ENDFIN pair with that
+            /// block's LGR name, so they stop counting as global-grid keywords.
+            /// Call once, after parsing.
+            void scopeLgrBlockKeywords();
+
+            /// The keywords bracketed by the named LGR's CARFIN...ENDFIN pair,
+            /// in deck order. They describe the refined block and are absent
+            /// from the global view and from every DeckSection.
+            DeckView lgrBlock(const std::string& lgrName) const;
+
         private:
 
             std::vector< DeckKeyword > keywordList;

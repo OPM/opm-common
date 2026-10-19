@@ -25,13 +25,28 @@
 #include <opm/input/eclipse/EclipseState/Grid/GridDims.hpp>
 
 #include <fmt/format.h>
+#include <fmt/ranges.h>
 
+#include <opm/input/eclipse/Deck/Deck.hpp>
+#include <opm/input/eclipse/Deck/DeckItem.hpp>
+#include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
+#include <opm/input/eclipse/Deck/DeckView.hpp>
+#include <opm/input/eclipse/Deck/value_status.hpp>
 #include <opm/input/eclipse/Deck/DeckSection.hpp>
 
 #include <opm/input/eclipse/Parser/ParserKeywords/C.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/H.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/L.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/M.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/N.hpp>
 
 #include <cstddef>
+#include <optional>
+#include <stdexcept>
+#include <string>
+#include <type_traits>
+#include <vector>
 
 namespace Opm {
 
@@ -43,7 +58,133 @@ namespace Opm {
     TODO: Collect also lgrs from RADFIN blocks...
      */
 
-    LgrCollection::LgrCollection(const GRIDSection& gridSection, const EclipseGrid& grid) {
+    namespace {
+
+        /// The last N*FIN/H*FIN of a block wins, as repeated keywords do.
+        template <typename Keyword>
+        const DeckItem* gradingItem(const DeckView& block)
+        {
+            if (! block.has_keyword<Keyword>()) {
+                return nullptr;
+            }
+
+            const auto& keyword = block.get<Keyword>().back();
+            if (keyword.empty()) {
+                return nullptr;
+            }
+
+            return &keyword.getDataRecord().getDataItem();
+        }
+
+        /// The block's MINPV (or MINPORV), the last one if it sets several.
+        std::optional<double> blockMinpv(const DeckView& block)
+        {
+            for (const auto* name : { ParserKeywords::MINPV::keywordName.c_str(),
+                                      ParserKeywords::MINPORV::keywordName.c_str() })
+            {
+                if (! block.has_keyword(name)) {
+                    continue;
+                }
+
+                const auto& keyword = block[name].back();
+                if (! keyword.empty()) {
+                    return keyword.getRecord(0).getItem(0).getSIDouble(0);
+                }
+            }
+
+            return std::nullopt;
+        }
+
+        /// N*FIN counts. A defaulted entry would have to be inferred from the
+        /// others, which changes the geometry, so it is refused instead.
+        template <typename Keyword>
+        std::vector<int> subdivisionCounts(const DeckView& block, const std::string& lgrName)
+        {
+            const auto* item = gradingItem<Keyword>(block);
+            if (item == nullptr) {
+                return {};
+            }
+
+            const auto& status = item->getValueStatus();
+            for (auto entry = 0*status.size(); entry < status.size(); ++entry) {
+                if (! value::has_value(status[entry])) {
+                    throw std::invalid_argument {
+                        fmt::format("CARFIN '{}': {} entry {} is defaulted. Every parent "
+                                    "cell's number of refined cells must be given.",
+                                    lgrName, Keyword::keywordName, entry + 1)
+                    };
+                }
+            }
+
+            return item->template getData<int>();
+        }
+
+        /// H*FIN widths, relative and normalised within each parent cell. A
+        /// defaulted entry is an equal share of its parent cell, which is
+        /// weight one against the explicit widths.
+        template <typename Keyword>
+        std::vector<double> subdivisionWidths(const DeckView& block)
+        {
+            const auto* item = gradingItem<Keyword>(block);
+            if (item == nullptr) {
+                return {};
+            }
+
+            auto widths = item->getSIDoubleData();
+            const auto& status = item->getValueStatus();
+            for (auto entry = 0*widths.size(); entry < widths.size(); ++entry) {
+                if (! value::has_value(status[entry])) {
+                    widths[entry] = 1.0;
+                }
+            }
+
+            return widths;
+        }
+
+        /*
+          N*FIN says how many refined columns each parent cell of the box takes,
+          H*FIN their relative widths. Both live inside the CARFIN...ENDFIN
+          block, so they reach us through the deck rather than the GRID section.
+        */
+        void applyGrading(Carfin& lgr, const DeckView& block)
+        {
+            const auto& name = lgr.NAME();
+
+            // MINPV/MINPORV inside the block is the refined cells' threshold,
+            // in place of the field's.
+            if (const auto minpv = blockMinpv(block); minpv.has_value()) {
+                lgr.setMinpv(minpv.value());
+            }
+
+            lgr.setGrading(0,
+                           subdivisionCounts<ParserKeywords::NXFIN>(block, name),
+                           subdivisionWidths<ParserKeywords::HXFIN>(block));
+            lgr.setGrading(1,
+                           subdivisionCounts<ParserKeywords::NYFIN>(block, name),
+                           subdivisionWidths<ParserKeywords::HYFIN>(block));
+            lgr.setGrading(2,
+                           subdivisionCounts<ParserKeywords::NZFIN>(block, name),
+                           subdivisionWidths<ParserKeywords::HZFIN>(block));
+        }
+
+    } // Anonymous namespace
+
+    LgrCollection::LgrCollection(const GRIDSection& gridSection,
+                                 const EclipseGrid& grid,
+                                 const Deck& deck)
+    {
+        if (gridSection.hasKeyword<ParserKeywords::LGRPILLR>()) {
+            const auto& keyword = gridSection.get<ParserKeywords::LGRPILLR>().back();
+            const auto mode = keyword.getRecord(0).getItem<ParserKeywords::LGRPILLR::MODE>().getTrimmedString(0);
+            if (mode != "COLUMN" && mode != "BOX") {
+                throw OpmInputError {
+                    fmt::format("LGRPILLR mode '{}' is not one of 'COLUMN' and 'BOX'.", mode),
+                    keyword.location()
+                };
+            }
+            m_pillarsFromBoxLayer = (mode == "BOX");
+        }
+
         const auto& lgrKeywords = gridSection.getKeywordList<ParserKeywords::CARFIN>();
 
         for (const auto& lgrsKeyword : lgrKeywords) {
@@ -51,6 +192,15 @@ namespace Opm {
 
             for (const auto& lgrRecord : *lgrsKeyword) {
                 addLgr(grid, lgrRecord, lgrsKeyword->location());
+
+                auto& lgr = m_lgrs.iget(m_lgrs.size() - 1);
+                try {
+                    applyGrading(lgr, deck.lgrBlock(lgr.NAME()));
+                    lgr.validateSubdivision();
+                }
+                catch (const std::invalid_argument& e) {
+                    throw OpmInputError { e.what(), lgrsKeyword->location() };
+                }
             }
         }
     }
@@ -127,7 +277,24 @@ namespace Opm {
        m_lgrs.insert(std::make_pair(lgr.NAME(), lgr));
     }
 
+    std::array<int,3> LgrCollection::levelZeroIJK(const std::size_t lgrNumber,
+                                                  std::array<int,3> ijk) const
+    {
+        const Carfin* box = &this->getLgr(lgrNumber - 1);
+        while (true) {
+            const std::array<int,3> start { box->I1(), box->J1(), box->K1() };
+            for (std::size_t d = 0; d < 3; ++d) {
+                ijk[d] = start[d] + box->refinedColumns(d).parentOffset.at(ijk[d]);
+            }
+            if (box->PARENT_NAME() == "GLOBAL" || !this->hasLgr(box->PARENT_NAME())) {
+                return ijk;
+            }
+            box = &this->getLgr(box->PARENT_NAME());
+        }
+    }
+
     bool LgrCollection::operator==(const LgrCollection& data) const {
-        return this->m_lgrs == data.m_lgrs;
+        return (this->m_lgrs == data.m_lgrs)
+            && (this->m_pillarsFromBoxLayer == data.m_pillarsFromBoxLayer);
     }
 }

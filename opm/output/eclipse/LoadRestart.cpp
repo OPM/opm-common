@@ -582,15 +582,16 @@ namespace {
     }
 
     std::vector<double>
-    double_vector(const std::string& key, const Opm::EclIO::RestartFileView& rst_view)
+    double_vector(const std::string& key, const Opm::EclIO::RestartFileView& rst_view,
+                  const int occurrence = 0)
     {
         if (rst_view.hasKeyword<double>(key)) {
             // Data exists as type DOUB.  Return unchanged.
-            return rst_view.getKeyword<double>(key);
+            return rst_view.getKeyword<double>(key, occurrence);
         }
         else if (rst_view.hasKeyword<float>(key)) {
             // Data exists as type REAL.  Convert to double.
-            const auto& data = rst_view.getKeyword<float>(key);
+            const auto& data = rst_view.getKeyword<float>(key, occurrence);
 
             return { data.begin(), data.end() };
         }
@@ -619,9 +620,10 @@ namespace {
     void loadIfAvailable(const Opm::RestartKey&               value,
                          const std::vector<double>::size_type numcells,
                          const Opm::EclIO::RestartFileView&   rst_view,
-                         Opm::data::Solution&                 sol)
+                         Opm::data::Solution&                 sol,
+                         const int                            occurrence = 0)
     {
-        const auto& kwdata = double_vector(value.key, rst_view);
+        const auto& kwdata = double_vector(value.key, rst_view, occurrence);
 
         if (kwdata.empty()) {
             throwIfMissingRequired(value);
@@ -656,13 +658,14 @@ namespace {
     Opm::data::Solution
     restoreSOLUTION(const std::vector<Opm::RestartKey>& solution_keys,
                     const int                           numcells,
-                    const Opm::EclIO::RestartFileView&  rst_view)
+                    const Opm::EclIO::RestartFileView&  rst_view,
+                    const int                           occurrence = 0)
     {
         Opm::data::Solution sol(/* init_si = */ false);
 
         for (const auto& value : solution_keys) {
             // Load vector if available.
-            loadIfAvailable(value, numcells, rst_view, sol);
+            loadIfAvailable(value, numcells, rst_view, sol, occurrence);
         }
 
         return sol;
@@ -1785,6 +1788,45 @@ namespace Opm::RestartIO  {
         restore_cumulative(summary_state, schedule, es.tracer(), std::move(rst_view));
 
         return rst_value;
+    }
+
+    std::vector<data::Solution>
+    load_solution_only_levels(const std::string&             filename,
+                              int                            report_step,
+                              const std::vector<RestartKey>& solution_keys,
+                              const EclipseState&            es,
+                              const EclipseGrid&             grid)
+    {
+        // With LGRs the report step holds one solution section per grid -- the
+        // global grid, then each LGR in the order the deck declares them, which
+        // is the order the simulator's levels are in. They are the same keywords
+        // repeated, so they are addressed by occurrence.
+        auto rst_view = std::make_shared<Opm::EclIO::RestartFileView>
+            (std::make_shared<Opm::EclIO::ERst>(filename), report_step);
+
+        if (!rst_view->valid()) {
+            return {};
+        }
+
+        const auto labels = grid.get_all_lgr_labels();
+
+        std::vector<data::Solution> levels{};
+        levels.reserve(labels.size() + 1);
+
+        auto load = [&](const int numcells, const int occurrence) {
+            auto sol = restoreSOLUTION(solution_keys, numcells, *rst_view, occurrence);
+            sol.convertToSI(es.getUnits());
+            levels.push_back(std::move(sol));
+        };
+
+        load(grid.getNumActive(), 0);
+
+        for (auto label = 0*labels.size(); label < labels.size(); ++label) {
+            load(grid.getLGRCell(labels[label]).getNumActive(),
+                 static_cast<int>(label) + 1);
+        }
+
+        return levels;
     }
 
     data::Solution
