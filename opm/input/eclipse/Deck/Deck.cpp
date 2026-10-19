@@ -153,7 +153,7 @@ const DeckView& Deck::global_view() const {
             for (; close < this->keywordList.size(); ++close) {
                 const auto& name = this->keywordList[close].name();
                 if ((name == "ENDFIN") || (name == "CARFIN") ||
-                    (sectionKeywords.count(name) > 0))
+                    sectionKeywords.contains(name))
                 {
                     break;
                 }
