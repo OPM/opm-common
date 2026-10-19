@@ -927,12 +927,52 @@ namespace Opm { namespace data {
         /// converted limit.
         bool drawdownLimited{false};
 
+        /// Group which sets the target of a well under group control (GRUP):
+        /// the group closest to the well that either has the target in force
+        /// itself or receives its share of a higher-level group's target by
+        /// its own guide rate.  Empty if no group target applies.
+        std::string controllingGroup{};
+
+        /// Rate which the group target controls for a producer under group
+        /// control, e.g., WRAT if that target is a water rate.  Undefined if
+        /// no group target applies.
+        ::Opm::WellProducerCMode groupTargetProd {
+            ::Opm::WellProducerCMode::CMODE_UNDEFINED
+        };
+
+        /// Rate which the group target controls for an injector under group
+        /// control: RATE for surface rate targets, including reinjection,
+        /// and RESV for reservoir rate targets, including voidage
+        /// replacement.  Undefined if no group target applies.
+        ::Opm::WellInjectorCMode groupTargetInj {
+            ::Opm::WellInjectorCMode::CMODE_UNDEFINED
+        };
+
+        /// Whether the well is under group control and both the controlling
+        /// group and the rate its target controls are known.
+        bool underGroupTarget() const
+        {
+            using PMode = ::Opm::WellProducerCMode;
+            using IMode = ::Opm::WellInjectorCMode;
+
+            if (this->controllingGroup.empty()) {
+                return false;
+            }
+
+            return this->isProducer
+                ? (this->prod == PMode::GRUP) && (this->groupTargetProd != PMode::CMODE_UNDEFINED)
+                : (this->inj == IMode::GRUP) && (this->groupTargetInj != IMode::CMODE_UNDEFINED);
+        }
+
         bool operator==(const CurrentControl& rhs) const
         {
             return (this->isProducer == rhs.isProducer)
+                && (this->controllingGroup == rhs.controllingGroup)
                 && ((this->isProducer && (this->prod == rhs.prod) &&
-                     (this->drawdownLimited == rhs.drawdownLimited)) ||
-                    (!this->isProducer && (this->inj == rhs.inj)));
+                     (this->drawdownLimited == rhs.drawdownLimited) &&
+                     (this->groupTargetProd == rhs.groupTargetProd)) ||
+                    (!this->isProducer && (this->inj == rhs.inj) &&
+                     (this->groupTargetInj == rhs.groupTargetInj)));
         }
 
         template <class MessageBufferType>
@@ -948,17 +988,24 @@ namespace Opm { namespace data {
             serializer(prod);
             serializer(inj);
             serializer(drawdownLimited);
+            serializer(controllingGroup);
+            serializer(groupTargetProd);
+            serializer(groupTargetInj);
         }
 
         static CurrentControl serializationTestObject()
         {
           // A producer, so that the round trip of the producer-only members,
-          // the production control mode and the drawdown limited flag, is
-          // actually covered by the serialization test.
+          // the production control mode, the drawdown limited flag and the
+          // group target's rate, is actually covered by the serialization
+          // test.
           return CurrentControl{true,
                                 ::Opm::WellProducerCMode::BHP,
                                 ::Opm::WellInjectorCMode::GRUP,
-                                true
+                                true,
+                                "test_group",
+                                ::Opm::WellProducerCMode::WRAT,
+                                ::Opm::WellInjectorCMode::RESV
                  };
         }
     };
@@ -1662,10 +1709,13 @@ namespace Opm { namespace data {
         if (this->isProducer) {
             buffer.write(this->prod);
             buffer.write(this->drawdownLimited);
+            buffer.write(this->groupTargetProd);
         }
         else {
             buffer.write(this->inj);
+            buffer.write(this->groupTargetInj);
         }
+        buffer.write(this->controllingGroup);
     }
 
     template <class MessageBufferType>
@@ -1846,10 +1896,13 @@ namespace Opm { namespace data {
         if (this->isProducer) {
             buffer.read(this->prod);
             buffer.read(this->drawdownLimited);
+            buffer.read(this->groupTargetProd);
         }
         else {
             buffer.read(this->inj);
+            buffer.read(this->groupTargetInj);
         }
+        buffer.read(this->controllingGroup);
     }
 
     template <class MessageBufferType>

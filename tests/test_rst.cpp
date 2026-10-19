@@ -397,9 +397,87 @@ END
 
     }
 
-    void writeRstFile(const SimulationCase& simCase,
-                      const std::string&    baseName,
-                      const std::size_t     rptStep)
+    Opm::Deck group_target_sim()
+    {
+        return Opm::Parser{}.parseString(R"~(
+RUNSPEC
+OIL
+WATER
+GAS
+DISGAS
+
+DIMENS
+ 5 5 3 /
+
+WELLDIMS
+ 4 3 5 4 /
+
+START
+ 1 JAN 2020 /
+
+GRID
+
+DXV
+ 5*100.0 /
+DYV
+ 5*100.0 /
+DZV
+ 3*10.0 /
+DEPTHZ
+36*2000.0 /
+
+PORO
+ 75*0.2 /
+PERMX
+ 75*100 /
+PERMY
+ 75*100 /
+PERMZ
+ 75*10 /
+
+SCHEDULE
+
+GRUPTREE
+ 'PLAT' 'FIELD' /
+ 'MANI' 'PLAT' /
+ 'PROD' 'MANI' /
+ 'INJ'  'FIELD' /
+/
+
+WELSPECS
+ 'P1' 'PROD' 1 1 1* 'OIL' /
+ 'WI' 'INJ'  4 4 1* 'WATER' /
+/
+
+COMPDAT
+ 'P1' 1 1 1 3 'OPEN' 1* 10.0 0.2 /
+ 'WI' 4 4 1 3 'OPEN' 1* 10.0 0.2 /
+/
+
+GCONPROD
+ 'PLAT' 'ORAT' 1000.0 200.0 1* 2000.0 'RATE' /
+ 'MANI' 'FLD' 4* 'RATE' 'YES' 1.0 'OIL' /
+/
+
+WCONPROD
+ 'P1' 'OPEN' 'GRUP' 500.0 4* 50.0 /
+/
+
+WCONINJE
+ 'WI' 'WATER' 'OPEN' 'GRUP' 1000.0 1* 400.0 /
+/
+
+TSTEP
+ 10 10 /
+
+END
+)~");
+    }
+
+    void writeRstFile(const SimulationCase&   simCase,
+                      const std::string&      baseName,
+                      const std::size_t       rptStep,
+                      const Opm::data::Wells& xw = {})
     {
         const auto sim_step = rptStep - 1;
 
@@ -421,7 +499,7 @@ END
                                          sim_step, action_state,
                                          wtest_state, sumState, ih);
         wellData.captureDynamicWellData(simCase.sched, simCase.es.tracer(),
-                                        sim_step, {}, sumState);
+                                        sim_step, xw, sumState);
 
         auto connectionData = Opm::RestartIO::Helpers::AggregateConnectionData(ih);
         connectionData.captureDeclaredConnData(simCase.sched, simCase.grid,
@@ -474,10 +552,11 @@ END
     }
 
     Opm::RestartIO::RstState
-    makeRestartState(const SimulationCase& simCase,
-                     const std::string&    baseName,
-                     const std::size_t     rptStep,
-                     const std::string&    workArea)
+    makeRestartState(const SimulationCase&   simCase,
+                     const std::string&      baseName,
+                     const std::size_t       rptStep,
+                     const std::string&      workArea,
+                     const Opm::data::Wells& xw = {})
     {
         // Recall: Constructor changes working directory of current process,
         // destructor restores original working directory.  The non-trivial
@@ -485,7 +564,7 @@ END
         // "unused" in release builds.
         WorkArea work_area{workArea};
 
-        writeRstFile(simCase, baseName, rptStep);
+        writeRstFile(simCase, baseName, rptStep, xw);
         return loadRestart(simCase, baseName, rptStep);
     }
 } // Anonymous namespace
@@ -1217,4 +1296,77 @@ BOOST_AUTO_TEST_CASE(Historic_Period_WHistCtl)
                             "Well loaded from restart file must be controlled by "
                             "observed reservoir voidage rate (RESV) after WCONHIST");
     }
+}
+
+BOOST_AUTO_TEST_CASE(Group_Target_Control)
+{
+    using Ctrl = Opm::RestartIO::Helpers::VectorItems::IWell::Value::WellCtrlMode;
+
+    const auto simCase = SimulationCase{group_target_sim()};
+
+    const auto rptStep  = std::size_t{2};
+    const auto baseName = std::string { "TEST_RST_GROUP_TARGET" };
+
+    auto xw = Opm::data::Wells{};
+    for (const auto* wname : { "P1", "WI" }) {
+        xw[wname].connections.emplace_back().rates
+            .set(Opm::data::Rates::opt::wat, 1.0)
+            .set(Opm::data::Rates::opt::oil, 2.0);
+    }
+
+    {
+        auto& curr = xw["P1"].current_control;
+        curr.prod = Opm::WellProducerCMode::GRUP;
+        curr.groupTargetProd = Opm::WellProducerCMode::WRAT;
+        curr.controllingGroup = "MANI";
+    }
+
+    {
+        auto& curr = xw["WI"].current_control;
+        curr.isProducer = false;
+        curr.inj = Opm::WellInjectorCMode::GRUP;
+        curr.groupTargetInj = Opm::WellInjectorCMode::RESV;
+        curr.controllingGroup = "FIELD";
+    }
+
+    const auto state = makeRestartState(simCase, baseName, rptStep,
+                                        "test_rst_group_target", xw);
+
+    const auto& p1 = state.get_well("P1");
+    const auto& wi = state.get_well("WI");
+
+    // The controlling group in the group control flag identifies wells
+    // under group control, whatever rate the group target controls.
+    BOOST_CHECK_EQUAL(p1.active_control, Ctrl::Group);
+    BOOST_CHECK_EQUAL(p1.group_controllable_flag,
+                      static_cast<int>(simCase.sched.getGroup("MANI", rptStep - 1).insert_index()));
+
+    BOOST_CHECK_EQUAL(wi.active_control, Ctrl::Group);
+    BOOST_CHECK_EQUAL(wi.group_controllable_flag, state.header.max_groups_in_field);
+
+    auto makeRestartWell = [&state](const Opm::RestartIO::RstWell& rst_well)
+    {
+        return Opm::Well {
+            rst_well,
+            static_cast<int>(rptStep),
+            0, // NONE
+            Opm::TracerConfig{},
+            Opm::UnitSystem::newMETRIC(),
+            std::nullopt
+        };
+    };
+
+    const auto st = Opm::SummaryState { Opm::TimeService::now(), state.header.udq_undefined };
+
+    const auto p1Well = makeRestartWell(p1);
+    BOOST_CHECK_MESSAGE(p1Well.productionControls(st).cmode == Opm::WellProducerCMode::GRUP,
+                        "Well 'P1' must be under group control after restart");
+    BOOST_CHECK_MESSAGE(p1Well.isAvailableForGroupControl(),
+                        "Well 'P1' must be available for group control after restart");
+
+    const auto wiWell = makeRestartWell(wi);
+    BOOST_CHECK_MESSAGE(wiWell.injectionControls(st).cmode == Opm::WellInjectorCMode::GRUP,
+                        "Well 'WI' must be under group control after restart");
+    BOOST_CHECK_MESSAGE(wiWell.isAvailableForGroupControl(),
+                        "Well 'WI' must be available for group control after restart");
 }
