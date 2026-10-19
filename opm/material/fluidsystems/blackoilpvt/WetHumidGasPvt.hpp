@@ -66,12 +66,14 @@ public:
     void initFromState(const EclipseState& eclState, const Schedule& schedule);
 
 private:
-    void extendPvtgwTable_(unsigned regionIdx,
+    void extendPvtgwTable_(TabulatedTwoDFunctionBuilder& invGasBRvSat,
+                          TabulatedTwoDFunctionBuilder& gasMuRvSat,
                           unsigned xIdx,
                           const SimpleTable& curTable,
                          const SimpleTable& masterTable);
 
-    void extendPvtgTable_(unsigned regionIdx,
+    void extendPvtgTable_(TabulatedTwoDFunctionBuilder& invGasBRvwSat,
+                          TabulatedTwoDFunctionBuilder& gasMuRvwSat,
                           unsigned xIdx,
                           const SimpleTable& curTable,
                           const SimpleTable& masterTable);
@@ -454,10 +456,6 @@ private:
     std::vector<Scalar> gasReferenceDensity_{};
     std::vector<Scalar> oilReferenceDensity_{};
     std::vector<Scalar> waterReferenceDensity_{};
-    std::vector<TabulatedTwoDFunctionBuilder> inverseGasBRvwSatBuilder_{};
-    std::vector<TabulatedTwoDFunctionBuilder> inverseGasBRvSatBuilder_{};
-    std::vector<TabulatedTwoDFunctionBuilder> gasMuRvwSatBuilder_{};
-    std::vector<TabulatedTwoDFunctionBuilder> gasMuRvSatBuilder_{};
     std::vector<TabulatedTwoDFunction> inverseGasBRvwSat_{};
     std::vector<TabulatedTwoDFunction> inverseGasBRvSat_{};
     std::vector<TabulatedOneDFunction> inverseSaturatedGasB_{};

@@ -95,8 +95,8 @@ initFromState(const EclipseState& eclState, const Schedule&)
             OPM_THROW(std::runtime_error, "Saturated PVTGW table needs at least two rows.");
         }
 
-        auto& gasmu = gasMuBuilder_[regionIdx];
-        auto& invGasB = inverseGasBBuilder_[regionIdx];
+        TabulatedTwoDFunctionBuilder gasmu{TabulatedTwoDFunction::InterpolationPolicy::RightExtreme};
+        TabulatedTwoDFunctionBuilder invGasB{TabulatedTwoDFunction::InterpolationPolicy::RightExtreme};
         auto& waterVaporizationFac = saturatedWaterVaporizationFactorTable_[regionIdx];
 
         waterVaporizationFac.setXYArrays(saturatedTable.numRows(),
@@ -170,11 +170,15 @@ initFromState(const EclipseState& eclState, const Schedule&)
 
 
             // extend the current table using the master table.
-            extendPvtgwTable_(regionIdx,
+            extendPvtgwTable_(invGasB,
+                             gasmu,
                              xIdx,
                              pvtgwTable.getUnderSaturatedTable(xIdx),
                              pvtgwTable.getUnderSaturatedTable(masterTableIdx));
         }
+
+        gasMu_[regionIdx] = std::move(gasmu).build();
+        inverseGasB_[regionIdx] = std::move(invGasB).build();
     }
 
     vapPar1_ = 0.0;
@@ -184,7 +188,8 @@ initFromState(const EclipseState& eclState, const Schedule&)
 
 template<class Scalar>
 void DryHumidGasPvt<Scalar>::
-extendPvtgwTable_(unsigned regionIdx,
+extendPvtgwTable_(TabulatedTwoDFunctionBuilder& invGasB,
+                  TabulatedTwoDFunctionBuilder& gasmu,
                   unsigned xIdx,
                   const SimpleTable& curTable,
                   const SimpleTable& masterTable)
@@ -192,9 +197,6 @@ extendPvtgwTable_(unsigned regionIdx,
     std::vector<double> RwArray = curTable.getColumn("RW").vectorCopy();
     std::vector<double> gasBArray = curTable.getColumn("BG").vectorCopy();
     std::vector<double> gasMuArray = curTable.getColumn("MUG").vectorCopy();
-
-    auto& invGasB = inverseGasBBuilder_[regionIdx];
-    auto& gasmu = gasMuBuilder_[regionIdx];
 
     for (std::size_t newRowIdx = 1; newRowIdx < masterTable.numRows(); ++newRowIdx) {
         const auto& RWColumn = masterTable.getColumn("RW");
@@ -240,13 +242,11 @@ void DryHumidGasPvt<Scalar>::setNumRegions(std::size_t numRegions)
 {
     waterReferenceDensity_.resize(numRegions);
     gasReferenceDensity_.resize(numRegions);
-    inverseGasBBuilder_.resize(numRegions, TabulatedTwoDFunctionBuilder{TabulatedTwoDFunction::InterpolationPolicy::RightExtreme});
-    gasMuBuilder_.resize(numRegions, TabulatedTwoDFunctionBuilder{TabulatedTwoDFunction::InterpolationPolicy::RightExtreme});
-    inverseGasB_.resize(numRegions);
+    inverseGasB_.resize(numRegions, TabulatedTwoDFunction{TabulatedTwoDFunction::InterpolationPolicy::RightExtreme});
     inverseGasBMu_.resize(numRegions, TabulatedTwoDFunction{TabulatedTwoDFunction::InterpolationPolicy::RightExtreme});
     inverseSaturatedGasB_.resize(numRegions);
     inverseSaturatedGasBMu_.resize(numRegions);
-    gasMu_.resize(numRegions);
+    gasMu_.resize(numRegions, TabulatedTwoDFunction{TabulatedTwoDFunction::InterpolationPolicy::RightExtreme});
     saturatedWaterVaporizationFactorTable_.resize(numRegions);
     saturatedWaterVaporizationSaltFactorTable_.resize(numRegions, TabulatedTwoDFunction{TabulatedTwoDFunction::InterpolationPolicy::RightExtreme});
     saturationPressure_.resize(numRegions);
@@ -284,28 +284,33 @@ setSaturatedGasViscosity(unsigned regionIdx,
 
     // calculate a table of estimated densities depending on pressure and gas mass
     // fraction
+    TabulatedTwoDFunctionBuilder gasmu{TabulatedTwoDFunction::InterpolationPolicy::RightExtreme};
     for (std::size_t RwIdx = 0; RwIdx < nRw; ++RwIdx) {
         Scalar Rw = RwMin + (RwMax - RwMin)*RwIdx/nRw;
 
-        gasMuBuilder_[regionIdx].appendXPos(Rw);
+        gasmu.appendXPos(Rw);
 
         for (std::size_t pIdx = 0; pIdx < nP; ++pIdx) {
             Scalar pg = poMin + (poMax - poMin)*pIdx/nP;
             Scalar mug = mugTable.eval(pg, /*extrapolate=*/true);
 
-            gasMuBuilder_[regionIdx].appendSamplePoint(RwIdx, pg, mug);
+            gasmu.appendSamplePoint(RwIdx, pg, mug);
         }
     }
+
+    gasMu_[regionIdx] = std::move(gasmu).build();
 }
 
 template<class Scalar>
 void DryHumidGasPvt<Scalar>::initEnd()
 {
     // calculate the final 2D functions which are used for interpolation.
-    std::size_t regions = gasMuBuilder_.size();
+    std::size_t regions = gasMu_.size();
     for (unsigned regionIdx = 0; regionIdx < regions; ++ regionIdx) {
-        auto& gasmu = gasMu_[regionIdx] = std::move(gasMuBuilder_[regionIdx]).build();
-        auto& invGasB = inverseGasB_[regionIdx] = std::move(inverseGasBBuilder_[regionIdx]).build();
+        // calculate the table which stores the inverse of the product of the gas
+        // formation volume factor and the gas viscosity
+        const auto& gasmu = gasMu_[regionIdx];
+        const auto& invGasB = inverseGasB_[regionIdx];
         assert(gasmu.numX() == invGasB.numX());
 
         auto& invGasBMu = inverseGasBMu_[regionIdx];

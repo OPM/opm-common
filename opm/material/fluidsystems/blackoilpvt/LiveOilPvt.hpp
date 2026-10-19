@@ -63,7 +63,8 @@ public:
     void initFromState(const EclipseState& eclState, const Schedule& schedule);
 
 private:
-    void extendPvtoTable_(unsigned regionIdx,
+    void extendPvtoTable_(TabulatedTwoDFunctionBuilder& invOilB,
+                          TabulatedTwoDFunctionBuilder& oilMu,
                           unsigned xIdx,
                           const SimpleTable& curTable,
                           const SimpleTable& masterTable);
@@ -403,8 +404,6 @@ private:
 
     std::vector<Scalar> gasReferenceDensity_{};
     std::vector<Scalar> oilReferenceDensity_{};
-    std::vector<TabulatedTwoDFunctionBuilder> inverseOilBTableBuilder_{};
-    std::vector<TabulatedTwoDFunctionBuilder> oilMuTableBuilder_{};
     std::vector<TabulatedTwoDFunction> inverseOilBTable_{};
     std::vector<TabulatedTwoDFunction> oilMuTable_{};
     std::vector<TabulatedTwoDFunction> inverseOilBMuTable_{};

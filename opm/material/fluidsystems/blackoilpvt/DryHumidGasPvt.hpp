@@ -66,7 +66,8 @@ public:
     void initFromState(const EclipseState& eclState, const Schedule&);
 
 private:
-    void extendPvtgwTable_(unsigned regionIdx,
+    void extendPvtgwTable_(TabulatedTwoDFunctionBuilder& invGasB,
+                          TabulatedTwoDFunctionBuilder& gasmu,
                           unsigned xIdx,
                           const SimpleTable& curTable,
                           const SimpleTable& masterTable);
@@ -404,8 +405,6 @@ private:
 
     std::vector<Scalar> gasReferenceDensity_{};
     std::vector<Scalar> waterReferenceDensity_{};
-    std::vector<TabulatedTwoDFunctionBuilder> inverseGasBBuilder_{};
-    std::vector<TabulatedTwoDFunctionBuilder> gasMuBuilder_{};
     std::vector<TabulatedTwoDFunction> inverseGasB_{};
     std::vector<TabulatedOneDFunction> inverseSaturatedGasB_{};
     std::vector<TabulatedTwoDFunction> gasMu_{};

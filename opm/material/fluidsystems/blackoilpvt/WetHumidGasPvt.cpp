@@ -106,8 +106,8 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
          }
 
         // PVTGW table contains values at saturated Rv
-        auto& gasMuRvSat = gasMuRvSatBuilder_[regionIdx];
-        auto& invGasBRvSat = inverseGasBRvSatBuilder_[regionIdx];
+        TabulatedTwoDFunctionBuilder gasMuRvSat{TabulatedTwoDFunction::InterpolationPolicy::RightExtreme};
+        TabulatedTwoDFunctionBuilder invGasBRvSat{TabulatedTwoDFunction::InterpolationPolicy::RightExtreme};
         auto& waterVaporizationFac = saturatedWaterVaporizationFactorTable_[regionIdx];
 
         waterVaporizationFac.setXYArrays(saturatedTable.numRows(),
@@ -181,11 +181,15 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
             }
 
             // extend the current table using the master table.
-            extendPvtgwTable_(regionIdx,
+            extendPvtgwTable_(invGasBRvSat,
+                             gasMuRvSat,
                              xIdx,
                              pvtgwTable.getUnderSaturatedTable(xIdx),
                              pvtgwTable.getUnderSaturatedTable(masterTableIdx));
         }
+
+        gasMuRvSat_[regionIdx] = std::move(gasMuRvSat).build();
+        inverseGasBRvSat_[regionIdx] = std::move(invGasBRvSat).build();
     }
 
     // Table PVTG
@@ -198,8 +202,8 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
                       "Saturated PVTG table must have atleast 2 rows.");
          }
         // PVTG table contains values at saturated Rvw
-        auto& gasMuRvwSat = gasMuRvwSatBuilder_[regionIdx];
-        auto& invGasBRvwSat = inverseGasBRvwSatBuilder_[regionIdx];
+        TabulatedTwoDFunctionBuilder gasMuRvwSat{TabulatedTwoDFunction::InterpolationPolicy::RightExtreme};
+        TabulatedTwoDFunctionBuilder invGasBRvwSat{TabulatedTwoDFunction::InterpolationPolicy::RightExtreme};
         auto& oilVaporizationFac = saturatedOilVaporizationFactorTable_[regionIdx];
 
         oilVaporizationFac.setXYArrays(saturatedTable.numRows(),
@@ -273,11 +277,15 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
             }
 
             // extend the current table using the master table.
-            extendPvtgTable_(regionIdx,
+            extendPvtgTable_(invGasBRvwSat,
+                             gasMuRvwSat,
                              xIdx,
                              pvtgTable.getUnderSaturatedTable(xIdx),
                              pvtgTable.getUnderSaturatedTable(masterTableIdx));
         }
+
+        gasMuRvwSat_[regionIdx] = std::move(gasMuRvwSat).build();
+        inverseGasBRvwSat_[regionIdx] = std::move(invGasBRvwSat).build();
     }
     vapPar1_ = 0.0;
     const auto& oilVap = schedule[0].oilvap();
@@ -290,7 +298,8 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
 
 template<class Scalar>
 void WetHumidGasPvt<Scalar>::
-extendPvtgwTable_(unsigned regionIdx,
+extendPvtgwTable_(TabulatedTwoDFunctionBuilder& invGasBRvSat,
+                  TabulatedTwoDFunctionBuilder& gasMuRvSat,
                   unsigned xIdx,
                   const SimpleTable& curTable,
                   const SimpleTable& masterTable)
@@ -298,9 +307,6 @@ extendPvtgwTable_(unsigned regionIdx,
     std::vector<double> RvArray = curTable.getColumn("RW").vectorCopy();
     std::vector<double> gasBArray = curTable.getColumn("BG").vectorCopy();
     std::vector<double> gasMuArray = curTable.getColumn("MUG").vectorCopy();
-
-    auto& invGasBRvSat = inverseGasBRvSatBuilder_[regionIdx];
-    auto& gasMuRvSat = gasMuRvSatBuilder_[regionIdx];
 
     for (std::size_t newRowIdx = 1; newRowIdx < masterTable.numRows(); ++newRowIdx) {
         const auto& RVColumn = masterTable.getColumn("RW");
@@ -343,7 +349,8 @@ extendPvtgwTable_(unsigned regionIdx,
 
 template<class Scalar>
 void WetHumidGasPvt<Scalar>::
-extendPvtgTable_(unsigned regionIdx,
+extendPvtgTable_(TabulatedTwoDFunctionBuilder& invGasBRvwSat,
+                 TabulatedTwoDFunctionBuilder& gasMuRvwSat,
                  unsigned xIdx,
                  const SimpleTable& curTable,
                  const SimpleTable& masterTable)
@@ -351,9 +358,6 @@ extendPvtgTable_(unsigned regionIdx,
     std::vector<double> RvArray = curTable.getColumn("RV").vectorCopy();
     std::vector<double> gasBArray = curTable.getColumn("BG").vectorCopy();
     std::vector<double> gasMuArray = curTable.getColumn("MUG").vectorCopy();
-
-    auto& invGasBRvwSat= inverseGasBRvwSatBuilder_[regionIdx];
-    auto& gasMuRvwSat = gasMuRvwSatBuilder_[regionIdx];
 
     for (std::size_t newRowIdx = 1; newRowIdx < masterTable.numRows(); ++newRowIdx) {
         const auto& RVColumn = masterTable.getColumn("RV");
@@ -400,18 +404,14 @@ void WetHumidGasPvt<Scalar>::setNumRegions(std::size_t numRegions)
     waterReferenceDensity_.resize(numRegions);
     oilReferenceDensity_.resize(numRegions);
     gasReferenceDensity_.resize(numRegions);
-    inverseGasBRvwSatBuilder_.resize(numRegions, TabulatedTwoDFunctionBuilder{TabulatedTwoDFunction::InterpolationPolicy::RightExtreme});
-    inverseGasBRvSatBuilder_.resize(numRegions, TabulatedTwoDFunctionBuilder{TabulatedTwoDFunction::InterpolationPolicy::RightExtreme});
-    gasMuRvwSatBuilder_.resize(numRegions, TabulatedTwoDFunctionBuilder{TabulatedTwoDFunction::InterpolationPolicy::RightExtreme});
-    gasMuRvSatBuilder_.resize(numRegions, TabulatedTwoDFunctionBuilder{TabulatedTwoDFunction::InterpolationPolicy::RightExtreme});
-    inverseGasBRvwSat_.resize(numRegions);
-    inverseGasBRvSat_.resize(numRegions);
+    inverseGasBRvwSat_.resize(numRegions, TabulatedTwoDFunction{TabulatedTwoDFunction::InterpolationPolicy::RightExtreme});
+    inverseGasBRvSat_.resize(numRegions, TabulatedTwoDFunction{TabulatedTwoDFunction::InterpolationPolicy::RightExtreme});
     inverseGasBMuRvwSat_.resize(numRegions, TabulatedTwoDFunction{TabulatedTwoDFunction::InterpolationPolicy::RightExtreme});
     inverseGasBMuRvSat_.resize(numRegions, TabulatedTwoDFunction{TabulatedTwoDFunction::InterpolationPolicy::RightExtreme});
     inverseSaturatedGasB_.resize(numRegions);
     inverseSaturatedGasBMu_.resize(numRegions);
-    gasMuRvwSat_.resize(numRegions);
-    gasMuRvSat_.resize(numRegions);
+    gasMuRvwSat_.resize(numRegions, TabulatedTwoDFunction{TabulatedTwoDFunction::InterpolationPolicy::RightExtreme});
+    gasMuRvSat_.resize(numRegions, TabulatedTwoDFunction{TabulatedTwoDFunction::InterpolationPolicy::RightExtreme});
     saturatedWaterVaporizationFactorTable_.resize(numRegions);
     saturatedWaterVaporizationSaltFactorTable_.resize(numRegions, TabulatedTwoDFunction{TabulatedTwoDFunction::InterpolationPolicy::RightExtreme});
     saturatedOilVaporizationFactorTable_.resize(numRegions);
@@ -436,10 +436,12 @@ void WetHumidGasPvt<Scalar>::initEnd()
 
     //PVTGW
     // calculate the final 2D functions which are used for interpolation.
-    std::size_t regions = gasMuRvSatBuilder_.size();
+    std::size_t regions = gasMuRvSat_.size();
     for (unsigned regionIdx = 0; regionIdx < regions; ++ regionIdx) {
-        auto& gasMuRvSat = gasMuRvSat_[regionIdx] = std::move(gasMuRvSatBuilder_[regionIdx]).build();
-        auto& invGasBRvSat = inverseGasBRvSat_[regionIdx] = std::move(inverseGasBRvSatBuilder_[regionIdx]).build();
+        // calculate the table which stores the inverse of the product of the gas
+        // formation volume factor and the gas viscosity
+        const auto& gasMuRvSat = gasMuRvSat_[regionIdx];
+        const auto& invGasBRvSat = inverseGasBRvSat_[regionIdx];
         assert(gasMuRvSat.numX() == invGasBRvSat.numX());
 
         auto& invGasBMuRvSat = inverseGasBMuRvSat_[regionIdx];
@@ -480,8 +482,10 @@ void WetHumidGasPvt<Scalar>::initEnd()
     // calculate the final 2D functions which are used for interpolation.
     //std::size_t numRegions = gasMuRvwSat_.size();
     for (unsigned regionIdx = 0; regionIdx < regions; ++ regionIdx) {
-        auto& gasMuRvwSat = gasMuRvwSat_[regionIdx] = std::move(gasMuRvwSatBuilder_[regionIdx]).build();
-        auto& invGasBRvwSat = inverseGasBRvwSat_[regionIdx] = std::move(inverseGasBRvwSatBuilder_[regionIdx]).build();
+        // calculate the table which stores the inverse of the product of the gas
+        // formation volume factor and the gas viscosity
+        const auto& gasMuRvwSat = gasMuRvwSat_[regionIdx];
+        const auto& invGasBRvwSat = inverseGasBRvwSat_[regionIdx];
         assert(gasMuRvwSat.numX() == invGasBRvwSat.numX());
 
         auto& invGasBMuRvwSat = inverseGasBMuRvwSat_[regionIdx];
