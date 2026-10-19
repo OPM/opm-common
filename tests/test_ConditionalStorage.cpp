@@ -30,6 +30,7 @@
 
 #include <opm/material/common/ConditionalStorage.hpp>
 
+#include <memory>
 #include <stdexcept>
 #include <string>
 #include <cstdlib>
@@ -48,6 +49,14 @@ public:
 
     IAmAnIslandLeaveMeAlone& operator=(const IAmAnIslandLeaveMeAlone&) = delete;
 };
+
+// The copy and move operations are defaulted, so trivial copyability and
+// copy-constructibility follow the payload.
+static_assert(std::is_trivially_copyable_v<Opm::ConditionalStorage<true, double>>);
+static_assert(std::is_trivially_copyable_v<Opm::ConditionalStorage<false, std::string>>);
+static_assert(!std::is_trivially_copyable_v<Opm::ConditionalStorage<true, std::string>>);
+static_assert(!std::is_copy_constructible_v<Opm::ConditionalStorage<true, std::unique_ptr<int>>>);
+static_assert(std::is_move_constructible_v<Opm::ConditionalStorage<true, std::unique_ptr<int>>>);
 
 int main()
 {
