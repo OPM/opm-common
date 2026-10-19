@@ -667,10 +667,14 @@ namespace {
     bool is_unsupported_compositional(const std::string& keyword)
     {
         static const auto comp_kw = keyword_set {
+            "BXMF", "BYMF",
+            "CKFR", "CKFT", "CZMF",
             "FODN", "FGDN",
             "FXMF", "FYMF", "FZMF", "FCHMR", "FCHMT", "FCMIR", "FCMIT",
             "GCHMR", "GCHMT",
             "WAMF", "WXMF", "WYMF", "WZMF", "WCGMR", "WCOMR",
+            "WCGMT", "WCHMR", "WCHMT", "WCMIR", "WCMIT", "WCMPR", "WCMPT", "WCOMT",
+            "WHMIR", "WHMIT", "WHMPR", "WHMPT",
         };
 
         return is_in_set(comp_kw, keyword);

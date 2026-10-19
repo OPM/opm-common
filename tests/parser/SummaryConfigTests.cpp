@@ -2337,6 +2337,20 @@ WZMF
  '*' 1 /
  'W_1' 2 /
 /
+WCMPR
+ '*' 1 /
+/
+WHMPR
+ 'W_1' 'W_3' /
+WHMIT
+/
+BXMF
+ 1 1 1 2 /
+ 1 1 3 1 /
+/
+CKFR
+ 'W_1' 1 1 3 3 /
+/
 )" };
 
     const auto deck = createDeck(input);
@@ -2351,6 +2365,26 @@ WZMF
     BOOST_REQUIRE_EQUAL(wzmf.size(), std::size_t{2});
     BOOST_CHECK_EQUAL(wzmf.getRecord(1).getItem("WELLS").getTrimmedString(0), "W_1");
     BOOST_CHECK_EQUAL(wzmf.getRecord(1).getItem("COMP_NUM").get<int>(0), 2);
+
+    BOOST_CHECK_EQUAL(deck["WCMPR"].back().getRecord(0).getItem("COMP_NUM").get<int>(0), 1);
+    const auto& whmpr = deck["WHMPR"].back();
+    BOOST_REQUIRE_EQUAL(whmpr.size(), std::size_t{1});
+    const auto& whmpr_wells = whmpr.getRecord(0).getItem("WELLS");
+    BOOST_REQUIRE_EQUAL(whmpr_wells.data_size(), std::size_t{2});
+    BOOST_CHECK_EQUAL(whmpr_wells.getTrimmedString(0), "W_1");
+    BOOST_CHECK_EQUAL(whmpr_wells.getTrimmedString(1), "W_3");
+    BOOST_CHECK_EQUAL(deck["WHMIT"].back().getRecord(0).getItem("WELLS").data_size(),
+                      std::size_t{0});
+
+    const auto& bxmf = deck["BXMF"].back();
+    BOOST_REQUIRE_EQUAL(bxmf.size(), std::size_t{2});
+    BOOST_CHECK_EQUAL(bxmf.getRecord(1).getItem("K").get<int>(0), 3);
+    BOOST_CHECK_EQUAL(bxmf.getRecord(1).getItem("COMP_NUM").get<int>(0), 1);
+
+    const auto& ckfr = deck["CKFR"].back();
+    BOOST_REQUIRE_EQUAL(ckfr.size(), std::size_t{1});
+    BOOST_CHECK_EQUAL(ckfr.getRecord(0).getItem("WELL").getTrimmedString(0), "W_1");
+    BOOST_CHECK_EQUAL(ckfr.getRecord(0).getItem("COMP_NUM").get<int>(0), 3);
 
     // Accepted in the SUMMARY section, but not evaluated.
     const auto summary = createSummary(input);

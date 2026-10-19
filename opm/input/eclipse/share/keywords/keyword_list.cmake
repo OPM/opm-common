@@ -1055,10 +1055,12 @@ set( keywords
      001_Eclipse300/B/BIC
      001_Eclipse300/B/BICS
      001_Eclipse300/B/BLOCK_PROBE300
+     001_Eclipse300/B/BLOCK_PROBE_COMP
      001_Eclipse300/C/CIRCLE
      001_Eclipse300/C/CNAMES
      001_Eclipse300/C/COMPS
      001_Eclipse300/C/COMPVD
+     001_Eclipse300/C/CONNECTION_PROBE_COMP
      001_Eclipse300/C/CO2SOL
      001_Eclipse300/C/CO2STORE
      001_Eclipse300/C/CREF
@@ -1134,6 +1136,7 @@ set( keywords
      001_Eclipse300/V/VISCAQA
      001_Eclipse300/W/WELLSTRE
      001_Eclipse300/W/WELL_PROBE_COMP
+     001_Eclipse300/W/WELL_PROBE_COMP_AGGREGATE
      001_Eclipse300/W/WINJGAS
      001_Eclipse300/W/WINJOIL
      001_Eclipse300/W/WINJTEMP
