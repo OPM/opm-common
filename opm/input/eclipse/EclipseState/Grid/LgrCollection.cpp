@@ -60,18 +60,6 @@ namespace Opm {
 
     namespace {
 
-        template <typename... Keyword>
-        std::vector<std::string> keywordsPresent(const GRIDSection& gridSection)
-        {
-            auto present = std::vector<std::string>{};
-
-            ((gridSection.hasKeyword<Keyword>()
-              ? present.push_back(Keyword::keywordName)
-              : void()), ...);
-
-            return present;
-        }
-
         /// The last N*FIN/H*FIN of a block wins, as repeated keywords do.
         template <typename Keyword>
         const DeckItem* gradingItem(const DeckView& block)
