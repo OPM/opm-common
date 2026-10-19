@@ -29,6 +29,7 @@
 #include <opm/common/utility/OpmInputError.hpp>
 
 #include <opm/input/eclipse/Deck/Deck.hpp>
+#include <opm/input/eclipse/Deck/DeckSection.hpp>
 
 #include <opm/input/eclipse/Parser/ErrorGuard.hpp>
 #include <opm/input/eclipse/Parser/InputErrorAction.hpp>
@@ -1667,6 +1668,157 @@ END
                             "Must not request any additional "
                             "properties for report step 5");
     }
+}
+
+BOOST_AUTO_TEST_CASE(RPTSOL_CompositionalProperties)
+{
+    const auto deck = Parser{}.parseString(R"(RUNSPEC
+COMPS
+3 /
+SOLUTION
+RPTSOL
+  RESTART=2 PRESSURE SWAT SGAS SOIL
+  XMF=2 YMF ZMF=0 DENO DENG DENW
+  VOIL VGAS VWAT FIP=2 /
+)");
+
+    auto context = ParseContext{};
+    context.update(ParseContext::RPT_UNKNOWN_MNEMONIC, InputErrorAction::THROW_EXCEPTION);
+    auto errors = ErrorGuard{};
+    const auto config = RSTConfig{SOLUTIONSection{deck}, context, true, errors};
+    const auto expected = std::map<std::string, int> {
+        {"DENG", 1}, {"DENO", 1}, {"DENW", 1}, {"FIP", 2},
+        {"PRESSURE", 1}, {"SGAS", 1}, {"SOIL", 1}, {"SWAT", 1},
+        {"VGAS", 1}, {"VOIL", 1}, {"VWAT", 1},
+        {"XMF", 2}, {"YMF", 1}, {"ZMF", 0},
+    };
+
+    BOOST_CHECK(config.write_rst_file.value_or(false));
+    BOOST_CHECK(config.keywords == expected);
+    BOOST_CHECK(RSTConfig::first(config).keywords.empty());
+}
+
+BOOST_AUTO_TEST_CASE(RPTSOL_CompositionalMnemonicValidation)
+{
+    auto context = ParseContext{};
+    context.update(ParseContext::RPT_UNKNOWN_MNEMONIC, InputErrorAction::THROW_EXCEPTION);
+    auto errors = ErrorGuard{};
+
+    for (const auto* mnemonic : {"XMF", "YMF", "ZMF"}) {
+        BOOST_TEST_CONTEXT(mnemonic) {
+            const auto deck = Parser{}.parseString(std::string{"SOLUTION\nRPTSOL\nRESTART=2 "}
+                                                   + mnemonic + " /\n");
+            BOOST_CHECK_THROW((RSTConfig{SOLUTIONSection{deck}, context, false, errors}),
+                              OpmInputError);
+        }
+    }
+
+    const auto deck = Parser{}.parseString(R"(SOLUTION
+RPTSOL
+  RESTART=2 XMF YMF ZMF ZXMF /
+)");
+    BOOST_CHECK_THROW((RSTConfig{SOLUTIONSection{deck}, context, true, errors}), OpmInputError);
+}
+
+BOOST_AUTO_TEST_CASE(RPTSOL_CompositionalOnlyRestartVocabulary)
+{
+    auto context = ParseContext{};
+    context.update(ParseContext::RPT_UNKNOWN_MNEMONIC, InputErrorAction::THROW_EXCEPTION);
+    auto errors = ErrorGuard{};
+
+    const auto rptsol = [](const std::string& mnemonic)
+    {
+        return Parser{}.parseString("SOLUTION\nRPTSOL\nRESTART=2 " + mnemonic + "=2 /\n");
+    };
+
+    for (const auto* mnemonic : {"BOIL", "BGAS", "BWAT", "FUGO", "MLSC", "TOTCOMP",
+                                 "PSAT", "VMF"}) {
+        BOOST_TEST_CONTEXT(mnemonic) {
+            const auto deck = rptsol(mnemonic);
+            const auto config = RSTConfig{SOLUTIONSection{deck}, context, true, errors};
+            BOOST_CHECK_EQUAL(config.keywords.at(mnemonic), 2);
+            BOOST_CHECK_THROW((RSTConfig{SOLUTIONSection{deck}, context, false, errors}),
+                              OpmInputError);
+        }
+    }
+
+    // Restart controls and restart names shared with black-oil runs are
+    // still rejected.
+    for (const auto* mnemonic : {"BASIC", "FREQ", "ALLPROPS", "DEN", "VELOCITY", "RK",
+                                 "BG", "PORV"}) {
+        BOOST_TEST_CONTEXT(mnemonic) {
+            BOOST_CHECK_THROW((RSTConfig{SOLUTIONSection{rptsol(mnemonic)}, context, true, errors}),
+                              OpmInputError);
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(RPTRST_MnemonicModelAndKeywordScope)
+{
+    auto context = ParseContext{};
+    context.update(ParseContext::RPT_UNKNOWN_MNEMONIC, InputErrorAction::THROW_EXCEPTION);
+    auto errors = ErrorGuard{};
+    const auto controls = Parser{}.parseString(R"(SOLUTION
+RPTRST
+  BASIC=2 FREQ=3 /
+)");
+
+    for (const auto compositional : {false, true}) {
+        BOOST_TEST_CONTEXT("compositional=" << compositional) {
+            const auto config = RSTConfig{SOLUTIONSection{controls}, context,
+                                          compositional, errors};
+            BOOST_CHECK_EQUAL(config.basic.value_or(-1), 2);
+            BOOST_CHECK_EQUAL(config.freq.value_or(-1), 3);
+            BOOST_CHECK(config.keywords.empty());
+        }
+    }
+
+    const auto properties = Parser{}.parseString(R"(SOLUTION
+RPTRST
+  PRESSURE=2 /
+)");
+    BOOST_CHECK_THROW((RSTConfig{SOLUTIONSection{properties}, context, false, errors}),
+                      OpmInputError);
+    const auto config = RSTConfig{SOLUTIONSection{properties}, context, true, errors};
+    BOOST_CHECK_EQUAL(config.keywords.at("PRESSURE"), 2);
+}
+
+BOOST_AUTO_TEST_CASE(RPTSCHED_RejectsCompositionalRestartProperties)
+{
+    const auto deck = Parser{}.parseString(R"(SCHEDULE
+RPTSCHED
+  FUGO /
+)");
+    auto context = ParseContext{};
+    context.update(ParseContext::RPT_UNKNOWN_MNEMONIC, InputErrorAction::THROW_EXCEPTION);
+    auto errors = ErrorGuard{};
+
+    for (const auto compositional : {false, true}) {
+        BOOST_TEST_CONTEXT("compositional=" << compositional) {
+            auto config = RSTConfig{SOLUTIONSection{deck}, context, compositional, errors};
+            BOOST_CHECK_THROW(config.update(deck["RPTSCHED"].back(), context, errors),
+                              OpmInputError);
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(RPTSOL_CompositionalIntegerControls)
+{
+    const auto deck = Parser{}.parseString(R"(SOLUTION
+RPTSOL
+  1 2 3 4 5 6 2 3 /
+)");
+    auto errors = ErrorGuard{};
+    const auto context = ParseContext{};
+    const auto config = RSTConfig{SOLUTIONSection{deck}, context, true, errors};
+    const auto expected = std::map<std::string, int> {
+        {"FIP", 3}, {"PRES", 1}, {"RS", 5}, {"RV", 6},
+        {"SGAS", 4}, {"SOIL", 2}, {"SWAT", 3},
+    };
+
+    BOOST_CHECK(config.write_rst_file.value_or(false));
+    BOOST_CHECK(config.keywords == expected);
+    BOOST_CHECK(RSTConfig::first(config).keywords.empty());
 }
 
 BOOST_AUTO_TEST_CASE(RPTRST_TRACT) {

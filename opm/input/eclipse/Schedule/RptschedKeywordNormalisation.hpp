@@ -43,11 +43,15 @@ namespace Opm {
     /// \param[in,out] errors Collection of parse errors encountered thus
     /// far.  Behaviour controlled by \p parseContext.
     ///
+    /// \param[in] alsoAccept Optional predicate accepting additional
+    /// mnemonics.  An empty predicate preserves the RPTSCHED vocabulary.
+    ///
     /// \return Sequence of mnemonics and associate integer values.
     RPTKeywordNormalisation::MnemonicMap
     normaliseRptSchedKeyword(const DeckKeyword&  kw,
                              const ParseContext& parseContext,
-                             ErrorGuard&         errors);
+                             ErrorGuard&         errors,
+                             const RPTKeywordNormalisation::MnemonicPredicate& alsoAccept = {});
 
 } // namespace Opm
 
