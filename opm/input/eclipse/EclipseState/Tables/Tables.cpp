@@ -114,6 +114,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <cstddef>
 #include <functional>
 #include <initializer_list>
@@ -3072,6 +3073,11 @@ ZmfvdTable::ZmfvdTable(const DeckItem& item,
         const std::size_t depthIdx = row * ncol;
         const double siDepth = unitSystem.to_si(UnitSystem::measure::length,
                                                 item.get<double>(depthIdx));
+        if (!std::isfinite(siDepth)) {
+            throw OpmInputError(fmt::format(
+                "{} table {}: depth in row {} must be finite, got {}",
+                tableName, tableID + 1, row + 1, siDepth), location);
+        }
         getColumn(0).addValue(siDepth, tableName);
 
         // Component mole-fraction columns (dimensionless)
@@ -3157,6 +3163,11 @@ CompvdTable::CompvdTable(const DeckItem& item,
 
         // Depth column
         const double siDepth = unitSystem.to_si(UnitSystem::measure::length, data.at(rowStart));
+        if (!std::isfinite(siDepth)) {
+            throw OpmInputError(fmt::format(
+                "{} table {}: depth in row {} must be finite, got {}",
+                tableName, tableID + 1, row + 1, siDepth), location);
+        }
         getColumn(0).addValue(siDepth, tableName);
 
         // Component mole-fraction columns (dimensionless).
@@ -3187,6 +3198,11 @@ CompvdTable::CompvdTable(const DeckItem& item,
 
         // Saturation-pressure column
         const double siPsat = unitSystem.to_si(UnitSystem::measure::pressure, data.at(rowStart + 2 + numComponents));
+        if (!std::isfinite(siPsat) || siPsat < 0.0) {
+            throw OpmInputError(fmt::format(
+                "COMPVD table {}: saturation pressure in row {} must be finite and non-negative, got {}",
+                tableID + 1, row + 1, siPsat), location);
+        }
         getColumn(1 + numComponents).addValue(siPsat, tableName);
     }
 

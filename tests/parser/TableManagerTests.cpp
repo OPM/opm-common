@@ -3790,3 +3790,55 @@ END
 
     BOOST_CHECK_THROW(Opm::TableManager{ deck }, Opm::OpmInputError);
 }
+
+
+BOOST_AUTO_TEST_CASE(CompositionDepthTables_RejectNonFiniteDepth)
+{
+    for (const std::string keyword : {"ZMFVD", "COMPVD"}) {
+        for (const std::string depth : {"NaN", "Inf", "-Inf"}) {
+            const std::string row = depth + " 0.5 0.5" +
+                ((keyword == "COMPVD") ? " 0 150" : "");
+            const auto deck = Opm::Parser{}.parseString(
+                "RUNSPEC\nMETRIC\nCOMPS\n2 /\nEQLDIMS\n1 /\nPROPS\n" +
+                keyword + "\n" + row + " /\nEND\n");
+            BOOST_CHECK_EXCEPTION(Opm::TableManager{deck}, Opm::OpmInputError,
+                [&keyword](const Opm::OpmInputError& error) {
+                    const std::string message = error.what();
+                    return message.find(keyword) != std::string::npos &&
+                           message.find("row 1") != std::string::npos &&
+                           message.find("line") != std::string::npos;
+                });
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(CompvdTable_RejectsInvalidSaturationPressure)
+{
+    // Include finite deck input whose conversion from bar to Pa overflows.
+    for (const std::string pressure : {"-1", "NaN", "Inf", "-Inf", "1e308"}) {
+        const auto deck = Opm::Parser{}.parseString(
+            "RUNSPEC\nMETRIC\nCOMPS\n2 /\nEQLDIMS\n1 /\nPROPS\nCOMPVD\n"
+            "100 0.5 0.5 0 " + pressure + " /\nEND\n");
+        BOOST_CHECK_EXCEPTION(Opm::TableManager{deck}, Opm::OpmInputError,
+            [](const Opm::OpmInputError& error) {
+                const std::string message = error.what();
+                return message.find("COMPVD") != std::string::npos &&
+                       message.find("row 1") != std::string::npos &&
+                       message.find("line") != std::string::npos;
+            });
+    }
+}
+
+BOOST_AUTO_TEST_CASE(CompositionDepthTables_FiniteBoundaryValuesRemainValid)
+{
+    // Negative finite depths and zero saturation pressure retain their previous
+    // behavior; this change only rejects non-finite depth and invalid pressure.
+    const auto zmfvd = Opm::Parser{}.parseString(
+        "RUNSPEC\nMETRIC\nCOMPS\n2 /\nEQLDIMS\n1 /\nPROPS\nZMFVD\n"
+        "-100 0.5 0.5 /\nEND\n");
+    BOOST_CHECK_NO_THROW(Opm::TableManager{zmfvd});
+    const auto compvd = Opm::Parser{}.parseString(
+        "RUNSPEC\nMETRIC\nCOMPS\n2 /\nEQLDIMS\n1 /\nPROPS\nCOMPVD\n"
+        "-100 0.5 0.5 0 0 /\nEND\n");
+    BOOST_CHECK_NO_THROW(Opm::TableManager{compvd});
+}
