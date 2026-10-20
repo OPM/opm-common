@@ -667,7 +667,7 @@ namespace {
     bool is_unsupported_compositional(const std::string& keyword)
     {
         static const auto comp_kw = keyword_set {
-            "BXMF", "BYMF",
+            "BXMF", "BYMF", "BZMF",
             "CKFR", "CKFT", "CZMF",
             "FODN", "FGDN",
             "FXMF", "FYMF", "FZMF", "FCHMR", "FCHMT", "FCMIR", "FCMIT",
