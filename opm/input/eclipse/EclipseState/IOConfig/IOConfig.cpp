@@ -146,8 +146,12 @@ namespace {
             return {};
         }
 
-        return grid.get<Opm::ParserKeywords::USEFLUX>()
-            .back()
+        const auto& useflux = grid.get<Opm::ParserKeywords::USEFLUX>().back();
+        if (useflux.empty()) {
+            return {};
+        }
+
+        return useflux
             .getRecord(0)
             .getItem<Opm::ParserKeywords::USEFLUX::FLUX_BASENAME>()
             .getTrimmedString(0);
@@ -240,11 +244,11 @@ namespace Opm {
 
         result.m_UNIFIN = true;
         result.m_UNIFOUT = true;
-        result.m_use_flux = false;
+        result.m_use_flux = true;
         result.m_dump_flux = true;
-        result.m_use_flux_base_name = "";
-        result.m_use_flux_regions = {};
-        result.m_flux_type = "FLUX";
+        result.m_use_flux_base_name = "test4";
+        result.m_use_flux_regions = {2, 5};
+        result.m_flux_type = "BOTH";
 
         result.m_output_enabled = false;
         result.ecl_compatible_rst = false;

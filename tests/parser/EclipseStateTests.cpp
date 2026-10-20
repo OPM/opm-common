@@ -747,3 +747,37 @@ BOOST_AUTO_TEST_CASE(SALINITCtest)
     BOOST_CHECK_CLOSE(salinitc[SaltIndex::CL], expectedSaltMassFrac[SaltIndex::CL], tol);
     BOOST_CHECK_CLOSE(salinitc[SaltIndex::SO4], expectedSaltMassFrac[SaltIndex::SO4], tol);
 }
+
+// Edited depths are held per active cell, so deactivating cells has to move
+// them along with the cells they belong to.
+BOOST_AUTO_TEST_CASE(EditedDepthsFollowResetActnum)
+{
+    const auto deck = Parser{}.parseString(R"(
+RUNSPEC
+DIMENS
+ 2 1 1 /
+GRID
+DX
+ 2*10 /
+DY
+ 2*10 /
+DZ
+ 2*10 /
+TOPS
+ 2*50 /
+PORO
+ 2*0.3 /
+EDIT
+DEPTH
+ 100 200 /
+)");
+
+    EclipseState state(deck);
+    BOOST_CHECK_CLOSE(state.getInputGrid().getCellDepth(0), 100.0, 1.0e-12);
+    BOOST_CHECK_CLOSE(state.getInputGrid().getCellDepth(1), 200.0, 1.0e-12);
+
+    state.reset_actnum({0, 1});
+
+    BOOST_REQUIRE_EQUAL(state.getInputGrid().getNumActive(), 1U);
+    BOOST_CHECK_CLOSE(state.getInputGrid().getCellDepth(1), 200.0, 1.0e-12);
+}
