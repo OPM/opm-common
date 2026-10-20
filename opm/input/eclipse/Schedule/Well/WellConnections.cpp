@@ -1186,16 +1186,19 @@ CF and Kh items for well {} must both be specified or both defaulted/negative)",
 
     bool WellConnections::operator==(const WellConnections& rhs) const
     {
-        return (this->size() == rhs.size())
-            && (this->m_ordering == rhs.m_ordering)
-            && (this->coord == rhs.coord)
-            && (this->md == rhs.md)
+        return this->sameMetaData(rhs)
             && std::ranges::equal(*this, rhs);
     }
 
     bool WellConnections::operator!=(const WellConnections& rhs) const
     {
         return ! (*this == rhs);
+    }
+
+    bool WellConnections::isSameExceptForOrdering(const WellConnections& rhs) const
+    {
+        return this->sameMetaData(rhs)
+            && std::ranges::is_permutation(this->m_connections, rhs.m_connections);
     }
 
     double WellConnections::segment_perf_length(int segment) const
@@ -1401,4 +1404,13 @@ namespace {
         return changed;
     }
 
+    bool WellConnections::sameMetaData(const WellConnections& rhs) const
+    {
+        return (this->m_ordering == rhs.m_ordering)
+            && (this->headI == rhs.headI)
+            && (this->headJ == rhs.headJ)
+            && (this->coord == rhs.coord)
+            && (this->md == rhs.md)
+            ;
+    }
 }

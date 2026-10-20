@@ -1096,20 +1096,27 @@ bool Well::updateConnections(std::shared_ptr<WellConnections> connections_arg, b
 {
     connections_arg->order();
 
-    // Connections may lie in several LGRs: each carries its own grid number
-    // and the simulator resolves it against that grid.
+    return this->replaceConnections(std::move(connections_arg), force);
+}
 
-    if (force || (*this->connections != *connections_arg)) {
-        this->connections = std::move(connections_arg);
-        return true;
-    }
-
-    return false;
+bool Well::replaceConnections(std::shared_ptr<WellConnections> connections_arg, bool force)
+{
+    return this->replaceConnections(std::move(connections_arg), force,
+                                    &WellConnections::operator==);
 }
 
 bool Well::updateConnections(std::shared_ptr<WellConnections> connections_arg, const ScheduleGrid& grid)
 {
-    bool update = this->updateConnections(std::move(connections_arg), false);
+    connections_arg->order();
+
+    return this->updateConnectionsUnordered(std::move(connections_arg), grid);
+}
+
+bool Well::updateConnectionsUnordered(std::shared_ptr<WellConnections> connections_arg,
+                                      const ScheduleGrid&              grid)
+{
+    bool update = this->replaceConnections(std::move(connections_arg), false,
+                                           &WellConnections::isSameExceptForOrdering);
 
     if (this->pvt_table == 0 && !this->connections->empty()) {
         const auto& lowest = this->connections->lowest();
@@ -1123,7 +1130,22 @@ bool Well::updateConnections(std::shared_ptr<WellConnections> connections_arg, c
     return update;
 }
 
+bool Well::orderConnections()
+{
+    auto ordered = std::make_shared<WellConnections>(*this->connections);
+    ordered->order();
 
+    const auto changed = *ordered != *this->connections;
+    if (changed) {
+        this->connections = std::move(ordered);
+    }
+
+    // Defaulted reference depth is that of the first connection.
+    const auto refDepth = this->ref_depth;
+    this->updateRefDepth();
+
+    return changed || (this->ref_depth != refDepth);
+}
 
 bool Well::updateSolventFraction(const double solvent_fraction_arg)
 {
@@ -2525,4 +2547,19 @@ std::string Opm::Well::filterConcBasisToString(const FilterConcBasis basis)
     case FilterConcBasis::RESERVOIR: return "RES";
     }
     throw std::invalid_argument("Unhandled filtration concentration basis");
+}
+
+bool Opm::Well::replaceConnections(std::shared_ptr<WellConnections> connections_arg,
+                                   const bool                       force,
+                                   bool (WellConnections::*isSame)(const WellConnections&) const)
+{
+    // Connections may lie in several LGRs: each carries its own grid number
+    // and the simulator resolves it against that grid.
+
+    if (force || ! ((*this->connections).*isSame)(*connections_arg)) {
+        this->connections = std::move(connections_arg);
+        return true;
+    }
+
+    return false;
 }
