@@ -290,6 +290,37 @@ BOOST_AUTO_TEST_CASE(DenseLiquidKeepsLiquidLabel)
     }
 }
 
+// Decane with traces of CO2 and methane at 3 bar and 150 C is a single-phase
+// liquid. Cold-started as at the beginning of a run, successive substitution
+// and the hybrid method used to fail after the stability test instead.
+BOOST_AUTO_TEST_CASE(NearPureHeavyLiquidIsSinglePhase)
+{
+    for (const auto eos : {EOSType::PR, EOSType::SRK}) {
+        for (const auto method :
+             {PTFlashMethod::Newton, PTFlashMethod::Ssi, PTFlashMethod::SsiNewton}) {
+            BOOST_TEST_CONTEXT("EOS " << static_cast<int>(eos) << ", method "
+                                      << static_cast<int>(method))
+            {
+                constexpr Scalar trace = 1.e-8;
+                constexpr Scalar z[numComponents] = {trace, trace, 1. - 2. * trace};
+                FluidState fs;
+                for (unsigned phaseIdx = 0; phaseIdx < FluidSystem::numPhases; ++phaseIdx) {
+                    fs.setPressure(phaseIdx, 3.e5);
+                }
+                fs.setTemperature(423.15);
+                for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+                    fs.setMoleFraction(compIdx, z[compIdx]);
+                    fs.setKvalue(compIdx, fs.wilsonK_(compIdx));
+                }
+                fs.setLvalue(-1.0);
+
+                BOOST_REQUIRE(PtFlash::solve(fs, method, flashTolerance, eos));
+                BOOST_CHECK_EQUAL(Opm::getValue(fs.L()), 1.0);
+            }
+        }
+    }
+}
+
 // Out-of-range negative-flash and coincident SSI results both indicate that a
 // warm-started cell has crossed into the single-phase region.
 BOOST_AUTO_TEST_CASE(WarmSsiReassessesOutOfRangeSplits)
