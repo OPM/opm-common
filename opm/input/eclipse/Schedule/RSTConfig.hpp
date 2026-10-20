@@ -130,30 +130,39 @@
      -- Advance the simulator forward with TSTEP / DATES
      TSTEP / DATES / WCONxxx
 
-     -- Turn writing of restart files OFF using integer controls.
+     -- Turn writing of restart files OFF.
      RPTRST
-        0 /
+        BASIC=0 /
 
      -- Advance the simulator forward with TSTEP / DATES
      TSTEP / DATES / WCONxxx
 
-    -- Turn writing of restart files ON using integer controls.
+    -- Turn writing of restart files ON again.
     RPTRST
-        2 /
+        BASIC=2 /
 
   When writing of restart files is turned on again with the last
   RPTRST keyword, should still the relative permeabilites KRO, KRW and
   KRG be added to the restart files? The model we have implemented is:
 
-   - The list of keywords written to the restart file is persisted
-     independtly of the BASIC=n setting.
+   - The list of keywords written to the restart file persists across
+     RPTRST keywords with BASIC=n, n > 0.
 
-   - Using string based mnonics you can *only add* kewyords to be
-     written to the files. To stop writing a keyword you must use an
-     integer control with value 0.
+   - An RPTRST keyword with BASIC=0 clears all previously requested
+     mnemonics (including FREQ and NORST).  Mnemonics in the same
+     RPTRST record as BASIC=0 are retained.  A subsequent BASIC=n,
+     n > 0, therefore behaves as if no earlier RPTRST keywords had
+     been seen.
 
-  Based on this best guess heuristic the final restart files will
-  still contain KRO, KRW and KRG.
+   - To stop writing an individual keyword without turning off
+     restart output, set its value to zero, e.g., KRW=0.
+
+   - RPTSCHED, including RESTART=0, never cancels mnemonics requested
+     by RPTRST.  RESTART=0 only turns off restart output.
+
+  With these rules the final restart files above will *not* contain
+  KRO, KRW and KRG.  Note that the integer form 'RPTRST 0 /' with
+  fewer than 27 items leaves BASIC unchanged.
 
 
 
@@ -282,6 +291,8 @@ private:
                         ErrorGuard& errors);
 
     void update_schedule(const std::pair<std::optional<int>, std::optional<int>>& basic_freq);
+
+    void clearRptRstMnemonics();
 };
 
 } // namespace Opm

@@ -469,7 +469,7 @@ RESTART=1
 DATES             -- 2
  20  JAN 2010 /
 /
-RPTRST  -- RK,VELOCITY,COMPRESS --2
+RPTRST  -- BASIC=0, clears earlier mnemonics --2
   18*0 0 8*0 /
 DATES             -- 3
  20  FEB 2010 /
@@ -500,10 +500,9 @@ RESTART=0
     BOOST_CHECK_EQUAL_COLLECTIONS( expected1.begin(), expected1.end(),
                                    kw_list1.begin(), kw_list1.end() );
 
+    // Integer-form BASIC=0 clears all earlier mnemonics.
     const auto& kw_list2 = filter_keywords( sched.rst_keywords(3));
-    const auto expected2 = { "COMPRESS", "RK", "VELOCITY" };
-    BOOST_CHECK_EQUAL_COLLECTIONS( expected2.begin(), expected2.end(),
-                                   kw_list2.begin(), kw_list2.end() );
+    BOOST_CHECK_MESSAGE( kw_list2.empty(), "BASIC=0 must clear earlier RPTRST mnemonics" );
 }
 
 BOOST_AUTO_TEST_CASE(RPTRST_mixed_mnemonics_int_list) {
@@ -833,12 +832,10 @@ DATES             -- 3
     BOOST_CHECK( !sched1.write_rst_file( 1 ) );
     BOOST_CHECK(  sched1.write_rst_file( 2 ) );
 
-
-    std::vector<std::string> expected = { "ACIP","BG","BO","BW","DEN","KRG", "KRO", "KRW", "NORST", "SFREQ", "VGAS", "VOIL", "VWAT"};
+    // BASIC=0 in SCHEDULE clears the mnemonics requested in SOLUTION.
     const auto kw_list = filter_keywords( sched1.rst_keywords(2) );
-
-    BOOST_CHECK_EQUAL_COLLECTIONS( expected.begin() ,expected.end(),
-                                   kw_list.begin() , kw_list.end() );
+    BOOST_CHECK_MESSAGE(kw_list.empty(), "BASIC=0 must clear earlier RPTRST mnemonics");
+    BOOST_CHECK(! sched1[1].rst_config().norst.has_value());
 
     ctx.update(ParseContext::RPT_UNKNOWN_MNEMONIC, InputErrorAction::THROW_EXCEPTION);
     BOOST_CHECK_THROW( Schedule( deck2, es2, ctx, errors, {} ), std::exception );
@@ -1386,6 +1383,140 @@ DATES
         BOOST_CHECK( !sched.write_rst_file( ts ) );
 }
 
+BOOST_AUTO_TEST_CASE(BASIC_EQ_0_Clears_Mnemonics) {
+    const std::string data = R"(
+SCHEDULE
+RPTRST
+BASIC=2 FREQ=3 KRW FLORES NORST=1 /
+DATES
+ 22 MAY 1981 /
+/
+RPTRST
+BASIC=0 /
+DATES
+ 23 MAY 1981 /
+/
+RPTRST
+BASIC=2 /
+DATES
+ 24 MAY 1981 /
+/
+)";
+
+    const auto sched = make_schedule(data);
+
+    BOOST_CHECK( sched.write_rst_file(1));
+    BOOST_CHECK(!sched.write_rst_file(2));
+    BOOST_CHECK( sched.write_rst_file(3));
+
+    const auto expected1 = { "FLORES", "KRW", "NORST" };
+    const auto kw_list1 = filter_keywords(sched.rst_keywords(1));
+    BOOST_CHECK_EQUAL_COLLECTIONS(expected1.begin(), expected1.end(),
+                                  kw_list1.begin(), kw_list1.end());
+    BOOST_CHECK_EQUAL(sched[0].rst_config().norst.value_or(0), 1);
+
+    BOOST_CHECK(filter_keywords(sched.rst_keywords(3)).empty());
+
+    const auto& rst = sched[2].rst_config();
+    BOOST_CHECK(!rst.norst.has_value());
+    BOOST_CHECK(!rst.freq.has_value());
+    BOOST_CHECK_EQUAL(rst.basic.value_or(-1), 2);
+}
+
+BOOST_AUTO_TEST_CASE(SOLUTION_RPTRST_Mnemonics_Persist) {
+    const std::string data = R"(
+SOLUTION
+RPTRST
+BASIC=2 KRW FLORES NORST=1 /
+SCHEDULE
+DATES
+ 22 MAY 1981 /
+ 23 MAY 1981 /
+/
+)";
+
+    const auto sched = make_schedule(data);
+
+    const auto expected = { "FLORES", "KRW", "NORST" };
+    for (const std::size_t step : { 0, 1, 2 }) {
+        BOOST_TEST_MESSAGE("Report step " << step);
+        BOOST_CHECK(sched.write_rst_file(step));
+
+        const auto kw_list = filter_keywords(sched.rst_keywords(step));
+        BOOST_CHECK_EQUAL_COLLECTIONS(expected.begin(), expected.end(),
+                                      kw_list.begin(), kw_list.end());
+    }
+
+    BOOST_CHECK_EQUAL(sched[1].rst_config().norst.value_or(0), 1);
+}
+
+BOOST_AUTO_TEST_CASE(SOLUTION_RPTRST_Mnemonics_Persist_With_RPTSOL) {
+    const std::string data = R"(
+SOLUTION
+RPTRST
+BASIC=2 KRW FLORES FIP /
+RPTSOL
+RESTART=2 FIP=3 SWAT /
+SCHEDULE
+DATES
+ 22 MAY 1981 /
+ 23 MAY 1981 /
+/
+)";
+
+    const auto sched = make_schedule(data);
+
+    const auto expected0 = { "FIP", "FLORES", "KRW", "SWAT" };
+    const auto kw_list0 = filter_keywords(sched.rst_keywords(0));
+    BOOST_CHECK_EQUAL_COLLECTIONS(expected0.begin(), expected0.end(),
+                                  kw_list0.begin(), kw_list0.end());
+
+    const auto expected = { "FIP", "FLORES", "KRW" };
+    for (const std::size_t step : { 1, 2 }) {
+        BOOST_TEST_MESSAGE("Report step " << step);
+        const auto kw_list = filter_keywords(sched.rst_keywords(step));
+        BOOST_CHECK_EQUAL_COLLECTIONS(expected.begin(), expected.end(),
+                                      kw_list.begin(), kw_list.end());
+    }
+}
+
+
+BOOST_AUTO_TEST_CASE(RPTSCHED_INTEGER_RESTART_EQ_0_Keeps_Mnemonics) {
+    const std::string data = R"(
+SCHEDULE
+RPTRST
+BASIC=2 KRW FLORES FIP RK /
+DATES
+ 22 MAY 1981 /
+/
+RPTSCHED
+6*1 0 50*0 /
+DATES
+ 23 MAY 1981 /
+/
+RPTSCHED
+RESTART=2 /
+DATES
+ 24 MAY 1981 /
+/
+)";
+
+    const auto sched = make_schedule(data);
+
+    BOOST_CHECK( sched.write_rst_file(1));
+    BOOST_CHECK(!sched.write_rst_file(2));
+    BOOST_CHECK( sched.write_rst_file(3));
+
+    for (const std::size_t step : { 1, 2, 3 }) {
+        BOOST_TEST_MESSAGE("Report step " << step);
+        const auto& kws = sched.rst_keywords(step);
+        for (const auto* kw : { "FIP", "FLORES", "KRW", "RK" }) {
+            const auto it = kws.find(kw);
+            BOOST_CHECK_MESSAGE((it != kws.end()) && (it->second > 0),
+                                "Restart mnemonic " << kw << " must persist");
+        }
+    }
+}
 
 BOOST_AUTO_TEST_CASE(RESTART_EQ_0) {
     const std::string data =  R"(
@@ -1581,7 +1712,7 @@ RESTART=1
 DATES             -- 2
  20  JAN 2010 /
 /
-RPTRST  -- RK,VELOCITY,COMPRESS
+RPTRST  -- BASIC=0, clears earlier mnemonics
   18*0 0 8*0 /
 DATES             -- 3
  20  FEB 2010 /
@@ -1608,10 +1739,9 @@ DATES       -- 4
     BOOST_CHECK_EQUAL_COLLECTIONS( expected1.begin(), expected1.end(),
                                    kw_list1.begin(), kw_list1.end() );
 
+    // Integer-form BASIC=0 clears all earlier mnemonics.
     const auto& kw_list2 = filter_keywords( sched.rst_keywords(3));
-    const auto expected2 = { "COMPRESS", "RK", "VELOCITY" };
-    BOOST_CHECK_EQUAL_COLLECTIONS( expected2.begin(), expected2.end(),
-                                   kw_list2.begin(), kw_list2.end() );
+    BOOST_CHECK_MESSAGE( kw_list2.empty(), "BASIC=0 must clear earlier RPTRST mnemonics" );
 }
 
 BOOST_AUTO_TEST_CASE(RPTSOL_Properties)
