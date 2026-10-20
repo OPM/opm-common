@@ -436,12 +436,14 @@ namespace Opm {
                                  std::unordered_map<std::string, double>& wpimult_global_factor,
                                  WelSegsSet* welsegs_wells,
                                  std::set<std::string>* compsegs_wells,
-                                 std::set<std::string>* comptraj_wells)
+                                 std::set<std::string>* comptraj_wells,
+                                 std::set<std::string>* connection_order_wells)
     {
         HandlerContext handlerContext { *this, block, keyword, grid, currentStep,
                                         matches, action_mode,
                                         parseContext, errors, sim_update, target_wellpi,
-                                        wpimult_global_factor, welsegs_wells, compsegs_wells, comptraj_wells};
+                                        wpimult_global_factor, welsegs_wells, compsegs_wells, comptraj_wells,
+                                        connection_order_wells};
 
         if (!KeywordHandlers::getInstance().handleKeyword(handlerContext)) {
             OpmLog::warning(fmt::format("No handler registered for keyword {} "
@@ -722,6 +724,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
             }
             this->create_next(block);
 
+            std::set<std::string> connection_order_wells{};
             std::unordered_map<std::string, double> wpimult_global_factor;
 
             // Location of the first network keyword of this report step, if
@@ -808,7 +811,8 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                                     wpimult_global_factor,
                                     &welsegs_wells,
                                     &compsegs_wells,
-                                    &comptraj_wells);
+                                    &comptraj_wells,
+                                    &connection_order_wells);
                 keyword_index++;
             }
 
@@ -836,6 +840,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                                                      parseContext, errors);
             }
 
+            this->orderConnections(connection_order_wells);
             this->applyGlobalWPIMULT(wpimult_global_factor);
             this->end_report(report_step);
 
@@ -847,6 +852,17 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                 this->m_sched_deck.clearKeywords(report_step);
             }
         } // for (auto report_step = load_start
+    }
+
+    void Schedule::orderConnections(const std::set<std::string>& well_names)
+    {
+        for (const auto& well_name : well_names) {
+            auto well = this->snapshots.back().wells(well_name);
+
+            if (well.orderConnections()) {
+                this->snapshots.back().wells.update(std::move(well));
+            }
+        }
     }
 
     void Schedule::applyGlobalWPIMULT( const std::unordered_map<std::string, double>& wpimult_global_factor) {
@@ -1841,6 +1857,7 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
         ScheduleGrid grid(this->completed_cells, this->completed_cells_lgr, this->completed_cells_lgr_map);
         SimulatorUpdate sim_update;
         std::unordered_map<std::string, double> wpimult_global_factor;
+        std::set<std::string> connection_order_wells;
         const auto matches = Action::Result{false}.matches();
         const std::string prefix = "| "; // logger prefix string
 
@@ -1873,7 +1890,9 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
                                     action_mode,
                                     &sim_update,
                                     &target_wellpi,
-                                    wpimult_global_factor);
+                                    wpimult_global_factor,
+                                    nullptr, nullptr, nullptr,
+                                    &connection_order_wells);
             }
             else {
                 const std::string msg_fmt =
@@ -1885,6 +1904,7 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
             }
         }
 
+        this->orderConnections(connection_order_wells);
         this->applyGlobalWPIMULT(wpimult_global_factor);
         this->end_report(reportStep);
 
@@ -1945,6 +1965,7 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
         ErrorGuard errors;
         SimulatorUpdate sim_update;
         ScheduleGrid grid(this->completed_cells, this->completed_cells_lgr, this->completed_cells_lgr_map);
+        std::set<std::string> connection_order_wells;
 
         OpmLog::debug("/----------------------------------------------------------------------");
         OpmLog::debug(fmt::format("{0}Action {1} triggered. Will add action "
@@ -1972,9 +1993,12 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
                                 /* actionx_mode = */ true,
                                 &sim_update,
                                 &target_wellpi,
-                                wpimult_global_factor);
+                                wpimult_global_factor,
+                                nullptr, nullptr, nullptr,
+                                &connection_order_wells);
         }
 
+        this->orderConnections(connection_order_wells);
         this->applyGlobalWPIMULT(wpimult_global_factor);
 
         this->end_report(reportStep);

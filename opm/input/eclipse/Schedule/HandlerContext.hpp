@@ -69,6 +69,9 @@ public:
     /// \param welsegs_wells_ All wells with a WELSEGS entry for checks.
     /// \param compsegs_wells_ All wells with a COMPSEGS entry for checks.
     /// \param comptraj_wells_ All wells with a COMPTRAJ entry for checks.
+    /// \param connection_order_wells_ Wells whose connections must be
+    ///    (re-)ordered once all keywords in the current report step have
+    ///    been processed.
     HandlerContext(Schedule& schedule,
                    const ScheduleBlock& block_,
                    const DeckKeyword& keyword_,
@@ -83,7 +86,8 @@ public:
                    std::unordered_map<std::string, double>& wpimult_global_factor_,
                    WelSegsSet* welsegs_wells_,
                    std::set<std::string>* compsegs_wells_,
-                   std::set<std::string>* comptraj_wells_)
+                   std::set<std::string>* comptraj_wells_,
+                   std::set<std::string>* connection_order_wells_)
         : block(block_)
         , keyword(keyword_)
         , currentStep(currentStep_)
@@ -97,6 +101,7 @@ public:
         , welsegs_wells(welsegs_wells_)
         , compsegs_wells(compsegs_wells_)
         , comptraj_wells(comptraj_wells_)
+        , connection_order_wells(connection_order_wells_)
         , sim_update(sim_update_)
         , schedule_(schedule)
     {}
@@ -131,6 +136,14 @@ public:
 
     /// \brief Mark that the well occured in a COMPTRAJ keyword.
     void comptraj_handled(const std::string& well_name);
+
+    /// \brief Mark that the connections of a well must be ordered before
+    /// the end of the current report step.
+    ///
+    /// Ordering is deferred in order to avoid repeating this relatively
+    /// expensive operation for every keyword that adds or changes the
+    /// connection structure of a well.
+    void connection_structure_changed(const std::string& well_name);
 
     //! \brief Set exit code.
     void setExitCode(int code);
@@ -219,6 +232,7 @@ private:
     WelSegsSet* welsegs_wells{nullptr};
     std::set<std::string>* compsegs_wells{nullptr};
     std::set<std::string>* comptraj_wells{nullptr};
+    std::set<std::string>* connection_order_wells{nullptr};
     SimulatorUpdate* sim_update{nullptr};
     Schedule& schedule_;
 };
