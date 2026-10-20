@@ -161,10 +161,10 @@ public:
     /// records, so several records may share the same \c reportStep.
     ///
     /// A record covers the half-open interval
-    /// <tt>[startTime, startTime + stepLength]</tt>, in seconds.  The \c rates
-    /// are the TIME-AVERAGE over that interval, so that holding them constant
-    /// across it reproduces the flow over the interval exactly.  The state
-    /// arrays -- \c pressures, \c swat, \c sgas, \c rs, \c rv and
+    /// <tt>[startTime, startTime + stepLength]</tt>, in seconds.  The
+    /// \c massRates are the TIME-AVERAGE over that interval, so that holding
+    /// them constant across it reproduces the flow over the interval exactly.
+    /// The state arrays -- \c pressures, \c swat, \c sgas, \c rs, \c rv and
     /// \c temperature -- are the exterior cell values at the END of the
     /// interval.
     ///
@@ -202,7 +202,7 @@ public:
         std::vector<double> massRates;
 
         /// Relative permeability of the exterior cell, face-major over the
-        /// active phases like \c rates.
+        /// active phases like \c massRates.
         ///
         /// Written in Pressure mode. A reduced run needs these to form the
         /// mobility of an inflowing stream: evaluating the saturation
@@ -295,7 +295,7 @@ public:
 
         bool empty() const { return this->wells.empty(); }
 
-        bool operator==(const ParentWells& other) const = default;
+        bool operator==(const ParentWells& other) const;
     };
 
     struct Data {

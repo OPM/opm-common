@@ -26,6 +26,7 @@
 #include <opm/io/eclipse/FluxFile.hpp>
 
 #include <filesystem>
+#include <limits>
 #include <stdexcept>
 #include <cmath>
 #include <string>
@@ -104,6 +105,12 @@ Opm::EclIO::FluxFile::Data sampleData()
         step.rs = {100.0, 110.0};
         step.rv = {5.0, 6.0};
         step.temperature = {330.0, 331.0};
+        step.relPerm = {0.40, 0.10, 0.02, 0.35, 0.12, 0.03};
+        step.capPressure = {0.0, 1.2e4, -3.0e3, 0.0, 1.1e4, -2.5e3};
+        step.externalRegionSums = {
+            2.0e9, 3.3e4, 1.4e3, 5.0e-3, 0.0, 0.0, 1.0e7, 0.0,
+            2.1e9, 3.4e4, 1.5e3, 6.0e-3, 0.0, 0.0, 1.1e7, 0.0,
+        };
     }
     {
         auto& step = data.reportSteps[1];
@@ -118,7 +125,28 @@ Opm::EclIO::FluxFile::Data sampleData()
         step.rs = {120.0, 130.0};
         step.rv = {7.0, 8.0};
         step.temperature = {332.0, 333.0};
+        step.relPerm = {0.38, 0.11, 0.04, 0.33, 0.13, 0.05};
+        step.capPressure = {0.0, 1.3e4, -3.2e3, 0.0, 1.0e4, -2.4e3};
+        step.externalRegionSums = {
+            1.9e9, 3.2e4, 1.3e3, 4.0e-3, 0.0, 0.0, 0.9e7, 0.0,
+            2.0e9, 3.3e4, 1.4e3, 5.0e-3, 0.0, 0.0, 1.0e7, 0.0,
+        };
     }
+
+    // Two report steps, two wells and FIELD plus one group. The injector is
+    // not defined at the first step, and has no reference depth, which is
+    // held as NaN and has to survive the round trip as such.
+    auto& wells = data.parentWells;
+    wells.stepStart = {1.5e9, 1.6e9};
+    wells.wells = {"P1", "I1"};
+    wells.groups = {"FIELD", "G1"};
+    wells.wellGroup = {2, 0, 2, 2};
+    wells.wellType = {1, 0, 1, 2};
+    wells.wellStatus = {1, 0, 1, 3};
+    wells.wellEfficiency = {1.0, 1.0, 0.9, 1.0};
+    wells.wellRefDepth = {1580.0, std::numeric_limits<double>::quiet_NaN()};
+    wells.groupParent = {0, 1, 0, 1};
+    wells.groupEfficiency = {1.0, 1.0, 1.0, 0.95};
 
     // Summary samples are deliberately independent of the report-step
     // sequence: three samples spanning two report steps.
@@ -162,10 +190,13 @@ Opm::EclIO::FluxFile::Data gasOilData()
                           | static_cast<int>(FluxFile::Phase::Gas);
 
     for (auto& step : data.reportSteps) {
-        step.massRates = {
-            step.massRates[0], step.massRates[2],
-            step.massRates[3], step.massRates[5],
-        };
+        // Drop the water entry, the second of each face's three phases.
+        const auto oilGas = [](const std::vector<double>& v)
+        { return std::vector<double>{v[0], v[2], v[3], v[5]}; };
+
+        step.massRates = oilGas(step.massRates);
+        step.relPerm = oilGas(step.relPerm);
+        step.capPressure = oilGas(step.capPressure);
         step.swat.clear();
     }
 
@@ -470,4 +501,107 @@ BOOST_AUTO_TEST_CASE(RecordAndSampleCountsAreDerivedNotTrusted)
     BOOST_CHECK_EQUAL(readBack.header.numSummarySamples, 3);
     BOOST_CHECK_EQUAL(readBack.reportSteps.size(), 2U);
     BOOST_CHECK_EQUAL(readBack.summarySamples.size(), 3U);
+}
+
+BOOST_AUTO_TEST_CASE(ParentWellsSurviveTheRoundTrip)
+{
+    WorkArea work;
+
+    const auto written = sampleData();
+    for (const auto formatted : {false, true}) {
+        const auto filename = formatted ? std::string{"WELLS.FFLUX"} : std::string{"WELLS.FLUX"};
+        writeAll(filename, formatted, written);
+
+        const auto readBack = Opm::EclIO::FluxFile::read(filename);
+        const auto& wells = readBack.parentWells;
+        BOOST_CHECK(wells == written.parentWells);
+
+        BOOST_REQUIRE_EQUAL(wells.wells.size(), 2U);
+        BOOST_CHECK_EQUAL(wells.wells[1], "I1");
+        BOOST_CHECK_EQUAL(wells.groups[1], "G1");
+        BOOST_CHECK_EQUAL(wells.wellGroup[1], 0);
+        BOOST_CHECK_EQUAL(wells.wellType[3], 2);
+        BOOST_CHECK_EQUAL(wells.wellStatus[3], 3);
+        BOOST_CHECK_CLOSE(wells.wellEfficiency[2], 0.9, 1.0e-12);
+        BOOST_CHECK_CLOSE(wells.groupEfficiency[3], 0.95, 1.0e-12);
+        BOOST_CHECK_CLOSE(wells.wellRefDepth[0], 1580.0, 1.0e-12);
+        BOOST_CHECK(std::isnan(wells.wellRefDepth[1]));
+    }
+}
+
+BOOST_AUTO_TEST_CASE(ExteriorSaturationFunctionsAndOutsideSumsSurviveTheRoundTrip)
+{
+    WorkArea work;
+
+    const auto written = sampleData();
+    for (const auto formatted : {false, true}) {
+        const auto filename = formatted ? std::string{"KRPC.FFLUX"} : std::string{"KRPC.FLUX"};
+        writeAll(filename, formatted, written);
+
+        const auto readBack = Opm::EclIO::FluxFile::read(filename);
+        BOOST_REQUIRE_EQUAL(readBack.reportSteps.size(), written.reportSteps.size());
+
+        for (std::size_t r = 0; r < written.reportSteps.size(); ++r) {
+            const auto& got = readBack.reportSteps[r];
+            const auto& want = written.reportSteps[r];
+
+            BOOST_CHECK_EQUAL_COLLECTIONS(got.relPerm.begin(), got.relPerm.end(),
+                                          want.relPerm.begin(), want.relPerm.end());
+            BOOST_CHECK_EQUAL_COLLECTIONS(got.capPressure.begin(), got.capPressure.end(),
+                                          want.capPressure.begin(), want.capPressure.end());
+            BOOST_CHECK_EQUAL_COLLECTIONS(got.externalRegionSums.begin(),
+                                          got.externalRegionSums.end(),
+                                          want.externalRegionSums.begin(),
+                                          want.externalRegionSums.end());
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(RejectsMisSizedRelPermAndCapPressure)
+{
+    // A record with the wrong number of values would make the whole block's
+    // array the wrong size, and the file unreadable after the fact.
+    WorkArea work;
+
+    {
+        auto data = sampleData();
+        data.reportSteps[1].relPerm.pop_back();
+        BOOST_CHECK_THROW(writeAll("BADKR.FLUX", false, data), std::invalid_argument);
+    }
+    {
+        auto data = sampleData();
+        data.reportSteps[0].capPressure.push_back(0.0);
+        BOOST_CHECK_THROW(writeAll("BADPC.FLUX", false, data), std::invalid_argument);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(ABlockCountIsCheckedBeforeItIsUsed)
+{
+    // The count in FLXSEQ comes from the file. A damaged one must be reported
+    // as such, not first used to size the record list.
+    WorkArea work;
+
+    for (const auto badCount : {-1, 2'000'000'000}) {
+        const auto data = sampleData();
+        writeAll("BADCOUNT.FLUX", false, data);
+
+        {
+            Opm::EclIO::EclOutput output("BADCOUNT.FLUX", false, std::ios::app);
+            output.write("FLXSEQ", std::vector<int>{1, badCount});
+            output.write("FLXSTEP", std::vector<int>{2});
+            output.write("FLXSIM", std::vector<int>{4});
+            output.write("FLXTIME", std::vector<double>{28.5});
+            output.write("FLXDT", std::vector<double>{1.0});
+
+            // A block after it, so that the bad one is not mistaken for the
+            // torn tail of a run killed during a write.
+            output.write("FLXSEQ", std::vector<int>{2, 1});
+            output.write("FLXSTEP", std::vector<int>{3});
+            output.write("FLXSIM", std::vector<int>{5});
+            output.write("FLXTIME", std::vector<double>{29.5});
+            output.write("FLXDT", std::vector<double>{1.0});
+        }
+
+        BOOST_CHECK_THROW(Opm::EclIO::FluxFile::read("BADCOUNT.FLUX"), std::runtime_error);
+    }
 }

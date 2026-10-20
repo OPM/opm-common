@@ -38,10 +38,10 @@
 namespace {
 
 template <class Member>
-using BoundaryMemberType = std::remove_cv_t<std::remove_reference_t<decltype(std::declval<Opm::EclIO::FluxFile::BoundaryFace>().*std::declval<Member>())>>;
+using BoundaryMemberType = std::remove_cvref_t<decltype(std::declval<Opm::EclIO::FluxFile::BoundaryFace>().*std::declval<Member>())>;
 
 template <class Member>
-using StepMemberType = std::remove_cv_t<std::remove_reference_t<decltype(std::declval<Opm::EclIO::FluxFile::ReportStep>().*std::declval<Member>())>>;
+using StepMemberType = std::remove_cvref_t<decltype(std::declval<Opm::EclIO::FluxFile::ReportStep>().*std::declval<Member>())>;
 
 constexpr int hasTemperatureIndex = 14;
 constexpr int modeIndex = 15;
@@ -158,17 +158,6 @@ std::vector<StepMemberType<Member>> flattenStepMeta(
     values.reserve(steps.size());
     for (const auto& step : steps) {
         values.push_back(step.*member);
-    }
-    return values;
-}
-
-std::vector<double> flattenVectors(const std::vector<Opm::EclIO::FluxFile::ReportStep>& steps,
-                                   const std::vector<double> Opm::EclIO::FluxFile::ReportStep::* member)
-{
-    std::vector<double> values;
-    for (const auto& step : steps) {
-        const auto& field = step.*member;
-        values.insert(values.end(), field.begin(), field.end());
     }
     return values;
 }
@@ -338,7 +327,28 @@ bool FluxFile::BoundaryFace::operator==(const BoundaryFace& other) const
         && (this->exteriorGlobalCell == other.exteriorGlobalCell)
         && (this->transmissibility == other.transmissibility)
         && (this->exteriorPvtRegion == other.exteriorPvtRegion)
+        && (this->exteriorEquilRegion == other.exteriorEquilRegion)
         && sameDepth;
+}
+
+bool FluxFile::ParentWells::operator==(const ParentWells& other) const
+{
+    // A well without a reference depth is held as NaN, as for BoundaryFace.
+    const auto sameDepths = std::equal(this->wellRefDepth.begin(), this->wellRefDepth.end(),
+                                       other.wellRefDepth.begin(), other.wellRefDepth.end(),
+                                       [](const double a, const double b)
+                                       { return (std::isnan(a) && std::isnan(b)) || (a == b); });
+
+    return (this->stepStart == other.stepStart)
+        && (this->wells == other.wells)
+        && (this->groups == other.groups)
+        && (this->wellGroup == other.wellGroup)
+        && (this->wellType == other.wellType)
+        && (this->wellStatus == other.wellStatus)
+        && (this->wellEfficiency == other.wellEfficiency)
+        && sameDepths
+        && (this->groupParent == other.groupParent)
+        && (this->groupEfficiency == other.groupEfficiency);
 }
 
 bool FluxFile::ReportStep::operator==(const ReportStep& other) const = default;
@@ -655,12 +665,15 @@ FluxFile::Data FluxFile::read(const std::string& filename, bool preload)
                                       arrayNames[first], marker.size()));
             }
 
+            if (marker[1] < 0) {
+                OPM_THROW(std::runtime_error,
+                          fmt::format("{} declares a negative count {}",
+                                      arrayNames[first], marker[1]));
+            }
+
             const auto count = static_cast<std::size_t>(marker[1]);
 
             if (arrayNames[first] == "FLXSEQ") {
-                const auto base = data.reportSteps.size();
-                data.reportSteps.resize(base + count);
-
                 const auto metaIndex = [&](const std::string& name)
                 {
                     const auto idx = indexOf(name);
@@ -690,6 +703,9 @@ FluxFile::Data FluxFile::read(const std::string& filename, bool preload)
                 requireCount("FLXSIM", simNumbers.size());
                 requireCount("FLXTIME", startTimes.size());
                 requireCount("FLXDT", stepLengths.size());
+
+                const auto base = data.reportSteps.size();
+                data.reportSteps.resize(base + count);
 
                 for (std::size_t r = 0; r < count; ++r) {
                     auto& step = data.reportSteps[base + r];
@@ -897,40 +913,51 @@ void FluxFile::validateRecordsForWrite(const Data& data,
         }
 
         if (pressureEnabled) {
-            const auto checkSize = [&](const std::vector<double>& values, const std::string& name) {
-                if (values.size() != perFaceValues) {
+            const auto checkSize = [](const std::vector<double>& values,
+                                      const std::string& name,
+                                      const std::size_t expected)
+            {
+                if (values.size() != expected) {
                     OPM_THROW(std::invalid_argument,
                               fmt::format("Each {} step must contain {} values, got {}",
-                                          name, perFaceValues, values.size()));
+                                          name, expected, values.size()));
                 }
             };
 
-            checkSize(step.pressures, "FLXPRES");
+            checkSize(step.pressures, "FLXPRES", perFaceValues);
 
             if (data.header.hasPhase(Phase::Water)) {
-                checkSize(step.swat, "FLXSATW");
+                checkSize(step.swat, "FLXSATW", perFaceValues);
             }
             else if (!step.swat.empty()) {
                 OPM_THROW(std::invalid_argument, "Water saturation values provided, but water is not active");
             }
 
             if (data.header.hasPhase(Phase::Gas)) {
-                checkSize(step.sgas, "FLXSATG");
+                checkSize(step.sgas, "FLXSATG", perFaceValues);
             }
             else if (!step.sgas.empty()) {
                 OPM_THROW(std::invalid_argument, "Gas saturation values provided, but gas is not active");
             }
 
             if (!step.rs.empty()) {
-                checkSize(step.rs, "FLXRS");
+                checkSize(step.rs, "FLXRS", perFaceValues);
             }
 
             if (!step.rv.empty()) {
-                checkSize(step.rv, "FLXRV");
+                checkSize(step.rv, "FLXRV", perFaceValues);
             }
 
             if (!step.temperature.empty()) {
-                checkSize(step.temperature, "FLXTEMP");
+                checkSize(step.temperature, "FLXTEMP", perFaceValues);
+            }
+
+            if (!step.relPerm.empty()) {
+                checkSize(step.relPerm, "FLXKR", perFacePhaseValues);
+            }
+
+            if (!step.capPressure.empty()) {
+                checkSize(step.capPressure, "FLXPC", perFacePhaseValues);
             }
         }
     }

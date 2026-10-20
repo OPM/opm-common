@@ -109,7 +109,7 @@ bool Opm::EclIO::isFormatted(const std::filesystem::path& filename)
     // otherwise marks a formatted file, and so are its numbered forms such as
     // .FLUX0002. The formatted spelling is .FFLUX, which the rule below still
     // catches.
-    if (ext.string().rfind(".FLUX", 0) == 0) {
+    if (ext.generic_string().starts_with(".FLUX")) {
         return false;
     }
 
