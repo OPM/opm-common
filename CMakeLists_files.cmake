@@ -343,6 +343,7 @@ list(APPEND MAIN_SOURCE_FILES
   opm/io/eclipse/ERst.cpp
   opm/io/eclipse/ERsm.cpp
   opm/io/eclipse/ESmry.cpp
+  opm/io/eclipse/FluxFile.cpp
   opm/io/eclipse/ExtESmry.cpp
   opm/io/eclipse/ESmry_write_rsm.cpp
   opm/io/eclipse/OutputStream.cpp
@@ -543,6 +544,7 @@ list(APPEND TEST_SOURCE_FILES
   tests/test_ExtESmry.cpp
   tests/test_FastSmallVector.cpp
   tests/test_FIPRegionStatistics.cpp
+  tests/test_FluxFile.cpp
   tests/test_GroupSatelliteInjection.cpp
   tests/test_GroupStructureViz.cpp
   tests/test_GuideRate.cpp
@@ -1298,6 +1300,7 @@ list(APPEND PUBLIC_HEADER_FILES
   opm/io/eclipse/EclFile.hpp
   opm/io/eclipse/EclIOdata.hpp
   opm/io/eclipse/EclOutput.hpp
+  opm/io/eclipse/FluxFile.hpp
   opm/io/eclipse/EclUtil.hpp
   opm/io/eclipse/ExtESmry.hpp
   opm/io/eclipse/ExtSmryOutput.hpp
