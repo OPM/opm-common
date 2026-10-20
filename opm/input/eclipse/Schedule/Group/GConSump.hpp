@@ -26,6 +26,7 @@
 #include <cstddef>
 #include <map>
 #include <string>
+#include <vector>
 
 namespace Opm {
 
@@ -72,6 +73,13 @@ namespace Opm {
                  const UDAValue& import_rate, const std::string& network_node,
                  const UnitSystem& unit_system);
         std::size_t size() const;
+
+        /// Names of all groups with GCONSUMP data, in alphabetical order.
+        std::vector<std::string> group_names() const;
+
+        /// Item 4 value which excludes a group's consumption and import
+        /// from the extended network.
+        static constexpr const char* NO_NODES = "NO-NODES";
 
         bool operator==(const GConSump& data) const;
 

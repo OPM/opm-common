@@ -23,6 +23,7 @@
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/utility/OpmInputError.hpp>
 
+#include <opm/input/eclipse/Schedule/Group/GConSump.hpp>
 #include <opm/input/eclipse/Schedule/Network/Branch.hpp>
 #include <opm/input/eclipse/Schedule/Network/ExtNetwork.hpp>
 #include <opm/input/eclipse/Schedule/Network/Node.hpp>
@@ -267,4 +268,31 @@ void Opm::Network::validateTopology(const ExtNetwork&                           
 
     checkSourcesAreGroups(network, nodes, isGroup, location, parseContext, errors);
     checkFlowPathsAreTerminated(network, nodes, location, parseContext, errors);
+}
+
+void Opm::Network::validateGasConsumptionNodes(const ExtNetwork&      network,
+                                               const GConSump&        gconsump,
+                                               const KeywordLocation& location,
+                                               const ParseContext&    parseContext,
+                                               ErrorGuard&            errors)
+{
+    if (!network.active() || network.is_standard_network()) {
+        return;
+    }
+
+    const auto nodes = connectedNodes(network);
+
+    for (const auto& group : gconsump.group_names()) {
+        const auto& node = gconsump.get(group).network_node;
+        if (node.empty() || (node == GConSump::NO_NODES)) {
+            continue;
+        }
+
+        if (std::ranges::find(nodes, node) == nodes.end()) {
+            reportInconsistency(fmt::format("GCONSUMP item 4 for group {} names network node {}, "
+                                            "which is not a node of the extended network.",
+                                            group, node),
+                                location, parseContext, errors);
+        }
+    }
 }
