@@ -88,6 +88,7 @@ namespace Opm {
         result.rsRvInj = 11;
         result.gas_inj_composition = std::vector<double>{1.0, 2.0, 3.0};
         result.oil_inj_composition = std::vector<double>{4.0, 5.0, 6.0};
+        result.group_gas_inj_composition = std::vector<double> {7.0, 8.0, 9.0};
 
         return result;
     }
@@ -287,22 +288,17 @@ namespace Opm {
     }
 
     bool Well::WellInjectionProperties::operator==(const Well::WellInjectionProperties& other) const {
-        if ((surfaceInjectionRate == other.surfaceInjectionRate) &&
-            (reservoirInjectionRate == other.reservoirInjectionRate) &&
-            (BHPTarget == other.BHPTarget) &&
-            (THPTarget == other.THPTarget) &&
-            (BHPH == other.BHPH) &&
-            (THPH == other.THPH) &&
-            (bhp_hist_limit == other.bhp_hist_limit) &&
-            (thp_hist_limit == other.thp_hist_limit) &&
-            (VFPTableNumber == other.VFPTableNumber) &&
-            (predictionMode == other.predictionMode) &&
-            (injectionControls == other.injectionControls) &&
-            (injectorType == other.injectorType) &&
-            (controlMode == other.controlMode) &&
-            (rsRvInj == other.rsRvInj) &&
-            (gas_inj_composition == other.gas_inj_composition) &&
-            (oil_inj_composition == other.oil_inj_composition))
+        if ((surfaceInjectionRate == other.surfaceInjectionRate)
+            && (reservoirInjectionRate == other.reservoirInjectionRate)
+            && (BHPTarget == other.BHPTarget) && (THPTarget == other.THPTarget)
+            && (BHPH == other.BHPH) && (THPH == other.THPH)
+            && (bhp_hist_limit == other.bhp_hist_limit) && (thp_hist_limit == other.thp_hist_limit)
+            && (VFPTableNumber == other.VFPTableNumber) && (predictionMode == other.predictionMode)
+            && (injectionControls == other.injectionControls)
+            && (injectorType == other.injectorType) && (controlMode == other.controlMode)
+            && (rsRvInj == other.rsRvInj) && (gas_inj_composition == other.gas_inj_composition)
+            && (oil_inj_composition == other.oil_inj_composition)
+            && (group_gas_inj_composition == other.group_gas_inj_composition))
             return true;
         else
             return false;
@@ -536,8 +532,29 @@ namespace Opm {
         gas_inj_composition = composition;
     }
 
+    void
+    Well::WellInjectionProperties::setGroupGasInjComposition(
+        const std::optional<std::vector<double>>& composition)
+    {
+        group_gas_inj_composition = composition;
+    }
+
+    const std::optional<std::vector<double>>&
+    Well::WellInjectionProperties::groupGasInjComposition() const
+    {
+        return group_gas_inj_composition;
+    }
+
     const std::vector<double>& Well::WellInjectionProperties::gasInjComposition() const {
-        return injComposition(gas_inj_composition, "Gas");
+        return injComposition(gas_inj_composition.has_value() ? gas_inj_composition
+                                                              : group_gas_inj_composition,
+                              "Gas");
+    }
+
+    bool
+    Well::WellInjectionProperties::hasGasInjComposition() const
+    {
+        return gas_inj_composition.has_value() || group_gas_inj_composition.has_value();
     }
 
     void

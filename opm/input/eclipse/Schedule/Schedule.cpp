@@ -1739,8 +1739,61 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
         }
     }
 
+    // A gas injector without WINJGAS injects the GINJGAS stream of the nearest
+    // group above it.
+    void
+    Schedule::applyGroupGasInjectionStreams(std::size_t report_step)
+    {
+        // Only compositional runs inject a composition.
+        if (!this->runspec().compositional()) {
+            return;
+        }
+
+        auto& state = this->snapshots[report_step];
+        for (const auto& well_name : state.wells.keys()) {
+            auto well = state.wells.get(well_name);
+            if (!well.isInjector() || well.injectorType() != InjectorType::GAS) {
+                continue;
+            }
+
+            auto stream = std::optional<std::vector<double>> {};
+            for (auto group_name = well.groupName();;) {
+                if (state.group_gas_inj_streams.has(group_name)) {
+                    stream = state.group_gas_inj_streams.get(group_name);
+                    break;
+                }
+                const auto& group = state.groups.get(group_name);
+                if (group.is_field()) {
+                    break;
+                }
+                group_name = group.parent();
+            }
+
+            const bool open = well.getStatus() == Well::Status::OPEN;
+            const auto& injection = well.getInjectionProperties();
+            bool has_composition = injection.hasGasInjComposition();
+            if (injection.groupGasInjComposition() != stream) {
+                auto new_injection = std::make_shared<Well::WellInjectionProperties>(injection);
+                new_injection->setGroupGasInjComposition(stream);
+                has_composition = new_injection->hasGasInjComposition();
+                well.updateInjectionProperties(std::move(new_injection));
+                state.wells.update(std::move(well));
+                state.events().addEvent(ScheduleEvents::INJECTION_UPDATE);
+                state.wellgroup_events().addEvent(well_name, ScheduleEvents::INJECTION_UPDATE);
+            }
+
+            if (open && !has_composition) {
+                throw std::invalid_argument {
+                    fmt::format("Gas injector {} has no stream to inject. Assign one with "
+                                "WINJGAS, or with GINJGAS for one of its groups.",
+                                well_name)};
+            }
+        }
+    }
+
     void Schedule::end_report(std::size_t report_step) {
         this->checkIfAllConnectionsIsShut(report_step);
+        this->applyGroupGasInjectionStreams(report_step);
     }
 
     const UDQConfig& Schedule::getUDQConfig(std::size_t timeStep) const {

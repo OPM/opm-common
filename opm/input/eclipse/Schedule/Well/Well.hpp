@@ -177,6 +177,8 @@ public:
         // injection stream composition for compositional simulation
         std::optional<std::vector<double>> gas_inj_composition{};
         std::optional<std::vector<double>> oil_inj_composition{};
+        // GINJGAS stream of the nearest group, for a gas injector without its own
+        std::optional<std::vector<double>> group_gas_inj_composition {};
 
         bool operator==(const WellInjectionProperties& other) const;
         bool operator!=(const WellInjectionProperties& other) const;
@@ -245,7 +247,11 @@ public:
         void handleWTMULT(Well::WELTARGCMode cmode, double factor);
 
         void setGasInjComposition(const std::vector<double>& composition);
+        void setGroupGasInjComposition(const std::optional<std::vector<double>>& composition);
+        const std::optional<std::vector<double>>& groupGasInjComposition() const;
+        //! The well's own stream, or else the one of its nearest group.
         const std::vector<double>& gasInjComposition() const;
+        bool hasGasInjComposition() const;
         void setOilInjComposition(const std::vector<double>& composition);
         const std::vector<double>& oilInjComposition() const;
 
@@ -269,6 +275,7 @@ public:
             serializer(rsRvInj);
             serializer(gas_inj_composition);
             serializer(oil_inj_composition);
+            serializer(group_gas_inj_composition);
         }
     };
 
