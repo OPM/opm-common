@@ -89,6 +89,21 @@ Schedule create_schedule(const std::string& deck_string, const ParseContext& par
              std::make_shared<Python>() };
 }
 
+void check_schedule_throws_with(const std::string& deck_string,
+                                const std::string& expected_message)
+{
+    try {
+        create_schedule(deck_string);
+        BOOST_ERROR("Schedule creation did not throw, expected: " + expected_message);
+    }
+    catch (const std::exception& e) {
+        const auto msg = std::string { e.what() };
+        BOOST_CHECK_MESSAGE(msg.find(expected_message) != std::string::npos,
+                            "Exception message \"" << msg
+                            << "\" does not contain \"" << expected_message << '"');
+    }
+}
+
 } // Anonymous namespace
 
 BOOST_AUTO_TEST_CASE(CreateGroup_CorrectNameAndDefaultValues) {
@@ -525,6 +540,210 @@ END
 
     BOOST_CHECK_MESSAGE(! sched[1].groups("G1").hasSatelliteInjection(),
                         R"(Group "G1" must NOT have satellite injection at time 1)");
+}
+
+BOOST_AUTO_TEST_CASE(GSatProd_Leaf_Group_In_Hierarchy)
+{
+    const auto sched = create_schedule(R"(
+START             -- 0
+20 OCT 2026 /
+SCHEDULE
+GRUPTREE
+  PLAT FIELD /
+  PROD PLAT /
+  SAT  PLAT /
+/
+
+WELSPECS
+  'P1' 'PROD' 1 1 1* 'OIL' /
+/
+
+GSATPROD
+  'SAT' 1000 500 10E3 /
+/
+
+TSTEP
+  1 /
+END
+)");
+
+    BOOST_CHECK_MESSAGE(sched[0].groups("SAT").hasSatelliteProduction(),
+                        R"(Group "SAT" must have satellite production)");
+    BOOST_CHECK_EQUAL(sched[0].groups("SAT").parent(), "PLAT");
+}
+
+BOOST_AUTO_TEST_CASE(GSatProd_Reject_Group_With_Child_Groups)
+{
+    const auto input = std::string { R"(
+START             -- 0
+20 OCT 2026 /
+SCHEDULE
+GRUPTREE
+  PLAT FIELD /
+  G1   PLAT /
+/
+
+GSATPROD
+  'PLAT' 1000 500 10E3 /
+/
+
+TSTEP
+  1 /
+END
+)" };
+
+    check_schedule_throws_with(input, "GSATPROD cannot be applied to group PLAT since it has child groups");
+}
+
+BOOST_AUTO_TEST_CASE(GSatProd_Reject_Group_With_Wells)
+{
+    const auto input = std::string { R"(
+START             -- 0
+20 OCT 2026 /
+SCHEDULE
+GRUPTREE
+  G1 FIELD /
+/
+
+WELSPECS
+  'P1' 'G1' 1 1 1* 'OIL' /
+/
+
+GSATPROD
+  'G1' 1000 500 10E3 /
+/
+
+TSTEP
+  1 /
+END
+)" };
+
+    check_schedule_throws_with(input, "GSATPROD cannot be applied to group G1 since it has wells");
+}
+
+BOOST_AUTO_TEST_CASE(GSatProd_Reject_Pattern_Matching_Non_Leaf_Group)
+{
+    const auto input = std::string { R"(
+START             -- 0
+20 OCT 2026 /
+SCHEDULE
+GRUPTREE
+  SAT1 FIELD /
+  SAT2 FIELD /
+  SUB  SAT2 /
+/
+
+GSATPROD
+  'SAT*' 1000 500 10E3 /
+/
+
+TSTEP
+  1 /
+END
+)" };
+
+    check_schedule_throws_with(input, "GSATPROD cannot be applied to group SAT2 since it has child groups");
+}
+
+BOOST_AUTO_TEST_CASE(GSatProd_Reject_Child_Group_Of_Satellite)
+{
+    const auto input = std::string { R"(
+START             -- 0
+20 OCT 2026 /
+SCHEDULE
+GRUPTREE
+  SAT FIELD /
+/
+
+GSATPROD
+  'SAT' 1000 500 10E3 /
+/
+
+GRUPTREE
+  G1 SAT /
+/
+
+TSTEP
+  1 /
+END
+)" };
+
+    check_schedule_throws_with(input, "Group G1 cannot be a child of satellite group SAT");
+}
+
+BOOST_AUTO_TEST_CASE(GSatProd_Reject_Well_In_Satellite)
+{
+    const auto input = std::string { R"(
+START             -- 0
+20 OCT 2026 /
+SCHEDULE
+GRUPTREE
+  SAT FIELD /
+/
+
+GSATPROD
+  'SAT' 1000 500 10E3 /
+/
+
+WELSPECS
+  'P1' 'SAT' 1 1 1* 'OIL' /
+/
+
+TSTEP
+  1 /
+END
+)" };
+
+    check_schedule_throws_with(input, "Cannot parent well P1 to satellite group SAT");
+}
+
+BOOST_AUTO_TEST_CASE(GSatInje_Reject_Group_With_Child_Groups)
+{
+    const auto input = std::string { R"(
+START             -- 0
+20 OCT 2026 /
+SCHEDULE
+GRUPTREE
+  PLAT FIELD /
+  G1   PLAT /
+/
+
+GSATINJE
+  'PLAT' WATER 1234.56 /
+/
+
+TSTEP
+  1 /
+END
+)" };
+
+    check_schedule_throws_with(input, "GSATINJE cannot be applied to group PLAT since it has child groups");
+}
+
+BOOST_AUTO_TEST_CASE(GSatInje_Reject_Group_With_Wells)
+{
+    const auto input = std::string { R"(
+START             -- 0
+20 OCT 2026 /
+SCHEDULE
+GRUPTREE
+  G1 FIELD /
+/
+
+WELSPECS
+  'I1' 'G1' 1 1 1* 'WATER' /
+/
+
+GSATINJE
+  'G1' WATER 1234.56 /
+/
+
+TSTEP
+  1 /
+END
+)" };
+
+    check_schedule_throws_with(input, "GSATINJE cannot be applied to group G1 since it has wells");
 }
 
 BOOST_AUTO_TEST_CASE(Satellite_Injection)
