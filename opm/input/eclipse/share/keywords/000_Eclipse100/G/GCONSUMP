@@ -18,13 +18,12 @@
       "name": "GAS_IMPORT_RATE",
       "value_type": "UDA",
       "default": 0,
-      "dimension": "GasSurfaceVolume/Time",
-      "comment": "Not supported"
+      "dimension": "GasSurfaceVolume/Time"
     },
     {
       "name": "NETWORK_NODE",
       "value_type": "STRING",
-      "comment": "Not supported"
+      "comment": "Extended network node of consumption/import. Defaulted: the group's own node if it is a source node. NO-NODES: not applied to the network."
     }
   ]
 }

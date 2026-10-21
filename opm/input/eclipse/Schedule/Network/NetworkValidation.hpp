@@ -25,6 +25,7 @@
 
 namespace Opm {
     class ErrorGuard;
+    class GConSump;
     class KeywordLocation;
     class ParseContext;
 } // namespace Opm
@@ -66,6 +67,31 @@ void validateTopology(const ExtNetwork& network,
                       const KeywordLocation& location,
                       const ParseContext& parseContext,
                       ErrorGuard& errors);
+
+/// Check that every network node named in GCONSUMP item 4 is a node of the
+/// extended network.
+///
+/// Gas consumption and import of a group are applied at the network node
+/// named in item 4 of GCONSUMP, unless that item is defaulted or set to
+/// 'NO-NODES'.  A named node which does not take part in the network is
+/// reported through the normal error handling protocol.
+///
+/// \param[in] network Extended network, typically that of the current
+/// report step's schedule state.
+///
+/// \param[in] gconsump Gas consumption and import data of the current
+/// report step.
+///
+/// \param[in] location Location of the keyword which prompted this check.
+///
+/// \param[in] parseContext Error handling controls.
+///
+/// \param[in,out] errors Collection of parse errors.
+void validateGasConsumptionNodes(const ExtNetwork& network,
+                                 const GConSump& gconsump,
+                                 const KeywordLocation& location,
+                                 const ParseContext& parseContext,
+                                 ErrorGuard& errors);
 
 } // namespace Opm::Network
 

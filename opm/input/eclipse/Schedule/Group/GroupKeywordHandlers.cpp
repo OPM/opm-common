@@ -141,6 +141,34 @@ namespace {
         }
     }
 
+    // Satellite groups must be leaf groups.  Group::addGroup() and
+    // Group::addWell() reject children of an existing satellite group, so
+    // this check covers the reverse order of input.
+    void rejectGroupIfNotLeaf(const Opm::Group&    group,
+                              Opm::HandlerContext& handlerContext)
+    {
+        const auto& keyword = handlerContext.keyword;
+        if (! group.groups().empty()) {
+            throw Opm::OpmInputError {
+                fmt::format("{} cannot be applied to group {} "
+                            "since it has child groups.  "
+                            "A satellite group must be a leaf group.",
+                            keyword.name(), group.name()),
+                keyword.location()
+            };
+        }
+
+        if (! group.wells().empty()) {
+            throw Opm::OpmInputError {
+                fmt::format("{} cannot be applied to group {} "
+                            "since it has wells.  "
+                            "A satellite group must not have any wells.",
+                            keyword.name(), group.name()),
+                keyword.location()
+            };
+        }
+    }
+
     std::vector<std::string>
     getGroupNamesAndCreateIfNeeded(const std::string&   groupNamePattern,
                                    Opm::HandlerContext& handlerContext)
@@ -752,6 +780,7 @@ void handleGSATINJE(HandlerContext& handlerContext)
 
         for (const auto& group_name : group_names) {
             rejectGroupIfField(group_name, handlerContext);
+            rejectGroupIfNotLeaf(handlerContext.state().groups(group_name), handlerContext);
 
             auto i = handlerContext.state().satelliteInjection.has(group_name)
                 ? handlerContext.state().satelliteInjection(group_name)
@@ -782,6 +811,7 @@ void handleGSATPROD(HandlerContext& handlerContext)
 
         for (const auto& group_name : group_names) {
             rejectGroupIfField(group_name, handlerContext);
+            rejectGroupIfNotLeaf(handlerContext.state().groups(group_name), handlerContext);
 
             auto p = handlerContext.state().satelliteProduction.has(group_name)
                 ? handlerContext.state().satelliteProduction(group_name)

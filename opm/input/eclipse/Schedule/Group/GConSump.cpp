@@ -76,6 +76,15 @@ std::size_t GConSump::size() const {
     return groups.size();
 }
 
+std::vector<std::string> GConSump::group_names() const {
+    std::vector<std::string> names;
+    names.reserve(groups.size());
+    for (const auto& [name, group] : groups) {
+        names.push_back(name);
+    }
+    return names;
+}
+
 bool GConSump::operator==(const GConSump& data) const {
     return this->groups == data.groups;
 }

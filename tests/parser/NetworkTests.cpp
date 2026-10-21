@@ -32,7 +32,7 @@
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
 
 #include <opm/input/eclipse/Python/Python.hpp>
-
+#include <opm/input/eclipse/Schedule/Group/GConSump.hpp>
 #include <opm/input/eclipse/Schedule/Network/Branch.hpp>
 #include <opm/input/eclipse/Schedule/Network/ExtNetwork.hpp>
 #include <opm/input/eclipse/Schedule/Network/Node.hpp>
@@ -895,6 +895,100 @@ BRANPROP
     ErrorGuard errors;
 
     BOOST_CHECK_THROW((Schedule{deck, grid, fp, NumericalAquifers{}, runspec, parseContext, errors, std::make_shared<Python>()}), OpmInputError);
+}
+
+BOOST_AUTO_TEST_CASE(Accept_GConSump_Network_Nodes)
+{
+    // Item 4 defaulted, set to 'NO-NODES', or naming a node of the network
+    // (whether a source node or not).
+    const auto deck_string = network_deck(valid_network() + R"(
+GCONSUMP
+--  Group  Consumption  Import  Node
+    B1     1000.0       1*      1* /
+    C1     1000.0       1*      'NO-NODES' /
+    M5S    1000.0       1*      'PLAT-A' /
+    M5N    1000.0       1*      'C1' /
+/
+)");
+
+    auto errors = ErrorGuard{};
+    const auto schedule = make_schedule(deck_string, errors);
+    BOOST_CHECK_MESSAGE(! errors, errors.formattedErrors());
+    errors.clear();
+
+    const auto& gconsump = schedule[0].gconsump();
+    BOOST_CHECK_EQUAL(gconsump.get("B1").network_node, "");
+    BOOST_CHECK_EQUAL(gconsump.get("C1").network_node, GConSump::NO_NODES);
+    BOOST_CHECK_EQUAL(gconsump.get("M5S").network_node, "PLAT-A");
+    BOOST_CHECK_EQUAL(gconsump.get("M5N").network_node, "C1");
+
+    const auto expected_names = std::vector<std::string> { "B1", "C1", "M5N", "M5S" };
+    const auto names = gconsump.group_names();
+    BOOST_CHECK_EQUAL_COLLECTIONS(names.begin(), names.end(),
+                                  expected_names.begin(), expected_names.end());
+}
+
+BOOST_AUTO_TEST_CASE(Reject_GConSump_Unknown_Network_Node)
+{
+    const auto deck_string = network_deck(valid_network() + R"(
+GCONSUMP
+--  Group  Consumption  Import  Node
+    M5S    1000.0       1*      'NO-SUCH-NODE' /
+/
+)");
+
+    auto errors = ErrorGuard{};
+    make_schedule(deck_string, errors);
+
+    const auto diagnostic = errors.formattedErrors();
+    errors.clear();
+
+    BOOST_CHECK_MESSAGE(diagnostic.find("GCONSUMP item 4 for group M5S names network node NO-SUCH-NODE")
+                        != std::string::npos, diagnostic);
+}
+
+BOOST_AUTO_TEST_CASE(Reject_GConSump_Node_Detached_From_Network)
+{
+    // GCONSUMP names C1, which is valid initially, but the network update
+    // at the second report step drops C1's only branch.
+    const auto deck_string = network_deck(valid_network() + R"(
+GCONSUMP
+--  Group  Consumption  Import  Node
+    M5N    1000.0       1*      'C1' /
+/
+
+TSTEP
+ 10 /
+
+BRANPROP
+--  Downtree  Uptree   #VFP    ALQ
+    C1        PLAT-A   0       1* /
+/
+)");
+
+    auto errors = ErrorGuard{};
+    make_schedule(deck_string, errors);
+
+    const auto diagnostic = errors.formattedErrors();
+    errors.clear();
+
+    BOOST_CHECK_MESSAGE(diagnostic.find("names network node C1") != std::string::npos, diagnostic);
+}
+
+BOOST_AUTO_TEST_CASE(Accept_GConSump_Network_Node_Without_Network)
+{
+    // Item 4 is not checked unless an extended network is active.
+    const auto deck_string = network_deck(R"(
+GCONSUMP
+--  Group  Consumption  Import  Node
+    M5S    1000.0       1*      'NO-SUCH-NODE' /
+/
+)");
+
+    auto errors = ErrorGuard{};
+    make_schedule(deck_string, errors);
+    BOOST_CHECK_MESSAGE(! errors, errors.formattedErrors());
+    errors.clear();
 }
 
 BOOST_AUTO_TEST_SUITE_END()     // Topology_Consistency

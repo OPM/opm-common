@@ -99,6 +99,7 @@
 #include <opm/input/eclipse/Parser/ParserKeywords/B.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/C.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/E.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/G.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/N.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/V.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
@@ -729,6 +730,11 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
             // problem is reported against that keyword.
             std::optional<KeywordLocation> network_location;
 
+            // Location of the first GCONSUMP keyword of this report step, if
+            // any.  Network nodes named in GCONSUMP item 4 are checked
+            // whenever either the network or GCONSUMP changes.
+            std::optional<KeywordLocation> gconsump_location;
+
             while (true) {
                 if (keyword_index == block.size())
                     break;
@@ -782,6 +788,12 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                     network_location = location;
                 }
 
+                if (!gconsump_location.has_value() &&
+                    keyword.is<ParserKeywords::GCONSUMP>())
+                {
+                    gconsump_location = location;
+                }
+
                 logger(fmt::format("Processing keyword {} at line {}", location.keyword, location.lineno));
                 this->handleKeyword(report_step,
                                     block,
@@ -810,6 +822,18 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                                           [&state](const std::string& name)
                                           { return state.groups.has(name); },
                                           *network_location, parseContext, errors);
+            }
+
+            if (network_location.has_value() || gconsump_location.has_value()) {
+                const auto& state = this->snapshots[report_step];
+                const auto& location = gconsump_location.has_value()
+                    ? *gconsump_location
+                    : *network_location;
+
+                Network::validateGasConsumptionNodes(state.network.get(),
+                                                     state.gconsump.get(),
+                                                     location,
+                                                     parseContext, errors);
             }
 
             this->applyGlobalWPIMULT(wpimult_global_factor);
