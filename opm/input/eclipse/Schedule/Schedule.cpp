@@ -825,10 +825,13 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
 
             if (network_location.has_value() || gconsump_location.has_value()) {
                 const auto& state = this->snapshots[report_step];
+                const auto& location = gconsump_location.has_value()
+                    ? *gconsump_location
+                    : *network_location;
 
                 Network::validateGasConsumptionNodes(state.network.get(),
                                                      state.gconsump.get(),
-                                                     gconsump_location.value_or(*network_location),
+                                                     location,
                                                      parseContext, errors);
             }
 
