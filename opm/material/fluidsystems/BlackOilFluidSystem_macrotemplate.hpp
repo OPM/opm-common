@@ -98,8 +98,8 @@ public:
         using Evaluation = EvaluationT;
 
     public:
-        explicit ParameterCache(unsigned regionIdx = 0)
-            : regionIdx_(regionIdx)
+        explicit ParameterCache(unsigned pvtRegionIdx = 0)
+            : pvtRegionIdx_(pvtRegionIdx)
         {
         }
 
@@ -107,37 +107,29 @@ public:
          * \brief Copy the data which is not dependent on the type of the Scalars from
          *        another parameter cache.
          *
-         * For the black-oil parameter cache this means that the region index must be
+         * For the black-oil parameter cache this means that the PVT region index must be
          * copied.
          */
         template <class OtherCache>
         void assignPersistentData(const OtherCache& other)
         {
-            regionIdx_ = other.regionIndex();
+            pvtRegionIdx_ = other.pvtRegionIndex();
         }
 
         /*!
-         * \brief Return the index of the region which should be used to determine the
-         *        thermodynamic properties
-         *
-         * This is only required because "oil" and "gas" are pseudo-components, i.e. for
-         * more comprehensive equations of state there would only be one "region".
+         * \brief Return the PVT region used for the fluid properties.
          */
-        unsigned regionIndex() const
-        { return regionIdx_; }
+        unsigned pvtRegionIndex() const
+        { return pvtRegionIdx_; }
 
         /*!
-         * \brief Set the index of the region which should be used to determine the
-         *        thermodynamic properties
-         *
-         * This is only required because "oil" and "gas" are pseudo-components, i.e. for
-         * more comprehensive equations of state there would only be one "region".
+         * \brief Set the PVT region used for the fluid properties.
          */
-        void setRegionIndex(unsigned val)
-        { regionIdx_ = val; }
+        void setPvtRegionIndex(unsigned pvtRegionIdx)
+        { pvtRegionIdx_ = pvtRegionIdx; }
 
     private:
-        unsigned regionIdx_;
+        unsigned pvtRegionIdx_;
     };
 
     #else
@@ -374,12 +366,12 @@ public:
      * \param rhoOil The reference density of (gas saturated) oil phase.
      * \param rhoWater The reference density of the water phase.
      * \param rhoGas The reference density of the gas phase.
-     * \param regionIdx Region index to use.
+     * \param pvtRegionIdx PVT region index to use.
      */
     STATIC_OR_DEVICE void setReferenceDensities(Scalar rhoOil,
                                       Scalar rhoWater,
                                       Scalar rhoGas,
-                                      unsigned regionIdx);
+                                      unsigned pvtRegionIdx);
 
     /*!
      * \brief Finish initializing the black oil fluid system.
@@ -554,8 +546,8 @@ public:
      *
      * \copydoc Doxygen::phaseIdxParam
      */
-    STATIC_OR_DEVICE Scalar referenceDensity(unsigned phaseIdx, unsigned regionIdx) NOTHING_OR_CONST
-    { return referenceDensity_[regionIdx][phaseIdx]; }
+    STATIC_OR_DEVICE Scalar referenceDensity(unsigned phaseIdx, unsigned pvtRegionIdx) NOTHING_OR_CONST
+    { return referenceDensity_[pvtRegionIdx][phaseIdx]; }
 
     /****************************************
      * thermodynamic quantities (generic version)
@@ -565,7 +557,7 @@ public:
     STATIC_OR_DEVICE LhsEval density(const FluidState& fluidState,
                            const ParameterCache<ParamCacheEval>& paramCache,
                            unsigned phaseIdx) NOTHING_OR_CONST
-    { return density<FluidState, LhsEval>(fluidState, phaseIdx, paramCache.regionIndex()); }
+    { return density<FluidState, LhsEval>(fluidState, phaseIdx, paramCache.pvtRegionIndex()); }
 
     //! \copydoc BaseFluidSystem::fugacityCoefficient
     template <class FluidState, class LhsEval = typename FluidState::ValueType, class ParamCacheEval = LhsEval>
@@ -577,7 +569,7 @@ public:
         return fugacityCoefficient<FluidState, LhsEval>(fluidState,
                                                         phaseIdx,
                                                         compIdx,
-                                                        paramCache.regionIndex());
+                                                        paramCache.pvtRegionIndex());
     }
 
     //! \copydoc BaseFluidSystem::viscosity
@@ -585,20 +577,20 @@ public:
     STATIC_OR_DEVICE LhsEval viscosity(const FluidState& fluidState,
                              const ParameterCache<ParamCacheEval>& paramCache,
                              unsigned phaseIdx) NOTHING_OR_CONST
-    { return viscosity<FluidState, LhsEval>(fluidState, phaseIdx, paramCache.regionIndex()); }
+    { return viscosity<FluidState, LhsEval>(fluidState, phaseIdx, paramCache.pvtRegionIndex()); }
 
     //! \copydoc BaseFluidSystem::enthalpy
     template <class FluidState, class LhsEval = typename FluidState::ValueType, class ParamCacheEval = LhsEval>
     STATIC_OR_DEVICE LhsEval enthalpy(const FluidState& fluidState,
                             const ParameterCache<ParamCacheEval>& paramCache,
                             unsigned phaseIdx)
-    { return enthalpy<FluidState, LhsEval>(fluidState, phaseIdx, paramCache.regionIndex()); }
+    { return enthalpy<FluidState, LhsEval>(fluidState, phaseIdx, paramCache.pvtRegionIndex()); }
 
     template <class FluidState, class LhsEval = typename FluidState::ValueType, class ParamCacheEval = LhsEval>
     STATIC_OR_DEVICE LhsEval internalEnergy(const FluidState& fluidState,
                                   const ParameterCache<ParamCacheEval>& paramCache,
                                   unsigned phaseIdx) NOTHING_OR_CONST
-    { return internalEnergy<FluidState, LhsEval>(fluidState, phaseIdx, paramCache.regionIndex()); }
+    { return internalEnergy<FluidState, LhsEval>(fluidState, phaseIdx, paramCache.pvtRegionIndex()); }
 
     /****************************************
      * thermodynamic quantities (black-oil specific version: Note that the PVT region
@@ -1768,17 +1760,17 @@ public:
 
         // diffusion coefficients are set, and we use them
         if(!diffusionCoefficients_.empty()) {
-            return diffusionCoefficient(compIdx, phaseIdx, paramCache.regionIndex());
+            return diffusionCoefficient(compIdx, phaseIdx, paramCache.pvtRegionIndex());
         }
 
         const auto& p = decay<LhsEval>(fluidState.pressure(phaseIdx));
         const auto& T = decay<LhsEval>(fluidState.temperature(phaseIdx));
-        const unsigned regionIdx = paramCache.regionIndex();
+        const unsigned pvtRegionIdx = paramCache.pvtRegionIndex();
 
         switch (phaseIdx) {
         case oilPhaseIdx: return oilPvt().diffusionCoefficient(T, p, compIdx);
         case gasPhaseIdx: return gasPvt().diffusionCoefficient(T, p, compIdx);
-        case waterPhaseIdx: return waterPvt().diffusionCoefficient(T, p, compIdx, regionIdx);
+        case waterPhaseIdx: return waterPvt().diffusionCoefficient(T, p, compIdx, pvtRegionIdx);
         default: OPM_THROW(std::logic_error, "Unhandled phase index " + std::to_string(phaseIdx));
         }
     }
@@ -1881,11 +1873,11 @@ NOTHING_OR_DEVICE void FLUIDSYSTEM_CLASSNAME<Scalar,IndexTraits,Storage>::
 setReferenceDensities(Scalar rhoOil,
                       Scalar rhoWater,
                       Scalar rhoGas,
-                      unsigned regionIdx)
+                      unsigned pvtRegionIdx)
 {
-    referenceDensity_[regionIdx][oilPhaseIdx] = rhoOil;
-    referenceDensity_[regionIdx][waterPhaseIdx] = rhoWater;
-    referenceDensity_[regionIdx][gasPhaseIdx] = rhoGas;
+    referenceDensity_[pvtRegionIdx][oilPhaseIdx] = rhoOil;
+    referenceDensity_[pvtRegionIdx][waterPhaseIdx] = rhoWater;
+    referenceDensity_[pvtRegionIdx][gasPhaseIdx] = rhoGas;
 }
 
 template <class Scalar, class IndexTraits, template<typename> typename Storage>
