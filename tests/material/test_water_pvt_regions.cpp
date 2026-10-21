@@ -43,12 +43,11 @@
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/EclipseState/Compositional/CompositionalConfig.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/input/eclipse/Parser/Parser.hpp>
 #include <opm/input/eclipse/Python/Python.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
-#include <opm/input/eclipse/Units/Units.hpp>
 
-#include <array>
 #include <memory>
 
 namespace {
@@ -56,21 +55,6 @@ namespace {
 using Scalar = double;
 using FluidSystem = Opm::GenericOilGasWaterFluidSystem<Scalar, 3, true>;
 using EOSType = Opm::CompositionalConfig::EOSType;
-
-// The PVTW and DENSITY records of each PVT region: fresh water, then brine.
-struct WaterRegion
-{
-    Scalar referencePressure;    // bar
-    Scalar formationVolumeFactor;
-    Scalar compressibility;      // 1/bar
-    Scalar viscosity;            // cP
-    Scalar surfaceDensity;       // kg/m3
-};
-
-constexpr std::array<WaterRegion, 2> regions{{
-    {75.0, 1.03, 4.0e-5, 0.3, 1000.0},
-    {75.0, 1.01, 2.5e-5, 0.9, 1150.0},
-}};
 
 constexpr auto deck = R"(
 RUNSPEC
@@ -129,6 +113,13 @@ DENSITY
  800.0 1150.0 1.0 /
 )";
 
+const Opm::TableManager& testTables()
+{
+    static const auto parsed = Opm::Parser{}.parseString(deck);
+    static const Opm::TableManager tables(parsed);
+    return tables;
+}
+
 struct Fixture
 {
     Fixture()
@@ -153,10 +144,10 @@ Opm::CompositionalFluidState<Scalar, FluidSystem> waterState()
     return fs;
 }
 
-Scalar expectedDensity(const WaterRegion& region)
+Scalar expectedDensity(const Opm::PVTWRecord& pvtw, const Scalar surfaceDensity)
 {
-    const Scalar x = region.compressibility * (pressure / 1.0e5 - region.referencePressure);
-    return region.surfaceDensity * (1.0 + x + 0.5 * x * x) / region.formationVolumeFactor;
+    const Scalar x = pvtw.compressibility * (pressure - pvtw.reference_pressure);
+    return surfaceDensity * (1.0 + x + 0.5 * x * x) / pvtw.volume_factor;
 }
 
 } // Anonymous namespace
@@ -166,16 +157,23 @@ BOOST_GLOBAL_FIXTURE(Fixture);
 BOOST_AUTO_TEST_CASE(WaterPropertiesFollowTheSelectedPvtRegion)
 {
     const auto fs = waterState();
-    for (unsigned regionIdx = 0; regionIdx < regions.size(); ++regionIdx) {
+    const auto& tables = testTables();
+    const auto& pvtw = tables.getPvtwTable();
+    const auto& density = tables.getDensityTable();
+    BOOST_REQUIRE_EQUAL(pvtw.size(), 2u);
+    BOOST_REQUIRE_EQUAL(density.size(), pvtw.size());
+    BOOST_REQUIRE(pvtw[0].viscosity != pvtw[1].viscosity);
+    BOOST_REQUIRE(density[0].water != density[1].water);
+
+    for (unsigned regionIdx = 0; regionIdx < pvtw.size(); ++regionIdx) {
         BOOST_TEST_CONTEXT("PVT region " << regionIdx + 1) {
             typename FluidSystem::template ParameterCache<Scalar> paramCache(EOSType::PR);
             paramCache.setRegionIndex(regionIdx);
-            const auto& region = regions[regionIdx];
             BOOST_CHECK_CLOSE(FluidSystem::density(fs, paramCache, FluidSystem::waterPhaseIdx),
-                              expectedDensity(region), 1.0e-10);
-            BOOST_CHECK_CLOSE(FluidSystem::viscosity(fs, paramCache, FluidSystem::waterPhaseIdx),
-                              region.viscosity * Opm::prefix::centi * Opm::unit::Poise,
+                              expectedDensity(pvtw[regionIdx], density[regionIdx].water),
                               1.0e-10);
+            BOOST_CHECK_CLOSE(FluidSystem::viscosity(fs, paramCache, FluidSystem::waterPhaseIdx),
+                              pvtw[regionIdx].viscosity, 1.0e-10);
         }
     }
 }
@@ -183,8 +181,13 @@ BOOST_AUTO_TEST_CASE(WaterPropertiesFollowTheSelectedPvtRegion)
 BOOST_AUTO_TEST_CASE(FirstPvtRegionIsTheDefault)
 {
     const auto fs = waterState();
+    const auto& tables = testTables();
+    BOOST_REQUIRE(!tables.getPvtwTable().empty());
+    BOOST_REQUIRE(!tables.getDensityTable().empty());
     const typename FluidSystem::template ParameterCache<Scalar> paramCache(EOSType::PR);
     BOOST_CHECK_EQUAL(paramCache.regionIndex(), 0u);
     BOOST_CHECK_CLOSE(FluidSystem::density(fs, paramCache, FluidSystem::waterPhaseIdx),
-                      expectedDensity(regions[0]), 1.0e-10);
+                      expectedDensity(tables.getPvtwTable()[0],
+                                      tables.getDensityTable()[0].water),
+                      1.0e-10);
 }
