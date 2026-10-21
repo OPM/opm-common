@@ -36,10 +36,12 @@
 #include <opm/input/eclipse/Parser/ParseContext.hpp>
 #include <opm/input/eclipse/Parser/Parser.hpp>
 
+#include <array>
 #include <cstddef>
 #include <map>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <tuple>
 #include <utility>
 #include <vector>
@@ -479,6 +481,8 @@ RESTART=0
 /
 )";
 
+    using namespace std::literals::string_view_literals;
+
     auto sched = make_schedule(deckData1, false);
 
     BOOST_CHECK_MESSAGE( sched.write_rst_file( 0 ),
@@ -496,7 +500,11 @@ RESTART=0
     BOOST_CHECK_MESSAGE( !sched.write_rst_file( 3 ), "Must NOT write restart for report step 3" );
 
     const auto& kw_list1 = filter_keywords(sched.rst_keywords(1));
-    const auto expected1 = {"BG","BO","BW","COMPRESS","DEN","KRG","KRO","KRW","PCOG","PCOW","PRES","RK","VELOCITY","VGAS","VOIL","VWAT"};
+    const auto expected1 = std::array {
+        "1OVERBG"sv, "1OVERBO"sv, "1OVERBW"sv, "COMPRESS"sv, "DEN"sv,
+        "KRG"sv, "KRO"sv, "KRW"sv, "PCOG"sv, "PCOW"sv, "PRES"sv, "RK"sv,
+        "VELOCITY"sv, "VGAS"sv, "VOIL"sv, "VWAT"sv,
+    };
     BOOST_CHECK_EQUAL_COLLECTIONS( expected1.begin(), expected1.end(),
                                    kw_list1.begin(), kw_list1.end() );
 
@@ -632,21 +640,27 @@ DATES             -- 3
 /
 )";
 
+    using namespace std::literals::string_view_literals;
+
     auto sched1 = make_schedule(deckData1, false);
 
     BOOST_CHECK( !sched1.write_rst_file( 0 ) );
     BOOST_CHECK( !sched1.write_rst_file( 1 ) );
     BOOST_CHECK(  sched1.write_rst_file( 2 ) );
 
+    const auto expected = std::array {
+        "1OVERBG"sv, "1OVERBO"sv, "1OVERBW"sv,
+        "ACIP"sv, "DEN"sv, "KRG"sv, "KRO"sv, "KRW"sv,
+        "NORST"sv, "SFREQ"sv, "VGAS"sv, "VOIL"sv, "VWAT"sv,
+    };
 
-    std::vector<std::string> expected = { "ACIP","BG","BO","BW","DEN","KRG", "KRO", "KRW", "NORST", "SFREQ", "VGAS", "VOIL", "VWAT"};
     const auto kw_list = filter_keywords( sched1.rst_keywords(2) );
 
     BOOST_CHECK_EQUAL_COLLECTIONS( expected.begin() ,expected.end(),
                                    kw_list.begin() , kw_list.end() );
 
     auto sched2 = make_schedule(deckData2);
-    const auto expected2 = { "FLOWS" };
+    const auto expected2 = std::array { "FLOWS"sv, };
     const auto kw_list2 = filter_keywords( sched2.rst_keywords( 2 ) );
     BOOST_CHECK_EQUAL_COLLECTIONS( expected2.begin(), expected2.end(),
                                    kw_list2.begin(), kw_list2.end() );
@@ -803,6 +817,8 @@ DATES             -- 3
 /
 )";
 
+    using namespace std::literals::string_view_literals;
+
     Opm::Parser parser;
     ParseContext ctx;
     ErrorGuard errors;
@@ -844,7 +860,7 @@ DATES             -- 3
     Schedule sched2(deck2, es2, ctx, errors, {});
 
 
-    const auto expected2 = { "FLOWS"};
+    const auto expected2 = std::array { "FLOWS"sv, };
     const auto kw_list2 = filter_keywords( sched2.rst_keywords( 2 ) );
     BOOST_CHECK_EQUAL_COLLECTIONS( expected2.begin(), expected2.end(),
                                    kw_list2.begin(), kw_list2.end() );
@@ -1726,6 +1742,8 @@ DATES       -- 4
 /
 )" };
 
+    using namespace std::literals::string_view_literals;
+
     auto sched = make_schedule(deckData1, false);
 
     BOOST_CHECK_EQUAL( sched.size(), 5);
@@ -1735,7 +1753,12 @@ DATES       -- 4
     BOOST_CHECK( !sched.write_rst_file( 3 ) );
 
     const auto& kw_list1 = filter_keywords(sched.rst_keywords(1));
-    const auto expected1 = {"BG","BO","BW","COMPRESS","DEN","KRG","KRO","KRW","PCOG","PCOW","PRES","RK","VELOCITY","VGAS","VOIL","VWAT"};
+    const auto expected1 = std::array {
+        "1OVERBG"sv, "1OVERBO"sv, "1OVERBW"sv,
+        "COMPRESS"sv, "DEN"sv, "KRG"sv, "KRO"sv, "KRW"sv,
+        "PCOG"sv, "PCOW"sv, "PRES"sv, "RK"sv, "VELOCITY"sv,
+        "VGAS"sv, "VOIL"sv, "VWAT"sv,
+    };
     BOOST_CHECK_EQUAL_COLLECTIONS( expected1.begin(), expected1.end(),
                                    kw_list1.begin(), kw_list1.end() );
 
