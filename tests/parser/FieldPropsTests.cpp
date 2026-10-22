@@ -829,6 +829,27 @@ RTEMPVD
     BOOST_CHECK_CLOSE( tempi[1], 100 + celcius_offset , 1e-6);
 }
 
+BOOST_AUTO_TEST_CASE(GET_SOIL) {
+    const std::string deck_string = R"(
+RUNSPEC
+
+SOLUTION
+
+SOIL
+  0.8 0.25 /
+)";
+
+    EclipseGrid grid(1, 1, 2);
+    Deck deck = Parser{}.parseString(deck_string);
+    FieldPropsManager fpm(deck, Phases{true, true, true}, grid, TableManager());
+
+    BOOST_CHECK(fpm.has_double("SOIL"));
+    const auto& soil = fpm.get_double("SOIL");
+    BOOST_REQUIRE_EQUAL(soil.size(), 2U);
+    BOOST_CHECK_CLOSE(soil[0], 0.8, 1e-8);
+    BOOST_CHECK_CLOSE(soil[1], 0.25, 1e-8);
+}
+
 BOOST_AUTO_TEST_CASE(GridAndEdit) {
     const std::string deck_string = R"(
 RUNSPEC

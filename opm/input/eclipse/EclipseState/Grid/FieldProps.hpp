@@ -278,6 +278,7 @@ static const std::unordered_map<std::string, keyword_info<double>> double_keywor
                                                                                       {"SSOL",     keyword_info<double>{}},
                                                                                       {"SWAT",     keyword_info<double>{}},
                                                                                       {"SGAS",     keyword_info<double>{}},
+                                                                                      {"SOIL",     keyword_info<double>{}},
                                                                                       {"SMICR",    keyword_info<double>{}.unit_string("Concentration")},
                                                                                       {"SOXYG",    keyword_info<double>{}.unit_string("Concentration")},
                                                                                       {"SUREA",    keyword_info<double>{}.unit_string("Concentration")},
