@@ -44,7 +44,6 @@
 #include <opm/material/fluidsystems/GenericOilGasWaterFluidSystem.hpp>
 #include <opm/material/viscositymodels/ViscosityModels.hpp>
 
-#include <opm/input/eclipse/EclipseState/Compositional/CompositionalConfig.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Parser/Parser.hpp>
@@ -68,8 +67,6 @@ using FluidSystem = Opm::GenericOilGasWaterFluidSystem<Scalar, numComponents, fa
 // properties are evaluated in these comparisons.
 using UnshiftedSystem = Opm::GenericOilGasWaterFluidSystem<Scalar, numComponents, true>;
 using CompVec = std::array<Scalar, numComponents>;
-
-constexpr auto eosType = Opm::CompositionalConfig::EOSType::PR;
 
 // Reference conditions at the top of the column: RTEMP = 120 degC.
 constexpr Scalar temperature = 393.15;
@@ -146,7 +143,7 @@ PhaseState gasState()
         fs.setMoleFraction(FluidSystem::oilPhaseIdx, c, z[c]);
     }
 
-    typename FluidSystem::template ParameterCache<Scalar> paramCache(eosType);
+    typename FluidSystem::template ParameterCache<Scalar> paramCache(/*eosRegionIdx=*/0);
     paramCache.updatePhase(fs, FluidSystem::gasPhaseIdx);
 
     // Store the unshifted EOS compressibility factor, as the simulator does.
@@ -177,7 +174,7 @@ std::pair<Eval, Eval> shiftedGasProperties(const Eval& p, const Eval& xCH4)
         fs.setMoleFraction(FluidSystem::gasPhaseIdx, c, Eval{z[c]});
     }
 
-    typename FluidSystem::template ParameterCache<Eval> paramCache(eosType);
+    typename FluidSystem::template ParameterCache<Eval> paramCache(/*eosRegionIdx=*/0);
     paramCache.updatePhase(fs, FluidSystem::gasPhaseIdx);
 
     return {FluidSystem::density(fs, paramCache, FluidSystem::gasPhaseIdx),
@@ -223,8 +220,8 @@ BOOST_AUTO_TEST_CASE(ShiftLeavesTheEquilibriumRatiosAlone)
         fsRef.setMoleFraction(UnshiftedSystem::gasPhaseIdx, c, y[c]);
     }
 
-    typename FluidSystem::template ParameterCache<Scalar> pc(eosType);
-    typename UnshiftedSystem::template ParameterCache<Scalar> pcRef(eosType);
+    typename FluidSystem::template ParameterCache<Scalar> pc(/*eosRegionIdx=*/0);
+    typename UnshiftedSystem::template ParameterCache<Scalar> pcRef(/*eosRegionIdx=*/0);
     for (int ph : {FluidSystem::oilPhaseIdx, FluidSystem::gasPhaseIdx}) {
         pc.updatePhase(fs, ph);
         pcRef.updatePhase(fsRef, ph);
@@ -261,8 +258,8 @@ BOOST_AUTO_TEST_CASE(ShiftTranslatesTheFugacityCoefficient)
         fsRef.setMoleFraction(UnshiftedSystem::gasPhaseIdx, c, z[c]);
     }
 
-    typename FluidSystem::template ParameterCache<Scalar> pc(eosType);
-    typename UnshiftedSystem::template ParameterCache<Scalar> pcRef(eosType);
+    typename FluidSystem::template ParameterCache<Scalar> pc(/*eosRegionIdx=*/0);
+    typename UnshiftedSystem::template ParameterCache<Scalar> pcRef(/*eosRegionIdx=*/0);
     pc.updatePhase(fs, FluidSystem::gasPhaseIdx);
     pcRef.updatePhase(fsRef, UnshiftedSystem::gasPhaseIdx);
 
@@ -273,7 +270,7 @@ BOOST_AUTO_TEST_CASE(ShiftTranslatesTheFugacityCoefficient)
         const Scalar unshifted =
             UnshiftedSystem::fugacityCoefficient(fsRef, pcRef, UnshiftedSystem::gasPhaseIdx, c);
         const Scalar factor =
-            std::exp(-FluidSystem::volumeShift(c) * pc.Bi(FluidSystem::gasPhaseIdx, c));
+            std::exp(-FluidSystem::volumeShift(c, /*eosRegionIdx=*/0) * pc.Bi(FluidSystem::gasPhaseIdx, c));
 
         BOOST_CHECK_CLOSE(shifted, unshifted * factor, 1.0e-8);
         if (std::abs(factor - 1.0) > 1.0e-6) {
@@ -296,7 +293,7 @@ BOOST_AUTO_TEST_CASE(ShiftDoesNotReachTheCachedVolume)
         fs.setMoleFraction(FluidSystem::gasPhaseIdx, c, z[c]);
         fs.setMoleFraction(FluidSystem::oilPhaseIdx, c, z[c]);
     }
-    typename FluidSystem::template ParameterCache<Scalar> pc(eosType);
+    typename FluidSystem::template ParameterCache<Scalar> pc(/*eosRegionIdx=*/0);
     pc.updatePhase(fs, FluidSystem::gasPhaseIdx);
 
     const Scalar Vm = pc.molarVolume(FluidSystem::gasPhaseIdx);
@@ -321,7 +318,7 @@ BOOST_AUTO_TEST_CASE(ShiftMovesTheLiquidDensityToo)
         fs.setMoleFraction(FluidSystem::oilPhaseIdx, c, z[c]);
         fs.setMoleFraction(FluidSystem::gasPhaseIdx, c, z[c]);
     }
-    typename FluidSystem::template ParameterCache<Scalar> pc(eosType);
+    typename FluidSystem::template ParameterCache<Scalar> pc(/*eosRegionIdx=*/0);
     pc.updatePhase(fs, FluidSystem::oilPhaseIdx);
 
     constexpr Scalar OmegaB = 0.0777960739;   // Peng-Robinson
@@ -363,7 +360,7 @@ BOOST_AUTO_TEST_CASE(WithoutAShiftTheTwoViscosityPathsAgree)
         fs.setMoleFraction(UnshiftedSystem::gasPhaseIdx, c, z[c]);
     }
 
-    typename UnshiftedSystem::template ParameterCache<Scalar> paramCache(eosType);
+    typename UnshiftedSystem::template ParameterCache<Scalar> paramCache(/*eosRegionIdx=*/0);
     paramCache.updatePhase(fs, UnshiftedSystem::gasPhaseIdx);
     const Scalar Z = paramCache.molarVolume(UnshiftedSystem::gasPhaseIdx) * pressure
                    / (Opm::Constants<Scalar>::R * temperature);
@@ -372,8 +369,8 @@ BOOST_AUTO_TEST_CASE(WithoutAShiftTheTwoViscosityPathsAgree)
     const Scalar viaMolarDensity =
         UnshiftedSystem::viscosity(fs, paramCache, UnshiftedSystem::gasPhaseIdx);
     const Scalar viaCompressFactor =
-        Opm::ViscosityModels<Scalar, UnshiftedSystem>::LBC(fs, paramCache,
-                                                           UnshiftedSystem::gasPhaseIdx);
+        Opm::ViscosityModels<Scalar, UnshiftedSystem>::LBC(fs, UnshiftedSystem::gasPhaseIdx,
+                                                           paramCache.eosRegionIndex());
 
     BOOST_CHECK_CLOSE(viaMolarDensity, viaCompressFactor, 1.0e-8);
 }
@@ -479,7 +476,7 @@ BOOST_AUTO_TEST_CASE(ParsedShiftReachesTheFluidSystem)
 
     const std::array<Scalar, 3> expected{-0.1595, 0.10784, -0.0817};
     for (unsigned c = 0; c < 3; ++c) {
-        BOOST_CHECK_CLOSE(DeckSystem::volumeShift(c), expected[c], 1.0e-10);
+        BOOST_CHECK_CLOSE(DeckSystem::volumeShift(c, /*eosRegionIdx=*/0), expected[c], 1.0e-10);
     }
 }
 
@@ -494,9 +491,9 @@ BOOST_AUTO_TEST_CASE(ReinitializationRestoresDefaultCoefficients)
     const auto& loadedLbc = DeckSystem::lbcCoefficients();
     BOOST_REQUIRE_EQUAL_COLLECTIONS(loadedLbc.begin(), loadedLbc.end(),
                                     deckLbc.begin(), deckLbc.end());
-    BOOST_REQUIRE_EQUAL(DeckSystem::interactionCoefficient(0, 1), 0.12);
-    BOOST_REQUIRE_EQUAL(DeckSystem::interactionCoefficient(0, 2), 0.23);
-    BOOST_REQUIRE_EQUAL(DeckSystem::interactionCoefficient(1, 2), 0.34);
+    BOOST_REQUIRE_EQUAL(DeckSystem::interactionCoefficient(0, 1, /*eosRegionIdx=*/0), 0.12);
+    BOOST_REQUIRE_EQUAL(DeckSystem::interactionCoefficient(0, 2, /*eosRegionIdx=*/0), 0.23);
+    BOOST_REQUIRE_EQUAL(DeckSystem::interactionCoefficient(1, 2, /*eosRegionIdx=*/0), 0.34);
 
     // Manual registration after init() must use defaults for properties that
     // are not supplied by ComponentParam, regardless of the previous deck.
@@ -511,9 +508,9 @@ BOOST_AUTO_TEST_CASE(ReinitializationRestoresDefaultCoefficients)
     }
 
     for (unsigned c = 0; c < DeckSystem::numComponents; ++c) {
-        BOOST_CHECK_EQUAL(DeckSystem::volumeShift(c), 0.0);
+        BOOST_CHECK_EQUAL(DeckSystem::volumeShift(c, /*eosRegionIdx=*/0), 0.0);
         for (unsigned d = 0; d < DeckSystem::numComponents; ++d) {
-            BOOST_CHECK_EQUAL(DeckSystem::interactionCoefficient(c, d), 0.0);
+            BOOST_CHECK_EQUAL(DeckSystem::interactionCoefficient(c, d, /*eosRegionIdx=*/0), 0.0);
         }
     }
     const auto defaultLbc = DeckSystem::ViscosityModel::defaultLBCCoefficients();
@@ -539,7 +536,7 @@ BOOST_AUTO_TEST_CASE(AnOverlargeShiftIsRejectedRatherThanReturned)
     fs.setMoleFraction(BigShift::gasPhaseIdx, 0, Scalar{1});
     fs.setMoleFraction(BigShift::oilPhaseIdx, 0, Scalar{1});
 
-    typename BigShift::template ParameterCache<Scalar> pc(eosType);
+    typename BigShift::template ParameterCache<Scalar> pc(/*eosRegionIdx=*/0);
     pc.updatePhase(fs, BigShift::gasPhaseIdx);
 
     BOOST_CHECK_THROW(BigShift::density(fs, pc, BigShift::gasPhaseIdx),

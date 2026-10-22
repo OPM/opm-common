@@ -62,6 +62,12 @@ public:
         EosType_= eos_type;
     }
 
+    //! Select the reservoir EOS region whose component properties are used.
+    void setEosRegionIndex(const unsigned eosRegionIdx)
+    {
+        eosRegionIdx_ = eosRegionIdx;
+    }
+
     void updatePure(Scalar temperature, Scalar pressure)
     {
         Valgrind::CheckDefined(temperature);
@@ -69,19 +75,19 @@ public:
 
         // calculate Ai and Bi
         for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
-            Scalar pr = pressure / FluidSystem::criticalPressure(compIdx);
-            Scalar Tr = temperature / FluidSystem::criticalTemperature(compIdx);
+            Scalar pr = pressure / FluidSystem::criticalPressure(compIdx, eosRegionIdx_);
+            Scalar Tr = temperature / FluidSystem::criticalTemperature(compIdx, eosRegionIdx_);
             Scalar OmegaA = OmegaA_(temperature, compIdx);
             Scalar OmegaB = OmegaB_();
             // OMEGAA and OMEGAB replace the constants of the equation per component.
             // Fluid systems without support for them keep the constants.
-            if constexpr (requires { FluidSystem::omegaA(0u); }) {
-                if (const auto omegaA = FluidSystem::omegaA(compIdx)) {
+            if constexpr (requires { FluidSystem::omegaA(0u, 0u); }) {
+                if (const auto omegaA = FluidSystem::omegaA(compIdx, eosRegionIdx_)) {
                     OmegaA *= *omegaA / constantOmegaA_();
                 }
             }
-            if constexpr (requires { FluidSystem::omegaB(0u); }) {
-                if (const auto omegaB = FluidSystem::omegaB(compIdx)) {
+            if constexpr (requires { FluidSystem::omegaB(0u, 0u); }) {
+                if (const auto omegaB = FluidSystem::omegaB(compIdx, eosRegionIdx_)) {
                     OmegaB = *omegaB;
                 }
             }
@@ -236,6 +242,7 @@ protected:
     std::array<std::array<Scalar, numComponents>, numComponents> aCache_;
 
     EOSType EosType_;
+    unsigned eosRegionIdx_{0};
 
 private:
     void updateACache_()
@@ -243,7 +250,7 @@ private:
         for (unsigned compIIdx = 0; compIIdx < numComponents; ++ compIIdx) {
             for (unsigned compJIdx = 0; compJIdx < numComponents; ++ compJIdx) {
                 // interaction coefficient as given in SPE5
-                Scalar Psi = FluidSystem::interactionCoefficient(compIIdx, compJIdx);
+                Scalar Psi = FluidSystem::interactionCoefficient(compIIdx, compJIdx, eosRegionIdx_);
 
                 aCache_[compIIdx][compJIdx] = sqrt(Ai(compIIdx) * Ai(compJIdx)) * (1 - Psi);
             }
@@ -254,13 +261,13 @@ private:
     {
         switch (EosType_) {
             case EOSType::PRCORR:
-                return PR::calcOmegaA(temperature, compIdx, /*modified=*/true);
+                return PR::calcOmegaA(temperature, compIdx, eosRegionIdx_, /*modified=*/true);
             case EOSType::PR:
-                return PR::calcOmegaA(temperature, compIdx, /*modified=*/false);
+                return PR::calcOmegaA(temperature, compIdx, eosRegionIdx_, /*modified=*/false);
             case EOSType::RK:
-                return RK::calcOmegaA(temperature, compIdx);
+                return RK::calcOmegaA(temperature, compIdx, eosRegionIdx_);
             case EOSType::SRK:
-                return SRK::calcOmegaA(temperature, compIdx);
+                return SRK::calcOmegaA(temperature, compIdx, eosRegionIdx_);
             default:
                 throw std::runtime_error("EOS type not implemented!");
         }

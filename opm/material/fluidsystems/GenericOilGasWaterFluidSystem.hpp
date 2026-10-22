@@ -28,6 +28,7 @@
 
 #include <opm/common/OpmLog/OpmLog.hpp>
 
+#include <opm/input/eclipse/EclipseState/Compositional/CompositionalConfig.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 
@@ -87,6 +88,7 @@ namespace Opm {
         using ViscosityModel = Opm::ViscosityModels<Scalar, GenericOilGasWaterFluidSystem<Scalar, NumComp, enableWater>>;
         using CubicEOS = Opm::CubicEOS<Scalar, GenericOilGasWaterFluidSystem<Scalar, NumComp, enableWater>>;
         using WaterPvt = WaterPvtMultiplexer<Scalar>;
+        using EOSType = CompositionalConfig::EOSType;
 
         struct ComponentParam {
             std::string name;
@@ -213,6 +215,9 @@ namespace Opm {
                 std::ranges::copy(bic, interaction_coefficients_.begin());
             }
 
+            eos_type_ = comp_config.eosType(0);
+            eos_type_from_deck_ = true;
+
             const auto& lbc = comp_config.lbcCoefficients();
             std::ranges::copy(lbc, lbc_coefficients_.begin());
 
@@ -229,6 +234,8 @@ namespace Opm {
             component_param_.clear();
             component_param_.reserve(numComponents);
             interaction_coefficients_.clear();
+            eos_type_ = EOSType::PR;
+            eos_type_from_deck_ = false;
             lbc_coefficients_ = ViscosityModel::defaultLBCCoefficients();
         }
 
@@ -238,17 +245,50 @@ namespace Opm {
         static void setWaterPvt(std::shared_ptr<WaterPvt> pvtObj)
         { waterPvt_ = std::move(pvtObj); }
 
+        //! The number of reservoir EOS regions.
+        static std::size_t numEosRegions()
+        { return 1; }
+
+        /*!
+         * \brief The equation of state of a reservoir EOS region.
+         *
+         * \param eosRegionIdx The reservoir EOS region.
+         */
+        static EOSType eosType([[maybe_unused]] unsigned eosRegionIdx)
+        {
+            assert(eosRegionIdx < numEosRegions());
+            return eos_type_;
+        }
+
+        /*!
+         * \brief Set the equation of state of a fluid system set up without a
+         *        deck. It is Peng-Robinson unless set here.
+         *
+         * A deck fills absent OMEGAA and OMEGAB entries with the constants of
+         * its equation of state, so a fluid system initialised from a deck
+         * keeps the deck's equation of state and rejects the call.
+         */
+        static void setEosType(const EOSType type)
+        {
+            if (eos_type_from_deck_) {
+                throw std::logic_error("The equation of state of a fluid system "
+                                       "initialised from a deck cannot be changed.");
+            }
+            eos_type_ = type;
+        }
+
         /*!
          * \brief The acentric factor of a component [].
          *
          * \copydetails Doxygen::compIdxParam
+         * \param eosRegionIdx The reservoir EOS region.
          */
-        static Scalar acentricFactor(unsigned compIdx)
+        static Scalar acentricFactor(unsigned compIdx, unsigned eosRegionIdx)
         {
             assert(isConsistent());
             assert(compIdx < numComponents);
 
-            return component_param_[compIdx].acentric_factor;
+            return regionComponents_(eosRegionIdx)[compIdx].acentric_factor;
         }
 
         /*!
@@ -258,13 +298,14 @@ namespace Opm {
          * equation-of-state covolume.
          *
          * \copydetails Doxygen::compIdxParam
+         * \param eosRegionIdx The reservoir EOS region.
          */
-        static Scalar volumeShift(unsigned compIdx)
+        static Scalar volumeShift(unsigned compIdx, unsigned eosRegionIdx)
         {
             assert(isConsistent());
             assert(compIdx < numComponents);
 
-            return component_param_[compIdx].volume_shift;
+            return regionComponents_(eosRegionIdx)[compIdx].volume_shift;
         }
 
         /*!
@@ -272,13 +313,14 @@ namespace Opm {
          *        when the constant of the equation of state applies.
          *
          * \copydetails Doxygen::compIdxParam
+         * \param eosRegionIdx The reservoir EOS region.
          */
-        static std::optional<Scalar> omegaA(unsigned compIdx)
+        static std::optional<Scalar> omegaA(unsigned compIdx, unsigned eosRegionIdx)
         {
             assert(isConsistent());
             assert(compIdx < numComponents);
 
-            return component_param_[compIdx].omega_a;
+            return regionComponents_(eosRegionIdx)[compIdx].omega_a;
         }
 
         /*!
@@ -286,50 +328,54 @@ namespace Opm {
          *        when the constant of the equation of state applies.
          *
          * \copydetails Doxygen::compIdxParam
+         * \param eosRegionIdx The reservoir EOS region.
          */
-        static std::optional<Scalar> omegaB(unsigned compIdx)
+        static std::optional<Scalar> omegaB(unsigned compIdx, unsigned eosRegionIdx)
         {
             assert(isConsistent());
             assert(compIdx < numComponents);
 
-            return component_param_[compIdx].omega_b;
+            return regionComponents_(eosRegionIdx)[compIdx].omega_b;
         }
 
         /*!
          * \brief Critical temperature of a component [K].
          *
          * \copydetails Doxygen::compIdxParam
+         * \param eosRegionIdx The reservoir EOS region.
          */
-        static Scalar criticalTemperature(unsigned compIdx)
+        static Scalar criticalTemperature(unsigned compIdx, unsigned eosRegionIdx)
         {
             assert(isConsistent());
             assert(compIdx < numComponents);
 
-            return component_param_[compIdx].critic_temp;
+            return regionComponents_(eosRegionIdx)[compIdx].critic_temp;
         }
         /*!
          * \brief Critical pressure of a component [Pa].
          *
          * \copydetails Doxygen::compIdxParam
+         * \param eosRegionIdx The reservoir EOS region.
          */
-        static Scalar criticalPressure(unsigned compIdx)
+        static Scalar criticalPressure(unsigned compIdx, unsigned eosRegionIdx)
         {
             assert(isConsistent());
             assert(compIdx < numComponents);
 
-            return component_param_[compIdx].critic_pres;
+            return regionComponents_(eosRegionIdx)[compIdx].critic_pres;
         }
         /*!
         * \brief Critical volume of a component [m3].
         *
         * \copydetails Doxygen::compIdxParam
+        * \param eosRegionIdx The reservoir EOS region.
         */
-        static Scalar criticalVolume(unsigned compIdx)
+        static Scalar criticalVolume(unsigned compIdx, unsigned eosRegionIdx)
         {
             assert(isConsistent());
             assert(compIdx < numComponents);
 
-            return component_param_[compIdx].critic_vol;
+            return regionComponents_(eosRegionIdx)[compIdx].critic_vol;
         }
 
         //! \copydoc BaseFluidSystem::molarMass
@@ -352,20 +398,23 @@ namespace Opm {
 
         /*!
          * \brief Returns the interaction coefficient for two components.
-         *.
+         *
+         * \param eosRegionIdx The reservoir EOS region.
          */
-        static Scalar interactionCoefficient(unsigned comp1Idx, unsigned comp2Idx)
+        static Scalar interactionCoefficient(unsigned comp1Idx, unsigned comp2Idx,
+                                             unsigned eosRegionIdx)
         {
             assert(isConsistent());
             assert(comp1Idx < numComponents);
             assert(comp2Idx < numComponents);
-            if (interaction_coefficients_.empty() || comp2Idx == comp1Idx) {
+            const auto& coefficients = regionInteractionCoefficients_(eosRegionIdx);
+            if (coefficients.empty() || comp2Idx == comp1Idx) {
                 return 0.0;
             }
             // make sure row is the bigger value compared to column number
             const auto [column, row] = std::minmax(comp1Idx, comp2Idx);
             const unsigned index = (row * (row - 1) / 2 + column); // it is the current understanding
-            return interaction_coefficients_[index];
+            return coefficients[index];
         }
 
         //! \copydoc BaseFluidSystem::phaseName
@@ -432,7 +481,8 @@ namespace Opm {
                 const auto rho = density(fluidState, paramCache, phaseIdx);
                 const auto molarDensity = rho / fluidState.averageMolarMass(phaseIdx);
                 return decay<LhsEval>(
-                    ViscosityModel::LBCWithMolarDensity(fluidState, molarDensity, phaseIdx));
+                    ViscosityModel::LBCWithMolarDensity(fluidState, molarDensity, phaseIdx,
+                                                        paramCache.eosRegionIndex()));
             }
             else {
                 const LhsEval& p = decay<LhsEval>(fluidState.pressure(phaseIdx));
@@ -467,7 +517,7 @@ namespace Opm {
             const auto fugCoeff =
                 CubicEOS::computeFugacityCoefficient(fluidState, paramCache, phaseIdx, compIdx);
             const auto translation =
-                exp(-volumeShift(compIdx) * paramCache.Bi(phaseIdx, compIdx));
+                exp(-volumeShift(compIdx, paramCache.eosRegionIndex()) * paramCache.Bi(phaseIdx, compIdx));
 
             return decay<LhsEval>(fugCoeff * translation);
         }
@@ -579,6 +629,20 @@ namespace Opm {
             return component_param_.size() == NumComp;
         }
 
+        static const std::vector<ComponentParam>&
+        regionComponents_([[maybe_unused]] const unsigned eosRegionIdx)
+        {
+            assert(eosRegionIdx < numEosRegions());
+            return component_param_;
+        }
+
+        static const std::vector<Scalar>&
+        regionInteractionCoefficients_([[maybe_unused]] const unsigned eosRegionIdx)
+        {
+            assert(eosRegionIdx < numEosRegions());
+            return interaction_coefficients_;
+        }
+
         // Critical volume [m^3/mol] of a component. ZCRIT, when given, takes
         // precedence over VCRIT: Vc = Zc R Tc / Pc.
         static double criticalVolume_(const CompositionalConfig::EOSProps& props,
@@ -597,6 +661,8 @@ namespace Opm {
 
         static std::vector<ComponentParam> component_param_;
         static std::vector<Scalar> interaction_coefficients_;
+        static EOSType eos_type_;
+        static bool eos_type_from_deck_;
         static std::array<Scalar, 5> lbc_coefficients_;
         static std::shared_ptr<WaterPvt> waterPvt_;
 
@@ -623,6 +689,15 @@ namespace Opm {
     template <class Scalar, int NumComp, bool enableWater>
     std::vector<Scalar>
     GenericOilGasWaterFluidSystem<Scalar, NumComp, enableWater>::interaction_coefficients_;
+
+    template <class Scalar, int NumComp, bool enableWater>
+    CompositionalConfig::EOSType
+    GenericOilGasWaterFluidSystem<Scalar, NumComp, enableWater>::eos_type_ =
+        CompositionalConfig::EOSType::PR;
+
+    template <class Scalar, int NumComp, bool enableWater>
+    bool
+    GenericOilGasWaterFluidSystem<Scalar, NumComp, enableWater>::eos_type_from_deck_ = false;
 
     template <class Scalar, int NumComp, bool enableWater>
     std::array<Scalar, 5>
