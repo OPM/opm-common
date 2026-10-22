@@ -47,7 +47,7 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
-#include <type_traits>
+#include <vector>
 
 #include <fmt/format.h>
 
@@ -157,12 +157,10 @@ namespace Opm {
          */
         static void initFromState(const EclipseState& eclState, const Schedule& schedule)
         {
-            // TODO: we are not considering the EOS region for now
             const auto& comp_config = eclState.compositionalConfig();
             // how should we utilize the numComps from the CompositionalConfig?
             using FluidSystem = GenericOilGasWaterFluidSystem<Scalar, NumComp, enableWater>;
             const std::size_t num_comps = comp_config.numComps();
-            // const std::size_t num_eos_region = comp_config.
 
             // CompositionalConfig is left empty for input the compositional path
             // cannot handle - CO2STORE and H2STORE runs return before any of it
@@ -186,33 +184,31 @@ namespace Opm {
 
             const auto& names = comp_config.compName();
             const auto& eos_props = comp_config.eosProps(0);
-            // Absent OMEGAA and OMEGAB entries hold the constants of the EOS type.
-            const auto& omega_a = comp_config.omegaA(0);
-            const auto& omega_b = comp_config.omegaB(0);
             FluidSystem::init();
-            using CompParm = typename FluidSystem::ComponentParam;
-            for (std::size_t c = 0; c < num_comps; ++c) {
-                // we use m^3/kmol for the critic volume in the flash calculation, so we multiply 1.e3 for the critic volume
-                FluidSystem::addComponent(
-                    CompParm {names[c],
-                              static_cast<Scalar>(eos_props.molecular_weights[c]),
-                              static_cast<Scalar>(eos_props.critical_temperature[c]),
-                              static_cast<Scalar>(eos_props.critical_pressure[c]),
-                              static_cast<Scalar>(criticalVolume_(eos_props, c) * 1.e3),
-                              static_cast<Scalar>(eos_props.acentric_factors[c]),
-                              c < eos_props.volume_shifts.size()
-                                  ? static_cast<Scalar>(eos_props.volume_shifts[c])
-                                  : Scalar {0},
-                              static_cast<Scalar>(omega_a[c]),
-                              static_cast<Scalar>(omega_b[c])});
+            for (const auto& param : componentsOf_(names, eos_props)) {
+                FluidSystem::addComponent(param);
             }
+            interaction_coefficients_ = interactionCoefficientsOf_(eos_props);
 
-            const auto& bic = eos_props.binary_interaction_coefficient;
-            if constexpr (std::is_same_v<Scalar, double>) {
-                interaction_coefficients_ = bic;
-            } else {
-                interaction_coefficients_.resize(bic.size());
-                std::ranges::copy(bic, interaction_coefficients_.begin());
+            // With several reservoir EOS regions, each keeps its own properties
+            // and equation of state. The molecular weights must agree: component
+            // masses cross region boundaries unchanged, which would otherwise
+            // change their amounts.
+            const auto num_eos_regions = eclState.runspec().tabdims().getNumEosRes();
+            if (num_eos_regions > 1) {
+                for (std::size_t region = 0; region < num_eos_regions; ++region) {
+                    const auto& props = comp_config.eosProps(region);
+                    if (props.molecular_weights != eos_props.molecular_weights) {
+                        throw std::runtime_error {
+                            fmt::format("The molecular weights of EOS region {} differ from "
+                                        "those of EOS region 1. All reservoir EOS regions "
+                                        "must use the same molecular weights.", region + 1)
+                        };
+                    }
+                    region_component_param_.push_back(componentsOf_(names, props));
+                    region_interaction_coefficients_.push_back(interactionCoefficientsOf_(props));
+                    region_eos_type_.push_back(comp_config.eosType(region));
+                }
             }
 
             eos_type_ = comp_config.eosType(0);
@@ -236,6 +232,9 @@ namespace Opm {
             interaction_coefficients_.clear();
             eos_type_ = EOSType::PR;
             eos_type_from_deck_ = false;
+            region_component_param_.clear();
+            region_interaction_coefficients_.clear();
+            region_eos_type_.clear();
             lbc_coefficients_ = ViscosityModel::defaultLBCCoefficients();
         }
 
@@ -247,17 +246,17 @@ namespace Opm {
 
         //! The number of reservoir EOS regions.
         static std::size_t numEosRegions()
-        { return 1; }
+        { return std::max(region_component_param_.size(), std::size_t{1}); }
 
         /*!
          * \brief The equation of state of a reservoir EOS region.
          *
          * \param eosRegionIdx The reservoir EOS region.
          */
-        static EOSType eosType([[maybe_unused]] unsigned eosRegionIdx)
+        static EOSType eosType(unsigned eosRegionIdx)
         {
             assert(eosRegionIdx < numEosRegions());
-            return eos_type_;
+            return region_eos_type_.empty() ? eos_type_ : region_eos_type_[eosRegionIdx];
         }
 
         /*!
@@ -629,18 +628,50 @@ namespace Opm {
             return component_param_.size() == NumComp;
         }
 
-        static const std::vector<ComponentParam>&
-        regionComponents_([[maybe_unused]] const unsigned eosRegionIdx)
+        // Absent OMEGAA and OMEGAB entries hold the constants of the EOS type.
+        static std::vector<ComponentParam>
+        componentsOf_(const std::vector<std::string>& names,
+                      const CompositionalConfig::EOSProps& props)
         {
-            assert(eosRegionIdx < numEosRegions());
-            return component_param_;
+            std::vector<ComponentParam> params;
+            params.reserve(names.size());
+            for (std::size_t c = 0; c < names.size(); ++c) {
+                // we use m^3/kmol for the critic volume in the flash calculation, so we multiply 1.e3 for the critic volume
+                params.emplace_back(names[c],
+                                    static_cast<Scalar>(props.molecular_weights[c]),
+                                    static_cast<Scalar>(props.critical_temperature[c]),
+                                    static_cast<Scalar>(props.critical_pressure[c]),
+                                    static_cast<Scalar>(criticalVolume_(props, c) * 1.e3),
+                                    static_cast<Scalar>(props.acentric_factors[c]),
+                                    c < props.volume_shifts.size()
+                                        ? static_cast<Scalar>(props.volume_shifts[c])
+                                        : Scalar{0},
+                                    static_cast<Scalar>(props.omega_a[c]),
+                                    static_cast<Scalar>(props.omega_b[c]));
+            }
+            return params;
         }
 
-        static const std::vector<Scalar>&
-        regionInteractionCoefficients_([[maybe_unused]] const unsigned eosRegionIdx)
+        static std::vector<Scalar>
+        interactionCoefficientsOf_(const CompositionalConfig::EOSProps& props)
+        {
+            const auto& bic = props.binary_interaction_coefficient;
+            return {bic.begin(), bic.end()};
+        }
+
+        static const std::vector<ComponentParam>& regionComponents_(const unsigned eosRegionIdx)
         {
             assert(eosRegionIdx < numEosRegions());
-            return interaction_coefficients_;
+            return region_component_param_.empty() ? component_param_
+                                                   : region_component_param_[eosRegionIdx];
+        }
+
+        static const std::vector<Scalar>& regionInteractionCoefficients_(const unsigned eosRegionIdx)
+        {
+            assert(eosRegionIdx < numEosRegions());
+            return region_interaction_coefficients_.empty()
+                ? interaction_coefficients_
+                : region_interaction_coefficients_[eosRegionIdx];
         }
 
         // Critical volume [m^3/mol] of a component. ZCRIT, when given, takes
@@ -663,6 +694,10 @@ namespace Opm {
         static std::vector<Scalar> interaction_coefficients_;
         static EOSType eos_type_;
         static bool eos_type_from_deck_;
+        // Every reservoir EOS region when there are several, otherwise empty.
+        static std::vector<std::vector<ComponentParam>> region_component_param_;
+        static std::vector<std::vector<Scalar>> region_interaction_coefficients_;
+        static std::vector<EOSType> region_eos_type_;
         static std::array<Scalar, 5> lbc_coefficients_;
         static std::shared_ptr<WaterPvt> waterPvt_;
 
@@ -698,6 +733,19 @@ namespace Opm {
     template <class Scalar, int NumComp, bool enableWater>
     bool
     GenericOilGasWaterFluidSystem<Scalar, NumComp, enableWater>::eos_type_from_deck_ = false;
+
+    template <class Scalar, int NumComp, bool enableWater>
+    std::vector<std::vector<
+        typename GenericOilGasWaterFluidSystem<Scalar, NumComp, enableWater>::ComponentParam>>
+    GenericOilGasWaterFluidSystem<Scalar, NumComp, enableWater>::region_component_param_;
+
+    template <class Scalar, int NumComp, bool enableWater>
+    std::vector<std::vector<Scalar>>
+    GenericOilGasWaterFluidSystem<Scalar, NumComp, enableWater>::region_interaction_coefficients_;
+
+    template <class Scalar, int NumComp, bool enableWater>
+    std::vector<CompositionalConfig::EOSType>
+    GenericOilGasWaterFluidSystem<Scalar, NumComp, enableWater>::region_eos_type_;
 
     template <class Scalar, int NumComp, bool enableWater>
     std::array<Scalar, 5>
