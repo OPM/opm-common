@@ -114,7 +114,7 @@ struct CompositionalRegionParams {
  *
  * \brief The component parameters, the binary interaction coefficients and
  *        the LBC viscosity coefficients of an equation-of-state region of a
- *        deck. GenericOilGasWaterFluidSystem::initFromState() takes region 0.
+ *        deck. GenericOilGasWaterFluidSystem::initFromState() takes every region.
  *
  * It does not depend on the number of components of the fluid system, so a
  * program can read a deck before it knows that number.
@@ -285,12 +285,10 @@ compositionalRegionParams(const CompositionalConfig& config, const std::size_t e
          */
         static void initFromState(const EclipseState& eclState, const Schedule& schedule)
         {
-            // TODO: we are not considering the EOS region for now
             const auto& comp_config = eclState.compositionalConfig();
             // how should we utilize the numComps from the CompositionalConfig?
             using FluidSystem = GenericOilGasWaterFluidSystem<Scalar, NumComp, enableWater>;
             const std::size_t num_comps = comp_config.numComps();
-            // const std::size_t num_eos_region = comp_config.
 
             // CompositionalConfig is left empty for input the compositional path
             // cannot handle - CO2STORE and H2STORE runs return before any of it
@@ -312,6 +310,31 @@ compositionalRegionParams(const CompositionalConfig& config, const std::size_t e
                 };
             }
 
+            // With several reservoir EOS regions, each keeps its own properties
+            // and equation of state. The molecular weights must agree: component
+            // masses cross region boundaries unchanged, which would otherwise
+            // change their amounts. Every region is read before the static data
+            // changes, so a rejected deck leaves the fluid system as it was.
+            const auto num_eos_regions = eclState.runspec().tabdims().getNumEosRes();
+            const auto& molecular_weights = comp_config.eosProps(0).molecular_weights;
+            std::vector<std::vector<ComponentParam>> region_components;
+            std::vector<std::vector<Scalar>> region_coefficients;
+            std::vector<EOSType> region_eos_types;
+            if (num_eos_regions > 1) {
+                for (std::size_t region = 0; region < num_eos_regions; ++region) {
+                    if (comp_config.eosProps(region).molecular_weights != molecular_weights) {
+                        throw std::runtime_error {
+                            fmt::format("The molecular weights of EOS region {} differ from "
+                                        "those of EOS region 1. All reservoir EOS regions "
+                                        "must use the same molecular weights.", region + 1)
+                        };
+                    }
+                    auto params = compositionalRegionParams<Scalar>(comp_config, region);
+                    region_components.push_back(std::move(params.components));
+                    region_coefficients.push_back(std::move(params.interaction_coefficients));
+                    region_eos_types.push_back(comp_config.eosType(region));
+                }
+            }
             auto params = compositionalRegionParams<Scalar>(comp_config, 0);
             FluidSystem::init();
             for (const auto& component : params.components) {
@@ -319,6 +342,9 @@ compositionalRegionParams(const CompositionalConfig& config, const std::size_t e
             }
             interaction_coefficients_ = std::move(params.interaction_coefficients);
             lbc_coefficients_ = params.lbc_coefficients;
+            region_component_param_ = std::move(region_components);
+            region_interaction_coefficients_ = std::move(region_coefficients);
+            region_eos_type_ = std::move(region_eos_types);
             eos_type_ = comp_config.eosType(0);
             eos_type_from_deck_ = true;
 
@@ -337,6 +363,9 @@ compositionalRegionParams(const CompositionalConfig& config, const std::size_t e
             interaction_coefficients_.clear();
             eos_type_ = EOSType::PR;
             eos_type_from_deck_ = false;
+            region_component_param_.clear();
+            region_interaction_coefficients_.clear();
+            region_eos_type_.clear();
             lbc_coefficients_ = ViscosityModel::defaultLBCCoefficients();
         }
 
@@ -348,7 +377,7 @@ compositionalRegionParams(const CompositionalConfig& config, const std::size_t e
 
         //! The number of reservoir EOS regions.
         static std::size_t numEosRegions()
-        { return 1; }
+        { return std::max(region_component_param_.size(), std::size_t{1}); }
 
         /*!
          * \brief The equation of state of a reservoir EOS region.
@@ -358,7 +387,7 @@ compositionalRegionParams(const CompositionalConfig& config, const std::size_t e
         static EOSType eosType(unsigned eosRegionIdx)
         {
             checkEosRegion_(eosRegionIdx);
-            return eos_type_;
+            return region_eos_type_.empty() ? eos_type_ : region_eos_type_[eosRegionIdx];
         }
 
         /*!
@@ -746,20 +775,27 @@ compositionalRegionParams(const CompositionalConfig& config, const std::size_t e
         regionComponents_(const unsigned eosRegionIdx)
         {
             checkEosRegion_(eosRegionIdx);
-            return component_param_;
+            return region_component_param_.empty() ? component_param_
+                                                   : region_component_param_[eosRegionIdx];
         }
 
         static const std::vector<Scalar>&
         regionInteractionCoefficients_(const unsigned eosRegionIdx)
         {
             checkEosRegion_(eosRegionIdx);
-            return interaction_coefficients_;
+            return region_interaction_coefficients_.empty()
+                ? interaction_coefficients_
+                : region_interaction_coefficients_[eosRegionIdx];
         }
 
         static std::vector<ComponentParam> component_param_;
         static std::vector<Scalar> interaction_coefficients_;
         static EOSType eos_type_;
         static bool eos_type_from_deck_;
+        // Every reservoir EOS region when there are several, otherwise empty.
+        static std::vector<std::vector<ComponentParam>> region_component_param_;
+        static std::vector<std::vector<Scalar>> region_interaction_coefficients_;
+        static std::vector<EOSType> region_eos_type_;
         static std::array<Scalar, 5> lbc_coefficients_;
         static std::shared_ptr<WaterPvt> waterPvt_;
 
@@ -795,6 +831,19 @@ compositionalRegionParams(const CompositionalConfig& config, const std::size_t e
     template <class Scalar, int NumComp, bool enableWater>
     bool
     GenericOilGasWaterFluidSystem<Scalar, NumComp, enableWater>::eos_type_from_deck_ = false;
+
+    template <class Scalar, int NumComp, bool enableWater>
+    std::vector<std::vector<
+        typename GenericOilGasWaterFluidSystem<Scalar, NumComp, enableWater>::ComponentParam>>
+    GenericOilGasWaterFluidSystem<Scalar, NumComp, enableWater>::region_component_param_;
+
+    template <class Scalar, int NumComp, bool enableWater>
+    std::vector<std::vector<Scalar>>
+    GenericOilGasWaterFluidSystem<Scalar, NumComp, enableWater>::region_interaction_coefficients_;
+
+    template <class Scalar, int NumComp, bool enableWater>
+    std::vector<CompositionalConfig::EOSType>
+    GenericOilGasWaterFluidSystem<Scalar, NumComp, enableWater>::region_eos_type_;
 
     template <class Scalar, int NumComp, bool enableWater>
     std::array<Scalar, 5>
