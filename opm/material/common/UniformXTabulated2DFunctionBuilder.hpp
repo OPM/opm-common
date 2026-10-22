@@ -39,7 +39,6 @@
 #include <limits>
 #include <numeric>
 #include <stdexcept>
-#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -75,13 +74,13 @@ public:
      * \brief Returns the value of the Y coordinate of a sampling point.
      */
     Scalar yAt(std::size_t i, std::size_t j) const
-    { return std::get<1>(samples_[i][j]); }
+    { return samples_[i][j].y; }
 
     /*!
      * \brief Returns the value of a sampling point.
      */
     Scalar valueAt(std::size_t i, std::size_t j) const
-    { return std::get<2>(samples_[i][j]); }
+    { return samples_[i][j].value; }
 
     /*!
      * \brief Returns the number of sampling points in X direction.
@@ -93,13 +92,13 @@ public:
      * \brief Returns the minimum of the Y coordinate of the sampling points for a given column.
      */
     Scalar yMin(unsigned i) const
-    { return std::get<1>(samples_.at(i).front()); }
+    { return samples_.at(i).front().y; }
 
     /*!
      * \brief Returns the maximum of the Y coordinate of the sampling points for a given column.
      */
     Scalar yMax(unsigned i) const
-    { return std::get<1>(samples_.at(i).back()); }
+    { return samples_.at(i).back().y; }
 
     /*!
      * \brief Returns the minimum of the X coordinate of the sampling points.
@@ -167,14 +166,14 @@ public:
             yPos_[i] = y;
             return 0;
         }
-        else if (std::get<1>(samples_[i].back()) < y) {
+        else if (samples_[i].back().y < y) {
             samples_[i].emplace_back(x, y, value);
             if (interpolationGuide_ == InterpolationPolicy::RightExtreme) {
                 yPos_[i] = y;
             }
             return samples_[i].size() - 1;
         }
-        else if (std::get<1>(samples_[i].front()) > y) {
+        else if (samples_[i].front().y > y) {
             // slow, but we still don't care...
             samples_[i].emplace(samples_[i].begin(), x, y, value);
             if (interpolationGuide_ == InterpolationPolicy::LeftExtreme) {
