@@ -45,8 +45,6 @@
 #include <opm/material/fluidstates/CompositionalFluidState.hpp>
 #include <opm/material/fluidsystems/GenericOilGasWaterFluidSystem.hpp>
 
-#include <opm/input/eclipse/EclipseState/Compositional/CompositionalConfig.hpp>
-
 #include <array>
 #include <cmath>
 
@@ -58,7 +56,6 @@ using FluidSystem = Opm::GenericOilGasWaterFluidSystem<Scalar, numComponents, fa
 using Evaluation = Opm::DenseAd::Evaluation<Scalar, numComponents + 1>;
 using FluidState = Opm::CompositionalFluidState<Evaluation, FluidSystem>;
 using PtFlash = Opm::PTFlash<Scalar, FluidSystem>;
-using EOSType = Opm::CompositionalConfig::EOSType;
 using Composition = std::array<Scalar, numComponents>;
 
 // Methane, propane and eicosane from their pure-component data.
@@ -89,7 +86,7 @@ FluidState makeColdState(const Scalar pressure, const Scalar temperature, const 
         fs.setMoleFraction(compIdx, z[compIdx]);
     }
     for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
-        fs.setKvalue(compIdx, fs.wilsonK_(compIdx));
+        fs.setKvalue(compIdx, fs.wilsonK_(compIdx, /*eosRegionIdx=*/0));
     }
     // No previous split, as at initialisation: the flash starts with stability analysis.
     fs.setLvalue(-1.0);
@@ -111,7 +108,7 @@ BOOST_AUTO_TEST_CASE(ColdFlashOfALeanGasConverges)
                 bool singlePhase = true;
                 BOOST_REQUIRE_NO_THROW(singlePhase
                                        = PtFlash::solve(fs, Opm::PTFlashMethod::SsiNewton, 1e-8,
-                                                        EOSType::PR));
+                                                        /*eosRegionIdx=*/0));
                 BOOST_CHECK(!singlePhase);
                 const Scalar L = Opm::getValue(fs.L());
                 BOOST_CHECK(L > 0.0 && L < 2.0e-3);
@@ -125,9 +122,9 @@ BOOST_AUTO_TEST_CASE(SplitIsInEquilibrium)
     // Plain substitution does not converge here within its iteration budget
     // either, so check the split against the equations it solves.
     auto fs = makeColdState(160.0e5, 323.15, gas);
-    BOOST_REQUIRE_NO_THROW(PtFlash::solve(fs, Opm::PTFlashMethod::SsiNewton, 1e-8, EOSType::PR));
+    BOOST_REQUIRE_NO_THROW(PtFlash::solve(fs, Opm::PTFlashMethod::SsiNewton, 1e-8, /*eosRegionIdx=*/0));
 
-    typename FluidSystem::template ParameterCache<Evaluation> paramCache(EOSType::PR);
+    typename FluidSystem::template ParameterCache<Evaluation> paramCache(/*eosRegionIdx=*/0);
     paramCache.updatePhase(fs, FluidSystem::oilPhaseIdx);
     paramCache.updatePhase(fs, FluidSystem::gasPhaseIdx);
 

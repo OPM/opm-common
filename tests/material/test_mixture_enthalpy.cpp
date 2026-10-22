@@ -111,7 +111,7 @@ phaseComposition(const FluidState& state, const unsigned phaseIdx)
 }
 
 // one phase at (T, p, w) as a plain-double state, with its parameter cache
-// updated for the given equation of state
+// updated for the fluid system's equation of state
 template <class FluidSystem>
 struct PhaseProbe
 {
@@ -120,8 +120,8 @@ struct PhaseProbe
 
     PhaseProbe(const double T, const double p,
                const std::array<double, FluidSystem::numComponents>& w,
-               const unsigned phaseIdx, const EOSType eosType)
-        : paramCache(eosType)
+               const unsigned phaseIdx)
+        : paramCache(/*eosRegionIdx=*/0)
     {
         fs.setTemperature(T);
         fs.setPressure(FluidSystem::oilPhaseIdx, p);
@@ -153,9 +153,9 @@ template <class FluidSystem>
 std::array<double, FluidSystem::numComponents>
 fluidSystemLnPhi(const double T, const double p,
                  const std::array<double, FluidSystem::numComponents>& w,
-                 const unsigned phaseIdx, const EOSType eosType)
+                 const unsigned phaseIdx)
 {
-    PhaseProbe<FluidSystem> probe(T, p, w, phaseIdx, eosType);
+    PhaseProbe<FluidSystem> probe(T, p, w, phaseIdx);
     std::array<double, FluidSystem::numComponents> lnPhi;
     for (int compIdx = 0; compIdx < FluidSystem::numComponents; ++compIdx) {
         lnPhi[compIdx] = std::log(FluidSystem::fugacityCoefficient(probe.fs, probe.paramCache,
@@ -383,6 +383,7 @@ BOOST_AUTO_TEST_CASE(ResidualMatchesFugacityCoefficients)
 
     for (const auto eosType : {EOSType::PR, EOSType::PRCORR,
                                EOSType::SRK, EOSType::RK}) {
+        FluidSystemF1::setEosType(eosType);
         for (unsigned phaseIdx : {static_cast<unsigned>(FluidSystemF1::oilPhaseIdx),
                                   static_cast<unsigned>(FluidSystemF1::gasPhaseIdx)}) {
             BOOST_TEST_CONTEXT("F1, EoS " << Opm::CompositionalConfig::eosTypeToString(eosType)
@@ -390,9 +391,9 @@ BOOST_AUTO_TEST_CASE(ResidualMatchesFugacityCoefficients)
                 const auto w = phaseComposition<FluidSystemF1>(outcomeF1.state, phaseIdx);
                 const double expected = residualByFiniteDifference<numComponentsF1>(T, w,
                     [&](const double t) {
-                        return fluidSystemLnPhi<FluidSystemF1>(t, f1Pressure, w, phaseIdx, eosType);
+                        return fluidSystemLnPhi<FluidSystemF1>(t, f1Pressure, w, phaseIdx);
                     });
-                BOOST_CHECK_CLOSE(EnthalpyF1::phaseResidualEnthalpy(outcomeF1.state, phaseIdx, eosType),
+                BOOST_CHECK_CLOSE(EnthalpyF1::phaseResidualEnthalpy(outcomeF1.state, phaseIdx, /*eosRegionIdx=*/0),
                                   expected, 1e-4); // [%]
             }
         }
@@ -411,9 +412,9 @@ BOOST_AUTO_TEST_CASE(ResidualMatchesFugacityCoefficients)
                 const auto w = phaseComposition<FluidSystemH1>(outcomeH1.state, phaseIdx);
                 const double expected = residualByFiniteDifference<numComponentsH1>(T, w,
                     [&](const double t) {
-                        return fluidSystemLnPhi<FluidSystemH1>(t, h1Pressure, w, phaseIdx, eosType);
+                        return fluidSystemLnPhi<FluidSystemH1>(t, h1Pressure, w, phaseIdx);
                     });
-                BOOST_CHECK_CLOSE(EnthalpyH1::phaseResidualEnthalpy(outcomeH1.state, phaseIdx, eosType),
+                BOOST_CHECK_CLOSE(EnthalpyH1::phaseResidualEnthalpy(outcomeH1.state, phaseIdx, /*eosRegionIdx=*/0),
                                   expected, 1e-4); // [%]
             }
         }
@@ -440,7 +441,7 @@ BOOST_AUTO_TEST_CASE(HeavyComponentBelowFugacityLimit)
             const auto x = phaseComposition<FluidSystemH1>(outcome.state, oilPhaseIdx);
 
             // the case is in the limited regime
-            const PhaseProbe<FluidSystemH1> probe(T, h1Pressure, x, oilPhaseIdx, eosType);
+            const PhaseProbe<FluidSystemH1> probe(T, h1Pressure, x, oilPhaseIdx);
             const double phiLimited = FluidSystemH1::CubicEOS::computeFugacityCoefficient(
                 probe.fs, probe.paramCache, oilPhaseIdx, heavyIdx);
             const double phiCubic = std::exp(cubicLnPhi(probe, x, oilPhaseIdx)[heavyIdx]);
@@ -448,15 +449,15 @@ BOOST_AUTO_TEST_CASE(HeavyComponentBelowFugacityLimit)
 
             const double expected = residualByFiniteDifference<numComponentsH1>(T, x,
                 [&](const double t) {
-                    const PhaseProbe<FluidSystemH1> probeAtT(t, h1Pressure, x, oilPhaseIdx, eosType);
+                    const PhaseProbe<FluidSystemH1> probeAtT(t, h1Pressure, x, oilPhaseIdx);
                     auto lnPhi = cubicLnPhi(probeAtT, x, oilPhaseIdx);
                     for (int compIdx = 0; compIdx < numComponentsH1; ++compIdx) {
-                        lnPhi[compIdx] -= FluidSystemH1::volumeShift(compIdx)
+                        lnPhi[compIdx] -= FluidSystemH1::volumeShift(compIdx, /*eosRegionIdx=*/0)
                                           * probeAtT.paramCache.Bi(oilPhaseIdx, compIdx);
                     }
                     return lnPhi;
                 });
-            const double residual = EnthalpyH1::phaseResidualEnthalpy(outcome.state, oilPhaseIdx, eosType);
+            const double residual = EnthalpyH1::phaseResidualEnthalpy(outcome.state, oilPhaseIdx, /*eosRegionIdx=*/0);
             BOOST_CHECK_CLOSE(residual, expected, 1e-4); // [%]
             BOOST_CHECK_LT(residual, -40e3);             // [J/mol]: vaporization-enthalpy scale
         }
@@ -473,9 +474,9 @@ BOOST_AUTO_TEST_CASE(IdealGasLimit)
     const auto anchorOutcome = runFlash<FluidSystemF1, EvaluationF1>(anchor);
 
     const double resLow = EnthalpyF1::phaseResidualEnthalpy(
-        lowOutcome.state, FluidSystemF1::gasPhaseIdx, EOSType::PR);
+        lowOutcome.state, FluidSystemF1::gasPhaseIdx, /*eosRegionIdx=*/0);
     const double resAnchor = EnthalpyF1::phaseResidualEnthalpy(
-        anchorOutcome.state, FluidSystemF1::gasPhaseIdx, EOSType::PR);
+        anchorOutcome.state, FluidSystemF1::gasPhaseIdx, /*eosRegionIdx=*/0);
 
     BOOST_CHECK_LT(std::abs(resLow), 10.);   // [J/mol], near-ideal at 10 mbar
     BOOST_CHECK_LT(std::abs(resLow), 0.05 * std::abs(resAnchor));
@@ -496,14 +497,14 @@ BOOST_AUTO_TEST_CASE(DepartureCouplesToSplit)
 
     // (a) decomposition consistency of the model-switch overload
     const double viaMixture = Opm::getValue(EnthalpyF1::mixtureEnthalpy(
-        outcome.state, cpTable, EOSType::PR, Opm::EnthalpyModel::eos_departure));
+        outcome.state, cpTable, /*eosRegionIdx=*/0, Opm::EnthalpyModel::eos_departure));
     const double L = outcome.summary.L;
     const double hOil = Opm::getValue(EnthalpyF1::phaseEnthalpy(
                             outcome.state, FluidSystemF1::oilPhaseIdx, cpTable))
-        + EnthalpyF1::phaseResidualEnthalpy(outcome.state, FluidSystemF1::oilPhaseIdx, EOSType::PR);
+        + EnthalpyF1::phaseResidualEnthalpy(outcome.state, FluidSystemF1::oilPhaseIdx, /*eosRegionIdx=*/0);
     const double hGas = Opm::getValue(EnthalpyF1::phaseEnthalpy(
                             outcome.state, FluidSystemF1::gasPhaseIdx, cpTable))
-        + EnthalpyF1::phaseResidualEnthalpy(outcome.state, FluidSystemF1::gasPhaseIdx, EOSType::PR);
+        + EnthalpyF1::phaseResidualEnthalpy(outcome.state, FluidSystemF1::gasPhaseIdx, /*eosRegionIdx=*/0);
     BOOST_CHECK_CLOSE(viaMixture, L*hOil + (1. - L)*hGas, 1e-9); // [%]
 
     // (b) the caloric cancellation is broken: departure H differs from the
@@ -516,7 +517,7 @@ BOOST_AUTO_TEST_CASE(DepartureCouplesToSplit)
 
     // (c) the liquid's residual is negative (attractive interactions)
     BOOST_CHECK_LT(EnthalpyF1::phaseResidualEnthalpy(
-        outcome.state, FluidSystemF1::oilPhaseIdx, EOSType::PR), 0.);
+        outcome.state, FluidSystemF1::oilPhaseIdx, /*eosRegionIdx=*/0), 0.);
 }
 
 // The caloric seam is untouched: the model-switch overload with
@@ -531,7 +532,7 @@ BOOST_AUTO_TEST_CASE(CaloricSeamUnchanged)
     const double viaCaloric = Opm::getValue(
         EnthalpyF1::mixtureEnthalpy(outcome.state, cpTable));
     const double viaSwitch = Opm::getValue(EnthalpyF1::mixtureEnthalpy(
-        outcome.state, cpTable, EOSType::PR, Opm::EnthalpyModel::caloric));
+        outcome.state, cpTable, /*eosRegionIdx=*/0, Opm::EnthalpyModel::caloric));
     BOOST_CHECK_CLOSE(viaCaloric, viaSwitch, 1e-12); // [%]
 }
 
@@ -546,14 +547,14 @@ BOOST_AUTO_TEST_CASE(DepartureDatumIsIdealGasAtT0)
     const double L = outcome.summary.L;
 
     const double H0 = EnthalpyF1::mixtureEnthalpy(
-        outcome.state, cpTable, EOSType::PR, Opm::EnthalpyModel::eos_departure);
+        outcome.state, cpTable, /*eosRegionIdx=*/0, Opm::EnthalpyModel::eos_departure);
     double residual = 0.;
     if (L > 0.)
         residual += L * EnthalpyF1::phaseResidualEnthalpy(
-            outcome.state, FluidSystemF1::oilPhaseIdx, EOSType::PR);
+            outcome.state, FluidSystemF1::oilPhaseIdx, /*eosRegionIdx=*/0);
     if (L < 1.)
         residual += (1. - L) * EnthalpyF1::phaseResidualEnthalpy(
-            outcome.state, FluidSystemF1::gasPhaseIdx, EOSType::PR);
+            outcome.state, FluidSystemF1::gasPhaseIdx, /*eosRegionIdx=*/0);
 
     BOOST_CHECK_CLOSE(H0, residual, 1e-9); // [%]
     BOOST_CHECK_GT(std::abs(H0), 100.);    // [J/mol]: the residual is not part of the datum
@@ -574,13 +575,13 @@ BOOST_AUTO_TEST_CASE(ModelSwitchReturnsValueOnly)
     static_assert(!std::is_same_v<ValueType, Scalar>,
                   "the probe state must be AD-valued for this check to mean anything");
     static_assert(std::is_same_v<decltype(EnthalpyF1::mixtureEnthalpy(
-                                     outcome.state, cpTable, EOSType::PR,
+                                     outcome.state, cpTable, /*eosRegionIdx=*/0,
                                      Opm::EnthalpyModel::eos_departure)),
                                  Scalar>,
                   "the model-switch mixtureEnthalpy must return a plain Scalar");
     static_assert(std::is_same_v<decltype(EnthalpyF1::phaseEnthalpy(
                                      outcome.state, FluidSystemF1::oilPhaseIdx, cpTable,
-                                     EOSType::PR, Opm::EnthalpyModel::eos_departure)),
+                                     /*eosRegionIdx=*/0, Opm::EnthalpyModel::eos_departure)),
                                  Scalar>,
                   "the model-switch phaseEnthalpy must return a plain Scalar");
     static_assert(std::is_same_v<decltype(EnthalpyF1::mixtureEnthalpy(outcome.state, cpTable)),
@@ -588,7 +589,7 @@ BOOST_AUTO_TEST_CASE(ModelSwitchReturnsValueOnly)
                   "the caloric overload keeps the state's value type");
 
     // returning a plain Scalar does not change the value
-    BOOST_CHECK_CLOSE(EnthalpyF1::mixtureEnthalpy(outcome.state, cpTable, EOSType::PR,
+    BOOST_CHECK_CLOSE(EnthalpyF1::mixtureEnthalpy(outcome.state, cpTable, /*eosRegionIdx=*/0,
                                                   Opm::EnthalpyModel::caloric),
                       Opm::getValue(EnthalpyF1::mixtureEnthalpy(outcome.state, cpTable)),
                       1e-12); // [%]

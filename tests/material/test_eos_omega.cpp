@@ -87,13 +87,13 @@ Scalar equationOmegaA(const EOSType eos, const unsigned compIdx)
 {
     switch (eos) {
     case EOSType::PR:
-        return PR::calcOmegaA(temperature, compIdx, /*modified=*/false);
+        return PR::calcOmegaA(temperature, compIdx, /*eosRegionIdx=*/0, /*modified=*/false);
     case EOSType::PRCORR:
-        return PR::calcOmegaA(temperature, compIdx, /*modified=*/true);
+        return PR::calcOmegaA(temperature, compIdx, /*eosRegionIdx=*/0, /*modified=*/true);
     case EOSType::SRK:
-        return SRK::calcOmegaA(temperature, compIdx);
+        return SRK::calcOmegaA(temperature, compIdx, /*eosRegionIdx=*/0);
     case EOSType::RK:
-        return RK::calcOmegaA(temperature, compIdx);
+        return RK::calcOmegaA(temperature, compIdx, /*eosRegionIdx=*/0);
     default:
         throw std::logic_error("Unexpected equation of state");
     }
@@ -198,12 +198,12 @@ BOOST_AUTO_TEST_CASE(DeckOmegasReplaceTheEquationConstants)
         for (unsigned compIdx = 0; compIdx < 3; ++compIdx) {
             BOOST_TEST_CONTEXT(eosKeywords(eos) << "component " << compIdx)
             {
-                BOOST_CHECK_EQUAL(FluidSystem::omegaA(compIdx).value(), omegaA[compIdx]);
-                BOOST_CHECK_EQUAL(FluidSystem::omegaB(compIdx).value(), omegaB[compIdx]);
+                BOOST_CHECK_EQUAL(FluidSystem::omegaA(compIdx, /*eosRegionIdx=*/0).value(), omegaA[compIdx]);
+                BOOST_CHECK_EQUAL(FluidSystem::omegaB(compIdx, /*eosRegionIdx=*/0).value(), omegaB[compIdx]);
 
                 // OMEGAA replaces only the constant, not the temperature scaling.
-                const Scalar pr = pressure / FluidSystem::criticalPressure(compIdx);
-                const Scalar Tr = temperature / FluidSystem::criticalTemperature(compIdx);
+                const Scalar pr = pressure / FluidSystem::criticalPressure(compIdx, /*eosRegionIdx=*/0);
+                const Scalar Tr = temperature / FluidSystem::criticalTemperature(compIdx, /*eosRegionIdx=*/0);
                 const Scalar alpha = equationOmegaA(eos, compIdx) / constantOmegaA(eos);
                 BOOST_CHECK_CLOSE(params.Ai(compIdx),
                                   omegaA[compIdx] * alpha * pr / (Tr * Tr), 1e-12);
@@ -223,8 +223,8 @@ BOOST_AUTO_TEST_CASE(DefaultOmegasKeepTheEquationConstants)
         for (unsigned compIdx = 0; compIdx < 3; ++compIdx) {
             BOOST_TEST_CONTEXT(eosKeywords(eos) << "component " << compIdx)
             {
-                const Scalar pr = pressure / FluidSystem::criticalPressure(compIdx);
-                const Scalar Tr = temperature / FluidSystem::criticalTemperature(compIdx);
+                const Scalar pr = pressure / FluidSystem::criticalPressure(compIdx, /*eosRegionIdx=*/0);
+                const Scalar Tr = temperature / FluidSystem::criticalTemperature(compIdx, /*eosRegionIdx=*/0);
                 BOOST_CHECK_EQUAL(params.Ai(compIdx),
                                   equationOmegaA(eos, compIdx) * pr / (Tr * Tr));
                 BOOST_CHECK_EQUAL(params.Bi(compIdx), equationOmegaB(eos) * pr / Tr);

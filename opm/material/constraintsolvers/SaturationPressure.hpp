@@ -29,8 +29,6 @@
 #ifndef OPM_SATURATION_PRESSURE_HPP
 #define OPM_SATURATION_PRESSURE_HPP
 
-#include <opm/input/eclipse/EclipseState/Compositional/CompositionalConfig.hpp>
-
 #include <opm/material/fluidstates/CompositionalFluidState.hpp>
 
 #include <dune/common/fmatrix.hh>
@@ -130,7 +128,6 @@ class SaturationPressure
     static constexpr int oilPhaseIdx = FluidSystem::oilPhaseIdx;
     static constexpr int gasPhaseIdx = FluidSystem::gasPhaseIdx;
 
-    using EOSType = CompositionalConfig::EOSType;
     using ParameterCache = typename FluidSystem::template ParameterCache<Scalar>;
 
 public:
@@ -142,7 +139,7 @@ public:
     /// \return whether the calculation converged
     [[nodiscard]] static bool bubblePressure(const CompVec& liquid,
                                              const Scalar temp,
-                                             const EOSType eosType,
+                                             const unsigned eosRegionIdx,
                                              Scalar& press,
                                              CompVec& vapor)
     {
@@ -150,7 +147,7 @@ public:
         // of its own and publish only once it has converged.
         Scalar p{};
         CompVec incipient{};
-        if (solve_(normalized_(liquid), temp, eosType, Mode::Bubble, p, incipient)
+        if (solve_(normalized_(liquid), temp, eosRegionIdx, Mode::Bubble, p, incipient)
             != Outcome::Converged) {
             return false;
         }
@@ -170,7 +167,7 @@ public:
     /// \return whether the calculation converged
     [[nodiscard]] static bool dewPressure(const CompVec& vapor,
                                           const Scalar temp,
-                                          const EOSType eosType,
+                                          const unsigned eosRegionIdx,
                                           Scalar& press,
                                           CompVec& liquid)
     {
@@ -178,7 +175,7 @@ public:
         // still fail, so stage both and publish only on success.
         Scalar p{};
         CompVec incipient{};
-        if (!dewPressure_(normalized_(vapor), temp, eosType, p, incipient)) {
+        if (!dewPressure_(normalized_(vapor), temp, eosRegionIdx, p, incipient)) {
             return false;
         }
 
@@ -192,28 +189,28 @@ private:
     /// Takes an already normalised \p z and may write to its outputs on failure.
     static bool dewPressure_(const CompVec& z,
                              const Scalar temp,
-                             const EOSType eosType,
+                             const unsigned eosRegionIdx,
                              Scalar& press,
                              CompVec& liquid)
     {
-        if (solve_(z, temp, eosType, Mode::DewUpper, press, liquid)
+        if (solve_(z, temp, eosRegionIdx, Mode::DewUpper, press, liquid)
             == Outcome::Converged) {
             return true;
         }
 
         Scalar pLower{};
         CompVec lowerLiquid{};
-        if (solve_(z, temp, eosType, Mode::DewLower, pLower, lowerLiquid)
+        if (solve_(z, temp, eosRegionIdx, Mode::DewLower, pLower, lowerLiquid)
             != Outcome::Converged) {
             // Both dew scans can miss a narrow envelope. Try locating its
             // bubble boundary, then trace down to the dew point.
             Scalar pBubble{};
             CompVec bubbleVapor{};
-            if (solve_(z, temp, eosType, Mode::Bubble, pBubble, bubbleVapor)
+            if (solve_(z, temp, eosRegionIdx, Mode::Bubble, pBubble, bubbleVapor)
                 != Outcome::Converged) {
                 return false;
             }
-            return traceEnvelope_(z, temp, eosType, pBubble, bubbleVapor,
+            return traceEnvelope_(z, temp, eosRegionIdx, pBubble, bubbleVapor,
                                   /*fromBubble=*/true, press, liquid);
         }
 
@@ -228,7 +225,7 @@ private:
         // envelope without needing to trace it from the lower dew point.
         Scalar pBubble{};
         CompVec bubbleVapor{};
-        if (solve_(z, temp, eosType, Mode::Bubble, pBubble, bubbleVapor)
+        if (solve_(z, temp, eosRegionIdx, Mode::Bubble, pBubble, bubbleVapor)
                 == Outcome::Converged && pBubble >= pLower) {
             press = pLower;
             liquid = lowerLiquid;
@@ -236,7 +233,7 @@ private:
         }
         // A lower root alone is a seed, not a fallback answer. Start just
         // inside and follow the envelope to its upper dew or bubble boundary.
-        return traceEnvelope_(z, temp, eosType, pLower, lowerLiquid,
+        return traceEnvelope_(z, temp, eosRegionIdx, pLower, lowerLiquid,
                               /*fromBubble=*/false, press, liquid);
     }
 
@@ -327,14 +324,14 @@ private:
      *
      * \param[in] fs Fluid state supplying the temperature and pressure.
      * \param[in] composition Composition at which both roots are evaluated.
-     * \param[in] eosType Cubic EOS type.
+     * \param[in] eosRegionIdx Reservoir EOS region of the equation of state.
      * \return whether both roots are physical and their molar volumes differ
      *         by more than \c rootVolumeTolerance_.
      */
     static bool rootsDistinctAtComposition_(
         const CompositionalFluidState<Scalar, FluidSystem>& fs,
         const CompVec& composition,
-        const EOSType eosType)
+        const unsigned eosRegionIdx)
     {
         auto rootState = fs;
         for (int c = 0; c < numComponents; ++c) {
@@ -342,7 +339,7 @@ private:
             rootState.setMoleFraction(gasPhaseIdx, c, composition[c]);
         }
 
-        ParameterCache rootCache(eosType);
+        ParameterCache rootCache(eosRegionIdx);
         rootCache.updatePhase(rootState, oilPhaseIdx);
         rootCache.updatePhase(rootState, gasPhaseIdx);
         const Scalar vmL = rootCache.molarVolume(oilPhaseIdx);
@@ -421,14 +418,15 @@ private:
      * values initialise phase-composition iterations and the pressure scan.
      *
      * \param[in] temp Absolute temperature \f$T\f$.
+     * \param[in] eosRegionIdx Reservoir EOS region of the component properties.
      */
-    static CompVec wilsonKp_(const Scalar temp)
+    static CompVec wilsonKp_(const Scalar temp, const unsigned eosRegionIdx)
     {
         CompVec Kp;
         for (int c = 0; c < numComponents; ++c) {
-            Kp[c] = FluidSystem::criticalPressure(c) *
-                    std::exp(5.373 * (1.0 + FluidSystem::acentricFactor(c)) *
-                             (1.0 - FluidSystem::criticalTemperature(c) / temp));
+            Kp[c] = FluidSystem::criticalPressure(c, eosRegionIdx) *
+                    std::exp(5.373 * (1.0 + FluidSystem::acentricFactor(c, eosRegionIdx)) *
+                             (1.0 - FluidSystem::criticalTemperature(c, eosRegionIdx) / temp));
         }
         return Kp;
     }
@@ -455,18 +453,18 @@ private:
      * \param[in] knownPhaseIdx EOS phase/root used by the known phase and trial.
      * \param[in] wilsonK Wilson equilibrium-ratio estimate at the trial pressure.
      * \param[in] knownIsLiquid Selects the heavy or light Wilson trial direction.
-     * \param[in] eosType Cubic EOS type.
+     * \param[in] eosRegionIdx Reservoir EOS region of the equation of state.
      */
     static Stability knownPhaseStability_(const CompositionalFluidState<Scalar, FluidSystem>& fs,
                                           const CompVec& z,
                                           const unsigned knownPhaseIdx,
                                           const CompVec& wilsonK,
                                           const bool knownIsLiquid,
-                                          const EOSType eosType)
+                                          const unsigned eosRegionIdx)
     {
         // The known phase keeps its own state; the trial takes its root type
         // through the same phase index in a second state.
-        ParameterCache knownCache(eosType);
+        ParameterCache knownCache(eosRegionIdx);
         knownCache.updatePhase(fs, knownPhaseIdx);
         CompVec lnPhiZ;
         for (int c = 0; c < numComponents; ++c) {
@@ -485,7 +483,7 @@ private:
         }
 
         auto trial = fs;
-        ParameterCache trialCache(eosType);
+        ParameterCache trialCache(eosRegionIdx);
         // Dominant-eigenvalue extrapolation, as in the saturation search.
         CompVec dPrev{};
         Scalar sumPrev = std::numeric_limits<Scalar>::quiet_NaN();
@@ -540,7 +538,7 @@ private:
                     CompVec candidate = Y;
                     Scalar total{};
                     if (stationaryTrial_(fs, z, knownPhaseIdx, knownPhaseIdx,
-                                         eosType, candidate, total)) {
+                                         eosRegionIdx, candidate, total)) {
                         return verdict(total);
                     }
                 }
@@ -555,7 +553,7 @@ private:
             dPrev = d;
         }
         Scalar total{};
-        if (stationaryTrial_(fs, z, knownPhaseIdx, knownPhaseIdx, eosType, Y, total)) {
+        if (stationaryTrial_(fs, z, knownPhaseIdx, knownPhaseIdx, eosRegionIdx, Y, total)) {
             return total > 1.0 + stabilityTolerance_
                 ? Stability::Unstable : Stability::Stable;
         }
@@ -584,7 +582,7 @@ private:
      * \param[in] z Composition and reference fugacity of the known phase.
      * \param[in] knownPhase EOS root used to evaluate \f$\phi_i(T,p,z)\f$.
      * \param[in] trialPhase EOS root used to evaluate \f$\phi_i(T,p,w)\f$.
-     * \param[in] eosType Cubic EOS type.
+     * \param[in] eosRegionIdx Reservoir EOS region of the equation of state.
      * \param[in,out] Y Initial and converged unnormalised trial amounts.
      * \param[out] sum Converged value of \f$S_Y=\sum_iY_i\f$.
      * \return true only when the stationary residual converges.
@@ -593,13 +591,13 @@ private:
                                  const CompVec& z,
                                  const unsigned knownPhase,
                                  const unsigned trialPhase,
-                                 const EOSType eosType,
+                                 const unsigned eosRegionIdx,
                                  CompVec& Y,
                                  Scalar& sum)
     {
         using Vector = Dune::FieldVector<Scalar, numComponents>;
         using Matrix = Dune::FieldMatrix<Scalar, numComponents, numComponents>;
-        ParameterCache cache(eosType);
+        ParameterCache cache(eosRegionIdx);
         cache.updatePhase(fs, knownPhase);
         CompVec target{};
         Vector u(0.0);
@@ -763,7 +761,7 @@ private:
      *
      * \param[in] z Composition whose saturation pressure is sought.
      * \param[in] temp Absolute temperature.
-     * \param[in] eosType Cubic EOS type.
+     * \param[in] eosRegionIdx Reservoir EOS region of the equation of state.
      * \param[in] pSeed Pressure of the known boundary.
      * \param[in] seedTrial Equilibrium composition at the known boundary.
      * \param[in] fromBubble Whether the seed is a bubble rather than dew point.
@@ -773,7 +771,7 @@ private:
      */
     static bool traceEnvelope_(const CompVec& z,
                                const Scalar temp,
-                               const EOSType eosType,
+                               const unsigned eosRegionIdx,
                                const Scalar pSeed,
                                const CompVec& seedTrial,
                                const bool fromBubble,
@@ -787,8 +785,8 @@ private:
             fs.setMoleFraction(gasPhaseIdx, c, z[c]);
             fs.setMoleFraction(oilPhaseIdx, c, z[c]);
         }
-        const auto Kp = wilsonKp_(temp);
-        const auto evaluate = [&fs, &z, eosType, &Kp](const Scalar lnp,
+        const auto Kp = wilsonKp_(temp, eosRegionIdx);
+        const auto evaluate = [&fs, &z, eosRegionIdx, &Kp](const Scalar lnp,
                                                       CompVec& Y, Scalar& f) {
             const Scalar p = std::exp(lnp);
             if (!positiveFinite_(p)) {
@@ -796,7 +794,7 @@ private:
             }
             fs.setPressure(oilPhaseIdx, p);
             fs.setPressure(gasPhaseIdx, p);
-            ParameterCache cache(eosType);
+            ParameterCache cache(eosRegionIdx);
             cache.updatePhase(fs, oilPhaseIdx);
             cache.updatePhase(fs, gasPhaseIdx);
             Scalar gibbsDifference = 0.0;
@@ -826,7 +824,7 @@ private:
                     }
                     Scalar sum{};
                     if (!stationaryTrial_(fs, z, knownPhase, trialPhase,
-                                          eosType, candidate, sum)) {
+                                          eosRegionIdx, candidate, sum)) {
                         continue;
                     }
                     converged = true;
@@ -850,7 +848,7 @@ private:
             return true;
         };
 
-        const auto certifyBoundary = [&fs, &z, eosType, &Kp, fromBubble, pSeed,
+        const auto certifyBoundary = [&fs, &z, eosRegionIdx, &Kp, fromBubble, pSeed,
                                       &seedTrial, &press, &liquid](
                                          const Scalar lnp, CompVec Y, const Scalar f) {
             const Scalar p = std::exp(lnp);
@@ -876,7 +874,7 @@ private:
                 fs.setMoleFraction(knownPhase, c, z[c]);
                 fs.setMoleFraction(trialPhase, c, Y[c]);
             }
-            ParameterCache cache(eosType);
+            ParameterCache cache(eosRegionIdx);
             cache.updatePhase(fs, oilPhaseIdx);
             cache.updatePhase(fs, gasPhaseIdx);
             const Scalar vmL = cache.molarVolume(oilPhaseIdx);
@@ -897,7 +895,7 @@ private:
                     }
                 }
             }
-            if (knownPhaseStability_(fs, z, knownPhase, K, bubble, eosType)
+            if (knownPhaseStability_(fs, z, knownPhase, K, bubble, eosRegionIdx)
                 != Stability::Stable) {
                 return false;
             }
@@ -1124,7 +1122,7 @@ private:
      * \param[in] z Known liquid composition for bubble mode, or known vapour
      *              composition for either dew mode.
      * \param[in] temp Absolute temperature.
-     * \param[in] eosType Cubic EOS type.
+     * \param[in] eosRegionIdx Reservoir EOS region of the equation of state.
      * \param[in] mode Branch and scan direction.
      * \param[out] press Saturation pressure; unchanged unless converged.
      * \param[out] incipient Equilibrium composition of the incipient phase.
@@ -1133,7 +1131,7 @@ private:
      */
     static Outcome solve_(const CompVec& z,
                           const Scalar temp,
-                          const EOSType eosType,
+                          const unsigned eosRegionIdx,
                           const Mode mode,
                           Scalar& press,
                           CompVec& incipient)
@@ -1141,7 +1139,7 @@ private:
         if (!positiveFinite_(temp)) {
             return Outcome::GaveUp;
         }
-        const CompVec wilsonKp = wilsonKp_(temp);
+        const CompVec wilsonKp = wilsonKp_(temp, eosRegionIdx);
         const bool bubble = (mode == Mode::Bubble);
         // The bubble point and the retrograde dew point are approached from
         // the high-pressure side, the lower dew point from the low-pressure side.
@@ -1231,7 +1229,7 @@ private:
             fs.setPressure(oilPhaseIdx, p);
             fs.setPressure(gasPhaseIdx, p);
 
-            ParameterCache paramCache(eosType);
+            ParameterCache paramCache(eosRegionIdx);
             CompVec phiKnown;
 
             // Fugacity equality at fixed pressure: K_c = phi_liquid / phi_vapour.
@@ -1311,7 +1309,7 @@ private:
                 }
                 Scalar candidateSum{};
                 if (stationaryTrial_(fs, z, knownPhaseIdx, incipientPhaseIdx,
-                                     eosType, candidate, candidateSum)) {
+                                     eosRegionIdx, candidate, candidateSum)) {
                     for (int c = 0; c < numComponents; ++c) {
                         fs.setMoleFraction(incipientPhaseIdx, c,
                                            candidate[c] / candidateSum);
@@ -1334,7 +1332,7 @@ private:
             }
 
             const bool rootsDistinct = substitutionConverged
-                && rootsDistinctAtComposition_(fs, z, eosType);
+                && rootsDistinctAtComposition_(fs, z, eosRegionIdx);
 
             const auto markOutside = [&pOut, &haveOut, &haveFOut, &fOut, &p = std::as_const(p)](
                                          const bool withValue, const Scalar value) {
@@ -1401,7 +1399,7 @@ private:
                     && directionMatches) {
                     const auto stability =
                         knownPhaseStability_(fs, z, knownPhaseIdx,
-                                             candidateWilsonK, bubble, eosType);
+                                             candidateWilsonK, bubble, eosRegionIdx);
                     if (stability == Stability::Indeterminate) {
                         return Outcome::GaveUp;
                     }

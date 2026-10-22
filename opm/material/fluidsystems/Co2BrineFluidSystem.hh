@@ -35,6 +35,8 @@
 #include <opm/material/fluidsystems/PTFlashParameterCache.hpp>
 #include <opm/material/viscositymodels/ViscosityModels.hpp>
 
+#include <opm/input/eclipse/EclipseState/Compositional/CompositionalConfig.hpp>
+
 #include <string_view>
 
 namespace Opm {
@@ -69,14 +71,22 @@ namespace Opm {
         using ViscosityModel = typename Opm::ViscosityModels<Scalar, Co2BrineFluidSystem<Scalar>>;
 
         using CubicEOS = typename Opm::CubicEOS<Scalar, Co2BrineFluidSystem<Scalar>>;
+        using EOSType = CompositionalConfig::EOSType;
 
+        //! The equation of state, Peng-Robinson unless set.
+        static EOSType eosType(unsigned /*eosRegionIdx*/ = 0)
+        { return eos_type_; }
+
+        //! Set the equation of state.
+        static void setEosType(const EOSType type)
+        { eos_type_ = type; }
 
         /*!
          * \brief The acentric factor of a component [].
          *
          * \copydetails Doxygen::compIdxParam
          */
-        static Scalar acentricFactor(unsigned compIdx)
+        static Scalar acentricFactor(unsigned compIdx, unsigned /*eosRegionIdx*/ = 0)
         {
             switch (compIdx) {
             case Comp0Idx: return Comp0::acentricFactor();
@@ -89,7 +99,7 @@ namespace Opm {
          *
          * \copydetails Doxygen::compIdxParam
          */
-        static Scalar criticalTemperature(unsigned compIdx)
+        static Scalar criticalTemperature(unsigned compIdx, unsigned /*eosRegionIdx*/ = 0)
         {
             switch (compIdx) {
                 case Comp0Idx: return Comp0::criticalTemperature();
@@ -102,7 +112,7 @@ namespace Opm {
          *
          * \copydetails Doxygen::compIdxParam
          */
-        static Scalar criticalPressure(unsigned compIdx) {
+        static Scalar criticalPressure(unsigned compIdx, unsigned /*eosRegionIdx*/ = 0) {
             switch (compIdx) {
                 case Comp0Idx: return Comp0::criticalPressure();
                 case Comp1Idx: return Comp1::criticalPressure();
@@ -114,7 +124,7 @@ namespace Opm {
         *
         * \copydetails Doxygen::compIdxParam
         */
-        static Scalar criticalVolume(unsigned compIdx)
+        static Scalar criticalVolume(unsigned compIdx, unsigned /*eosRegionIdx*/ = 0)
         {
             switch (compIdx) {
                 case Comp0Idx: return Comp0::criticalVolume();
@@ -137,7 +147,8 @@ namespace Opm {
          * \brief Returns the interaction coefficient for two components.
          *.
          */
-        static Scalar interactionCoefficient(unsigned /*comp1Idx*/, unsigned /*comp2Idx*/)
+        static Scalar interactionCoefficient(unsigned /*comp1Idx*/, unsigned /*comp2Idx*/,
+                                             unsigned /*eosRegionIdx*/ = 0)
         {
             return 0.0;
         }
@@ -191,7 +202,7 @@ namespace Opm {
         {
             // Use LBC method to calculate viscosity
             LhsEval mu;
-            mu = ViscosityModel::LBC(fluidState, paramCache, phaseIdx);
+            mu = ViscosityModel::LBC(fluidState, phaseIdx, paramCache.eosRegionIndex());
 
 
             return mu;
@@ -213,6 +224,8 @@ namespace Opm {
             return phi;
         }
 
+    private:
+        static inline EOSType eos_type_ = EOSType::PR;
     };
 }
 #endif //OPM_CO2BRINEFLUIDSYSTEM_HH
