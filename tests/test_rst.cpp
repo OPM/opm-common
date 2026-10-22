@@ -70,6 +70,7 @@
 #include <algorithm>
 #include <chrono>
 #include <cstddef>
+#include <functional>
 #include <memory>
 #include <string>
 #include <utility>
@@ -397,13 +398,165 @@ END
 
     }
 
+    // Takes optional RUNSPEC keywords, such as UDQPARAM.
+    Opm::Deck producer_without_control(const std::string& runspec = "")
+    {
+        return Opm::Parser{}.parseString(R"~(RUNSPEC
+OIL
+GAS
+WATER
+DISGAS
+VAPOIL
+UNIFOUT
+UNIFIN
+)~" + runspec + R"~(DIMENS
+ 10 10 10 /
+
+START             -- 0
+1 OKT 2008 /
+
+GRID
+DXV
+10*0.25 /
+DYV
+10*0.25 /
+DZV
+10*0.25 /
+BOX
+ 1 10 1 10 1 1 /
+TOPS
+100*2000.0 /
+ENDBOX
+
+PORO
+1000*0.2 /
+PERMX
+1000*1 /
+PERMY
+1000*0.1 /
+PERMZ
+1000*0.01 /
+
+SOLUTION
+
+SCHEDULE
+RPTRST
+BASIC=2
+/
+DATES             -- 1
+ 10  OKT 2008 /
+/
+WELSPECS
+      'OP_1'  'OP'   9   9 1* 'OIL' 1*      1*  1*   1*  1*   1*  1*  /
+      'OP_2'  'OP'   9   9 1* 'OIL' 1*      1*  1*   1*  1*   1*  1*  /
+      'OP_3'  'OP'   9   9 1* 'OIL' 1*      1*  1*   1*  1*   1*  1*  /
+/
+COMPDAT
+      'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+      'OP_2'  9  9   2   2 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+      'OP_3'  9  9   3   3 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+/
+WCONPROD
+      'OP_2' 'SHUT' /
+/
+WELOPEN
+      'OP_3' 'STOP' /
+/
+TSTEP            -- 2
+10 /
+END
+)~");
+    }
+
+    Opm::Deck shut_group_controlled_wells()
+    {
+        return Opm::Parser{}.parseString(R"~(RUNSPEC
+OIL
+GAS
+WATER
+DISGAS
+VAPOIL
+UNIFOUT
+UNIFIN
+DIMENS
+ 10 10 10 /
+
+START             -- 0
+1 OKT 2008 /
+
+GRID
+DXV
+10*0.25 /
+DYV
+10*0.25 /
+DZV
+10*0.25 /
+BOX
+ 1 10 1 10 1 1 /
+TOPS
+100*2000.0 /
+ENDBOX
+
+PORO
+1000*0.2 /
+PERMX
+1000*1 /
+PERMY
+1000*0.1 /
+PERMZ
+1000*0.01 /
+
+SOLUTION
+
+SCHEDULE
+RPTRST
+BASIC=2
+/
+DATES             -- 1
+ 10  OKT 2008 /
+/
+GRUPTREE
+ 'G1' 'FIELD' /
+/
+WELSPECS
+      'OP_1'  'G1'   9   9 1* 'OIL'   1*      1*  1*   1*  1*   1*  1*  /
+      'WI_1'  'G1'   1   1 1* 'WATER' 1*      1*  1*   1*  1*   1*  1*  /
+/
+COMPDAT
+      'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+      'WI_1'  1  1   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+/
+GCONPROD
+      'G1' 'ORAT' 1000.0 /
+/
+GCONINJE
+      'G1' 'WATER' 'RATE' 1000.0 /
+/
+WCONPROD
+      'OP_1' 'SHUT' 'GRUP' 1000.0 4* 100.0 /
+/
+WCONINJE
+      'WI_1' 'WATER' 'SHUT' 'GRUP' 1000.0 1* 400.0 /
+/
+TSTEP            -- 2
+10 /
+END
+)~");
+    }
+
+    // Changes IWEL before it is written, given the number of items per well.
+    using EditIWel = std::function<void(std::vector<int>& iwel, std::size_t niwelz)>;
+
     void writeRstFile(const SimulationCase& simCase,
                       const std::string&    baseName,
-                      const std::size_t     rptStep)
+                      const std::size_t     rptStep,
+                      const EditIWel&       editIWel = {})
     {
         const auto sim_step = rptStep - 1;
 
-        const auto sumState     = Opm::SummaryState { Opm::TimeService::now(), 0.0 };
+        const auto sumState     = Opm::SummaryState {
+            Opm::TimeService::now(), simCase.es.runspec().udqParams().undefinedValue()
+        };
         const auto action_state = Opm::Action::State{};
         const auto wtest_state  = Opm::WellTestState{};
 
@@ -450,7 +603,12 @@ END
         rstFile.write("XGRP", groupData.getXGroup());
         rstFile.write("ZGRP", groupData.getZGroup());
 
-        rstFile.write("IWEL", wellData.getIWell());
+        auto iwel = wellData.getIWell();
+        if (editIWel) {
+            editIWel(iwel, ih[Opm::RestartIO::Helpers::VectorItems::intehead::NIWELZ]);
+        }
+
+        rstFile.write("IWEL", iwel);
         rstFile.write("SWEL", wellData.getSWell());
         rstFile.write("XWEL", wellData.getXWell());
         rstFile.write("ZWEL", wellData.getZWell());
@@ -477,7 +635,8 @@ END
     makeRestartState(const SimulationCase& simCase,
                      const std::string&    baseName,
                      const std::size_t     rptStep,
-                     const std::string&    workArea)
+                     const std::string&    workArea,
+                     const EditIWel&       editIWel = {})
     {
         // Recall: Constructor changes working directory of current process,
         // destructor restores original working directory.  The non-trivial
@@ -485,7 +644,7 @@ END
         // "unused" in release builds.
         WorkArea work_area{workArea};
 
-        writeRstFile(simCase, baseName, rptStep);
+        writeRstFile(simCase, baseName, rptStep, editIWel);
         return loadRestart(simCase, baseName, rptStep);
     }
 } // Anonymous namespace
@@ -1217,4 +1376,178 @@ BOOST_AUTO_TEST_CASE(Historic_Period_WHistCtl)
                             "Well loaded from restart file must be controlled by "
                             "observed reservoir voidage rate (RESV) after WCONHIST");
     }
+}
+
+BOOST_AUTO_TEST_CASE(Producer_Without_Control_Mode)
+{
+    namespace VI = Opm::RestartIO::Helpers::VectorItems;
+
+    const auto simCase = SimulationCase{ producer_without_control() };
+
+    const auto rptStep  = std::size_t{2};
+    const auto baseName = std::string { "NO_CONTROL_RST" };
+
+    // The test has no well results.  Write OP_3, the third well, as a
+    // stopped well whose connections flow.
+    const auto state =
+        makeRestartState(simCase, baseName, rptStep, "no_control_rst",
+                         [](std::vector<int>& iwel, const std::size_t niwelz)
+                         {
+                             iwel[2*niwelz + VI::IWell::index::item9] = 0;
+                             iwel[2*niwelz + VI::IWell::index::Status] =
+                                 VI::IWell::Value::Status::Stop;
+                         });
+
+    // No well has a well type in the restart file.
+    {
+        const auto sim_step = rptStep - 1;
+        const auto ih = Opm::RestartIO::Helpers::
+            createInteHead(simCase.es, simCase.grid, simCase.sched,
+                           0, sim_step, sim_step, sim_step);
+
+        auto wellData = Opm::RestartIO::Helpers::AggregateWellData(ih);
+        wellData.captureDeclaredWellData(simCase.sched, simCase.es.tracer(),
+                                         sim_step, Opm::Action::State{},
+                                         Opm::WellTestState{},
+                                         Opm::SummaryState { Opm::TimeService::now(), 0.0 },
+                                         ih);
+
+        const auto& iwell = wellData.getIWell();
+        const auto niwelz = ih[VI::intehead::NIWELZ];
+        for (const auto wellID : { 0, 1, 2 }) {
+            BOOST_CHECK_EQUAL(iwell[wellID*niwelz + VI::IWell::index::WType],
+                              VI::IWell::Value::WellType::NoType);
+        }
+    }
+
+    // OP_1: WELSPECS/COMPDAT only.  OP_2: shut by WCONPROD without control
+    // mode.  OP_3: stopped by WELOPEN without control mode.
+    using Status = Opm::Well::Status;
+    for (const auto& [wname, status] : { std::pair { "OP_1", Status::SHUT },
+                                         std::pair { "OP_2", Status::SHUT },
+                                         std::pair { "OP_3", Status::STOP } })
+    {
+        const auto& rst_well = state.get_well(wname);
+
+        BOOST_CHECK_EQUAL(rst_well.active_control,
+                          Opm::RestartIO::Helpers::VectorItems::IWell::
+                          Value::WellCtrlMode::NoCtrl);
+
+        const auto well = Opm::Well {
+            rst_well,
+            static_cast<int>(rptStep),
+            state.header.histctl_override,
+            Opm::TracerConfig{},
+            Opm::UnitSystem::newMETRIC(),
+            std::nullopt
+        };
+
+        BOOST_CHECK_MESSAGE(well.isProducer(),
+                            "Well '" << wname << "' must be a producer after restart");
+
+        BOOST_CHECK_MESSAGE(well.getPreferredPhase() == Opm::Phase::OIL,
+                            "Well '" << wname << "' must keep its preferred phase");
+
+        BOOST_CHECK_MESSAGE(well.getStatus() == status,
+                            "Well '" << wname << "' must keep its status after restart");
+
+        const auto& prop = well.getProductionProperties();
+
+        BOOST_CHECK_MESSAGE(prop.controlMode == Opm::WellProducerCMode::CMODE_UNDEFINED,
+                            "Well '" << wname << "' must not have an "
+                            "active control mode after restart");
+
+        BOOST_CHECK_MESSAGE(! prop.hasProductionControl(Opm::WellProducerCMode::CMODE_UNDEFINED),
+                            "Well '" << wname << "' must not register the "
+                            "undefined control mode as an available control");
+
+        // Each well keeps its BHP limit: none for OP_1 and OP_3, and the
+        // WCONPROD default for OP_2.  The restart file stores it in single
+        // precision, hence the tolerance (in percent).
+        const auto& original = simCase.sched.getWell(wname, rptStep - 1);
+        BOOST_CHECK_EQUAL(prop.BHPTarget.is<double>(),
+                          original.getProductionProperties().BHPTarget.is<double>());
+
+        const auto st = Opm::SummaryState { Opm::TimeService::now(), 0.0 };
+        BOOST_CHECK_CLOSE(well.productionControls(st).bhp_limit,
+                          original.productionControls(st).bhp_limit, 1.0e-5);
+    }
+}
+
+// A non-zero value for undefined UDQs must not give a well which has no BHP
+// limit one on restart.
+BOOST_AUTO_TEST_CASE(Producer_Without_Control_Mode_UDQ_Undefined)
+{
+    const auto simCase = SimulationCase {
+        producer_without_control("UDQPARAM\n 1* 1* 99999.0 /\n")
+    };
+
+    const auto rptStep = std::size_t{2};
+    const auto state =
+        makeRestartState(simCase, "NO_CONTROL_UDQ_RST", rptStep, "no_control_udq_rst");
+
+    const auto st = Opm::SummaryState { Opm::TimeService::now(), 99999.0 };
+    for (const auto* wname : { "OP_1", "OP_2" }) {
+        const auto well = Opm::Well {
+            state.get_well(wname),
+            static_cast<int>(rptStep),
+            state.header.histctl_override,
+            Opm::TracerConfig{},
+            Opm::UnitSystem::newMETRIC(),
+            std::nullopt
+        };
+
+        const auto& original = simCase.sched.getWell(wname, rptStep - 1);
+        BOOST_CHECK_EQUAL(well.getProductionProperties().BHPTarget.is<double>(),
+                          original.getProductionProperties().BHPTarget.is<double>());
+        BOOST_CHECK_CLOSE(well.productionControls(st).bhp_limit,
+                          original.productionControls(st).bhp_limit, 1.0e-5);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(Shut_Well_Waiting_For_Group_Control)
+{
+    namespace VI = Opm::RestartIO::Helpers::VectorItems;
+
+    const auto simCase = SimulationCase{ shut_group_controlled_wells() };
+
+    const auto rptStep  = std::size_t{2};
+    const auto baseName = std::string { "GROUP_WAIT_RST" };
+
+    // A restart file may hold control 0 for a shut well which is waiting
+    // for group control.
+    const auto state =
+        makeRestartState(simCase, baseName, rptStep, "group_wait_rst",
+                         [](std::vector<int>& iwel, const std::size_t niwelz)
+                         {
+                             for (auto i = std::size_t{0}; i < iwel.size(); i += niwelz) {
+                                 iwel[i + VI::IWell::index::ActWCtrl] =
+                                     VI::IWell::Value::WellCtrlMode::NoCtrl;
+                             }
+                         });
+
+    const auto restartWell = [&state, rptStep](const std::string& wname)
+    {
+        return Opm::Well {
+            state.get_well(wname),
+            static_cast<int>(rptStep),
+            state.header.histctl_override,
+            Opm::TracerConfig{},
+            Opm::UnitSystem::newMETRIC(),
+            std::nullopt
+        };
+    };
+
+    for (const auto* wname : { "OP_1", "WI_1" }) {
+        BOOST_CHECK_EQUAL(state.get_well(wname).active_control,
+                          VI::IWell::Value::WellCtrlMode::Group);
+    }
+
+    const auto op_1 = restartWell("OP_1");
+    BOOST_CHECK(op_1.isProducer());
+    BOOST_CHECK(op_1.production_cmode() == Opm::WellProducerCMode::GRUP);
+
+    const auto wi_1 = restartWell("WI_1");
+    BOOST_CHECK(wi_1.isInjector());
+    BOOST_CHECK(wi_1.injection_cmode() == Opm::WellInjectorCMode::GRUP);
 }

@@ -169,9 +169,18 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
 
         namespace Value {
 
+            enum WellType : int {
+                NoType   = 0,  // Well has not been given a control mode
+                Producer = 1,
+                OilInj   = 2,
+                WatInj   = 3,
+                GasInj   = 4,
+            };
+
             enum WellCtrlMode : int {
                 WMCtlUnk = -10,  // Unknown well control mode (OPM only)
                 Group    = - 1,  // Well under group control
+                NoCtrl   =   0,  // Well has not been given a control mode
                 OilRate  =   1,  // Well controlled by oil rate
                 WatRate  =   2,  // Well controlled by water rate
                 GasRate  =   3,  // Well controlled by gas rate
