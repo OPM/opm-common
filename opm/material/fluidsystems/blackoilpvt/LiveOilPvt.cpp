@@ -68,8 +68,8 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
             OPM_THROW(std::runtime_error, "Saturated PVTO must have at least two rows.");
         }
 
-        auto& oilMu = oilMuTable_[regionIdx];
-        auto& invOilB = inverseOilBTable_[regionIdx];
+        TabulatedTwoDFunctionBuilder oilMu{TabulatedTwoDFunction::InterpolationPolicy::LeftExtreme};
+        TabulatedTwoDFunctionBuilder invOilB{TabulatedTwoDFunction::InterpolationPolicy::LeftExtreme};
         std::vector<Scalar> invSatOilBArray;
         std::vector<Scalar> satOilMuArray;
 
@@ -142,11 +142,15 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
                           "entry for undersaturated oil!");
 
             // extend the current table using the master table.
-            extendPvtoTable_(regionIdx,
+            extendPvtoTable_(invOilB,
+                             oilMu,
                              xIdx,
                              pvtoTable.getUnderSaturatedTable(xIdx),
                              pvtoTable.getUnderSaturatedTable(masterTableIdx));
         }
+
+        oilMuTable_[regionIdx] = std::move(oilMu).build();
+        inverseOilBTable_[regionIdx] = std::move(invOilB).build();
     }
 
     vapPar2_ = 0.0;
@@ -160,7 +164,8 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
 
 template<class Scalar>
 void LiveOilPvt<Scalar>::
-extendPvtoTable_(unsigned regionIdx,
+extendPvtoTable_(TabulatedTwoDFunctionBuilder& invOilB,
+                 TabulatedTwoDFunctionBuilder& oilMu,
                  unsigned xIdx,
                  const SimpleTable& curTable,
                  const SimpleTable& masterTable)
@@ -168,9 +173,6 @@ extendPvtoTable_(unsigned regionIdx,
     std::vector<double> pressuresArray = curTable.getColumn("P").vectorCopy();
     std::vector<double> oilBArray = curTable.getColumn("BO").vectorCopy();
     std::vector<double> oilMuArray = curTable.getColumn("MU").vectorCopy();
-
-    auto& invOilB = inverseOilBTable_[regionIdx];
-    auto& oilMu = oilMuTable_[regionIdx];
 
     for (unsigned newRowIdx = 1; newRowIdx < masterTable.numRows(); ++newRowIdx) {
         const auto& pressureColumn = masterTable.getColumn("P");
@@ -243,7 +245,7 @@ setSaturatedOilFormationVolumeFactor(unsigned regionIdx,
                                      const SamplingPoints& samplePoints)
 {
     constexpr const Scalar T = 273.15 + 15.56; // [K]
-    auto& invOilB = inverseOilBTable_[regionIdx];
+    TabulatedTwoDFunctionBuilder invOilB{TabulatedTwoDFunction::InterpolationPolicy::LeftExtreme};
 
     updateSaturationPressure_(regionIdx);
 
@@ -262,6 +264,8 @@ setSaturatedOilFormationVolumeFactor(unsigned regionIdx,
         invOilB.appendSamplePoint(pIdx, p1, 1.0/Bo1);
         invOilB.appendSamplePoint(pIdx, p2, 1.0/Bo2);
     }
+
+    inverseOilBTable_[regionIdx] = std::move(invOilB).build();
 }
 
 template<class Scalar>
@@ -276,6 +280,7 @@ setSaturatedOilViscosity(unsigned regionIdx,
 
     // calculate a table of estimated viscosities depending on pressure and gas mass
     // fraction for untersaturated oil to make the other code happy
+    TabulatedTwoDFunctionBuilder oilMu{TabulatedTwoDFunction::InterpolationPolicy::LeftExtreme};
     for (std::size_t pIdx = 0; pIdx < samplePoints.size(); ++pIdx) {
         Scalar p1 = std::get<0>(samplePoints[pIdx]);
         Scalar p2 = p1 * 2.0;
@@ -286,10 +291,12 @@ setSaturatedOilViscosity(unsigned regionIdx,
 
         Scalar Rs = saturatedGasDissolutionFactor(regionIdx, T, p1);
 
-        oilMuTable_[regionIdx].appendXPos(Rs);
-        oilMuTable_[regionIdx].appendSamplePoint(pIdx, p1, mu1);
-        oilMuTable_[regionIdx].appendSamplePoint(pIdx, p2, mu2);
+        oilMu.appendXPos(Rs);
+        oilMu.appendSamplePoint(pIdx, p1, mu1);
+        oilMu.appendSamplePoint(pIdx, p2, mu2);
     }
+
+    oilMuTable_[regionIdx] = std::move(oilMu).build();
 }
 
 template<class Scalar>
@@ -309,20 +316,22 @@ void LiveOilPvt<Scalar>::initEnd()
         auto& invSatOilB = inverseSaturatedOilBTable_[regionIdx];
         auto& invSatOilBMu = inverseSaturatedOilBMuTable_[regionIdx];
 
+        TabulatedTwoDFunctionBuilder invOilBMuBuilder{invOilBMu.interpolationGuide()};
+
         std::vector<Scalar> satPressuresArray;
         std::vector<Scalar> invSatOilBArray;
         std::vector<Scalar> invSatOilBMuArray;
         for (unsigned rsIdx = 0; rsIdx < oilMu.numX(); ++rsIdx) {
-            invOilBMu.appendXPos(oilMu.xAt(rsIdx));
+            invOilBMuBuilder.appendXPos(oilMu.xAt(rsIdx));
 
             assert(oilMu.numY(rsIdx) == invOilB.numY(rsIdx));
 
             std::size_t numPressures = oilMu.numY(rsIdx);
             for (unsigned pIdx = 0; pIdx < numPressures; ++pIdx)
-                invOilBMu.appendSamplePoint(rsIdx,
-                                            oilMu.yAt(rsIdx, pIdx),
-                                            invOilB.valueAt(rsIdx, pIdx)
-                                            / oilMu.valueAt(rsIdx, pIdx));
+                invOilBMuBuilder.appendSamplePoint(rsIdx,
+                                                   oilMu.yAt(rsIdx, pIdx),
+                                                   invOilB.valueAt(rsIdx, pIdx)
+                                                   / oilMu.valueAt(rsIdx, pIdx));
 
             // the sampling points in UniformXTabulated2DFunction are always sorted
             // in ascending order. Thus, the value for saturated oil is the first one
@@ -332,6 +341,7 @@ void LiveOilPvt<Scalar>::initEnd()
             invSatOilBMuArray.push_back(invSatOilBArray.back()/satOilMu.valueAt(rsIdx));
         }
 
+        invOilBMu = std::move(invOilBMuBuilder).build();
         invSatOilB.setXYContainers(satPressuresArray, invSatOilBArray);
         invSatOilBMu.setXYContainers(satPressuresArray, invSatOilBMuArray);
 

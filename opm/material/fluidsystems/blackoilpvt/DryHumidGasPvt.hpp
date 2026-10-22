@@ -33,6 +33,7 @@
 #include <opm/material/Constants.hpp>
 #include <opm/material/common/MathToolbox.hpp>
 #include <opm/material/common/UniformXTabulated2DFunction.hpp>
+#include <opm/material/common/UniformXTabulated2DFunctionBuilder.hpp>
 #include <opm/material/common/Tabulated1DFunction.hpp>
 
 #include <cstddef>
@@ -54,6 +55,7 @@ class DryHumidGasPvt
 
 public:
     using TabulatedTwoDFunction = UniformXTabulated2DFunction<Scalar>;
+    using TabulatedTwoDFunctionBuilder = UniformXTabulated2DFunctionBuilder<Scalar>;
     using TabulatedOneDFunction = Tabulated1DFunction<Scalar>;
 
     /*!
@@ -64,7 +66,8 @@ public:
     void initFromState(const EclipseState& eclState, const Schedule&);
 
 private:
-    void extendPvtgwTable_(unsigned regionIdx,
+    void extendPvtgwTable_(TabulatedTwoDFunctionBuilder& invGasB,
+                          TabulatedTwoDFunctionBuilder& gasmu,
                           unsigned xIdx,
                           const SimpleTable& curTable,
                           const SimpleTable& masterTable);

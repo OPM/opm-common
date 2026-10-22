@@ -32,6 +32,7 @@
 
 #include <opm/material/common/MathToolbox.hpp>
 #include <opm/material/common/UniformXTabulated2DFunction.hpp>
+#include <opm/material/common/UniformXTabulated2DFunctionBuilder.hpp>
 #include <opm/material/common/Tabulated1DFunction.hpp>
 
 #include <cstddef>
@@ -53,6 +54,7 @@ class LiveOilPvt
 
 public:
     using TabulatedTwoDFunction = UniformXTabulated2DFunction<Scalar>;
+    using TabulatedTwoDFunctionBuilder = UniformXTabulated2DFunctionBuilder<Scalar>;
     using TabulatedOneDFunction = Tabulated1DFunction<Scalar>;
 
     /*!
@@ -61,7 +63,8 @@ public:
     void initFromState(const EclipseState& eclState, const Schedule& schedule);
 
 private:
-    void extendPvtoTable_(unsigned regionIdx,
+    void extendPvtoTable_(TabulatedTwoDFunctionBuilder& invOilB,
+                          TabulatedTwoDFunctionBuilder& oilMu,
                           unsigned xIdx,
                           const SimpleTable& curTable,
                           const SimpleTable& masterTable);
