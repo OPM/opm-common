@@ -41,7 +41,6 @@
 #include <opm/material/fluidsystems/GenericOilGasWaterFluidSystem.hpp>
 
 #include <opm/input/eclipse/Deck/Deck.hpp>
-#include <opm/input/eclipse/EclipseState/Compositional/CompositionalConfig.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/input/eclipse/Parser/Parser.hpp>
@@ -54,7 +53,6 @@ namespace {
 
 using Scalar = double;
 using FluidSystem = Opm::GenericOilGasWaterFluidSystem<Scalar, 3, true>;
-using EOSType = Opm::CompositionalConfig::EOSType;
 
 constexpr auto deck = R"(
 RUNSPEC
@@ -165,15 +163,15 @@ BOOST_AUTO_TEST_CASE(WaterPropertiesFollowTheSelectedPvtRegion)
     BOOST_REQUIRE(pvtw[0].viscosity != pvtw[1].viscosity);
     BOOST_REQUIRE(density[0].water != density[1].water);
 
-    for (unsigned regionIdx = 0; regionIdx < pvtw.size(); ++regionIdx) {
-        BOOST_TEST_CONTEXT("PVT region " << regionIdx + 1) {
-            typename FluidSystem::template ParameterCache<Scalar> paramCache(EOSType::PR);
-            paramCache.setRegionIndex(regionIdx);
+    for (unsigned pvtRegionIdx = 0; pvtRegionIdx < pvtw.size(); ++pvtRegionIdx) {
+        BOOST_TEST_CONTEXT("PVT region " << pvtRegionIdx + 1) {
+            typename FluidSystem::template ParameterCache<Scalar> paramCache(/*eosRegionIdx=*/0);
+            paramCache.setPvtRegionIndex(pvtRegionIdx);
             BOOST_CHECK_CLOSE(FluidSystem::density(fs, paramCache, FluidSystem::waterPhaseIdx),
-                              expectedDensity(pvtw[regionIdx], density[regionIdx].water),
+                              expectedDensity(pvtw[pvtRegionIdx], density[pvtRegionIdx].water),
                               1.0e-10);
             BOOST_CHECK_CLOSE(FluidSystem::viscosity(fs, paramCache, FluidSystem::waterPhaseIdx),
-                              pvtw[regionIdx].viscosity, 1.0e-10);
+                              pvtw[pvtRegionIdx].viscosity, 1.0e-10);
         }
     }
 }
@@ -184,8 +182,8 @@ BOOST_AUTO_TEST_CASE(FirstPvtRegionIsTheDefault)
     const auto& tables = testTables();
     BOOST_REQUIRE(!tables.getPvtwTable().empty());
     BOOST_REQUIRE(!tables.getDensityTable().empty());
-    const typename FluidSystem::template ParameterCache<Scalar> paramCache(EOSType::PR);
-    BOOST_CHECK_EQUAL(paramCache.regionIndex(), 0u);
+    const typename FluidSystem::template ParameterCache<Scalar> paramCache(/*eosRegionIdx=*/0);
+    BOOST_CHECK_EQUAL(paramCache.pvtRegionIndex(), 0u);
     BOOST_CHECK_CLOSE(FluidSystem::density(fs, paramCache, FluidSystem::waterPhaseIdx),
                       expectedDensity(tables.getPvtwTable()[0],
                                       tables.getDensityTable()[0].water),

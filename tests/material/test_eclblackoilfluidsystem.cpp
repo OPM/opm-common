@@ -737,8 +737,8 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(BlackOil, Evaluation, Types)
 
     // create a parameter cache
     using ParamCache = typename FluidSystem::template ParameterCache<Scalar>;
-    ParamCache paramCache(/*regionIdx=*/1);
-    BOOST_CHECK_EQUAL(paramCache.regionIndex(), 1);
+    ParamCache paramCache(/*pvtRegionIdx=*/1);
+    BOOST_CHECK_EQUAL(paramCache.pvtRegionIndex(), 1);
 
     BOOST_CHECK_SMALL(Opm::abs(FluidSystem::reservoirTemperature() - (273.15 + 15.555)), 1e-10);
     BOOST_CHECK(FluidSystem::enableDissolvedGas());
@@ -756,15 +756,15 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(BlackOil, Evaluation, Types)
     BOOST_CHECK_EQUAL(FluidSystem::soluteComponentIndex(oilPhaseIdx), gasCompIdx);
     BOOST_CHECK_EQUAL(FluidSystem::soluteComponentIndex(gasPhaseIdx), oilCompIdx);
 
-    BOOST_CHECK_SMALL(std::abs(FluidSystem::referenceDensity(oilPhaseIdx, /*regionIdx=*/1) - 860.04), 1e-10);
-    BOOST_CHECK_SMALL(std::abs(FluidSystem::referenceDensity(gasPhaseIdx, /*regionIdx=*/1) - 0.853), 1e-10);
-    BOOST_CHECK_SMALL(std::abs(FluidSystem::referenceDensity(waterPhaseIdx, /*regionIdx=*/1) - 1033), 1e-10);
+    BOOST_CHECK_SMALL(std::abs(FluidSystem::referenceDensity(oilPhaseIdx, /*pvtRegionIdx=*/1) - 860.04), 1e-10);
+    BOOST_CHECK_SMALL(std::abs(FluidSystem::referenceDensity(gasPhaseIdx, /*pvtRegionIdx=*/1) - 0.853), 1e-10);
+    BOOST_CHECK_SMALL(std::abs(FluidSystem::referenceDensity(waterPhaseIdx, /*pvtRegionIdx=*/1) - 1033), 1e-10);
 
     Opm::BlackOilFluidState<Evaluation, FluidSystem> fluidState{};
     Opm::Valgrind::SetUndefined(fluidState);
 
     static const Scalar eps = std::sqrt(std::numeric_limits<Scalar>::epsilon());
-    unsigned regionIdx = paramCache.regionIndex();
+    unsigned pvtRegionIdx = paramCache.pvtRegionIndex();
     for (unsigned i = 0; i < 1000; ++i) {
         const auto pval = Scalar(i)/1000*350e5 + 100e5;
         Evaluation p;
@@ -785,10 +785,10 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(BlackOil, Evaluation, Types)
                 fluidState.setSaturation(phaseIdx, s);
             }
 
-            Evaluation RsSat = FluidSystem::saturatedDissolutionFactor(fluidState, oilPhaseIdx, regionIdx);
+            Evaluation RsSat = FluidSystem::saturatedDissolutionFactor(fluidState, oilPhaseIdx, pvtRegionIdx);
             fluidState.setRs(RsSat);
 
-            Evaluation RvSat = FluidSystem::saturatedDissolutionFactor(fluidState, gasPhaseIdx, regionIdx);
+            Evaluation RvSat = FluidSystem::saturatedDissolutionFactor(fluidState, gasPhaseIdx, pvtRegionIdx);
             fluidState.setRv(RvSat);
 
             paramCache.updateAll(fluidState);
@@ -799,34 +799,34 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(BlackOil, Evaluation, Types)
                 // the generic methods return the same value as the ones for the saturated
                 // quantities (we specify the fluid state to be on the saturation line)
                 checkSmall(Opm::abs(FluidSystem::density(fluidState, paramCache, phaseIdx) -
-                                    FluidSystem::density(fluidState, phaseIdx, regionIdx)), eps);
+                                    FluidSystem::density(fluidState, phaseIdx, pvtRegionIdx)), eps);
 
                 checkSmall(Opm::abs(FluidSystem::density(fluidState, paramCache, phaseIdx) -
-                                    FluidSystem::saturatedDensity(fluidState, phaseIdx, regionIdx)), eps);
+                                    FluidSystem::saturatedDensity(fluidState, phaseIdx, pvtRegionIdx)), eps);
 
-                Evaluation b = FluidSystem::inverseFormationVolumeFactor(fluidState, phaseIdx, regionIdx);
-                Evaluation bSat = FluidSystem::saturatedInverseFormationVolumeFactor(fluidState, phaseIdx, regionIdx);
+                Evaluation b = FluidSystem::inverseFormationVolumeFactor(fluidState, phaseIdx, pvtRegionIdx);
+                Evaluation bSat = FluidSystem::saturatedInverseFormationVolumeFactor(fluidState, phaseIdx, pvtRegionIdx);
                 checkSmall(Opm::abs(b - bSat), eps);
 
-                Evaluation mu = FluidSystem::viscosity(fluidState, phaseIdx, regionIdx);
+                Evaluation mu = FluidSystem::viscosity(fluidState, phaseIdx, pvtRegionIdx);
                 checkSmall(Opm::abs(FluidSystem::viscosity(fluidState, paramCache, phaseIdx) - mu), 1e-10);
 
-                auto [b2, mu2] = FluidSystem::inverseFormationVolumeFactorAndViscosity(fluidState, phaseIdx, regionIdx);
+                auto [b2, mu2] = FluidSystem::inverseFormationVolumeFactorAndViscosity(fluidState, phaseIdx, pvtRegionIdx);
                 checkSmall(Opm::abs(b - b2), 1e-10);
                 checkSmall(Opm::abs(mu - mu2), 1e-10);
 
-                Evaluation R = FluidSystem::saturatedDissolutionFactor(fluidState, phaseIdx, regionIdx);
-                Evaluation R2 = FluidSystem::saturatedDissolutionFactor(fluidState, phaseIdx, regionIdx);
+                Evaluation R = FluidSystem::saturatedDissolutionFactor(fluidState, phaseIdx, pvtRegionIdx);
+                Evaluation R2 = FluidSystem::saturatedDissolutionFactor(fluidState, phaseIdx, pvtRegionIdx);
                 checkSmall(Opm::abs(R - R2), eps);
 
                 // water is immiscible and thus there is no saturation pressure
                 if (phaseIdx != waterPhaseIdx) {
-                    checkSmall(Opm::abs(FluidSystem::saturationPressure(fluidState, phaseIdx, regionIdx) - p), eps*pval);
+                    checkSmall(Opm::abs(FluidSystem::saturationPressure(fluidState, phaseIdx, pvtRegionIdx) - p), eps*pval);
                 }
             }
 
-            checkSmall(Opm::abs(FluidSystem::bubblePointPressure(fluidState, regionIdx) - p), eps*pval);
-            checkSmall(Opm::abs(FluidSystem::dewPointPressure(fluidState, regionIdx) - p), eps*pval);
+            checkSmall(Opm::abs(FluidSystem::bubblePointPressure(fluidState, pvtRegionIdx) - p), eps*pval);
+            checkSmall(Opm::abs(FluidSystem::dewPointPressure(fluidState, pvtRegionIdx) - p), eps*pval);
         }
     }
 

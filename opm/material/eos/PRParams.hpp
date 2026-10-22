@@ -45,10 +45,11 @@ public:
         return 0.457235529;
     }
 
-    static Scalar calcOmegaA(Scalar temperature, unsigned compIdx, bool modified)
+    static Scalar calcOmegaA(Scalar temperature, unsigned compIdx, unsigned eosRegionIdx,
+                             bool modified)
     {
-        Scalar Tr = temperature / FluidSystem::criticalTemperature(compIdx);
-        Scalar omega = FluidSystem::acentricFactor(compIdx);
+        Scalar Tr = temperature / FluidSystem::criticalTemperature(compIdx, eosRegionIdx);
+        Scalar omega = FluidSystem::acentricFactor(compIdx, eosRegionIdx);
         Scalar f_omega;
         if (!modified || omega <= 0.49)
             f_omega = 0.37464 + omega * (1.54226 + omega * (-0.26992));
