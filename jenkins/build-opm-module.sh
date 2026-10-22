@@ -367,13 +367,14 @@ function build_module_full {
   # Generate a failure report when opm-simulators was tested.
   # The report is always generated from the 'default' configuration data
   # since that is the configuration we have reference data for.
+  # The report is diagnostic only, so its errors do not fail the build.
   if test -d $WORKSPACE/default/build-opm-simulators
   then
     $WORKSPACE/deps/opm-simulators/tests/make_failure_report.sh \
     $WORKSPACE/deps/opm-tests \
     $WORKSPACE/default/build-opm-simulators \
-    $WORKSPACE/default/build-opm-simulators
-    test $? -eq 0 || exit 1
+    $WORKSPACE/default/build-opm-simulators || \
+      echo "Warning: failure report failed (exit status $?)" >&2
   fi
 
   if grep -q -i " run " <<< $ghprbCommentBody
