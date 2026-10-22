@@ -1791,6 +1791,9 @@ public:
     }
 
 private:
+    [[noreturn]] STATIC_OR_DEVICE void
+    throwInvalidSolventPhaseIndex_(unsigned phaseIdx) NOTHING_OR_CONST;
+
     STATIC_OR_NOTHING void resizeArrays_(std::size_t numRegions);
 
     STATIC_OR_NOTHING Scalar reservoirTemperature_;
@@ -1947,8 +1950,15 @@ solventComponentIndex(unsigned phaseIdx) NOTHING_OR_CONST
         return gasCompIdx;
 
     default:
-        OPM_THROW(std::logic_error, "Phase index " + std::to_string(phaseIdx) + " is unknown");
+        throwInvalidSolventPhaseIndex_(phaseIdx);
     }
+}
+
+template <class Scalar, class IndexTraits, template<typename> typename Storage>
+NOTHING_OR_DEVICE void FLUIDSYSTEM_CLASSNAME<Scalar,IndexTraits,Storage>::
+throwInvalidSolventPhaseIndex_(unsigned phaseIdx) NOTHING_OR_CONST
+{
+    OPM_THROW(std::logic_error, "Phase index " + std::to_string(phaseIdx) + " is unknown");
 }
 
 template <class Scalar, class IndexTraits, template<typename> typename Storage>
