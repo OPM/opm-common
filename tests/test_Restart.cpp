@@ -71,6 +71,8 @@
 
 #include <opm/input/eclipse/Parser/Parser.hpp>
 
+#include <fmt/format.h>
+
 #include <algorithm>
 #include <chrono>
 #include <cstddef>
@@ -1089,6 +1091,172 @@ BOOST_AUTO_TEST_CASE(Restore_Cumulatives)
     BOOST_CHECK_CLOSE(rstSumState.get("FLPTH"), 56789.01 + 67890.12, 1.0e-10);
     BOOST_CHECK_CLOSE(rstSumState.get("FWITH"), 89012.34, 1.0e-10);
     BOOST_CHECK_CLOSE(rstSumState.get("FGITH"), 90123.45, 1.0e-10);
+}
+
+namespace {
+
+// Water tracers waterTracers, with room for maxWaterTracers of them and
+// for maxOilTracers oil tracers.
+Deck tracerDeck(const int maxWaterTracers,
+                const int maxOilTracers = 0,
+                const std::vector<std::string>& waterTracers = { "SEA", "HTO" })
+{
+    auto tracers = std::string{};
+    for (const auto& tracer : waterTracers) {
+        tracers += fmt::format(" '{}' 'WAT' /\n", tracer);
+    }
+
+    return Parser{}.parseString(fmt::format(R"(RUNSPEC
+OIL
+GAS
+WATER
+UNIFOUT
+DIMENS
+ 3 3 3 /
+START
+ 1 NOV 1979 /
+WELLDIMS
+ 2 3 1 2 /
+TRACERS
+ {1} {0} /
+GRID
+DXV
+ 3*100 /
+DYV
+ 3*100 /
+DZV
+ 3*10 /
+TOPS
+ 9*1000 /
+PORO
+ 27*0.2 /
+PERMX
+ 27*100 /
+PERMY
+ 27*100 /
+PERMZ
+ 27*10 /
+PROPS
+TRACER
+{2}/
+SOLUTION
+SCHEDULE
+WELSPECS
+ 'OP_1' 'OP' 1 1 1* 'OIL' /
+ 'OP_2' 'OP' 3 3 1* 'WATER' /
+/
+COMPDAT
+ 'OP_1' 1 1 1 3 'OPEN' /
+ 'OP_2' 3 3 1 3 'OPEN' /
+/
+WCONPROD
+ 'OP_1' 'OPEN' 'ORAT' 1000 /
+/
+WCONINJE
+ 'OP_2' 'WATER' 'OPEN' 'RATE' 1000 /
+/
+TSTEP
+ 1 /
+)", maxWaterTracers, maxOilTracers, tracers));
+}
+
+} // Anonymous namespace
+
+BOOST_AUTO_TEST_CASE(Restore_Tracer_Cumulatives)
+{
+    WorkArea wa{"test_Restart"};
+    namespace OS = ::Opm::EclIO::OutputStream;
+
+    const auto rset   = OS::ResultSet{ wa.currentWorkingDirectory(), "TRACER" };
+    const auto seqnum = 1;
+    {
+        Setup setup(tracerDeck(2));
+
+        auto sumState = sim_state(setup.schedule);
+        sumState.update_well_var("OP_1", "WTPTSEA", 1.0);
+        sumState.update_well_var("OP_1", "WTPTHTO", 2.0);
+        sumState.update_well_var("OP_2", "WTITSEA", 3.0);
+        sumState.update_well_var("OP_2", "WTITHTO", 4.0);
+        sumState.update_group_var("OP", "GTPTSEA", 5.0);
+        sumState.update_group_var("OP", "GTITHTO", 6.0);
+        sumState.update("FTPTSEA", 7.0);
+        sumState.update("FTITHTO", 8.0);
+
+        Action::State action_state;
+        WellTestState wtest_state;
+        UDQState udq_state(98);
+        auto aquiferData = std::optional<RestartIO::Helpers::AggregateAquiferData>{};
+        auto rstFile = OS::Restart {
+            rset, seqnum, OS::Formatted{ false }, OS::Unified{ true }
+        };
+
+        // The tracers' concentrations, which the file must hold for their
+        // totals to be restored.
+        auto solution = mkSolution(setup.grid.getNumActive());
+        for (const auto* tracer : { "SEAF", "HTOF" }) {
+            solution.insert(tracer, UnitSystem::measure::identity,
+                            std::vector<double>(setup.grid.getNumActive(), 0.1),
+                            data::TargetType::RESTART_TRACER_SOLUTION);
+        }
+
+        RestartIO::save(rstFile, seqnum, 100,
+                        RestartValue { std::move(solution), {}, {}, {} },
+                        setup.es, setup.grid, setup.schedule,
+                        action_state, wtest_state, sumState, udq_state, aquiferData);
+    }
+
+    auto load = [&rset](const int maxWaterTracers,
+                        const int maxOilTracers = 0,
+                        const std::vector<std::string>& waterTracers = { "SEA", "HTO" })
+    {
+        Setup setup(tracerDeck(maxWaterTracers, maxOilTracers, waterTracers));
+        Action::State action_state;
+        SummaryState st(TimeService::now(), 0.0);
+        RestartIO::load(OS::outputFileName(rset, "UNRST"), seqnum, action_state, st,
+                        { RestartKey("SWAT", UnitSystem::measure::identity) },
+                        setup.es, setup.grid, setup.schedule, {});
+        return st;
+    };
+
+    const auto checkTotals = [](const SummaryState& st)
+    {
+        BOOST_CHECK_CLOSE(st.get("WTPTSEA:OP_1"), 1.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(st.get("WTPTHTO:OP_1"), 2.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(st.get("WTITSEA:OP_2"), 3.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(st.get("WTITHTO:OP_2"), 4.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(st.get("GTPTSEA:OP"), 5.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(st.get("GTITHTO:OP"), 6.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(st.get("FTPTSEA"), 7.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(st.get("FTITHTO"), 8.0, 1.0e-10);
+    };
+
+    checkTotals(load(2));
+
+    // Other TRACERS dimensions move the totals in this run's records, but
+    // they are read from where the file holds them.
+    checkTotals(load(3));
+    checkTotals(load(2, 1));
+
+    // An appended tracer has no totals in the file.
+    {
+        const auto st = load(3, 0, { "SEA", "HTO", "NEW" });
+
+        checkTotals(st);
+        BOOST_CHECK(! st.has("WTPTNEW:OP_1"));
+        BOOST_CHECK(! st.has("WTITNEW:OP_2"));
+        BOOST_CHECK(! st.has("GTPTNEW:OP"));
+        BOOST_CHECK(! st.has("FTITNEW"));
+    }
+
+    // Nor has a tracer which takes the place of one in the file.
+    {
+        const auto st = load(2, 0, { "SEA", "NEW" });
+
+        BOOST_CHECK_CLOSE(st.get("WTPTSEA:OP_1"), 1.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(st.get("FTPTSEA"), 7.0, 1.0e-10);
+        BOOST_CHECK(! st.has("WTITNEW:OP_2"));
+        BOOST_CHECK(! st.has("FTITNEW"));
+    }
 }
 
 namespace {
