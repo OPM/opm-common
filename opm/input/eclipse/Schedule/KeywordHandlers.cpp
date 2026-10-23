@@ -110,6 +110,14 @@ void handleBCMech(HandlerContext& handlerContext)
     }
 }
 
+void handleBCTracer(HandlerContext& handlerContext)
+{
+    auto& bcstate = handlerContext.state().bcstate;
+    for (const auto& record : handlerContext.keyword) {
+        bcstate.updateBCTracer(record);
+    }
+}
+
 void handleSource(HandlerContext& handlerContext)
 {
     auto new_source = handlerContext.state().source.get();
@@ -489,6 +497,7 @@ KeywordHandlers::KeywordHandlers()
         { "AQUFLUX",  &handleAQUFLUX    },
         { "BCMECH",   &handleBCMech     },
         { "BCPROP",   &handleBCProp     },
+        { "BCTRACER", &handleBCTracer   },
         { "BOX",      &handleGEOKeyword },
         { "ENDBOX"  , &handleGEOKeyword },
         { "EXIT",     &handleEXIT       },
