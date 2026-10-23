@@ -223,6 +223,7 @@ TuningDp::TuningDp()
     , TRGDDS(0.0)
     , TRGDDRS(0.0 * Metric::GasDissolutionFactor)
     , TRGDDRV(0.0 * Metric::OilDissolutionFactor)
+    , TRGDDT(0.0 * Metric::Temperature)
 {
 }
 
@@ -235,6 +236,7 @@ void TuningDp::set_defaults()
     this->TRGDDS = TUNINGDP::TRGDDS::defaultValue;
     this->TRGDDRS = TUNINGDP::TRGDDRS::defaultValue * Metric::GasDissolutionFactor;
     this->TRGDDRV = TUNINGDP::TRGDDRV::defaultValue * Metric::OilDissolutionFactor;
+    this->TRGDDT = TUNINGDP::TRGDDT::defaultValue * Metric::Temperature;
 
     this->defaults_updated = true;
 }
@@ -250,6 +252,7 @@ TuningDp TuningDp::serializationTestObject()
     result.TRGDDS = 4.0;
     result.TRGDDRS = 5.0;
     result.TRGDDRV = 6.0;
+    result.TRGDDT = 7.0;
 
     return result;
 }
@@ -264,6 +267,7 @@ bool TuningDp::operator==(const TuningDp& other) const
            this->TRGDDP == other.TRGDDP &&
            this->TRGDDS == other.TRGDDS &&
            this->TRGDDRS == other.TRGDDRS &&
-           this->TRGDDRV == other.TRGDDRV;
+           this->TRGDDRV == other.TRGDDRV &&
+           this->TRGDDT == other.TRGDDT;
 }
 }
