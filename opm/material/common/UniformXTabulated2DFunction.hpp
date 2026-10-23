@@ -30,9 +30,12 @@
 
 #include <opm/common/Exceptions.hpp>
 #include <opm/common/utility/SparseTable.hpp>
+#include <opm/common/utility/VectorWithDefaultAllocator.hpp>
+#include <opm/common/utility/gpuDecorators.hpp>
+#include <opm/common/utility/gpuistl_if_available.hpp>
 
-#include <opm/material/common/Valgrind.hpp>
 #include <opm/material/common/MathToolbox.hpp>
+#include <opm/material/common/Valgrind.hpp>
 
 #include <cassert>
 #include <cmath>
@@ -43,9 +46,80 @@
 #include <vector>
 
 namespace Opm {
+// forward declaration of the class so the function in the next namespace can be declared
+template <class Scalar, template <class> class Storage = VectorWithDefaultAllocator>
+class UniformXTabulated2DFunction;
+}
+
+#if HAVE_CUDA
+// declaration of make_view and copy_to_gpu in correct namespace so friend function can be declared in the class
+namespace Opm::gpuistl
+{
+    template <class ScalarT>
+    UniformXTabulated2DFunction<ScalarT, GpuBuffer>
+    copy_to_gpu(const UniformXTabulated2DFunction<ScalarT>& params);
+
+    template <class ScalarT>
+    UniformXTabulated2DFunction<ScalarT, GpuView>
+    make_view(UniformXTabulated2DFunction<ScalarT, GpuBuffer>& params);
+} // namespace Opm::gpuistl
+#endif // HAVE_CUDA
+
+namespace Opm {
 
 template <class Scalar>
 class UniformXTabulated2DFunctionBuilder;
+
+/*!
+ * \brief One tabulated sample point: (x, y) position and the function value there.
+ *
+ * \note x duplicates xPos_[i] for this point's column. X-axis segment lookups
+ *       (xSegmentIndex, xToAlpha, etc.) go through xPos_, not through this field -
+ *       it is only read back via operator==.
+ *
+ * \note This is templated on Scalar only (not on the Storage container) and declared
+ *       outside \c UniformXTabulated2DFunction so that it is the *same* type across all
+ *       Storage instantiations of that class. If it were nested inside the
+ *       Storage-templated class instead, UniformXTabulated2DFunction<Scalar, VectorWithDefaultAllocator>
+ *       ::SamplePoint and UniformXTabulated2DFunction<Scalar, GpuBuffer>::SamplePoint
+ *       would be distinct, incompatible types despite having identical layout, which
+ *       breaks copy_to_gpu()/make_view() (they move a SparseTable<SamplePoint, ...> built
+ *       from the CPU's SamplePoint type into a differently-stored instantiation).
+ */
+template <class Scalar>
+struct UniformXTabulated2DFunctionSamplePoint {
+    Scalar x;
+    Scalar y;
+    Scalar value;
+
+    UniformXTabulated2DFunctionSamplePoint(Scalar x_, Scalar y_, Scalar value_) : x(x_), y(y_), value(value_) {}
+    bool operator==(const UniformXTabulated2DFunctionSamplePoint& other) const = default;
+};
+
+static_assert(std::is_trivially_copyable_v<UniformXTabulated2DFunctionSamplePoint<double>>,
+    "SamplePoint must stay trivially copyable, because it needs to support being "
+    "transferred to the GPU via memcpy in SparseTable.");
+
+/*!
+ * \brief Indicates how interpolation will be performed.
+ *
+ * Normal interpolation is done by interpolating vertically between lines of sample
+ * points, whereas LeftExtreme or RightExtreme implies guided interpolation, where
+ * interpolation is done parallel to a guide line. With LeftExtreme the lowest Y
+ * values will be used for the guide, and the guide line slope extends unchanged to
+ * infinity. With RightExtreme, the highest Y values are used, and the slope
+ * decreases linearly down to 0 (normal interpolation) for y <= 0.
+ *
+ * \note Declared outside \c UniformXTabulated2DFunction (rather than as a nested enum)
+ *       for the same reason as \c UniformXTabulated2DFunctionSamplePoint: a nested enum
+ *       would be a distinct type per \c Storage instantiation, which breaks
+ *       copy_to_gpu()/make_view().
+ */
+enum class UniformXTabulated2DFunctionInterpolationPolicy {
+    LeftExtreme,
+    RightExtreme,
+    Vertical
+};
 
 /*!
  * \brief Implements a scalar function that depends on two variables and which is sampled
@@ -59,60 +133,32 @@ class UniformXTabulated2DFunctionBuilder;
  * \c UniformXTabulated2DFunctionBuilder, whose \c build() method returns the
  * evaluation-ready object constructed here.
  */
-template <class Scalar>
+template <class Scalar, template <class> class Storage>
 class UniformXTabulated2DFunction
 {
 public:
-    /*!
-     * \brief One tabulated sample point: (x, y) position and the function value there.
-     *
-     * \note x duplicates xPos_[i] for this point's column. X-axis segment lookups
-     *       (xSegmentIndex, xToAlpha, etc.) go through xPos_, not through this field -
-     *       it is only read back via operator==.
-     */
-    struct SamplePoint {
-        Scalar x;
-        Scalar y;
-        Scalar value;
+    //! One tabulated sample point. Not dependent on \c Storage - see
+    //! \c UniformXTabulated2DFunctionSamplePoint for why.
+    using SamplePoint = UniformXTabulated2DFunctionSamplePoint<Scalar>;
 
-        SamplePoint(Scalar x_, Scalar y_, Scalar value_) : x(x_), y(y_), value(value_) {}
-        bool operator==(const SamplePoint& other) const = default;
-    };
+    //! Indicates how interpolation will be performed. Not dependent on \c Storage -
+    //! see \c UniformXTabulated2DFunctionInterpolationPolicy for why.
+    using InterpolationPolicy = UniformXTabulated2DFunctionInterpolationPolicy;
 
-    static_assert(std::is_trivially_copyable_v<SamplePoint>,
-        "SamplePoint must stay trivially copyable, because it needs to support being "
-        "transferred to the GPU via memcpy in SparseTable.");
-
-    /*!
-     * \brief Indicates how interpolation will be performed.
-     *
-     * Normal interpolation is done by interpolating vertically between lines of sample
-     * points, whereas LeftExtreme or RightExtreme implies guided interpolation, where
-     * interpolation is done parallel to a guide line. With LeftExtreme the lowest Y
-     * values will be used for the guide, and the guide line slope extends unchanged to
-     * infinity. With RightExtreme, the highest Y values are used, and the slope
-     * decreases linearly down to 0 (normal interpolation) for y <= 0.
-     */
-    enum InterpolationPolicy {
-        LeftExtreme,
-        RightExtreme,
-        Vertical
-    };
-
-    explicit UniformXTabulated2DFunction(const InterpolationPolicy interpolationGuide = Vertical)
+    explicit UniformXTabulated2DFunction(const InterpolationPolicy interpolationGuide = InterpolationPolicy::Vertical)
         : interpolationGuide_(interpolationGuide)
     { }
 
     /*!
      * \brief Returns the minimum of the X coordinate of the sampling points.
      */
-    Scalar xMin() const
+    OPM_HOST_DEVICE Scalar xMin() const
     { return xPos_.front(); }
 
     /*!
      * \brief Returns the maximum of the X coordinate of the sampling points.
      */
-    Scalar xMax() const
+    OPM_HOST_DEVICE Scalar xMax() const
     { return xPos_.back(); }
 
     /*!
@@ -124,37 +170,37 @@ public:
     /*!
      * \brief Returns the value of the Y coordinate of a sampling point.
      */
-    Scalar yAt(std::size_t i, std::size_t j) const
+    OPM_HOST_DEVICE Scalar yAt(std::size_t i, std::size_t j) const
     { return samples_[i][j].y; }
 
     /*!
      * \brief Returns the value of a sampling point.
      */
-    Scalar valueAt(std::size_t i, std::size_t j) const
+    OPM_HOST_DEVICE Scalar valueAt(std::size_t i, std::size_t j) const
     { return samples_[i][j].value; }
 
     /*!
      * \brief Returns the number of sampling points in X direction.
      */
-    std::size_t numX() const
+    OPM_HOST_DEVICE std::size_t numX() const
     { return xPos_.size(); }
 
     /*!
      * \brief Returns the minimum of the Y coordinate of the sampling points for a given column.
      */
-    Scalar yMin(unsigned i) const
+    OPM_HOST_DEVICE Scalar yMin(unsigned i) const
     { return samples_[i].front().y; }
 
     /*!
      * \brief Returns the maximum of the Y coordinate of the sampling points for a given column.
      */
-    Scalar yMax(unsigned i) const
+    OPM_HOST_DEVICE Scalar yMax(unsigned i) const
     { return samples_[i].back().y; }
 
     /*!
      * \brief Returns the number of sampling points in Y direction a given column.
      */
-    std::size_t numY(unsigned i) const
+    OPM_HOST_DEVICE std::size_t numY(unsigned i) const
     { return samples_.rowSize(i); }
 
     /*!
@@ -167,17 +213,17 @@ public:
         return xPos_.at(i);
     }
 
-    const SparseTable<SamplePoint>& samples() const
+    OPM_HOST_DEVICE const SparseTable<SamplePoint, Storage>& samples() const
     {
         return samples_;
     }
 
-    const std::vector<Scalar>& xPos() const
+    const Storage<Scalar>& xPos() const
     {
         return xPos_;
     }
 
-    const std::vector<Scalar>& yPos() const
+    const Storage<Scalar>& yPos() const
     {
         return yPos_;
     }
@@ -202,7 +248,7 @@ public:
      * \brief Return the interval index of a given position on the x-axis.
      */
     template <class Evaluation>
-    unsigned xSegmentIndex(const Evaluation& x,
+    OPM_HOST_DEVICE unsigned xSegmentIndex(const Evaluation& x,
                            [[maybe_unused]] bool extrapolate = false) const
     {
         assert(extrapolate || (xMin() <= x && x <= xMax()));
@@ -239,7 +285,7 @@ public:
      * the range of the segment. In particular this happens for the extrapolation case.
      */
     template <class Evaluation>
-    Evaluation xToAlpha(const Evaluation& x, unsigned segmentIdx) const
+    OPM_HOST_DEVICE Evaluation xToAlpha(const Evaluation& x, unsigned segmentIdx) const
     {
         Scalar x1 = xPos_[segmentIdx];
         Scalar x2 = xPos_[segmentIdx + 1];
@@ -250,7 +296,7 @@ public:
      * \brief Return the interval index of a given position on the y-axis.
      */
     template <class Evaluation>
-    unsigned ySegmentIndex(const Evaluation& y, unsigned xSampleIdx,
+    OPM_HOST_DEVICE unsigned ySegmentIndex(const Evaluation& y, unsigned xSampleIdx,
                            [[maybe_unused]] bool extrapolate = false) const
     {
         assert(xSampleIdx < numX());
@@ -288,7 +334,7 @@ public:
      * the range of the segment. In particular this happens for the extrapolation case.
      */
     template <class Evaluation>
-    Evaluation yToBeta(const Evaluation& y, unsigned xSampleIdx, unsigned ySegmentIdx) const
+    OPM_HOST_DEVICE Evaluation yToBeta(const Evaluation& y, unsigned xSampleIdx, unsigned ySegmentIdx) const
     {
         assert(xSampleIdx < numX());
         assert(ySegmentIdx < numY(xSampleIdx) - 1);
@@ -305,7 +351,7 @@ public:
      * \brief Returns true iff a coordinate lies in the tabulated range
      */
     template <class Evaluation>
-    bool applies(const Evaluation& x, const Evaluation& y) const
+    OPM_HOST_DEVICE bool applies(const Evaluation& x, const Evaluation& y) const
     {
         if (x < xMin() || xMax() < x)
             return false;
@@ -333,7 +379,7 @@ public:
      * range, a \c Opm::NumericalIssue exception is thrown.
      */
     template <class Evaluation>
-    Evaluation eval(const Evaluation& x, const Evaluation& y, bool extrapolate=false) const
+    OPM_HOST_DEVICE Evaluation eval(const Evaluation& x, const Evaluation& y, bool extrapolate=false) const
     {
         Evaluation alpha, beta1, beta2;
         unsigned i, j1, j2;
@@ -342,7 +388,7 @@ public:
     }
 
     template <class Evaluation>
-    void findPoints(unsigned& i,
+    OPM_HOST_DEVICE void findPoints(unsigned& i,
                     unsigned& j1,
                     unsigned& j2,
                     Evaluation& alpha,
@@ -353,6 +399,7 @@ public:
                     bool extrapolate) const
     {
 #ifndef NDEBUG
+#if !OPM_IS_INSIDE_DEVICE_FUNCTION
         if (!extrapolate && !applies(x, y)) {
             if constexpr (std::is_floating_point_v<Evaluation>) {
                 throw NumericalProblem("Attempt to get undefined table value (" +
@@ -365,7 +412,7 @@ public:
             }
         };
 #endif
-
+#endif
         // bi-linear interpolation: first, calculate the x and y indices in the lookup
         // table ...
         i = xSegmentIndex(x, extrapolate);
@@ -410,7 +457,7 @@ public:
     }
 
     template <class Evaluation>
-    Evaluation eval(const unsigned& i, const unsigned& j1, const unsigned& j2, const Evaluation& alpha,const Evaluation& beta1,const Evaluation& beta2) const
+    OPM_HOST_DEVICE Evaluation eval(const unsigned& i, const unsigned& j1, const unsigned& j2, const Evaluation& alpha,const Evaluation& beta1,const Evaluation& beta2) const
     {
         // evaluate the two function values for the same y value ...
         const Evaluation& s1 = valueAt(i, j1)*(1.0 - beta1) + valueAt(i, j1 + 1)*beta1;
@@ -434,7 +481,7 @@ public:
      */
     void print(std::ostream& os) const;
 
-    bool operator==(const UniformXTabulated2DFunction<Scalar>& data) const {
+    bool operator==(const UniformXTabulated2DFunction<Scalar, Storage>& data) const {
         return this->xPos() == data.xPos() &&
                this->yPos() == data.yPos() &&
                this->samples() == data.samples() &&
@@ -444,9 +491,9 @@ public:
 private:
     friend class UniformXTabulated2DFunctionBuilder<Scalar>;
 
-    UniformXTabulated2DFunction(SparseTable<SamplePoint>&& samples,
-                                std::vector<Scalar>&& xPos,
-                                std::vector<Scalar>&& yPos,
+    UniformXTabulated2DFunction(SparseTable<SamplePoint, Storage>&& samples,
+                                Storage<Scalar>&& xPos,
+                                Storage<Scalar>&& yPos,
                                 InterpolationPolicy interpolationGuide)
         : samples_(std::move(samples))
         , xPos_(std::move(xPos))
@@ -454,16 +501,55 @@ private:
         , interpolationGuide_(interpolationGuide)
     { }
 
+#if HAVE_CUDA
+    template <class ScalarT>
+    friend UniformXTabulated2DFunction<ScalarT, gpuistl::GpuBuffer>
+    gpuistl::copy_to_gpu(const UniformXTabulated2DFunction<ScalarT>& cpu);
+
+    template <class ScalarT>
+    friend UniformXTabulated2DFunction<ScalarT, gpuistl::GpuView>
+    gpuistl::make_view(UniformXTabulated2DFunction<ScalarT, gpuistl::GpuBuffer>& gpuBuffers);
+#endif // HAVE_CUDA
+
     // the table which contains the values of the sample points f(x_i, y_j), stored
-    // row-major (one row per x position).
-    SparseTable<SamplePoint> samples_;
+    // row-major (one row per x position). Don't use this directly, use
+    // getSamplePoint(i,j) instead!
+    SparseTable<SamplePoint, Storage> samples_;
 
     // the position of each vertical line on the x-axis
-    std::vector<Scalar> xPos_;
+    Storage<Scalar> xPos_;
     // the position on the y-axis of the guide point
-    std::vector<Scalar> yPos_;
+    Storage<Scalar> yPos_;
     InterpolationPolicy interpolationGuide_;
 };
 } // namespace Opm
+
+#if HAVE_CUDA
+namespace Opm::gpuistl {
+    template <class ScalarT>
+    UniformXTabulated2DFunction<ScalarT, GpuBuffer>
+    copy_to_gpu(const UniformXTabulated2DFunction<ScalarT>& cpu)
+    {
+        return UniformXTabulated2DFunction<ScalarT, GpuBuffer>(
+            copy_to_gpu(cpu.samples()),
+            GpuBuffer(cpu.xPos()),
+            GpuBuffer(cpu.yPos()),
+            cpu.interpolationGuide()
+        );
+    }
+
+    template <class ScalarT>
+    UniformXTabulated2DFunction<ScalarT, GpuView>
+    make_view(UniformXTabulated2DFunction<ScalarT, GpuBuffer>& gpuBuffers)
+    {
+        return UniformXTabulated2DFunction<ScalarT, GpuView>(
+            make_view(gpuBuffers.samples_),
+            make_view(gpuBuffers.xPos_),
+            make_view(gpuBuffers.yPos_),
+            gpuBuffers.interpolationGuide_
+        );
+    }
+} // namespace Opm::gpuistl
+#endif // HAVE_CUDA
 
 #endif
