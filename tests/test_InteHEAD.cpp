@@ -697,6 +697,14 @@ BOOST_AUTO_TEST_CASE(TestHeader)
     BOOST_CHECK_EQUAL(header.hour, hour);
     BOOST_CHECK_EQUAL(header.minute, minute);
     BOOST_CHECK_EQUAL(header.microsecond, total_mseconds);
+    const auto [restart_time, restart_step] = header.restart_info();
+    BOOST_CHECK_EQUAL(restart_step, report_step);
+    BOOST_CHECK(restart_time == header.sim_time());
+    const auto midnight = asTimePoint(Opm::TimeStampUTC(year, month, mday));
+    BOOST_CHECK_EQUAL(std::chrono::duration_cast<std::chrono::milliseconds>(restart_time - midnight).count(),
+                      (hour * 3600 + minute * 60 + seconds) * 1000
+                      + std::chrono::round<std::chrono::milliseconds>(
+                          std::chrono::microseconds{mseconds}).count());
     BOOST_CHECK_EQUAL(header.phase_sum , phase_sum);
     BOOST_CHECK_EQUAL(header.niwelz, niwelz);
     BOOST_CHECK_EQUAL(header.nswelz, nswelz);
