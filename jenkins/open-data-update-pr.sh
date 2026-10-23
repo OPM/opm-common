@@ -43,7 +43,7 @@ then
   REV=${sha1}
   PRNUMBER=${REV//[!0-9]/}
   DATA_PR=`curl -X GET https://api.github.com/repos/OPM/opm-tests/pulls?head=jenkins4opm:$BRANCH_NAME | grep '"number":' | awk -F ':' '{print $2}' | sed -e 's/,//' -e 's/ //'`
-  git push -u jenkins4opm $BRANCH_NAME -f
+  git push -u jenkins4opm $BRANCH_NAME -f || exit 1
 fi
 
 if [ -n "$DATA_PR" ]
