@@ -1,4 +1,6 @@
 #!/bin/bash
+# Source this file to use the opm Python package from the build tree. One copy
+# is generated per build configuration, next to that configuration's package.
 
-export PYTHONPATH=@PROJECT_BINARY_DIR@/python:$PYTHONPATH
-export LD_LIBRARY_PATH=@_setup_lib_dirs@:$LD_LIBRARY_PATH
+export PYTHONPATH=@OPM_COMMON_PYTHON_BUILD_DIR@:$PYTHONPATH
+export LD_LIBRARY_PATH=$<TARGET_FILE_DIR:opmcommon>:@_setup_lib_dirs@:$LD_LIBRARY_PATH
