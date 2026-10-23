@@ -5,7 +5,13 @@ MAIN_REPO=$1 # The repo the update was triggered from
 # Open the pull request
 cd $WORKSPACE/deps/opm-tests
 git remote add jenkins4opm git@github.com:jenkins4opm/opm-tests
-BRANCH_NAME=`git branch --sort=committerdate | tail -n1`
+# update_reference_data.sh leaves its branch checked out
+BRANCH_NAME=`git rev-parse --abbrev-ref HEAD`
+if [[ $BRANCH_NAME != update* ]]
+then
+  echo "opm-tests is on '$BRANCH_NAME', not a reference data update branch" >&2
+  exit 1
+fi
 
 # Do some cleaning of old remote branches
 # Easier code with git 2.7+
@@ -35,7 +41,7 @@ if [ -n "`echo $BRANCHES | tr ' ' '\n' | grep ^jenkins4opm/$BRANCH_NAME$`" ]
 then
   GH_TOKEN=`git config --get gitOpenPull.Token`
   REV=${sha1}
-  PRNUMBER=${rev//[!0-9]/}
+  PRNUMBER=${REV//[!0-9]/}
   DATA_PR=`curl -X GET https://api.github.com/repos/OPM/opm-tests/pulls?head=jenkins4opm:$BRANCH_NAME | grep '"number":' | awk -F ':' '{print $2}' | sed -e 's/,//' -e 's/ //'`
   git push -u jenkins4opm $BRANCH_NAME -f
 fi
