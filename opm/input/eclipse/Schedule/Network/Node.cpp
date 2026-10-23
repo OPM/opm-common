@@ -81,6 +81,7 @@ Node Node::serializationTestObject()
     Node result;
     result.m_name = "test";
     result.m_terminal_pressure = 1.0;
+    result.m_choke_target_group = "test2";
     result.m_add_gas_lift_gas = true;
     result.m_efficiency = 1.0;
 
