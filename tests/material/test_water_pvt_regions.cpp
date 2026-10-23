@@ -165,15 +165,15 @@ BOOST_AUTO_TEST_CASE(WaterPropertiesFollowTheSelectedPvtRegion)
     BOOST_REQUIRE(pvtw[0].viscosity != pvtw[1].viscosity);
     BOOST_REQUIRE(density[0].water != density[1].water);
 
-    for (unsigned regionIdx = 0; regionIdx < pvtw.size(); ++regionIdx) {
-        BOOST_TEST_CONTEXT("PVT region " << regionIdx + 1) {
+    for (unsigned pvtRegionIdx = 0; pvtRegionIdx < pvtw.size(); ++pvtRegionIdx) {
+        BOOST_TEST_CONTEXT("PVT region " << pvtRegionIdx + 1) {
             typename FluidSystem::template ParameterCache<Scalar> paramCache(EOSType::PR);
-            paramCache.setRegionIndex(regionIdx);
+            paramCache.setPvtRegionIndex(pvtRegionIdx);
             BOOST_CHECK_CLOSE(FluidSystem::density(fs, paramCache, FluidSystem::waterPhaseIdx),
-                              expectedDensity(pvtw[regionIdx], density[regionIdx].water),
+                              expectedDensity(pvtw[pvtRegionIdx], density[pvtRegionIdx].water),
                               1.0e-10);
             BOOST_CHECK_CLOSE(FluidSystem::viscosity(fs, paramCache, FluidSystem::waterPhaseIdx),
-                              pvtw[regionIdx].viscosity, 1.0e-10);
+                              pvtw[pvtRegionIdx].viscosity, 1.0e-10);
         }
     }
 }
@@ -185,7 +185,7 @@ BOOST_AUTO_TEST_CASE(FirstPvtRegionIsTheDefault)
     BOOST_REQUIRE(!tables.getPvtwTable().empty());
     BOOST_REQUIRE(!tables.getDensityTable().empty());
     const typename FluidSystem::template ParameterCache<Scalar> paramCache(EOSType::PR);
-    BOOST_CHECK_EQUAL(paramCache.regionIndex(), 0u);
+    BOOST_CHECK_EQUAL(paramCache.pvtRegionIndex(), 0u);
     BOOST_CHECK_CLOSE(FluidSystem::density(fs, paramCache, FluidSystem::waterPhaseIdx),
                       expectedDensity(tables.getPvtwTable()[0],
                                       tables.getDensityTable()[0].water),
