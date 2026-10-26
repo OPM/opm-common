@@ -915,8 +915,8 @@ ENDFIN
 namespace {
 
 // One column of two layers on sheared pillars; the lower layer thickens towards
-// i = 1 more than the upper one, so the two layers' host corners give different
-// refined pillar lines.
+// i = 1 more than the upper one. Fitting pillars to either layer would give
+// different lines, whereas line interpolation must be layer independent.
 std::vector<double> lgrPillarCoord(const int k, const std::string& mode)
 {
     const auto deck = fmt::format(R"(RUNSPEC
@@ -960,17 +960,97 @@ SCHEDULE
 
 } // Anonymous namespace
 
-// LGRPILLR: refined pillars from the column's first layer by default, so boxes
-// stacked in a column share them; 'BOX' takes the box's own, as the reference.
+// Legacy pillar modes no longer change the layer-independent line interpolation.
 BOOST_AUTO_TEST_CASE(TestLgrPillarMode)
 {
     const auto column = lgrPillarCoord(2, "");
     BOOST_CHECK(column == lgrPillarCoord(2, "COLUMN"));
     BOOST_CHECK(column == lgrPillarCoord(1, ""));
-    BOOST_CHECK(column != lgrPillarCoord(2, "BOX"));
+    BOOST_CHECK(column == lgrPillarCoord(2, "BOX"));
+    // Centre pillar: interpolate the four lines at common depths 0 and 100.
+    const std::vector<double> centre {50, 50, 0, 50.5, 53, 100};
+    BOOST_CHECK_EQUAL_COLLECTIONS(column.begin() + 24, column.begin() + 30,
+                                  centre.begin(), centre.end());
     BOOST_CHECK(lgrPillarCoord(1, "BOX") == lgrPillarCoord(1, ""));
 
     BOOST_CHECK_THROW(lgrPillarCoord(2, "STACKED"), Opm::OpmInputError);
+}
+
+BOOST_AUTO_TEST_CASE(TestLgrPillarEndpointIndependence)
+{
+    auto refined = [](const std::array<double, 4>& top,
+                      const std::array<double, 4>& bottom) {
+        std::string coord;
+        for (int j = 0; j < 2; ++j) {
+            for (int i = 0; i < 2; ++i) {
+                const int n = i + 2*j;
+                // Different nonparallel line directions at all four corners.
+                const double sx = 0.1*(n - 1);
+                const double sy = 0.1*(2 - n);
+                coord += fmt::format("{} {} {} {} {} {}\n",
+                                     100*i + sx*top[n], 100*j + sy*top[n], top[n],
+                                     100*i + sx*bottom[n], 100*j + sy*bottom[n], bottom[n]);
+            }
+        }
+        const auto deck = Opm::Parser{}.parseString(fmt::format(R"(RUNSPEC
+DIMENS
+ 1 1 1 /
+OIL
+WATER
+LGR
+ 1 /
+GRID
+COORD
+{} /
+ZCORN
+ 4*20 4*80 /
+CARFIN
+ 'LGR1' 1 1 1 1 1 1 3 2 1 /
+ENDFIN
+PORO
+ 0.25 /
+PERMX
+ 100 /
+COPY
+ PERMX PERMY /
+ PERMX PERMZ /
+/
+PROPS
+REGIONS
+SOLUTION
+SCHEDULE
+)", coord));
+        const Opm::EclipseState state(deck);
+        const auto& lgr = state.getInputGrid().getLGRCell("LGR1");
+        return std::pair {lgr.getCOORD(), lgr.getZCORN()};
+    };
+    const auto [first, zcorn] = refined({-20, 0, 10, -10}, {100, 120, 90, 110});
+    const auto [moved, movedZcorn] = refined({-100, -50, 0, 10}, {200, 150, 120, 140});
+    BOOST_CHECK(zcorn == movedZcorn);
+    BOOST_REQUIRE_EQUAL(first.size(), 6*4*3);
+    BOOST_REQUIRE_EQUAL(moved.size(), first.size());
+    for (int j = 0; j <= 2; ++j) {
+        for (int i = 0; i <= 3; ++i) {
+            const auto p = 6*(j*4 + i);
+            BOOST_CHECK_EQUAL(first[p + 2], -20);
+            BOOST_CHECK_EQUAL(first[p + 5], 120);
+            BOOST_CHECK_EQUAL(moved[p + 2], -100);
+            BOOST_CHECK_EQUAL(moved[p + 5], 200);
+            const double u = i/3.0;
+            const double v = j/2.0;
+            const double n = u + 2*v;
+            for (double z : {-150.0, 50.0, 250.0}) {
+                const double t = (z - first[p + 2])/(first[p + 5] - first[p + 2]);
+                const double q = (z - moved[p + 2])/(moved[p + 5] - moved[p + 2]);
+                const double x = first[p] + t*(first[p + 3] - first[p]);
+                const double y = first[p + 1] + t*(first[p + 4] - first[p + 1]);
+                BOOST_CHECK_SMALL(x - (100*u + 0.1*(n - 1)*z), 1e-10);
+                BOOST_CHECK_SMALL(y - (100*v + 0.1*(2 - n)*z), 1e-10);
+                BOOST_CHECK_SMALL(x - (moved[p] + q*(moved[p + 3] - moved[p])), 1e-10);
+                BOOST_CHECK_SMALL(y - (moved[p + 1] + q*(moved[p + 4] - moved[p + 1])), 1e-10);
+            }
+        }
+    }
 }
 
 namespace {

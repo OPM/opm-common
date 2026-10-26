@@ -54,9 +54,8 @@ public:
                 const DeckRecord& lgrRecord,
                 const KeywordLocation& location);
 
-    /// LGRPILLR 'BOX': refined pillars from each box's own first layer, as the
-    /// reference, instead of the column's (stacked boxes on sheared pillars then
-    /// do not conform).
+    /// Legacy LGRPILLR setting, retained for input/serialization compatibility.
+    /// EclipseGrid now interpolates pillar lines independently of any layer.
     bool pillarsFromBoxLayer() const { return m_pillarsFromBoxLayer; }
 
     /// The level-zero (I,J,K) whose refinement holds cell ijk of LGR number
