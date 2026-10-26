@@ -84,6 +84,13 @@ namespace Opm {
                     const std::vector<double>& zcorn ,
                     const int * actnum = nullptr);
 
+        // The user-declared destructor suppresses the implicit move
+        // operations, so declare them explicitly.  Otherwise std::move()
+        // of a grid silently copies all of its Cartesian-sized arrays.
+        EclipseGrid(const EclipseGrid&) = default;
+        EclipseGrid(EclipseGrid&&) = default;
+        EclipseGrid& operator=(const EclipseGrid&) = default;
+        EclipseGrid& operator=(EclipseGrid&&) = default;
         virtual ~EclipseGrid() = default;
 
         /// EclipseGrid ignores ACTNUM in Deck, and therefore needs ACTNUM
