@@ -480,7 +480,9 @@ namespace Opm {
         /// Apply the block's own MINPV: a refined cell takes its share of the
         /// father's pore volume by volume, and drops out below the threshold.
         ///
+        /// @param father Father grid.
         /// @param fatherPorv Cartesian-sized pore volume of the father grid.
+        /// @param minpv Minimum pore volume threshold, in the same units as fatherPorv.
         void applyBlockMinpv(const EclipseGrid& father,
                              const std::vector<double>& fatherPorv,
                              double minpv);
