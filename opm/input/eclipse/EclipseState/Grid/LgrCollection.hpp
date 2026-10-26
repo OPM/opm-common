@@ -54,11 +54,6 @@ public:
                 const DeckRecord& lgrRecord,
                 const KeywordLocation& location);
 
-    /// LGRPILLR 'BOX': refined pillars from each box's own first layer, as the
-    /// reference, instead of the column's (stacked boxes on sheared pillars then
-    /// do not conform).
-    bool pillarsFromBoxLayer() const { return m_pillarsFromBoxLayer; }
-
     /// The level-zero (I,J,K) whose refinement holds cell ijk of LGR number
     /// lgrNumber (1-based, deck order), up through nested parents; graded boxes
     /// included.
@@ -70,12 +65,10 @@ public:
     void serializeOp(Serializer& serializer)
     {
         serializer(m_lgrs);
-        serializer(m_pillarsFromBoxLayer);
     }
 
 private:
     OrderedMap<Carfin, 8> m_lgrs;
-    bool m_pillarsFromBoxLayer{false};
 
 };
 }

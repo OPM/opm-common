@@ -71,6 +71,7 @@ list(APPEND MAIN_SOURCE_FILES
   opm/common/utility/numeric/calculateCellVol.cpp
   opm/common/utility/numeric/GridUtil.cpp
   opm/common/utility/numeric/MonotCubicInterpolator.cpp
+  opm/common/utility/numeric/PillarInterpolation.cpp
   opm/common/utility/numeric/RootFinders.cpp
   opm/input/eclipse/Deck/Deck.cpp
   opm/input/eclipse/Deck/DeckView.cpp
@@ -561,6 +562,7 @@ list(APPEND TEST_SOURCE_FILES
   tests/test_OpmLog.cpp
   tests/test_OutputStream.cpp
   tests/test_PhaseUsageInfo.cpp
+  tests/test_PillarInterpolation.cpp
   tests/test_PaddedOutputString.cpp
   tests/test_param.cpp
   tests/test_PAvgCalculator.cpp
@@ -958,6 +960,7 @@ list(APPEND PUBLIC_HEADER_FILES
   opm/common/utility/numeric/GridUtil.hpp
   opm/common/utility/numeric/MonotCubicInterpolator.hpp
   opm/common/utility/numeric/NonuniformTableLinear.hpp
+  opm/common/utility/numeric/PillarInterpolation.hpp
   opm/common/utility/numeric/RootFinders.hpp
   opm/common/utility/numeric/SparseVector.hpp
   opm/common/utility/numeric/UniformTableLinear.hpp

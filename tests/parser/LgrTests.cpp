@@ -28,7 +28,9 @@
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 
 #include <algorithm>
+#include <array>
 #include <filesystem>
+#include <limits>
 #include <string>
 
 #include <fmt/format.h>
@@ -915,9 +917,9 @@ ENDFIN
 namespace {
 
 // One column of two layers on sheared pillars; the lower layer thickens towards
-// i = 1 more than the upper one, so the two layers' host corners give different
-// refined pillar lines.
-std::vector<double> lgrPillarCoord(const int k, const std::string& mode)
+// i = 1 more than the upper one. Fitting pillars to either layer would give
+// different lines, whereas line interpolation must be layer independent.
+std::vector<double> lgrPillarCoord(const int k)
 {
     const auto deck = fmt::format(R"(RUNSPEC
 DIMENS
@@ -935,7 +937,6 @@ COORD
 ZCORN
  4*10  20 30 20 30
  20 30 20 30  40 70 40 70 /
-{}
 CARFIN
 'LGR1' 1 1 1 1 {} {} 2 2 1 /
 ENDFIN
@@ -951,26 +952,261 @@ PROPS
 REGIONS
 SOLUTION
 SCHEDULE
-)", mode.empty() ? "" : fmt::format("LGRPILLR\n '{}' /", mode), k, k);
+)", k, k);
 
     const Opm::EclipseState state(Opm::Parser{}.parseString(deck));
-    BOOST_CHECK_EQUAL(state.getLgrs().pillarsFromBoxLayer(), mode == "BOX");
     return state.getInputGrid().getLGRCell("LGR1").getCOORD();
 }
 
 } // Anonymous namespace
 
-// LGRPILLR: refined pillars from the column's first layer by default, so boxes
-// stacked in a column share them; 'BOX' takes the box's own, as the reference.
-BOOST_AUTO_TEST_CASE(TestLgrPillarMode)
+// Pillar lines depend on the host lines, not the layer being refined.
+BOOST_AUTO_TEST_CASE(TestLgrPillarsIndependentOfLayer)
 {
-    const auto column = lgrPillarCoord(2, "");
-    BOOST_CHECK(column == lgrPillarCoord(2, "COLUMN"));
-    BOOST_CHECK(column == lgrPillarCoord(1, ""));
-    BOOST_CHECK(column != lgrPillarCoord(2, "BOX"));
-    BOOST_CHECK(lgrPillarCoord(1, "BOX") == lgrPillarCoord(1, ""));
+    const auto column = lgrPillarCoord(2);
+    BOOST_CHECK(column == lgrPillarCoord(1));
+    // Centre pillar: interpolate the four lines at common depths 0 and 100.
+    const std::vector<double> centre {50, 50, 0, 50.5, 53, 100};
+    BOOST_CHECK_EQUAL_COLLECTIONS(column.begin() + 24, column.begin() + 30,
+                                  centre.begin(), centre.end());
+}
 
-    BOOST_CHECK_THROW(lgrPillarCoord(2, "STACKED"), Opm::OpmInputError);
+BOOST_AUTO_TEST_CASE(TestLgrPillarEndpointIndependence)
+{
+    auto refined = [](const std::array<double, 4>& top,
+                      const std::array<double, 4>& bottom) {
+        std::string coord;
+        for (int j = 0; j < 2; ++j) {
+            for (int i = 0; i < 2; ++i) {
+                const int n = i + 2*j;
+                // Different nonparallel line directions at all four corners.
+                const double sx = 0.1*(n - 1);
+                const double sy = 0.1*(2 - n);
+                coord += fmt::format("{} {} {} {} {} {}\n",
+                                     100*i + sx*top[n], 100*j + sy*top[n], top[n],
+                                     100*i + sx*bottom[n], 100*j + sy*bottom[n], bottom[n]);
+            }
+        }
+        const auto deck = Opm::Parser{}.parseString(fmt::format(R"(RUNSPEC
+DIMENS
+ 1 1 1 /
+OIL
+WATER
+LGR
+ 1 /
+GRID
+COORD
+{} /
+ZCORN
+ 4*20 4*80 /
+CARFIN
+ 'LGR1' 1 1 1 1 1 1 3 2 1 /
+ENDFIN
+PORO
+ 0.25 /
+PERMX
+ 100 /
+COPY
+ PERMX PERMY /
+ PERMX PERMZ /
+/
+PROPS
+REGIONS
+SOLUTION
+SCHEDULE
+)", coord));
+        const Opm::EclipseState state(deck);
+        const auto& lgr = state.getInputGrid().getLGRCell("LGR1");
+        return std::pair {lgr.getCOORD(), lgr.getZCORN()};
+    };
+    const auto [first, zcorn] = refined({-20, 0, 10, -10}, {100, 120, 90, 110});
+    const auto [moved, movedZcorn] = refined({-100, -50, 0, 10}, {200, 150, 120, 140});
+    BOOST_CHECK(zcorn == movedZcorn);
+    BOOST_REQUIRE_EQUAL(first.size(), 6*4*3);
+    BOOST_REQUIRE_EQUAL(moved.size(), first.size());
+    const std::array<double, 12> expectedTop {
+        -20, -20, -20, 0, -20, -20, -20, -10, 10, -10, -10, -10
+    };
+    const std::array<double, 12> expectedBottom {
+        100, 120, 120, 120, 100, 120, 120, 120, 90, 110, 110, 110
+    };
+    const std::array<double, 12> expectedMovedTop {
+        -100, -100, -100, -50, -100, -100, -100, -50, 0, 0, 0, 10
+    };
+    const std::array<double, 12> expectedMovedBottom {
+        200, 200, 200, 150, 200, 200, 200, 150, 120, 140, 140, 140
+    };
+    for (int j = 0; j <= 2; ++j) {
+        for (int i = 0; i <= 3; ++i) {
+            const auto pillar = j*4 + i;
+            const auto p = 6*pillar;
+            BOOST_CHECK_EQUAL(first[p + 2], expectedTop[pillar]);
+            BOOST_CHECK_EQUAL(first[p + 5], expectedBottom[pillar]);
+            BOOST_CHECK_EQUAL(moved[p + 2], expectedMovedTop[pillar]);
+            BOOST_CHECK_EQUAL(moved[p + 5], expectedMovedBottom[pillar]);
+            const double u = i/3.0;
+            const double v = j/2.0;
+            const double n = u + 2*v;
+            for (double z : {-150.0, 50.0, 250.0}) {
+                const double t = (z - first[p + 2])/(first[p + 5] - first[p + 2]);
+                const double q = (z - moved[p + 2])/(moved[p + 5] - moved[p + 2]);
+                const double x = first[p] + t*(first[p + 3] - first[p]);
+                const double y = first[p + 1] + t*(first[p + 4] - first[p + 1]);
+                BOOST_CHECK_SMALL(x - (100*u + 0.1*(n - 1)*z), 1e-10);
+                BOOST_CHECK_SMALL(y - (100*v + 0.1*(2 - n)*z), 1e-10);
+                BOOST_CHECK_SMALL(x - (moved[p] + q*(moved[p + 3] - moved[p])), 1e-10);
+                BOOST_CHECK_SMALL(y - (moved[p + 1] + q*(moved[p + 4] - moved[p + 1])), 1e-10);
+            }
+        }
+    }
+}
+
+// Each box computes this face from a different host column. The fault and
+// off-face endpoint depths must not change the shared COORD representation.
+BOOST_AUTO_TEST_CASE(TestLgrPillarsAgreeAcrossFault)
+{
+    std::string coord;
+    for (int j = 0; j <= 1; ++j) {
+        for (int i = 0; i <= 2; ++i) {
+            const double top = -50.0*i;
+            const double bottom = 600.0 + 70.0*i;
+            coord += fmt::format("{} {} {} {} {} {}\n",
+                                 100*i, 100*j - 0.1*j*top, top,
+                                 100*i, 100*j - 0.1*j*bottom, bottom);
+        }
+    }
+    const Opm::EclipseState state(Opm::Parser{}.parseString(fmt::format(R"(
+RUNSPEC
+DIMENS
+ 2 1 1 /
+OIL
+WATER
+LGR
+ 2 /
+GRID
+COORD
+{} /
+ZCORN
+ 0 0 200 200  0 0 200 200  90 90 290 290  10 10 210 210 /
+CARFIN
+ 'LGR1' 1 1 1 1 1 1 2 2 1 /
+ENDFIN
+CARFIN
+ 'LGR2' 2 2 1 1 1 1 2 2 1 /
+ENDFIN
+PORO
+ 2*0.25 /
+PERMX
+ 2*100 /
+COPY
+ PERMX PERMY /
+ PERMX PERMZ /
+/
+PROPS
+REGIONS
+SOLUTION
+SCHEDULE
+)", coord)));
+    const auto& left = state.getInputGrid().getLGRCell("LGR1").getCOORD();
+    const auto& right = state.getInputGrid().getLGRCell("LGR2").getCOORD();
+    for (std::size_t j = 0; j <= 2; ++j) {
+        BOOST_CHECK_EQUAL_COLLECTIONS(left.begin() + 6*(3*j + 2), left.begin() + 6*(3*j + 3),
+                                      right.begin() + 6*(3*j), right.begin() + 6*(3*j + 1));
+    }
+}
+
+// A spatial counterpart to the planar converging-pillar case. Fitting the
+// refined pillars to either host layer folds children of the other layer.
+// Sample the trilinear hexahedron Jacobian; this is a regression check, not
+// a proof of positivity throughout arbitrary corner-point cells.
+BOOST_AUTO_TEST_CASE(TestLgrSpatialRefinementKeepsPositiveSampledJacobians)
+{
+    const Opm::EclipseState state(Opm::Parser{}.parseString(R"(
+RUNSPEC
+DIMENS
+ 1 1 2 /
+OIL
+WATER
+LGR
+ 1 /
+GRID
+COORD
+ 0   0   0  -128   3   600
+ 100 0   0   154   62  600
+ 0   100 0  -76    56  600
+ 100 100 0   185   212 600 /
+ZCORN
+ 4*0
+ 444 270 144 558
+ 444 270 144 558
+ 4*600 /
+CARFIN
+ 'LGR1' 1 1 1 1 1 2 2 2 8 /
+ENDFIN
+PORO
+ 2*0.25 /
+PERMX
+ 2*100 /
+COPY
+ PERMX PERMY /
+ PERMX PERMZ /
+/
+PROPS
+REGIONS
+SOLUTION
+SCHEDULE
+)"));
+    const auto minimumSampledJacobian = [](const Opm::EclipseGrid& grid,
+                                           std::size_t i, std::size_t j, std::size_t k) {
+        std::array<std::array<double, 3>, 8> corners;
+        for (std::size_t n = 0; n < corners.size(); ++n) {
+            corners[n] = grid.getCornerPos(i, j, k, n);
+        }
+        double minimum = std::numeric_limits<double>::max();
+        for (int a = 0; a <= 10; ++a) {
+            for (int b = 0; b <= 10; ++b) {
+                for (int c = 0; c <= 10; ++c) {
+                    const std::array<double, 3> local {a/10.0, b/10.0, c/10.0};
+                    std::array<std::array<double, 3>, 3> jacobian{};
+                    for (std::size_t n = 0; n < corners.size(); ++n) {
+                        for (int derivative = 0; derivative < 3; ++derivative) {
+                            double weight = 1.0;
+                            for (int dim = 0; dim < 3; ++dim) {
+                                const bool high = (n >> dim) & 1;
+                                weight *= dim == derivative ? (high ? 1.0 : -1.0)
+                                    : (high ? local[dim] : 1.0 - local[dim]);
+                            }
+                            for (int dim = 0; dim < 3; ++dim) {
+                                jacobian[derivative][dim] += weight*corners[n][dim];
+                            }
+                        }
+                    }
+                    const auto& x = jacobian[0];
+                    const auto& y = jacobian[1];
+                    const auto& z = jacobian[2];
+                    const double determinant = x[0]*(y[1]*z[2] - y[2]*z[1])
+                        - x[1]*(y[0]*z[2] - y[2]*z[0]) + x[2]*(y[0]*z[1] - y[1]*z[0]);
+                    minimum = std::min(minimum, determinant);
+                }
+            }
+        }
+        return minimum;
+    };
+    const auto& parent = state.getInputGrid();
+    for (std::size_t k = 0; k < 2; ++k) {
+        BOOST_CHECK_GT(minimumSampledJacobian(parent, 0, 0, k), 0.0);
+    }
+    const auto& refined = parent.getLGRCell("LGR1");
+    BOOST_REQUIRE_EQUAL(refined.getCartesianSize(), 32);
+    for (std::size_t k = 0; k < refined.getNZ(); ++k) {
+        for (std::size_t j = 0; j < refined.getNY(); ++j) {
+            for (std::size_t i = 0; i < refined.getNX(); ++i) {
+                BOOST_TEST_CONTEXT("refined cell " << i << ',' << j << ',' << k) {
+                    BOOST_CHECK_GT(minimumSampledJacobian(refined, i, j, k), 0.0);
+                }
+            }
+        }
+    }
 }
 
 namespace {

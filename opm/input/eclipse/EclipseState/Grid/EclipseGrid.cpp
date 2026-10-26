@@ -25,6 +25,7 @@
 #include <opm/common/utility/OpmInputError.hpp>
 #include <opm/common/utility/String.hpp>
 #include <opm/common/utility/numeric/GeometryUtil.hpp>
+#include <opm/common/utility/numeric/PillarInterpolation.hpp>
 #include <opm/common/utility/numeric/VectorOps.hpp>
 #include <opm/common/utility/numeric/VectorUtil.hpp>
 #include <opm/common/utility/numeric/calculateCellVol.hpp>
@@ -1916,7 +1917,7 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
                 const bool move_bottom = (flag == "BOTTOM" || flag == "BOTH");
                 if (!move_top && !move_bottom) {
                     throw std::invalid_argument("ADDZCORN: ACTION must be TOP, BOTTOM, BOTH/ALL");
-                } 
+                }
 
                 const double value = record.getItem<ADDZCORN::ADDED_VALUE>().getSIDouble(0);
                 const int ix1 = record.getItem<ADDZCORN::IX1>().get<int>(0);
@@ -2040,7 +2041,7 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
             }
         }
 
-        
+
         mapper.addZCORN(m_zcorn, addzcorns);
 
         // Keep original-input representation in sync for save().
@@ -2582,7 +2583,6 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
                                                             lgr_cell.refinedColumns(2) });
 
                 auto& child = lgr_children_cells.back();
-                child.setPillarsFromBoxLayer(lgr_input.pillarsFromBoxLayer());
                 child.inheritActiveCellsFromFather(*this);
 
                 if (child.get_father_global().empty()) {
@@ -3235,70 +3235,6 @@ namespace Opm {
         m_coord = generate_refined_coord(parent_coord,  parent_nxyz);
         m_zcorn = generate_refined_zcorn(parent_zcorn, parent_nxyz);
 
-        // Inside a host column a refined pillar passes through the bilinear interpolation
-        // of the host's corners on the top and bottom of the column's first non-collapsed
-        // layer, so stacked boxes share pillars (LGRPILLR 'BOX': the box's own, as the reference).
-        const auto ch = CoordMapper { static_cast<std::size_t>(parent_nxyz[0]),
-                                      static_cast<std::size_t>(parent_nxyz[1]) };
-        const auto zh = ZcornMapper { static_cast<std::size_t>(parent_nxyz[0]),
-                                      static_cast<std::size_t>(parent_nxyz[1]),
-                                      static_cast<std::size_t>(parent_nxyz[2]) };
-        const auto cc = CoordMapper { getNX(), getNY() };
-        auto line = [this](int dim, std::size_t r) {
-            const auto& col = m_columns[dim];
-            const auto last = col.fracHi.size() - 1;
-            // A line on a host boundary inside the box belongs to the lower column.
-            if ((r > last) || ((r > 0) && (col.fracLo[r] == 0.0))) {
-                return std::pair<std::size_t, double> {
-                    static_cast<std::size_t>(low_fatherIJK[dim] + col.parentOffset[r - 1]),
-                    col.fracHi[r - 1] };
-            }
-            return std::pair<std::size_t, double> {
-                static_cast<std::size_t>(low_fatherIJK[dim] + col.parentOffset[r]), col.fracLo[r] };
-        };
-        auto hostCorner = [&](std::size_t I, std::size_t J, std::size_t K, int di, int dj, int dk) {
-            const double* pil = &parent_coord[ch.index(I + di, J + dj, 0, 0)];
-            const double z = parent_zcorn[zh.index(I, J, K, di + 2*dj + 4*dk)];
-            const double t = (pil[5] != pil[2]) ? (z - pil[2]) / (pil[5] - pil[2]) : 0.0;
-            return std::array<double,3>{ pil[0] + t*(pil[3] - pil[0]), pil[1] + t*(pil[4] - pil[1]), z };
-        };
-        for (std::size_t jr = 0; jr <= getNY(); ++jr) {
-            const auto [J, tj] = line(1, jr);
-            for (std::size_t ir = 0; ir <= getNX(); ++ir) {
-                const auto [I, ti] = line(0, ir);
-                if ((ti == 0.0 || ti == 1.0) && (tj == 0.0 || tj == 1.0)) {
-                    continue;
-                }
-                const int kFirst = m_pillarsFromBoxLayer ? low_fatherIJK[2] : 0;
-                const int kLast = m_pillarsFromBoxLayer ? up_fatherIJK[2] : parent_nxyz[2] - 1;
-                for (auto K = static_cast<std::size_t>(kFirst);
-                     K <= static_cast<std::size_t>(kLast); ++K) {
-                    std::array<std::array<double,3>,2> ends{};
-                    for (int dk = 0; dk < 2; ++dk) {
-                        for (int dj = 0; dj < 2; ++dj) {
-                            for (int di = 0; di < 2; ++di) {
-                                const double w = (di ? ti : 1.0 - ti) * (dj ? tj : 1.0 - tj);
-                                const auto x = hostCorner(I, J, K, di, dj, dk);
-                                for (int c = 0; c < 3; ++c) {
-                                    ends[dk][c] += w*x[c];
-                                }
-                            }
-                        }
-                    }
-                    const double dz = ends[1][2] - ends[0][2];
-                    if (std::abs(dz) > 1.0e-6) {
-                        // Keep the endpoint depths, so only the line changes.
-                        double* pillar = &m_coord[cc.index(ir, jr, 0, 0)];
-                        for (double* end : {pillar, pillar + 3}) {
-                            const double t = (end[2] - ends[0][2]) / dz;
-                            end[0] = ends[0][0] + t*(ends[1][0] - ends[0][0]);
-                            end[1] = ends[0][1] + t*(ends[1][1] - ends[0][1]);
-                        }
-                        break;
-                    }
-                }
-            }
-        }
         EclipseGrid::perform_refinement();
     }
 
@@ -3402,130 +3338,45 @@ namespace Opm {
                                                                const std::array<int,3>&   parent_nxyz)
     {
 
-        constexpr std::array<std::array<int,2>,4> corner_offset = {{
-            {0,0}, // 0
-            {1,0}, // 1
-            {1,1}, // 2
-            {0,1}, // 3
-        }};
+        const auto ch = CoordMapper { static_cast<std::size_t>(parent_nxyz[0]),
+                                      static_cast<std::size_t>(parent_nxyz[1]) };
+        const auto cc = CoordMapper { getNX(), getNY() };
 
-        auto interpolatePillar = [](const double* p1,
-                                              const double* p2,
-                                              const double t,
-                                              double* p)
-        {
-            for (std::size_t ix = 0; ix < std::size_t{6}; ++ix)
-            {
-                p[ix] = t * p2[ix] + (1.0 - t) * p1[ix];
+        // The 'dim' argument is 0 (i-direction) or 1 (j-direction), and the 'line'
+        // argument is the index of the refined pillar in that direction. I.e.
+        // for 2 columns of cells in the i-direction, refined each into three,
+        // there will be a total of 7 such pillars in the i-direction.
+        // Returns the index of the parent pillar and the interpolation fraction.
+        // Choosing the low fraction except for the last line, which uses the high fraction,
+        // i.e. returns (parent_index, 1.0) instead of (parent_index + 1, 0.0).
+        auto position = [this](int dim, std::size_t line) {
+            const auto& columns = m_columns[dim];
+            if (line == columns.parentOffset.size()) {
+                return std::pair<std::size_t, double> {
+                    static_cast<std::size_t>(low_fatherIJK[dim] + columns.parentOffset.back()),
+                    columns.fracHi.back() };
             }
+            return std::pair<std::size_t, double> {
+                static_cast<std::size_t>(low_fatherIJK[dim] + columns.parentOffset[line]),
+                columns.fracLo[line] };
         };
 
-        auto bilinear_interpolation = [](std::array<const double*, 4>& z,
-                                                              double ti, double tj, auto* interpolated_coord)
-        {
-            for (std::size_t dim = 0; dim < std::size_t{6}; ++dim) {
-                const double one_i = 1.0 - ti;
-                const double one_j = 1.0 - tj;
-                interpolated_coord[dim] =
-                    z[0][dim] * one_i * one_j +
-                    z[1][dim] * ti    * one_j +
-                    z[2][dim] * ti    * tj    +
-                    z[3][dim] * one_i * tj;
-            }
-        };
-
-        const std::size_t nx = getNX();
-        const std::size_t ny = getNY();
-
-        const std::size_t NX = parent_nxyz[0];
-        const std::size_t NY = parent_nxyz[1];
-
-        const std::size_t Imin = low_fatherIJK[0];
-        const std::size_t Imax = up_fatherIJK[0];
-
-        const std::size_t Jmin = low_fatherIJK[1];
-        const std::size_t Jmax = up_fatherIJK[1];
-
-        const auto ch = CoordMapper { NX, NY }; // Host grid dimensions Mapper
-        const auto cc = CoordMapper { nx, ny }; // Child/LGR grid dimensions Mapper
-
-        // Refined pillar lines carry the low edge of each refined column, plus a
-        // closing line: the same tables as the cell corners.
-        const auto& cI = m_columns[0];
-        const auto& cJ = m_columns[1];
-
-        std::vector<double> coord_c;
-        coord_c.resize(6 * (nx + 1) * (ny + 1));
-
-        // Element loop: for each element in the parent grid, identified by (I,J) in between Imin and Imax and Jmin and Jmax
-        for (auto J = Jmin; J <= Jmax; ++J) {
-            for (auto I = Imin; I <= Imax; ++I) {
-                // Retrieve Pillars Coordinates for the corners of the element (I,J) in the parent grid
-                std::array<const double*, 4> pillars = {};
-                for (std::size_t idx = 0; idx < corner_offset.size(); ++idx) {
-                    const auto& offset = corner_offset[idx];
-                    pillars[idx] = &coord_h[ch.index(I + offset[0], J + offset[1], 0, 0)];
-                }
-                // Loop through interal divisons inside the corners of element (I,J)
-                // Looping from 0 to si or sj included means, looping through t=0 to t=1 included, thus covering
-                // the whole area of the element (I,J) and including the corners.
-                const auto j0 = cJ.firstColumn[J - Jmin];
-                const auto i0 = cI.firstColumn[I - Imin];
-                for (auto j = 0; j < cJ.count[J - Jmin]; ++j) {
-                    const auto tj = cJ.fracLo[j0 + j];
-                    for (auto i = 0; i < cI.count[I - Imin]; ++i) {
-                        const auto ti = cI.fracLo[i0 + i];
-                        const auto refined_index = &coord_c[cc.index(i0 + i, j0 + j, 0, 0)];
-                        bilinear_interpolation( pillars, ti, tj, refined_index);
+        std::vector<double> coord_c(6 * (getNX() + 1) * (getNY() + 1));
+        for (std::size_t j = 0; j <= getNY(); ++j) {
+            const auto [J, tj] = position(1, j);
+            for (std::size_t i = 0; i <= getNX(); ++i) {
+                const auto [I, ti] = position(0, i);
+                std::array<PillarInterpolation::Pillar, 4> pillars;
+                for (std::size_t dj = 0; dj < 2; ++dj) {
+                    for (std::size_t di = 0; di < 2; ++di) {
+                        const auto* source = &coord_h[ch.index(I + di, J + dj, 0, 0)];
+                        pillars[di + 2*dj] = PillarInterpolation::Pillar::fromCoord(source);
                     }
                 }
+                PillarInterpolation::bilinear(pillars, ti, tj)
+                    .writeCoord(&coord_c[cc.index(i, j, 0, 0)]);
             }
         }
-
-        // Interpolating the Pillars coords
-        for (auto I = Imin; I <= Imax; ++I) {
-                // Retrieve Pillars Coordinates for the corners of the element (I,J) in the parent grid
-                std::array<const double*, 2> pillars = {};
-                std::size_t index = 0;
-                // Retrieve TOP Pillars Coordinates of Host Cell for the top row of elements in the LGR
-                for (const auto& offset : {corner_offset[3], corner_offset[2]}) {
-                    pillars[index++] = &coord_h[ch.index(I + offset[0], Jmax + offset[1], 0, 0)];
-                }
-                const auto i0 = cI.firstColumn[I - Imin];
-                for (auto i = 0; i < cI.count[I - Imin]; ++i) {
-                    const auto ti = cI.fracLo[i0 + i];
-                    const auto refined_index = &coord_c[cc.index(i0 + i, ny , 0, 0)];
-                    interpolatePillar(pillars[0], pillars[1], ti, refined_index);
-                }
-        }
-
-        for (auto J = Jmin; J <= Jmax; ++J) {
-            // Retrieve Pillars Coordinates for the corners of the element (I,J) in the parent grid
-            std::array<const double*, 2> pillars = {};
-            std::size_t index = 0;
-            // Retrieve RIGHT Pillars Coordinates of Host Cell between for Pillar
-            //  {Imax+1,J} to 2 {Imax+1,J+1} . I.e. RIGHT Pillars of the rightmost column of elements in the LGR
-            for (const auto& offset : {corner_offset[1], corner_offset[2]}) {
-                pillars[index++] = &coord_h[ch.index(Imax + offset[0], J + offset[1], 0, 0)];
-            }
-            const auto j0 = cJ.firstColumn[J - Jmin];
-            for (auto j = 0; j < cJ.count[J - Jmin]; ++j) {
-                const auto tj = cJ.fracLo[j0 + j];
-                const auto refined_index = &coord_c[cc.index(nx, j0 + j, 0, 0)];
-                interpolatePillar(pillars[0], pillars[1], tj, refined_index);
-            }
-        }
-
-        // adding the coordinate of the top right corner of the LGR, which is the only one not covered by the previous loops
-        {
-            // Retrieve TOP Right Pillars Coordinates of Host Cell between for Pillar
-            const double* host_top_right_pillar = &coord_h[ch.index(Imax + 1, Jmax + 1, 0, 0)];
-            double* refined_index = &coord_c[cc.index(nx, ny, 0, 0)];
-            for (std::size_t dim = 0; dim < 6; ++dim) {
-                refined_index[dim] = host_top_right_pillar[dim];
-            }
-        }
-
         return coord_c;
     }
 
