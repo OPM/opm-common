@@ -1917,7 +1917,7 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
                 const bool move_bottom = (flag == "BOTTOM" || flag == "BOTH");
                 if (!move_top && !move_bottom) {
                     throw std::invalid_argument("ADDZCORN: ACTION must be TOP, BOTTOM, BOTH/ALL");
-                } 
+                }
 
                 const double value = record.getItem<ADDZCORN::ADDED_VALUE>().getSIDouble(0);
                 const int ix1 = record.getItem<ADDZCORN::IX1>().get<int>(0);
@@ -2041,7 +2041,7 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
             }
         }
 
-        
+
         mapper.addZCORN(m_zcorn, addzcorns);
 
         // Keep original-input representation in sync for save().
@@ -3342,9 +3342,13 @@ namespace Opm {
                                       static_cast<std::size_t>(parent_nxyz[1]) };
         const auto cc = CoordMapper { getNX(), getNY() };
 
-        // Each line is the low edge of a refined column, except the closing
-        // line, which is the high edge of the last column. Use the same
-        // fractions for pillars and ZCORN, including graded refinements.
+        // The 'dim' argument is 0 (i-direction) or 1 (j-direction), and the 'line'
+        // argument is the index of the refined pillar in that direction. I.e.
+        // for 2 columns of cells in the i-direction, refined each into three,
+        // there will be a total of 7 such pillars in the i-direction.
+        // Returns the index of the parent pillar and the interpolation fraction.
+        // Choosing the low fraction except for the last line, which uses the high fraction,
+        // i.e. returns (parent_index, 1.0) instead of (parent_index + 1, 0.0).
         auto position = [this](int dim, std::size_t line) {
             const auto& columns = m_columns[dim];
             if (line == columns.parentOffset.size()) {
