@@ -96,14 +96,14 @@ public:
     /*!
      * \brief The PVT region whose water properties the fluid system returns.
      */
-    unsigned regionIndex() const
-    { return regionIdx_; }
+    unsigned pvtRegionIndex() const
+    { return pvtRegionIdx_; }
 
     /*!
      * \brief Select the PVT region of the water properties.
      */
-    void setRegionIndex(const unsigned regionIdx)
-    { regionIdx_ = regionIdx; }
+    void setPvtRegionIndex(const unsigned pvtRegionIdx)
+    { pvtRegionIdx_ = pvtRegionIdx; }
 
     //! \copydoc ParameterCacheBase::updatePhase
     template <class FluidState>
@@ -427,7 +427,7 @@ protected:
     OilPhaseParams oilPhaseParams_;
     GasPhaseParams gasPhaseParams_;
 
-    unsigned regionIdx_{0};
+    unsigned pvtRegionIdx_{0};
 };
 
 } // namespace Opm
