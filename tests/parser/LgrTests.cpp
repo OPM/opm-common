@@ -917,7 +917,7 @@ namespace {
 // One column of two layers on sheared pillars; the lower layer thickens towards
 // i = 1 more than the upper one. Fitting pillars to either layer would give
 // different lines, whereas line interpolation must be layer independent.
-std::vector<double> lgrPillarCoord(const int k, const std::string& mode)
+std::vector<double> lgrPillarCoord(const int k)
 {
     const auto deck = fmt::format(R"(RUNSPEC
 DIMENS
@@ -935,7 +935,6 @@ COORD
 ZCORN
  4*10  20 30 20 30
  20 30 20 30  40 70 40 70 /
-{}
 CARFIN
 'LGR1' 1 1 1 1 {} {} 2 2 1 /
 ENDFIN
@@ -951,29 +950,23 @@ PROPS
 REGIONS
 SOLUTION
 SCHEDULE
-)", mode.empty() ? "" : fmt::format("LGRPILLR\n '{}' /", mode), k, k);
+)", k, k);
 
     const Opm::EclipseState state(Opm::Parser{}.parseString(deck));
-    BOOST_CHECK_EQUAL(state.getLgrs().pillarsFromBoxLayer(), mode == "BOX");
     return state.getInputGrid().getLGRCell("LGR1").getCOORD();
 }
 
 } // Anonymous namespace
 
-// Legacy pillar modes no longer change the layer-independent line interpolation.
-BOOST_AUTO_TEST_CASE(TestLgrPillarMode)
+// Pillar lines depend on the host lines, not the layer being refined.
+BOOST_AUTO_TEST_CASE(TestLgrPillarsIndependentOfLayer)
 {
-    const auto column = lgrPillarCoord(2, "");
-    BOOST_CHECK(column == lgrPillarCoord(2, "COLUMN"));
-    BOOST_CHECK(column == lgrPillarCoord(1, ""));
-    BOOST_CHECK(column == lgrPillarCoord(2, "BOX"));
+    const auto column = lgrPillarCoord(2);
+    BOOST_CHECK(column == lgrPillarCoord(1));
     // Centre pillar: interpolate the four lines at common depths 0 and 100.
     const std::vector<double> centre {50, 50, 0, 50.5, 53, 100};
     BOOST_CHECK_EQUAL_COLLECTIONS(column.begin() + 24, column.begin() + 30,
                                   centre.begin(), centre.end());
-    BOOST_CHECK(lgrPillarCoord(1, "BOX") == lgrPillarCoord(1, ""));
-
-    BOOST_CHECK_THROW(lgrPillarCoord(2, "STACKED"), Opm::OpmInputError);
 }
 
 BOOST_AUTO_TEST_CASE(TestLgrPillarEndpointIndependence)

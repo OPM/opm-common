@@ -54,10 +54,6 @@ public:
                 const DeckRecord& lgrRecord,
                 const KeywordLocation& location);
 
-    /// Legacy LGRPILLR setting, retained for input/serialization compatibility.
-    /// EclipseGrid now interpolates pillar lines independently of any layer.
-    bool pillarsFromBoxLayer() const { return m_pillarsFromBoxLayer; }
-
     /// The level-zero (I,J,K) whose refinement holds cell ijk of LGR number
     /// lgrNumber (1-based, deck order), up through nested parents; graded boxes
     /// included.
@@ -69,12 +65,10 @@ public:
     void serializeOp(Serializer& serializer)
     {
         serializer(m_lgrs);
-        serializer(m_pillarsFromBoxLayer);
     }
 
 private:
     OrderedMap<Carfin, 8> m_lgrs;
-    bool m_pillarsFromBoxLayer{false};
 
 };
 }
