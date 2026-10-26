@@ -542,8 +542,6 @@ namespace Opm {
           return m_columns;
         }
 
-
-
         /**
          * @brief Sets Local Grid Refinement for the EclipseGridLGR.
          *

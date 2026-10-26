@@ -46,8 +46,10 @@ struct Pillar {
 /// intersections with that horizontal plane. Thus the resulting line is
 /// independent of the choice of endpoints representing each input line.
 ///
-/// The returned endpoints are at the minimum input top depth and maximum
-/// input bottom depth. Their depths describe a practical extent only;
+/// The returned endpoints are at the minimum top depth and maximum bottom
+/// depth of the input pillars with nonzero interpolation weight. On a shared
+/// face, only its two pillars contribute, so adjacent columns compute the
+/// same endpoint representation. The depths describe a practical extent only;
 /// interpolation along a pillar is not restricted to that extent.
 Pillar bilinear(const std::array<Pillar, 4>& pillars, double u, double v);
 

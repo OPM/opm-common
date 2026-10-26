@@ -18,6 +18,7 @@
 #include <opm/common/utility/numeric/PillarInterpolation.hpp>
 
 #include <algorithm>
+#include <limits>
 
 namespace Opm::PillarInterpolation {
 
@@ -42,19 +43,24 @@ std::array<double, 3> Pillar::atDepth(double z) const
 
 Pillar bilinear(const std::array<Pillar, 4>& pillars, double u, double v)
 {
-    double top = pillars[0].top[2];
-    double bottom = pillars[0].bottom[2];
-    for (const auto& pillar : pillars) {
-        top = std::min(top, pillar.top[2]);
-        bottom = std::max(bottom, pillar.bottom[2]);
-    }
-
     const std::array<double, 4> weights {
         (1.0 - u)*(1.0 - v), u*(1.0 - v), (1.0 - u)*v, u*v
     };
+    double top = std::numeric_limits<double>::max();
+    double bottom = std::numeric_limits<double>::lowest();
+    for (std::size_t i = 0; i < pillars.size(); ++i) {
+        if (weights[i] != 0.0) {
+            top = std::min(top, pillars[i].top[2]);
+            bottom = std::max(bottom, pillars[i].bottom[2]);
+        }
+    }
+
     auto interpolateAtDepth = [&](double depth) {
         std::array<double, 3> point {0.0, 0.0, depth};
         for (std::size_t i = 0; i < pillars.size(); ++i) {
+            if (weights[i] == 0.0) {
+                continue;
+            }
             const auto coordinate = pillars[i].atDepth(depth);
             for (int dim = 0; dim < 2; ++dim) {
                 point[dim] += weights[i]*coordinate[dim];
