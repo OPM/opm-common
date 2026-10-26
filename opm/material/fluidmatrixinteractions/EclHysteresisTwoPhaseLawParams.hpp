@@ -726,11 +726,15 @@ public:
                     updateParams = true;
                 }
                 else { // start new drainage curve
+                    // Gas immobile at the reversal point (e.g. waiting for gas to arrive):
+                    // the drainage starts when the gas arrives, at the current water saturation.
+                    const bool gasArrival = (nState_ == 1) &&
+                        (1.0 - krnSwDrainStartNxt_ <= Sncrd_ + tolWAG_);
                     isDrain_ = true;
                     // If all gas was trapped at the reversal point, the new drainage curve
                     // starts at the trapped saturation.
                     krnSwDrainStart_ = std::min(krnSwDrainStartNxt_, Scalar(1.0 - SncrtWAG_));
-                    swatImbStart_ = swatImbStartNxt_;
+                    swatImbStart_ = gasArrival ? std::max(Swco_, swCur) : swatImbStartNxt_;
                     krnSwWAG_ = krnSw;
                     updateParams = true;
                 }
@@ -738,8 +742,9 @@ public:
 
             // Two-phase drainage (primary or retracing the primary imbibition curve) turns
             // into three-phase drainage as soon as the water saturation exceeds the
-            // threshold. This also covers an initial three-phase state.
-            if (isDrain_ && nState_ == 1 && krwSw > tolWAG_ &&
+            // threshold. This also covers an initial three-phase state. A drainage started
+            // in this update keeps the origin set by the reversal above.
+            if (isDrain_ && wasDrain_ && nState_ == 1 && krwSw > tolWAG_ &&
                 swCur > Swco_ + wagConfig().wagWaterThresholdSaturation())
             {
                 if (1.0 - krnSw <= Sncrd_ + tolWAG_) {
