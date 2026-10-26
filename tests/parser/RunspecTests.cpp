@@ -1373,3 +1373,54 @@ REGDIMS
 
     BOOST_CHECK_EQUAL(maxID, std::size_t{6});
 }
+
+BOOST_AUTO_TEST_CASE(EHYSTR_ModParamTrapped_Carlson)
+{
+    const auto input = std::string { R"(
+RUNSPEC
+OIL
+WATER
+GAS
+SATOPTS
+  HYSTER /
+PROPS
+EHYSTR
+  1* 0 1* 0.0 KR /
+)" };
+
+    const auto hyst = EclHysterConfig { Parser{}.parseString(input) };
+
+    BOOST_CHECK(hyst.active());
+    BOOST_CHECK(!hyst.activeWag());
+    BOOST_CHECK_EQUAL(hyst.krHysteresisModel(), 0);
+
+    // Item 4 is only relevant to Killough/pc hysteresis and WAG
+    // hysteresis, so the default value is retained here.
+    BOOST_CHECK_CLOSE(hyst.modParamTrapped(), 0.1, 1.0e-8);
+}
+
+BOOST_AUTO_TEST_CASE(EHYSTR_ModParamTrapped_WAG)
+{
+    const auto input = std::string { R"(
+RUNSPEC
+OIL
+WATER
+GAS
+TABDIMS
+/
+SATOPTS
+  HYSTER /
+PROPS
+EHYSTR
+  1* 0 1* 0.0 KR /
+WAGHYSTR
+  1.5 0.0 YES NO NO /
+)" };
+
+    const auto hyst = EclHysterConfig { Parser{}.parseString(input) };
+
+    BOOST_CHECK(hyst.active());
+    BOOST_CHECK(hyst.activeWag());
+    BOOST_CHECK_EQUAL(hyst.krHysteresisModel(), 0);
+    BOOST_CHECK_EQUAL(hyst.modParamTrapped(), 0.0);
+}

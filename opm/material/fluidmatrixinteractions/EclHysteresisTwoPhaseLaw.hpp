@@ -329,7 +329,7 @@ public:
             if (Sw <= params.krnSwDrainRevert()+params.tolWAG() /*&& params.nState()>=1 */) {
                 Evaluation Krg = EffectiveLaw::template twoPhaseSatKrn<Evaluation, Args...>(params.drainageParams(), Sw);
                 Evaluation KrgDrain2 = (Krg-params.krnDrainStart())*params.reductionDrain() + params.krnImbStart();
-                return KrgDrain2;
+                return max(KrgDrain2, Evaluation(0.0));
             }
 
             // Subsequent imbibition: Scanning curve derived from previous secondary drainage
@@ -340,7 +340,7 @@ public:
             else {/* Sw < params.krnSwWAG() */  // Reversion along "next" drainage curve
                 Evaluation Krg = EffectiveLaw::template twoPhaseSatKrn<Evaluation, Args...>(params.drainageParams(), Sw);
                 Evaluation KrgDrainNxt = (Krg-params.krnDrainStartNxt())*params.reductionDrainNxt() + params.krnImbStartNxt();
-                return KrgDrainNxt;
+                return max(KrgDrainNxt, Evaluation(0.0));
             }
         }
         // if no relperm hysteresis is enabled, use the drainage curve
