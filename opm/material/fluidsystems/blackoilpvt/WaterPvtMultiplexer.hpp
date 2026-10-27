@@ -334,6 +334,9 @@ public:
 private:
     WaterPvtApproach approach_{WaterPvtApproach::NoWater};
     void* realWaterPvt_{nullptr};
+
+    // Deletes the current PVT object (according to approach_) and resets the pointer.
+    void releaseRealPvt_();
 };
 
 } // namespace Opm

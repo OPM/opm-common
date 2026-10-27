@@ -33,6 +33,13 @@ template<class Scalar, bool enableThermal, bool enableBrine>
 WaterPvtMultiplexer<Scalar,enableThermal,enableBrine>::
 ~WaterPvtMultiplexer()
 {
+    releaseRealPvt_();
+}
+
+template<class Scalar, bool enableThermal, bool enableBrine>
+void WaterPvtMultiplexer<Scalar,enableThermal,enableBrine>::
+releaseRealPvt_()
+{
     switch (approach_) {
     case WaterPvtApproach::ConstantCompressibilityWater: {
         delete &getRealPvt<WaterPvtApproach::ConstantCompressibilityWater>();
@@ -57,6 +64,8 @@ WaterPvtMultiplexer<Scalar,enableThermal,enableBrine>::
     case WaterPvtApproach::NoWater:
         break;
     }
+
+    realWaterPvt_ = nullptr;
 }
 
 template<class Scalar, bool enableThermal, bool enableBrine>
@@ -122,31 +131,34 @@ template<class Scalar, bool enableThermal, bool enableBrine>
 void WaterPvtMultiplexer<Scalar,enableThermal,enableBrine>::
 setApproach(WaterPvtApproach appr)
 {
+    void* newPvt = nullptr;
     switch (appr) {
     case WaterPvtApproach::ConstantCompressibilityWater:
-        realWaterPvt_ = new ConstantCompressibilityWaterPvt<Scalar>;
+        newPvt = new ConstantCompressibilityWaterPvt<Scalar>;
         break;
 
     case WaterPvtApproach::ConstantCompressibilityBrine:
-        realWaterPvt_ = new ConstantCompressibilityBrinePvt<Scalar>;
+        newPvt = new ConstantCompressibilityBrinePvt<Scalar>;
         break;
 
     case WaterPvtApproach::ThermalWater:
-        realWaterPvt_ = new WaterPvtThermal<Scalar, enableBrine>;
+        newPvt = new WaterPvtThermal<Scalar, enableBrine>;
         break;
 
     case WaterPvtApproach::BrineCo2:
-        realWaterPvt_ = new BrineCo2Pvt<Scalar>;
+        newPvt = new BrineCo2Pvt<Scalar>;
         break;
 
     case WaterPvtApproach::BrineH2:
-        realWaterPvt_ = new BrineH2Pvt<Scalar>;
+        newPvt = new BrineH2Pvt<Scalar>;
         break;
 
     case WaterPvtApproach::NoWater:
         throw std::logic_error("Not implemented: Water PVT of this deck!");
     }
 
+    releaseRealPvt_();
+    realWaterPvt_ = newPvt;
     approach_ = appr;
 }
 
@@ -155,26 +167,35 @@ WaterPvtMultiplexer<Scalar,enableThermal,enableBrine>&
 WaterPvtMultiplexer<Scalar,enableThermal,enableBrine>::
 operator=(const WaterPvtMultiplexer<Scalar,enableThermal,enableBrine>& data)
 {
-    approach_ = data.approach_;
-    switch (approach_) {
+    if (this == &data) {
+        return *this;
+    }
+
+    // Copy first, then release the current object using the current approach.
+    void* newPvt = nullptr;
+    switch (data.approach_) {
     case WaterPvtApproach::ConstantCompressibilityWater:
-        realWaterPvt_ = new ConstantCompressibilityWaterPvt<Scalar>(*static_cast<const ConstantCompressibilityWaterPvt<Scalar>*>(data.realWaterPvt_));
+        newPvt = new ConstantCompressibilityWaterPvt<Scalar>(*static_cast<const ConstantCompressibilityWaterPvt<Scalar>*>(data.realWaterPvt_));
         break;
     case WaterPvtApproach::ConstantCompressibilityBrine:
-        realWaterPvt_ = new ConstantCompressibilityBrinePvt<Scalar>(*static_cast<const ConstantCompressibilityBrinePvt<Scalar>*>(data.realWaterPvt_));
+        newPvt = new ConstantCompressibilityBrinePvt<Scalar>(*static_cast<const ConstantCompressibilityBrinePvt<Scalar>*>(data.realWaterPvt_));
         break;
     case WaterPvtApproach::ThermalWater:
-        realWaterPvt_ = new WaterPvtThermal<Scalar, enableBrine>(*static_cast<const WaterPvtThermal<Scalar, enableBrine>*>(data.realWaterPvt_));
+        newPvt = new WaterPvtThermal<Scalar, enableBrine>(*static_cast<const WaterPvtThermal<Scalar, enableBrine>*>(data.realWaterPvt_));
         break;
     case WaterPvtApproach::BrineCo2:
-        realWaterPvt_ = new BrineCo2Pvt<Scalar>(*static_cast<const BrineCo2Pvt<Scalar>*>(data.realWaterPvt_));
+        newPvt = new BrineCo2Pvt<Scalar>(*static_cast<const BrineCo2Pvt<Scalar>*>(data.realWaterPvt_));
         break;
     case WaterPvtApproach::BrineH2:
-        realWaterPvt_ = new BrineH2Pvt<Scalar>(*static_cast<const BrineH2Pvt<Scalar>*>(data.realWaterPvt_));
+        newPvt = new BrineH2Pvt<Scalar>(*static_cast<const BrineH2Pvt<Scalar>*>(data.realWaterPvt_));
         break;
-    default:
+    case WaterPvtApproach::NoWater:
         break;
     }
+
+    releaseRealPvt_();
+    realWaterPvt_ = newPvt;
+    approach_ = data.approach_;
 
     return *this;
 }
