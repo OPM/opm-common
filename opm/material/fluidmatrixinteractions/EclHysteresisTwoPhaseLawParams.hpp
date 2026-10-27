@@ -146,11 +146,11 @@ public:
     {
         if (config().enableHysteresis()) {
             if (config().krHysteresisModel() == 2 || config().krHysteresisModel() == 3 || config().krHysteresisModel() == 4 || config().pcHysteresisModel() == 0) {
-                C_ = 1.0/(Sncri_ - Sncrd_ + 1.0e-12) - 1.0/(Snmaxd_ - Sncrd_);
+                C_ = 1.0/(Sncri_ - Sncrd_ + saturationEpsilon_) - 1.0/(Snmaxd_ - Sncrd_);
                 curvatureCapPrs_ =  config().curvatureCapPrs();
             }
             if (config().krHysteresisModel() == 4) {
-                Cw_ = 1.0/(Swcri_ - Swcrd_ + 1.0e-12) - 1.0/(Swmaxd_ - Swcrd_);
+                Cw_ = 1.0/(Swcri_ - Swcrd_ + saturationEpsilon_) - 1.0/(Swmaxd_ - Swcrd_);
                 Krwd_sncri_ = EffLawT::twoPhaseSatKrw(drainageParams(), 1 - Sncri());
             }
             updateDynamicParams_();
@@ -513,7 +513,7 @@ public:
     {
         // a = 1 (deltaKrw)^a Formulation according to KILLOUGH 1976
         Scalar deltaKrw = Krwi_snrmax() - Krwd_sncri();
-        Scalar Krwi_snr = Krwd_sncrt() + deltaKrw * (Sncrt() / max(1e-12, Sncri()));
+        Scalar Krwi_snr = Krwd_sncrt() + deltaKrw * (Sncrt() / max(saturationEpsilon_, Sncri()));
         return (Krwi_snr - Krwd) / ( Krwi_snrmax() - Krwi_snmax());
     }
 
@@ -648,7 +648,7 @@ public:
             Evaluation Sn = Sncrd_;
             if (Swf < 1.0-baseWAG_) {
                 // Notation: Sn.. = Sg.. + Swco
-                const Scalar den = std::max(Scalar(1.0-krnSwDrainStart_ - baseWAG_), Scalar(1.0e-12));
+                const Scalar den = std::max(Scalar(1.0-krnSwDrainStart_ - baseWAG_), saturationEpsilon_);
                 const Scalar dd = (1.0-krnSwImbStart_ - Sncrd_) / den;
                 Sn += (1.0-Swf-baseWAG_)*dd;
             }
@@ -987,7 +987,7 @@ private:
                 aTransf_ += config().modParamTrapped() * (Snmaxd_ - Snhy());
             }
             if (snRev > SncrtWAG_) {
-                cTransf_ = 1.0 / (SncrtWAG_ - baseWAG_ + 1.0e-12) - aTransf_ / (snRev - baseWAG_);
+                cTransf_ = 1.0 / (SncrtWAG_ - baseWAG_ + saturationEpsilon_) - aTransf_ / (snRev - baseWAG_);
             }
         }
 
@@ -1102,6 +1102,9 @@ private:
     Scalar baseWAG_{};             // Lower end of the free saturation range for the current imbibition curve.
     Scalar aTransf_{1.0};          // Killough modification factor used for free gas calculations.
     Scalar tolWAG_{0.001};
+
+    // Regularisation of saturation differences used as denominators.
+    static constexpr Scalar saturationEpsilon_ = 1.0e-12;
 };
 
 } // namespace Opm
