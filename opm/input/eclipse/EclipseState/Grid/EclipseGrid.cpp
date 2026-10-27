@@ -3241,22 +3241,35 @@ namespace Opm {
     std::vector<double> EclipseGridLGR::generate_refined_zcorn(const std::vector<double>& zcorn_h,
                                                                const std::array<int,3>&   parent_nxyz)
     {
+        // Trilinear in the father's eight corner depths, z[i + 2*j + 4*k]. Where
+        // the father has zero thickness at this lateral position, the refined
+        // corners get zero thickness too: rounding would otherwise leave some
+        // refined cells slightly thick and turn others upside down.
         auto trilinear_interpolation  = [](const std::array<double,8>& z,
                                                      double ti, double tj, double tk)
         {
-            const double one_i = 1.0 - ti;
-            const double one_j = 1.0 - tj;
-            const double one_k = 1.0 - tk;
+            double dz = 0.0;
+            for (int j = 0; j < 2; ++j) {
+                const double wj = (j == 0) ? (1.0 - tj) : tj;
+                for (int i = 0; i < 2; ++i) {
+                    const double wi = (i == 0) ? (1.0 - ti) : ti;
+                    dz += wi*wj*(z[i + 2*j + 4] - z[i + 2*j]);
+                }
+            }
+            const double t = (dz == 0.0) ? 0.0 : tk;
 
-            return
-                z[0] * one_i * one_j * one_k +  // (0,0,0)
-                z[1] * ti    * one_j * one_k +  // (1,0,0)
-                z[2] * one_i * tj    * one_k +  // (0,1,0) - FIXED
-                z[3] * ti    * tj    * one_k +  // (1,1,0) - FIXED
-                z[4] * one_i * one_j * tk +     // (0,0,1)
-                z[5] * ti    * one_j * tk +     // (1,0,1)
-                z[6] * one_i * tj    * tk +     // (0,1,1) - FIXED
-                z[7] * ti    * tj    * tk;      // (1,1,1) - FIXED
+            double depth = 0.0;
+            for (int k = 0; k < 2; ++k) {
+                const double wk = (k == 0) ? (1.0 - t) : t;
+                for (int j = 0; j < 2; ++j) {
+                    const double wj = (j == 0) ? (1.0 - tj) : tj;
+                    for (int i = 0; i < 2; ++i) {
+                        const double wi = (i == 0) ? (1.0 - ti) : ti;
+                        depth += wi*wj*wk*z[i + 2*j + 4*k];
+                    }
+                }
+            }
+            return depth;
         };
 
         constexpr std::array<std::array<int,3>,8> corner_offset = {{
