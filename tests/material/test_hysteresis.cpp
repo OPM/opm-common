@@ -48,10 +48,13 @@
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 
+#include <algorithm>
 #include <array>
+#include <cmath>
 #include <cstddef>
 #include <functional>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 //Test Killogh hysteresis Gas Oil System
@@ -3649,4 +3652,322 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisRollbackRoundtrip2pGasOil, Scalar, Types
     Scalar tol = 1e-5;
     BOOST_CHECK_CLOSE(krBefore[Fixture<Scalar>::oilPhaseIdx], krRestored[Fixture<Scalar>::oilPhaseIdx], tol);
     BOOST_CHECK_CLOSE(krBefore[Fixture<Scalar>::gasPhaseIdx], krRestored[Fixture<Scalar>::gasPhaseIdx], tol);
+}
+
+// ---------------------------------------------------------------------------
+// WAG hysteresis (WAGHYSTR) gas relative permeability.
+//
+// Three-phase cell with connate water Swco = 0.2 and linear primary drainage
+// krg = Sg/0.8 (Sgcr = 0, Sgu = 0.8). Expected values are computed from the
+// closed-form scanning curve definitions:
+//   Trapped gas:   Sgt = Sghy / (A + C*Sghy),  A = 1 + a*(Sgu - Sghy)
+//   Imbibition:    krg = KD(base + y), Sg - Sgt = y - y/(A' + C'*y)
+//   Sec. drainage: KD(Sg) = R*(K(Sg) - K(Sgs)) + krImb(Sgs),  R = (Swco/Sw_s)^alpha
+// ---------------------------------------------------------------------------
+namespace {
+
+std::string wagHysterDeck(double C, double alpha, double fraction,
+                          double threshold, double modParam)
+{
+    return std::string { R"(
+RUNSPEC
+DIMENS
+   1 1 1 /
+TABDIMS
+/
+OIL
+WATER
+GAS
+SATOPTS
+  HYSTER /
+GRID
+DX
+   1*1000 /
+DY
+   1*1000 /
+DZ
+   1*50 /
+TOPS
+   1*0 /
+PORO
+  1*0.15 /
+PROPS
+SWOF
+  0.2  0.0  1.0  0.0
+  1.0  1.0  0.0  0.0 /
+SGOF
+  0.0  0.0  1.0  0.0
+  0.8  1.0  0.0  0.0 /
+EHYSTR
+  1* 0 1* )" } + std::to_string(modParam) + R"( KR /
+WAGHYSTR
+  )" + std::to_string(C) + " " + std::to_string(alpha) + " YES NO NO "
+       + std::to_string(fraction) + " " + std::to_string(threshold) + R"( /
+REGIONS
+SATNUM
+  1 /
+IMBNUM
+  1 /
+)";
+}
+
+template <class Scalar>
+struct WagCell
+{
+    using MaterialLaw = typename Fixture<Scalar>::MaterialLaw;
+    using MaterialLawManager = typename Fixture<Scalar>::MaterialLawManager;
+    static constexpr Scalar swco = 0.2;
+
+    explicit WagCell(const std::string& deckString)
+        : eclState(Opm::Parser{}.parseString(deckString))
+    {
+        manager.initFromState(eclState);
+        manager.initParamsForElements(eclState, 1, doOldLookup, doNothing);
+    }
+
+    typename Fixture<Scalar>::FluidState fluidState(Scalar sw, Scalar sg) const
+    {
+        typename Fixture<Scalar>::FluidState fs;
+        fs.setSaturation(Fixture<Scalar>::waterPhaseIdx, sw);
+        fs.setSaturation(Fixture<Scalar>::oilPhaseIdx, 1.0 - sw - sg);
+        fs.setSaturation(Fixture<Scalar>::gasPhaseIdx, sg);
+        return fs;
+    }
+
+    // Gas relperm at (sw, sg) with the current hysteresis state.
+    Scalar krg(Scalar sw, Scalar sg)
+    {
+        std::array<Scalar, Fixture<Scalar>::numPhases> kr{};
+        MaterialLaw::relativePermeabilities(kr, manager.materialLawParams(0), fluidState(sw, sg));
+        return kr[Fixture<Scalar>::gasPhaseIdx];
+    }
+
+    // Update the hysteresis state with (sw, sg) and return the gas relperm there.
+    Scalar step(Scalar sw, Scalar sg)
+    {
+        MaterialLaw::updateHysteresis(manager.materialLawParams(0), fluidState(sw, sg));
+        return krg(sw, sg);
+    }
+
+    const auto& gasOil() const
+    {
+        return manager.materialLawParams(0)
+            .template getRealParams<Opm::EclMultiplexerApproach::Default>().gasOilParams();
+    }
+
+    Scalar trappedGas() const { return gasOil().SncrtWAG() - swco; }
+
+    Opm::EclipseState eclState;
+    MaterialLawManager manager;
+};
+
+double wagK(double sg) { return std::clamp(sg / 0.8, 0.0, 1.0); }
+double wagKinv(double kr) { return 0.8 * kr; }
+
+// Free gas y above the base: d = y - y/(A + C*y), d = Sg - Sgt.
+double wagFree(double d, double C, double A = 1.0)
+{
+    if (d <= 0.0)
+        return 0.0;
+    const double q = C*d - (A - 1.0);
+    return (q + std::sqrt(q*q + 4.0*C*A*d)) / (2.0*C);
+}
+
+double wagTrapped(double sghy, double C, double a, double sgu = 0.8)
+{
+    return sghy / (1.0 + a*(sgu - sghy) + C*sghy);
+}
+
+template <class Scalar>
+constexpr double wagTol() { return std::is_same_v<Scalar, float> ? 2.0e-5 : 1.0e-5; }
+
+} // Anonymous namespace
+
+// Primary (two-phase) imbibition: Land's trapping (a = 0) and Killough's
+// modification frozen at the reversal point (a = 0.1).
+BOOST_AUTO_TEST_CASE_TEMPLATE(WagPrimaryImbibition, Scalar, Types)
+{
+    const double C = 2.0;
+    const double tol = wagTol<Scalar>();
+    for (const double a : { 0.0, 0.1 }) {
+        WagCell<Scalar> cell(wagHysterDeck(C, 0.5, 1.0e-6, 0.001, a));
+        const Scalar sw = cell.swco;
+
+        for (int i = 0; i <= 40; i += 2) {
+            const double sg = i / 100.0;
+            BOOST_CHECK_SMALL(cell.step(sw, sg) - wagK(sg), tol);
+        }
+        BOOST_CHECK_EQUAL(cell.gasOil().nState(), 1);
+
+        const double sghy = 0.4;
+        const double A = 1.0 + a*(0.8 - sghy);
+        const double sgt = wagTrapped(sghy, C, a);
+        BOOST_CHECK_SMALL(cell.trappedGas() - sgt, tol);
+
+        for (int i = 39; i >= 15; --i) {
+            const double sg = i / 100.0;
+            const double expected = wagK(wagFree(sg - sgt, C, A));
+            BOOST_CHECK_SMALL(cell.step(sw, sg) - expected, tol);
+            if (sg <= sgt) {
+                BOOST_CHECK_SMALL(double(cell.krg(sw, sg)), tol);
+            }
+            // Continuity: the imbibition curve passes through the reversal point.
+            const Scalar swRev = 1.0 - cell.swco - sghy;
+            BOOST_CHECK_SMALL(cell.gasOil().computeSwf(swRev) - swRev, Scalar(tol));
+        }
+        // Trapped saturation is unchanged during imbibition.
+        BOOST_CHECK_SMALL(cell.trappedGas() - sgt, tol);
+    }
+}
+
+// Three-phase cycles beyond nState = 2: secondary drainage with reduction,
+// imbibition curves based on the trapped saturation of the previous cycle,
+// fallback below the start of the drainage curve, and zero relperm at the
+// trapped saturation.
+BOOST_AUTO_TEST_CASE_TEMPLATE(WagThreePhaseCycles, Scalar, Types)
+{
+    const double C = 2.0;
+    const double alpha = 0.5;
+    const double tol = wagTol<Scalar>();
+    WagCell<Scalar> cell(wagHysterDeck(C, alpha, 1.0e-6, 0.001, 0.0));
+    const Scalar sw = 0.3;
+    const double R = std::pow(0.2 / 0.3, alpha);
+    const auto swGo = [&cell](double sg) { return Scalar(1.0 - cell.swco - sg); };
+
+    // Waiting for gas, then first (secondary) drainage from the critical saturation.
+    cell.step(sw, 0.0);
+    cell.step(sw, 0.0);
+    for (int i = 2; i <= 40; i += 2) {
+        const double sg = i / 100.0;
+        BOOST_CHECK_SMALL(cell.step(sw, sg) - R*wagK(sg), tol);
+    }
+    BOOST_CHECK_EQUAL(cell.gasOil().nState(), 2);
+    const double sgt1 = wagTrapped(0.4, C, 0.0);
+    BOOST_CHECK_SMALL(cell.trappedGas() - sgt1, tol);
+
+    const auto imb1 = [&](double sg) { return R*wagK(wagFree(sg - sgt1, C)); };
+    for (int i = 39; i >= 30; --i) {
+        const double sg = i / 100.0;
+        BOOST_CHECK_SMALL(cell.step(sw, sg) - imb1(sg), tol);
+    }
+    BOOST_CHECK_SMALL(cell.gasOil().computeKrImbWAG(swGo(0.4)) - R*wagK(0.4), tol);
+
+    // Second drainage from Sg = 0.30.
+    const double ki2 = imb1(0.30);
+    const auto drain2 = [&](double sg) { return R*(wagK(sg) - wagK(0.30)) + ki2; };
+    for (int i = 32; i <= 50; i += 2) {
+        const double sg = i / 100.0;
+        BOOST_CHECK_SMALL(cell.step(sw, sg) - drain2(sg), tol);
+        if (i == 32) { // continuity at the start of the drainage curve
+            BOOST_CHECK_SMALL(cell.krg(sw, 0.30) - ki2, tol);
+        }
+    }
+    BOOST_CHECK_EQUAL(cell.gasOil().nState(), 3);
+    const double sgt2 = wagTrapped(0.5, C, 0.0);
+    BOOST_CHECK_SMALL(cell.trappedGas() - sgt2, tol);
+
+    // Second imbibition: base = trapped saturation of the first cycle.
+    const double C2 = 1.0/(sgt2 - sgt1) - 1.0/(0.5 - sgt1);
+    const auto imb2 = [&](double sg) { return drain2(sgt1 + wagFree(sg - sgt2, C2)); };
+    for (int i = 49; i >= 35; --i) {
+        const double sg = i / 100.0;
+        BOOST_CHECK_SMALL(cell.step(sw, sg) - imb2(sg), tol);
+    }
+    BOOST_CHECK_SMALL(cell.gasOil().computeKrImbWAG(swGo(0.5)) - drain2(0.5), tol);
+    // The previous-cycle free gas transform is still applied (not a retrace of drainage).
+    BOOST_CHECK_GT(drain2(0.40) - imb2(0.40), 1.0e-3);
+
+    // Third drainage from Sg = 0.35.
+    const double ki3 = imb2(0.35);
+    const auto drain3 = [&](double sg) { return R*(wagK(sg) - wagK(0.35)) + ki3; };
+    for (int i = 37; i <= 60; i += 1) {
+        const double sg = i / 100.0;
+        BOOST_CHECK_SMALL(cell.step(sw, sg) - drain3(sg), tol);
+    }
+    BOOST_CHECK_EQUAL(cell.gasOil().nState(), 4);
+    const double sgt3 = wagTrapped(0.6, C, 0.0);
+    BOOST_CHECK_SMALL(cell.trappedGas() - sgt3, tol);
+
+    // Third imbibition (nState = 4), including the fallback below Sg = 0.35 on
+    // the drainage curve and zero relperm below the trapped saturation.
+    const double C3 = 1.0/(sgt3 - sgt2) - 1.0/(0.6 - sgt2);
+    const double sgImb = wagKinv(ki3);
+    const auto imb3 = [&](double sg) {
+        const double x = sgt2 + wagFree(sg - sgt3, C3);
+        if (x >= 0.35)
+            return drain3(x);
+        return wagK((x - sgt2)/(0.35 - sgt2) * sgImb);
+    };
+    bool fallbackTested = false;
+    for (int i = 59; i >= 25; --i) {
+        const double sg = i / 100.0;
+        BOOST_CHECK_SMALL(cell.step(sw, sg) - imb3(sg), tol);
+        fallbackTested = fallbackTested || (sgt2 + wagFree(sg - sgt3, C3) < 0.35 && sg > sgt3);
+        if (sg <= sgt3) {
+            BOOST_CHECK_SMALL(double(cell.krg(sw, sg)), tol);
+        }
+    }
+    BOOST_CHECK(fallbackTested);
+    BOOST_CHECK_SMALL(cell.gasOil().computeKrImbWAG(swGo(0.6)) - drain3(0.6), tol);
+    BOOST_CHECK_SMALL(cell.trappedGas() - sgt3, tol);
+
+    // Fourth drainage starting below the trapped saturation: starts at Sgt with krg = 0.
+    const Scalar sgLow = 0.25;
+    BOOST_CHECK_SMALL(double(cell.krg(sw, sgLow)), tol);
+    for (int i = 26; i <= 40; i += 1) {
+        const double sg = i / 100.0;
+        const double expected = std::max(0.0, R*(wagK(sg) - wagK(sgt3)));
+        BOOST_CHECK_SMALL(cell.step(sw, sg) - expected, tol);
+    }
+    BOOST_CHECK_EQUAL(cell.gasOil().nState(), 5);
+}
+
+// Gas arriving after a period without mobile gas: the drainage starts at the
+// critical saturation and uses the water saturation at gas arrival.
+BOOST_AUTO_TEST_CASE_TEMPLATE(WagGasArrival, Scalar, Types)
+{
+    const double alpha = 1.0;
+    const double tol = wagTol<Scalar>();
+
+    // Water above the threshold at gas arrival: secondary drainage, R = 0.2/0.4.
+    {
+        WagCell<Scalar> cell(wagHysterDeck(2.0, alpha, 1.0e-6, 0.001, 0.0));
+        for (int k = 0; k < 3; ++k) {
+            BOOST_CHECK_SMALL(double(cell.step(0.4, 0.0)), tol);
+        }
+        for (int i = 5; i <= 30; i += 5) {
+            const double sg = i / 100.0;
+            BOOST_CHECK_SMALL(cell.step(0.4, sg) - 0.5*wagK(sg), tol);
+        }
+        BOOST_CHECK_EQUAL(cell.gasOil().nState(), 2);
+    }
+
+    // Water dropping to connate as the gas arrives: primary (two-phase) drainage.
+    {
+        WagCell<Scalar> cell(wagHysterDeck(2.0, alpha, 1.0e-6, 0.001, 0.0));
+        for (int k = 0; k < 3; ++k) {
+            BOOST_CHECK_SMALL(double(cell.step(0.4, 0.0)), tol);
+        }
+        for (int i = 10; i <= 30; i += 5) {
+            const double sg = i / 100.0;
+            BOOST_CHECK_SMALL(cell.step(0.2, sg) - wagK(sg), tol);
+        }
+        BOOST_CHECK_EQUAL(cell.gasOil().nState(), 1);
+    }
+
+    // Water arriving during a two-phase drainage: switch to secondary drainage
+    // from the current point, with R evaluated at the current water saturation.
+    {
+        WagCell<Scalar> cell(wagHysterDeck(2.0, alpha, 1.0e-6, 0.001, 0.0));
+        for (int i = 0; i <= 20; i += 5) {
+            const double sg = i / 100.0;
+            BOOST_CHECK_SMALL(cell.step(0.2, sg) - wagK(sg), tol);
+        }
+        BOOST_CHECK_SMALL(cell.step(0.25, 0.25) - wagK(0.25), tol);
+        BOOST_CHECK_EQUAL(cell.gasOil().nState(), 2);
+        for (int i = 30; i <= 40; i += 5) {
+            const double sg = i / 100.0;
+            BOOST_CHECK_SMALL(cell.step(0.25, sg) - (0.8*(wagK(sg) - wagK(0.25)) + wagK(0.25)), tol);
+        }
+    }
 }

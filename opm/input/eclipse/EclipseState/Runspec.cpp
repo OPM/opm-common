@@ -446,8 +446,9 @@ EclHysterConfig::EclHysterConfig(const Opm::Deck& deck)
                     "(the first item of the 'EHYSTR' keyword).");
         }
 
-        // Killough model: Regularisation for trapped critical saturation calculations
-        if (pcHystMod == 0 || krHystMod == 2 || krHystMod == 3)
+        // Killough model: Regularisation for trapped critical saturation calculations.
+        // The WAG hysteresis model also uses this parameter for the trapped gas saturation.
+        if (pcHystMod == 0 || krHystMod == 2 || krHystMod == 3 || activeWagHyst)
             modParamTrappedValue = ehystrKeyword.getRecord(0).getItem<Kw::mod_param_trapped>().get<double>(0);
 
         if (krHystMod >= 0) {
