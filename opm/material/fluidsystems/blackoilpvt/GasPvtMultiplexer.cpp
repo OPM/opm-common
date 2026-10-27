@@ -100,7 +100,7 @@ GasPvtMultiplexer<Scalar, enableThermal>::makeGasPvt()
 {
     return UniqueVoidPtrWithDeleter(
         new ConcreteGasPvt,
-        [this](void* ptr) { deleter(ptr); }
+        [](void* ptr) { delete static_cast<ConcreteGasPvt*>(ptr); }
     );
 }
 
@@ -152,7 +152,7 @@ GasPvtMultiplexer<Scalar, enableThermal>::
 copyPvt(const std::unique_ptr<void, std::function<void(void*)>>& sourcePvt) {
     return UniqueVoidPtrWithDeleter(
         new ConcretePvt(*static_cast<const ConcretePvt*>(sourcePvt.get())),
-        [this](void* ptr) { deleter(ptr); }
+        [](void* ptr) { delete static_cast<ConcretePvt*>(ptr); }
     );
 }
 
@@ -160,6 +160,10 @@ template <class Scalar, bool enableThermal>
 GasPvtMultiplexer<Scalar, enableThermal>&
 GasPvtMultiplexer<Scalar, enableThermal>::operator=(const GasPvtMultiplexer<Scalar, enableThermal>& data)
 {
+    if (this == &data) {
+        return *this;
+    }
+
     gasPvtApproach_ = data.gasPvtApproach_;
     switch (gasPvtApproach_) {
     case GasPvtApproach::DryGas:
@@ -183,7 +187,8 @@ GasPvtMultiplexer<Scalar, enableThermal>::operator=(const GasPvtMultiplexer<Scal
     case GasPvtApproach::H2Gas:
         realGasPvt_ = copyPvt<H2GasPvt<Scalar>>(data.realGasPvt_);
         break;
-    default:
+    case GasPvtApproach::NoGas:
+        realGasPvt_.reset();
         break;
     }
 
@@ -191,9 +196,9 @@ GasPvtMultiplexer<Scalar, enableThermal>::operator=(const GasPvtMultiplexer<Scal
 }
 
 template <class Scalar, bool enableThermal>
-void GasPvtMultiplexer<Scalar, enableThermal>::deleter(void* ptr)
+void GasPvtMultiplexer<Scalar, enableThermal>::deleter(GasPvtApproach approach, void* ptr)
 {
-    switch (gasPvtApproach_) {
+    switch (approach) {
         case GasPvtApproach::DryGas: {
             delete static_cast<DryGasPvt<Scalar>*>(ptr);
             break;

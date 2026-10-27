@@ -410,3 +410,76 @@ BOOST_AUTO_TEST_CASE(RSCONST_ThrowsBelowBubblePoint)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE(GasPvtMultiplexerAssignment)
+
+namespace {
+
+using GasPvt = Opm::GasPvtMultiplexer<double>;
+
+GasPvt makeDryGas(const double bg)
+{
+    GasPvt gasPvt;
+    gasPvt.setApproach(Opm::GasPvtApproach::DryGas);
+    auto& dryGas = gasPvt.getRealPvt<Opm::GasPvtApproach::DryGas>();
+    dryGas.setNumRegions(1);
+    dryGas.setGasFormationVolumeFactor(0, {{1.0e5, bg}, {2.0e5, bg}});
+    return gasPvt;
+}
+
+GasPvt makeWetGas(const double rvSat)
+{
+    GasPvt gasPvt;
+    gasPvt.setApproach(Opm::GasPvtApproach::WetGas);
+    auto& wetGas = gasPvt.getRealPvt<Opm::GasPvtApproach::WetGas>();
+    wetGas.setNumRegions(1);
+    wetGas.setSaturatedGasOilVaporizationFactor(0, {{1.0e5, rvSat}, {2.0e5, rvSat}});
+    return gasPvt;
+}
+
+} // Anonymous namespace
+
+BOOST_AUTO_TEST_CASE(AssignBetweenApproaches)
+{
+    // Assigning a multiplexer with a different approach must release the
+    // previous PVT object using its own type, not the new one.
+    auto gasPvt = makeDryGas(0.005);
+
+    const auto wetGas = makeWetGas(0.15);
+    gasPvt = wetGas;
+    BOOST_CHECK(gasPvt.approach() == Opm::GasPvtApproach::WetGas);
+    BOOST_CHECK_CLOSE(gasPvt.saturatedOilVaporizationFactor(0, 300.0, 1.5e5), 0.15, 1.0e-10);
+
+    const auto dryGas = makeDryGas(0.004);
+    gasPvt = dryGas;
+    BOOST_CHECK(gasPvt.approach() == Opm::GasPvtApproach::DryGas);
+    BOOST_CHECK_CLOSE(gasPvt.inverseFormationVolumeFactor(0, 300.0, 1.5e5, 0.0, 0.0), 250.0, 1.0e-10);
+}
+
+BOOST_AUTO_TEST_CASE(AssignNoGasReleasesPvtObject)
+{
+    auto gasPvt = makeDryGas(0.005);
+
+    gasPvt = GasPvt{};
+    BOOST_CHECK(gasPvt.approach() == Opm::GasPvtApproach::NoGas);
+    BOOST_CHECK(gasPvt.realGasPvt() == nullptr);
+
+    const auto wetGas = makeWetGas(0.15);
+    gasPvt = wetGas;
+    BOOST_CHECK(gasPvt.approach() == Opm::GasPvtApproach::WetGas);
+    BOOST_CHECK_CLOSE(gasPvt.saturatedOilVaporizationFactor(0, 300.0, 1.5e5), 0.15, 1.0e-10);
+}
+
+BOOST_AUTO_TEST_CASE(SelfAssignment)
+{
+    auto gasPvt = makeWetGas(0.15);
+    const void* realPvt = gasPvt.realGasPvt();
+
+    const auto& self = gasPvt;
+    gasPvt = self;
+    BOOST_CHECK(gasPvt.approach() == Opm::GasPvtApproach::WetGas);
+    BOOST_CHECK_EQUAL(gasPvt.realGasPvt(), realPvt);
+    BOOST_CHECK_CLOSE(gasPvt.saturatedOilVaporizationFactor(0, 300.0, 1.5e5), 0.15, 1.0e-10);
+}
+
+BOOST_AUTO_TEST_SUITE_END()
