@@ -25,7 +25,7 @@
 #include <opm/common/utility/OpmInputError.hpp>
 #include <opm/common/utility/String.hpp>
 #include <opm/common/utility/numeric/GeometryUtil.hpp>
-#include <opm/common/utility/numeric/PillarInterpolation.hpp>
+#include <opm/common/utility/numeric/CornerPointRefinement.hpp>
 #include <opm/common/utility/numeric/VectorOps.hpp>
 #include <opm/common/utility/numeric/VectorUtil.hpp>
 #include <opm/common/utility/numeric/calculateCellVol.hpp>
@@ -3238,159 +3238,33 @@ namespace Opm {
         EclipseGrid::perform_refinement();
     }
 
+    namespace {
+
+    // The box an LGR refines in its father, for the shared corner-point refinement.
+    CornerPointRefinement::Box refinementBox(const std::array<int,3>& parent_nxyz,
+                                             const std::array<int,3>& low_fatherIJK,
+                                             const std::array<Carfin::RefinedColumns, 3>& columns)
+    {
+        CornerPointRefinement::Box box { parent_nxyz, low_fatherIJK, {} };
+        for (std::size_t dim = 0; dim < 3; ++dim) {
+            box.axes[dim] = { columns[dim].parentOffset, columns[dim].fracLo, columns[dim].fracHi };
+        }
+        return box;
+    }
+
+    } // anonymous namespace
+
     std::vector<double> EclipseGridLGR::generate_refined_zcorn(const std::vector<double>& zcorn_h,
                                                                const std::array<int,3>&   parent_nxyz)
     {
-        // Trilinear in the father's eight corner depths, z[i + 2*j + 4*k]. Where
-        // the father has zero thickness at this lateral position, the refined
-        // corners get zero thickness too: rounding would otherwise leave some
-        // refined cells slightly thick and turn others upside down.
-        auto trilinear_interpolation  = [](const std::array<double,8>& z,
-                                                     double ti, double tj, double tk)
-        {
-            double dz = 0.0;
-            for (int j = 0; j < 2; ++j) {
-                const double wj = (j == 0) ? (1.0 - tj) : tj;
-                for (int i = 0; i < 2; ++i) {
-                    const double wi = (i == 0) ? (1.0 - ti) : ti;
-                    dz += wi*wj*(z[i + 2*j + 4] - z[i + 2*j]);
-                }
-            }
-            const double t = (dz == 0.0) ? 0.0 : tk;
-
-            double depth = 0.0;
-            for (int k = 0; k < 2; ++k) {
-                const double wk = (k == 0) ? (1.0 - t) : t;
-                for (int j = 0; j < 2; ++j) {
-                    const double wj = (j == 0) ? (1.0 - tj) : tj;
-                    for (int i = 0; i < 2; ++i) {
-                        const double wi = (i == 0) ? (1.0 - ti) : ti;
-                        depth += wi*wj*wk*z[i + 2*j + 4*k];
-                    }
-                }
-            }
-            return depth;
-        };
-
-        constexpr std::array<std::array<int,3>,8> corner_offset = {{
-            {0,0,0}, // 1: (I,   J,   K  ) - top face, back-left
-            {1,0,0}, // 2: (I+1, J,   K  ) - top face, back-right
-            {0,1,0}, // 3: (I,   J+1, K  ) - top face, front-left
-            {1,1,0}, // 4: (I+1, J+1, K  ) - top face, front-right
-            {0,0,1}, // 5: (I,   J,   K+1) - bottom face, back-left
-            {1,0,1}, // 6: (I+1, J,   K+1) - bottom face, back-right
-            {0,1,1}, // 7: (I,   J+1, K+1) - bottom face, front-left
-            {1,1,1}  // 8: (I+1, J+1, K+1) - bottom face, front-right
-        }};
-
-        const std::size_t nx = getNX();
-        const std::size_t ny = getNY();
-        const std::size_t nz = getNZ();
-
-        const std::size_t NX = parent_nxyz[0];
-        const std::size_t NY = parent_nxyz[1];
-        const std::size_t NZ = parent_nxyz[2];
-
-        const std::size_t Imin = low_fatherIJK[0];
-        const std::size_t Imax = up_fatherIJK[0];
-
-        const std::size_t Jmin = low_fatherIJK[1];
-        const std::size_t Jmax = up_fatherIJK[1];
-
-        const std::size_t Kmin = low_fatherIJK[2];
-        const std::size_t Kmax = up_fatherIJK[2];
-
-        const auto zh = ZcornMapper { NX, NY,NZ }; // Host grid dimensions Mapper
-        const auto zc = ZcornMapper { nx, ny, nz }; // Child/LGR grid dimensions Mapper
-
-        std::vector<double> zcorn_c;
-        zcorn_c.resize(nx*ny*nz*8);
-
-
-        for (std::size_t K = Kmin; K <= Kmax; ++K) {
-            for (std::size_t J = Jmin; J <= Jmax; ++J) {
-                for (std::size_t I = Imin; I <= Imax; ++I) {
-                    std::array<double, 8> h_vertices;
-                    for (std::size_t idx = 0; idx < 8; ++idx) {
-                        const auto h = zh.index(I, J, K, idx);
-                        h_vertices[idx] = zcorn_h[h];
-                    }
-
-                    // The refined columns this parent owns, and their extent
-                    // inside it -- equal shares unless N*FIN/H*FIN say otherwise.
-                    const auto& cI = m_columns[0];
-                    const auto& cJ = m_columns[1];
-                    const auto& cK = m_columns[2];
-                    const auto k0 = cK.firstColumn[K - Kmin];
-                    const auto j0 = cJ.firstColumn[J - Jmin];
-                    const auto i0 = cI.firstColumn[I - Imin];
-
-                    for (std::size_t k = 0; k < static_cast<std::size_t>(cK.count[K - Kmin]); ++k) {
-                        for (std::size_t j = 0; j < static_cast<std::size_t>(cJ.count[J - Jmin]); ++j) {
-                            for (std::size_t i = 0; i < static_cast<std::size_t>(cI.count[I - Imin]); ++i) {
-                                for (std::size_t idx = 0; idx < 8; ++idx) {
-                                    const auto& offset = corner_offset[idx];
-
-                                    const double ti_c = offset[0] ? cI.fracHi[i0 + i] : cI.fracLo[i0 + i];
-                                    const double tj_c = offset[1] ? cJ.fracHi[j0 + j] : cJ.fracLo[j0 + j];
-                                    const double tk_c = offset[2] ? cK.fracHi[k0 + k] : cK.fracLo[k0 + k];
-                                    const auto c = zc.index(i0 + i, j0 + j, k0 + k, idx);
-                                    zcorn_c[c] = trilinear_interpolation(h_vertices,ti_c, tj_c, tk_c);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return zcorn_c;
+        return CornerPointRefinement::refinedZcorn(refinementBox(parent_nxyz, low_fatherIJK, m_columns), zcorn_h);
     }
 
 
     std::vector<double> EclipseGridLGR::generate_refined_coord(const std::vector<double>& coord_h,
                                                                const std::array<int,3>&   parent_nxyz)
     {
-
-        const auto ch = CoordMapper { static_cast<std::size_t>(parent_nxyz[0]),
-                                      static_cast<std::size_t>(parent_nxyz[1]) };
-        const auto cc = CoordMapper { getNX(), getNY() };
-
-        // The 'dim' argument is 0 (i-direction) or 1 (j-direction), and the 'line'
-        // argument is the index of the refined pillar in that direction. I.e.
-        // for 2 columns of cells in the i-direction, refined each into three,
-        // there will be a total of 7 such pillars in the i-direction.
-        // Returns the index of the parent pillar and the interpolation fraction.
-        // Choosing the low fraction except for the last line, which uses the high fraction,
-        // i.e. returns (parent_index, 1.0) instead of (parent_index + 1, 0.0).
-        auto position = [this](int dim, std::size_t line) {
-            const auto& columns = m_columns[dim];
-            if (line == columns.parentOffset.size()) {
-                return std::pair<std::size_t, double> {
-                    static_cast<std::size_t>(low_fatherIJK[dim] + columns.parentOffset.back()),
-                    columns.fracHi.back() };
-            }
-            return std::pair<std::size_t, double> {
-                static_cast<std::size_t>(low_fatherIJK[dim] + columns.parentOffset[line]),
-                columns.fracLo[line] };
-        };
-
-        std::vector<double> coord_c(6 * (getNX() + 1) * (getNY() + 1));
-        for (std::size_t j = 0; j <= getNY(); ++j) {
-            const auto [J, tj] = position(1, j);
-            for (std::size_t i = 0; i <= getNX(); ++i) {
-                const auto [I, ti] = position(0, i);
-                std::array<PillarInterpolation::Pillar, 4> pillars;
-                for (std::size_t dj = 0; dj < 2; ++dj) {
-                    for (std::size_t di = 0; di < 2; ++di) {
-                        const auto* source = &coord_h[ch.index(I + di, J + dj, 0, 0)];
-                        pillars[di + 2*dj] = PillarInterpolation::Pillar::fromCoord(source);
-                    }
-                }
-                PillarInterpolation::bilinear(pillars, ti, tj)
-                    .writeCoord(&coord_c[cc.index(i, j, 0, 0)]);
-            }
-        }
-        return coord_c;
+        return CornerPointRefinement::refinedCoord(refinementBox(parent_nxyz, low_fatherIJK, m_columns), coord_h);
     }
 
     void EclipseGridLGR::save_core(Opm::EclIO::EclOutput& egridfile, const Opm::UnitSystem& units) const{

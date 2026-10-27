@@ -69,6 +69,7 @@ list(APPEND MAIN_SOURCE_FILES
   opm/common/utility/parameters/ParameterRequirement.cpp
   opm/common/utility/parameters/ParameterTools.cpp
   opm/common/utility/numeric/calculateCellVol.cpp
+  opm/common/utility/numeric/CornerPointRefinement.cpp
   opm/common/utility/numeric/GridUtil.cpp
   opm/common/utility/numeric/MonotCubicInterpolator.cpp
   opm/common/utility/numeric/PillarInterpolation.cpp
@@ -563,6 +564,7 @@ list(APPEND TEST_SOURCE_FILES
   tests/test_OutputStream.cpp
   tests/test_PhaseUsageInfo.cpp
   tests/test_PillarInterpolation.cpp
+  tests/test_CornerPointRefinement.cpp
   tests/test_PaddedOutputString.cpp
   tests/test_param.cpp
   tests/test_PAvgCalculator.cpp
@@ -956,6 +958,7 @@ list(APPEND PUBLIC_HEADER_FILES
   opm/common/utility/VoigtArray.hpp
   opm/common/utility/gpuDecorators.hpp
   opm/common/utility/gpuistl_if_available.hpp
+  opm/common/utility/numeric/CornerPointRefinement.hpp
   opm/common/utility/numeric/GeometryUtil.hpp
   opm/common/utility/numeric/GridUtil.hpp
   opm/common/utility/numeric/MonotCubicInterpolator.hpp
