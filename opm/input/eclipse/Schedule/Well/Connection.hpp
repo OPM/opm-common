@@ -258,6 +258,53 @@ namespace Opm {
         void setDefaultSatTabId(bool id);
         void setStaticDFacCorrCoeff(const double c);
 
+        /// Branch numbers that have contributed a COMPTRAJ perforation to
+        /// this connection, in ascending order.
+        const std::vector<int>& comptrajBranches() const
+        {
+            return this->m_branches;
+        }
+
+        /// Per-branch CTF properties, parallel to comptrajBranches().  Empty
+        /// while fewer than two branches contribute, in which case
+        /// ctfProperties() already holds the single contributor's values.
+        const std::vector<CTFProperties>& comptrajBranchCTFs() const
+        {
+            return this->m_branch_ctf;
+        }
+
+        /// Restore branch bookkeeping onto a connection that was rebuilt in
+        /// place.
+        void setComptrajBranches(std::vector<int>           branches,
+                                 std::vector<CTFProperties> branch_ctf);
+
+        /// Combine a COMPTRAJ perforation from \p branch into this
+        /// connection.
+        ///
+        /// A cell may be intersected by several branches of a multi-lateral
+        /// well, each contributing its own transmissibility.  Re-specifying a
+        /// branch that already contributes replaces that branch's
+        /// contribution; other branches' contributions are retained.
+        ///
+        /// Updates ctfProperties() to the combination of all contributing
+        /// branches.
+        ///
+        /// \param[in] branch Contributing branch number.
+        ///
+        /// \param[in] ctf CTF properties of this branch's perforation.
+        void addComptrajBranch(int branch, const CTFProperties& ctf);
+
+        /// Well segment owner among the contributing branches.
+        ///
+        /// A cell shared by several branches is allocated to the segment of
+        /// the lowest-numbered contributing branch.  Nullopt for connections
+        /// that do not originate from COMPTRAJ.
+        std::optional<int> segmentOwnerBranch() const;
+
+        /// Whether this connection originates from COMPTRAJ rather than from
+        /// COMPDAT.
+        bool fromTrajectory() const;
+
         void scaleWellPi(double wellPi);
         bool prepareWellPIScaling();
         bool applyWellPIScaling(const double scaleFactor);
@@ -293,6 +340,8 @@ namespace Opm {
             serializer(this->m_subject_to_welpi);
             serializer(this->m_filter_cake);
             serializer(this->m_econ_limits);
+            serializer(this->m_branches);
+            serializer(this->m_branch_ctf);
         }
 
     private:
@@ -387,6 +436,21 @@ namespace Opm {
         std::optional<FilterCake> m_filter_cake{};
 
         Utility::CopyablePtr<ConnectionEconLimits> m_econ_limits{};
+
+        /// Branch numbers that have contributed a COMPTRAJ perforation to
+        /// this connection, in ascending order.  Empty for connections that
+        /// do not originate from COMPTRAJ.
+        std::vector<int> m_branches{};
+
+        /// Each contributing branch's CTF properties, parallel to
+        /// m_branches.  Only populated once more than one branch
+        /// contributes; with a single contributor ctf_properties_ already
+        /// holds that branch's values.
+        std::vector<CTFProperties> m_branch_ctf{};
+
+        /// Record \p ctf as the contribution of \p branch, keeping
+        /// m_branches sorted and m_branch_ctf aligned with it.
+        void setBranchCTF(int branch, const CTFProperties& ctf);
 
         static std::string CTFKindToString(const CTFKind);
     };

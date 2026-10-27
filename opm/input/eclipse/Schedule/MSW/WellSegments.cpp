@@ -25,6 +25,7 @@
 #include <opm/input/eclipse/Schedule/MSW/SICD.hpp>
 #include <opm/input/eclipse/Schedule/MSW/Segment.hpp>
 #include <opm/input/eclipse/Schedule/MSW/Valve.hpp>
+#include <opm/input/eclipse/Schedule/Well/GridIndependentWellKeywordHandlers.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
 
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
@@ -45,6 +46,7 @@
 #include <map>
 #include <numbers>
 #include <numeric>
+#include <optional>
 #include <set>
 #include <stdexcept>
 #include <string>
@@ -102,6 +104,104 @@ In {{file}} line {{line}}
         parseContext.handleError(Opm::ParseContext::SCHEDULE_ICD_INCOMPATIBLE_PDROP_MODEL,
                                  msg, location, errors);
     }
+
+    /// The well trajectory, holding one branch at a time.
+    ///
+    /// orderSegments() stores the segments of a branch consecutively, so
+    /// walking the segments in order visits each branch once and the geometry
+    /// is rebuilt once per branch rather than once per segment.
+    class BranchTrajectory
+    {
+    public:
+        BranchTrajectory(const std::map<int, std::array<std::vector<double>, 3>>& coords,
+                         const std::map<int, std::vector<double>>&                mds,
+                         std::string_view                                         well_name)
+            : m_coords   (coords)
+            , m_mds      (mds)
+            , m_well_name(well_name)
+        {
+            this->m_geometry = new external::RigWellPath;
+        }
+
+        /// The point on \p branch's trajectory at measured depth \p md.
+        external::cvf::Vec3d at(const int branch, const double md)
+        {
+            if (branch != this->m_branch) {
+                this->selectBranch(branch);
+            }
+
+            return this->interpolate(md);
+        }
+
+    private:
+        /// Point the geometry at \p branch's trajectory.
+        ///
+        /// Reports a missing branch instead of letting the lookup escape as a
+        /// std::out_of_range.  WELSEGS may name a branch that WELTRAJ never
+        /// defined, either directly or through a segment whose branch number
+        /// was mistyped.
+        void selectBranch(const int branch)
+        {
+            const auto coordPos = this->m_coords.find(branch);
+            const auto mdPos = this->m_mds.find(branch);
+
+            if ((coordPos == this->m_coords.end()) ||
+                (mdPos == this->m_mds.end()) || mdPos->second.empty())
+            {
+                throw std::logic_error {
+                    fmt::format("Well {} has segments on branch {}, but no WELTRAJ "
+                                "trajectory for that branch. Every branch used in "
+                                "WELSEGS must first be defined by WELTRAJ.",
+                                this->m_well_name, branch)
+                };
+            }
+
+            Opm::initWellPathGeometry(this->m_geometry, coordPos->second, mdPos->second);
+
+            this->m_branch_mds = &mdPos->second;
+            this->m_branch = branch;
+        }
+
+        /// Interpolate the selected branch's trajectory at measured depth \p md.
+        ///
+        /// A segment node outside the branch's trajectory would otherwise be
+        /// placed by extrapolating past its end, silently giving the well a
+        /// geometry the deck never described.
+        external::cvf::Vec3d interpolate(const double md) const
+        {
+            // Branch numbers start at 1, so at() always selects a branch first.
+            assert(this->m_branch_mds != nullptr);
+
+            const auto begin = this->m_branch_mds->front();
+            const auto end = this->m_branch_mds->back();
+
+            // The trajectory MDs and the segment lengths both come from the
+            // deck in the same unit, so a relative tolerance on the branch
+            // length is enough to absorb the round-off of reading them back.
+            const auto tol = 1.0e-10 * std::max(1.0, end - begin);
+
+            if ((md < begin - tol) || (md > end + tol)) {
+                throw std::logic_error {
+                    fmt::format("Segment node at measured depth {} on branch {} of "
+                                "well {} lies outside the branch's trajectory, "
+                                "which covers measured depths {} to {}.",
+                                md, this->m_branch, this->m_well_name, begin, end)
+                };
+            }
+
+            // Clamping keeps a node accepted by the tolerance from extrapolating.
+            return this->m_geometry->interpolatedPointAlongWellPath
+                (std::clamp(md, begin, end));
+        }
+
+        const std::map<int, std::array<std::vector<double>, 3>>& m_coords;
+        const std::map<int, std::vector<double>>&                m_mds;
+        std::string_view                                         m_well_name;
+
+        external::cvf::ref<external::RigWellPath> m_geometry{};
+        const std::vector<double>*                m_branch_mds{nullptr};
+        int                                       m_branch{0};
+    };
 }
 
 namespace Opm {
@@ -264,11 +364,15 @@ namespace Opm {
             m_segments[outlet_segment_index].addInletSegment(segment.segmentNumber());
         }
 
-        this->process(wname, unit_system, WellSegments::LengthDepth::ABS, this->depthTopSegment(), this->lengthTopSegment());
+        this->process(wname, {}, {}, unit_system, WellSegments::LengthDepth::ABS,
+                      this->depthTopSegment(), this->lengthTopSegment());
     }
 
 
-    void WellSegments::loadWELSEGS(const DeckKeyword& welsegsKeyword, const UnitSystem& unit_system)
+    void WellSegments::loadWELSEGS(const DeckKeyword& welsegsKeyword,
+                                   const std::map<int, std::array<std::vector<double>, 3>>& coords,
+                                   const std::map<int, std::vector<double>>& mds,
+                                   const UnitSystem& unit_system)
     {
         using Kw = ParserKeywords::WELSEGS;
 
@@ -288,6 +392,37 @@ namespace Opm {
 
         const auto nodeX_top = record1.getItem<Kw::TOP_X>().getSIDouble(0);
         const auto nodeY_top = record1.getItem<Kw::TOP_Y>().getSIDouble(0);
+
+        if (!mds.empty()) {
+            const auto mainBranch = mds.find(1);
+            if ((mainBranch == mds.end()) || mainBranch->second.empty()) {
+                throw std::logic_error {
+                    fmt::format("Well {} has WELTRAJ trajectory data, but none "
+                                "for the main branch. Branch 1 must be defined "
+                                "before WELSEGS can position its segments.", wname)
+                };
+            }
+
+            if (length_top < mainBranch->second.front()) {
+                throw std::logic_error {
+                    fmt::format("TOP_LENGTH {} in WELSEGS for well {} is less than "
+                                "the trajectory starting MD {}.",
+                                length_top, wname, mainBranch->second.front())
+                };
+            }
+
+            // The top segment's node sits on the trajectory, just like every
+            // other node, so any position given in the deck is redundant.
+            if (!(record1.getItem<Kw::TOP_X>().defaultApplied(0) &&
+                  record1.getItem<Kw::TOP_Y>().defaultApplied(0)))
+            {
+                OpmLog::warning(fmt::format(
+                    "TOP_X/TOP_Y values ({:.3e}, {:.3e}) in WELSEGS for grid-independent "
+                    "well {} are not defaulted. The values will be ignored and the top "
+                    "segment node position taken from the well trajectory instead.",
+                    nodeX_top, nodeY_top, wname));
+            }
+        }
 
         // Pipe-wall thermal properties for the whole segment set.  Individual
         // segments may override these in their own records.
@@ -378,6 +513,21 @@ namespace Opm {
             // If the length_depth_type is INC, then the depth is the depth change of the segment from the outlet segment.
             // If the length_depth_type is ABS, then the depth is the absolute depth of last the segment node in the range.
             const double depth = record.getItem<Kw::DEPTH>().getSIDouble(0);
+            if (mds.empty()) {
+                if (record.getItem<Kw::DEPTH>().defaultApplied(0)) {
+                    throw std::logic_error {
+                        fmt::format("DEPTH is defaulted for well {}. DEPTH values may only be "
+                                    "defaulted in WELSEGS for grid-independent wells. Please "
+                                    "provide an explicit DEPTH value.", wname)
+                    };
+                }
+            }
+            else if (! record.getItem<Kw::DEPTH>().defaultApplied(0)) {
+                OpmLog::warning(fmt::format(
+                    "DEPTH value {:.3e} in WELSEGS for grid-independent well {} is not "
+                    "defaulted. The value will be ignored and the segment node depth "
+                    "taken from the well trajectory instead.", depth, wname));
+            }
 
             double volume = invalid_value;
             {
@@ -449,7 +599,7 @@ namespace Opm {
             m_segments[outlet_segment_index].addInletSegment(segment.segmentNumber());
         }
 
-        this->process(wname, unit_system, length_depth_type, depth_top, length_top);
+        this->process(wname, coords, mds, unit_system, length_depth_type, depth_top, length_top);
     }
 
     const Segment& WellSegments::getFromSegmentNumber(const int segment_number) const {
@@ -464,16 +614,18 @@ namespace Opm {
     }
 
     void WellSegments::process(const std::string& well_name,
+                               const std::map<int, std::array<std::vector<double>, 3>>& coords,
+                               const std::map<int, std::vector<double>>& mds,
                                const UnitSystem& unit_system,
                                const LengthDepth length_depth,
                                const double      depth_top,
                                const double      length_top)
     {
         if (length_depth == LengthDepth::ABS) {
-            this->processABS();
+            this->processABS(well_name, coords, mds);
         }
         else if (length_depth == LengthDepth::INC) {
-            this->processINC(depth_top, length_top);
+            this->processINC(well_name, coords, mds, depth_top, length_top);
         }
         else {
             throw std::logic_error {
@@ -485,16 +637,39 @@ namespace Opm {
         this->checkSegmentDepthConsistency(well_name, unit_system);
     }
 
-    void WellSegments::processABS()
+    void
+    WellSegments::processABS(const std::string& well_name,
+                             const std::map<int, std::array<std::vector<double>, 3>>& coords,
+                             const std::map<int, std::vector<double>>& mds)
     {
         // Meaningless value to indicate unspecified/uncompleted values
         const double invalid_value = Segment::invalidValue();
 
         orderSegments();
 
-        std::size_t current_index = 1;
+        std::optional<BranchTrajectory> trajectory;
+        if (!coords.empty()) {
+            trajectory.emplace(coords, mds, well_name);
+        }
+
+        // Include the top segment only to update its coordinates from the trajectory.
+        std::size_t current_index = trajectory ? 0 : 1;
         while (current_index < size()) {
-            if (m_segments[current_index].dataReady()) {
+            const auto& current_segment = this->m_segments[current_index];
+            const auto  branch          = current_segment.branchNumber();
+
+            if (current_segment.dataReady()) {
+                if (trajectory) {
+                    // Take the segment node's depth and X/Y position from the
+                    // trajectory rather than from the WELSEGS record.
+                    const auto length = current_segment.totalLength();
+                    const auto coord = trajectory->at(branch, length);
+
+                    this->addSegment(Segment {
+                        current_segment, coord[2], length, coord[0], coord[1]
+                    });
+                }
+
                 current_index++;
                 continue;
             }
@@ -540,17 +715,26 @@ namespace Opm {
             for (std::size_t k = range_begin; k <= range_end; ++k) {
                 const auto& old_segment = this->m_segments[k];
 
-                double new_length, new_depth, new_x, new_y;
-                if (k == range_end) {
-                    new_length = old_segment.totalLength();
+                const auto num_inc = k - range_begin + 1;
+                const auto new_length = (k == range_end)
+                    ? old_segment.totalLength()
+                    : length_outlet + num_inc*length_inc;
+
+                double new_depth, new_x, new_y;
+                if (trajectory) {
+                    // Interpolated segment nodes take their depth and X/Y
+                    // position from the trajectory too.
+                    const auto coord = trajectory->at(branch, new_length);
+                    new_depth = coord[2];
+                    new_x     = coord[0];
+                    new_y     = coord[1];
+                }
+                else if (k == range_end) {
                     new_depth  = old_segment.depth();
                     new_x      = old_segment.node_X();
                     new_y      = old_segment.node_Y();
                 }
                 else {
-                    const auto num_inc = k - range_begin + 1;
-
-                    new_length = length_outlet + num_inc*length_inc;
                     new_depth  = depth_outlet  + num_inc*depth_inc;
                     new_x      = x_outlet      + num_inc*dx;
                     new_y      = y_outlet      + num_inc*dy;
@@ -587,39 +771,73 @@ namespace Opm {
         }
     }
 
-    void WellSegments::processINC(double depth_top, double length_top)
+    void
+    WellSegments::processINC(const std::string& well_name,
+                             const std::map<int, std::array<std::vector<double>, 3>>& coords,
+                             const std::map<int, std::vector<double>>& mds,
+                             double depth_top,
+                             double length_top)
     {
-        // Update the information inside the WellSegments to be in ABS way
+        // Give the top segment absolute depth/length and mark it data-ready.
         Segment new_top_segment(this->m_segments[0], depth_top, length_top);
         this->addSegment(new_top_segment);
 
         orderSegments();
 
-        // Begin with the second segment
-        for (std::size_t i_index = 1; i_index < size(); ++i_index) {
-            if (m_segments[i_index].dataReady()) {
+        std::optional<BranchTrajectory> trajectory;
+        if (!coords.empty()) {
+            trajectory.emplace(coords, mds, well_name);
+        }
+
+        // Include the top segment only to update its coordinates from the trajectory.
+        for (std::size_t i_index = trajectory ? 0 : 1; i_index < size(); ++i_index) {
+            const auto& current_segment = this->m_segments[i_index];
+            const auto  branch          = current_segment.branchNumber();
+
+            if (current_segment.dataReady()) {
+                if (trajectory) {
+                    // Take the segment node's depth and X/Y position from the
+                    // trajectory rather than from the WELSEGS record.
+                    const auto length = current_segment.totalLength();
+                    const auto coord = trajectory->at(branch, length);
+
+                    this->addSegment(Segment {
+                        current_segment, coord[2], length, coord[0], coord[1]
+                    });
+                }
+
                 continue;
             }
 
             // Find its outlet segment
-            const int outlet_segment = m_segments[i_index].outletSegment();
+            const int outlet_segment = current_segment.outletSegment();
             const int outlet_index = segmentNumberToIndex(outlet_segment);
 
             // assert some information of the outlet_segment
             assert(outlet_index >= 0);
             assert(m_segments[outlet_index].dataReady());
 
-            const double outlet_depth = m_segments[outlet_index].depth();
             const double outlet_length = m_segments[outlet_index].totalLength();
-            const double temp_depth = outlet_depth + m_segments[i_index].depth();
-            const double temp_length = outlet_length + m_segments[i_index].totalLength();
-            const auto new_x = m_segments[outlet_index].node_X() + m_segments[i_index].node_X();
-            const auto new_y = m_segments[outlet_index].node_Y() + m_segments[i_index].node_Y();
+            const double new_length = outlet_length + current_segment.totalLength();
+
+            double new_x, new_y, new_depth;
+            if (trajectory) {
+                // Take the segment node's depth and X/Y position from the
+                // trajectory rather than accumulating the WELSEGS increments.
+                const auto coord = trajectory->at(branch, new_length);
+                new_depth = coord[2];
+                new_x     = coord[0];
+                new_y     = coord[1];
+            } else {
+                const double outlet_depth = m_segments[outlet_index].depth();
+                new_depth = outlet_depth + current_segment.depth();
+                new_x     = m_segments[outlet_index].node_X() + current_segment.node_X();
+                new_y     = m_segments[outlet_index].node_Y() + current_segment.node_Y();
+            }
 
             // Applying the calculated length and depth to the current segment
             this->addSegment(Segment {
-                this->m_segments[i_index],
-                temp_depth, temp_length, new_x, new_y
+                current_segment, new_depth, new_length, new_x, new_y
             });
         }
     }

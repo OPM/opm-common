@@ -25,6 +25,7 @@
 #include <array>
 #include <cstddef>
 #include <functional>
+#include <map>
 #include <optional>
 #include <set>
 #include <string>
@@ -132,7 +133,11 @@ namespace Opm {
 
         int getHeadI() const;
         int getHeadJ() const;
-        const std::vector<double>& getMD() const;
+        /// Well trajectory measured depths, keyed by branch number.
+        const std::map<int, std::vector<double>>& getMD() const;
+
+        /// Well trajectory X/Y/Z coordinates, keyed by branch number.
+        const std::map<int, std::array<std::vector<double>, 3>>& getCoord() const;
 
         /// Move every coarse-grid connection that lies inside a refinement box
         /// into the innermost LGR covering it: the parent cell's centre column
@@ -234,8 +239,8 @@ namespace Opm {
         int headJ{0};
         std::vector<Connection> m_connections{};
 
-        std::array<std::vector<double>, 3> coord{};
-        std::vector<double> md{};
+        std::map<int, std::array<std::vector<double>, 3>> coord{};
+        std::map<int, std::vector<double>> md{};
 
         void addConnection(const int i, const int j, const int k,
                            const std::size_t global_index,
