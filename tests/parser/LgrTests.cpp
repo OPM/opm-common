@@ -1209,6 +1209,65 @@ SCHEDULE
     }
 }
 
+BOOST_AUTO_TEST_CASE(TestLgrZeroThicknessFatherGivesFlatRefinedCells)
+{
+    // The middle layer has zero thickness. Its refined cells must be flat, and
+    // no refined cell may be upside down; the fractions of 3 refined layers per
+    // father do not round exactly.
+    const Opm::EclipseState state(Opm::Parser{}.parseString(R"(
+RUNSPEC
+DIMENS
+ 3 3 3 /
+OIL
+WATER
+LGR
+ 1 1 /
+GRID
+DX
+ 27*100 /
+DY
+ 27*100 /
+DZ
+ 9*10.37 9*0 9*7.91 /
+TOPS
+ 2075.438530 2094.930120 2011.741428 2089.191318 2043.775731
+ 2061.402219 2018.327457 2071.668803 2033.119022 /
+PORO
+ 27*0.25 /
+PERMX
+ 27*100 /
+COPY
+ PERMX PERMY /
+ PERMX PERMZ /
+/
+CARFIN
+ 'LGR1' 1 2 1 2 1 3 6 6 9 /
+ENDFIN
+PROPS
+REGIONS
+SOLUTION
+SCHEDULE
+)"));
+    const auto& refined = state.getInputGrid().getLGRCell("LGR1");
+    BOOST_REQUIRE_EQUAL(refined.getNZ(), 9);
+    for (std::size_t k = 0; k < refined.getNZ(); ++k) {
+        for (std::size_t j = 0; j < refined.getNY(); ++j) {
+            for (std::size_t i = 0; i < refined.getNX(); ++i) {
+                for (std::size_t corner = 0; corner < 4; ++corner) {
+                    const double top = refined.getCornerPos(i, j, k, corner)[2];
+                    const double bottom = refined.getCornerPos(i, j, k, corner + 4)[2];
+                    BOOST_TEST_CONTEXT("refined cell " << i << ',' << j << ',' << k << " corner " << corner) {
+                        BOOST_CHECK_GE(bottom, top);
+                        if (k >= 3 && k < 6) {
+                            BOOST_CHECK_EQUAL(bottom, top);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 namespace {
 
 Opm::EclipseState nncNextToBox(const std::string& nnc)
