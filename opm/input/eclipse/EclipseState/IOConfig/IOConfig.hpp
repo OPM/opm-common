@@ -166,6 +166,14 @@ namespace Opm {
         const std::string& getUseFluxBaseName() const;
         std::string getUseFluxInputBaseName() const;
         const std::vector<int>& getUseFluxRegions() const;
+
+        /// Whether a USEFLUX run may go on past the last record of its FLUX
+        /// file, holding the boundary at that record. The second item of
+        /// USEFLUX, YES by default.
+        bool getUseFluxContinueBeyondData() const;
+
+        /// FLUX, PRESSURE or BOTH, PRESSURE by default. A USEFLUX run does
+        /// not accept BOTH.
         const std::string& getFluxType() const;
 
         bool writeAllTransMultipliers() const
@@ -219,6 +227,7 @@ namespace Opm {
             serializer(m_use_flux);
             serializer(m_dump_flux);
             serializer(m_use_flux_base_name);
+            serializer(m_use_flux_continue_beyond_data);
             serializer(m_use_flux_regions);
             serializer(m_flux_type);
 
@@ -251,8 +260,9 @@ namespace Opm {
         bool m_use_flux { false };
         bool m_dump_flux { false };
         std::string m_use_flux_base_name {};
+        bool m_use_flux_continue_beyond_data { true };
         std::vector<int> m_use_flux_regions {};
-        std::string m_flux_type { "FLUX" };
+        std::string m_flux_type { "PRESSURE" };
 
         bool m_output_enabled { true };
         bool ecl_compatible_rst { true };

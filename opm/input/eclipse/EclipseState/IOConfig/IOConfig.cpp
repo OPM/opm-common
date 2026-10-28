@@ -20,6 +20,7 @@
 #include <opm/input/eclipse/EclipseState/IOConfig/IOConfig.hpp>
 
 #include <opm/common/OpmLog/OpmLog.hpp>
+#include <opm/common/utility/OpmInputError.hpp>
 
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Deck/DeckItem.hpp>
@@ -97,32 +98,47 @@ namespace {
         }
     }
 
-    std::string parseFluxType(const Opm::GRIDSection& grid)
+    std::string uppercase(std::string text)
     {
-        if (!grid.hasKeyword<Opm::ParserKeywords::FLUXTYPE>()) {
-            return "FLUX";
-        }
-
-        auto mode = grid.get<Opm::ParserKeywords::FLUXTYPE>()
-            .back()
-            .getRecord(0)
-            .getItem<Opm::ParserKeywords::FLUXTYPE::BC_TYPE>()
-            .getTrimmedString(0);
-
-        std::ranges::transform(mode,
-                               mode.begin(),
+        std::ranges::transform(text,
+                               text.begin(),
                                [](const unsigned char c)
                                {
                                    return static_cast<char>(std::toupper(c));
                                });
+        return text;
+    }
 
-        if (mode == "FLUX" || mode == "PRESSURE" || mode == "BOTH") {
+    std::string parseFluxType(const Opm::GRIDSection& grid)
+    {
+        using Kw = Opm::ParserKeywords::FLUXTYPE;
+
+        const std::string defaultType = "PRESSURE";
+        if (!grid.hasKeyword<Kw>()) {
+            return defaultType;
+        }
+
+        const auto& keyword = grid.get<Kw>().back();
+        const auto& item = keyword.getRecord(0).getItem<Kw::BC_TYPE>();
+        if (item.defaultApplied(0)) {
+            return defaultType;
+        }
+
+        const bool useFlux = grid.hasKeyword<Opm::ParserKeywords::USEFLUX>();
+
+        const auto mode = uppercase(item.getTrimmedString(0));
+        if ((mode == "FLUX") || (mode == "PRESSURE") || (!useFlux && (mode == "BOTH"))) {
             return mode;
         }
 
-        Opm::OpmLog::warning("Unrecognized FLUXTYPE BC_TYPE value '" + mode
-                             + "', defaulting to FLUX output mode");
-        return "FLUX";
+        throw Opm::OpmInputError(useFlux
+                                 ? "Problem with keyword {keyword}\n"
+                                   "In {file} line {line}\n"
+                                   "FLUXTYPE in a USEFLUX run must be FLUX or PRESSURE"
+                                 : "Problem with keyword {keyword}\n"
+                                   "In {file} line {line}\n"
+                                   "FLUXTYPE must be FLUX, PRESSURE or BOTH",
+                                 keyword.location());
     }
 
     bool parseUseFlux(const Opm::GRIDSection& grid)
@@ -142,19 +158,44 @@ namespace {
 
     std::string parseUseFluxBaseName(const Opm::GRIDSection& grid)
     {
-        if (!grid.hasKeyword<Opm::ParserKeywords::USEFLUX>()) {
+        using Kw = Opm::ParserKeywords::USEFLUX;
+
+        if (!grid.hasKeyword<Kw>()) {
             return {};
         }
 
-        const auto& useflux = grid.get<Opm::ParserKeywords::USEFLUX>().back();
-        if (useflux.empty()) {
-            return {};
+        const auto& keyword = grid.get<Kw>().back();
+        const auto& item = keyword.getRecord(0).getItem<Kw::FLUX_BASENAME>();
+        if (item.defaultApplied(0) || item.getTrimmedString(0).empty()) {
+            throw Opm::OpmInputError("Problem with keyword {keyword}\n"
+                                     "In {file} line {line}\n"
+                                     "USEFLUX needs the base name of the FLUX file to read",
+                                     keyword.location());
         }
 
-        return useflux
-            .getRecord(0)
-            .getItem<Opm::ParserKeywords::USEFLUX::FLUX_BASENAME>()
-            .getTrimmedString(0);
+        return item.getTrimmedString(0);
+    }
+
+    bool parseUseFluxContinueBeyondData(const Opm::GRIDSection& grid)
+    {
+        using Kw = Opm::ParserKeywords::USEFLUX;
+
+        if (!grid.hasKeyword<Kw>()) {
+            return true;
+        }
+
+        const auto& keyword = grid.get<Kw>().back();
+        const auto value = uppercase(keyword.getRecord(0)
+                                     .getItem<Kw::CONTINUE_BEYOND_DATA>()
+                                     .getTrimmedString(0));
+        if ((value == "YES") || (value == "NO")) {
+            return value == "YES";
+        }
+
+        throw Opm::OpmInputError("Problem with keyword {keyword}\n"
+                                 "In {file} line {line}\n"
+                                 "The second item of USEFLUX must be YES or NO",
+                                 keyword.location());
     }
 
     std::vector<int> parseUseFluxRegions(const Opm::GRIDSection& grid)
@@ -163,12 +204,7 @@ namespace {
             return {};
         }
 
-        const auto& item = grid.get<Opm::ParserKeywords::FLUXREG>()
-            .back()
-            .getRecord(0)
-            .getItem<Opm::ParserKeywords::FLUXREG::REGIONS>();
-
-        return item.getData<int>();
+        return grid.get<Opm::ParserKeywords::FLUXREG>().back().getIntData();
     }
 
     bool normalize_case(std::string& s)
@@ -247,6 +283,7 @@ namespace Opm {
         result.m_use_flux = true;
         result.m_dump_flux = true;
         result.m_use_flux_base_name = "test4";
+        result.m_use_flux_continue_beyond_data = false;
         result.m_use_flux_regions = {2, 5};
         result.m_flux_type = "BOTH";
 
@@ -271,6 +308,7 @@ namespace Opm {
         , m_use_flux           (parseUseFlux(grid))
         , m_dump_flux          (parseDumpFlux(grid))
         , m_use_flux_base_name (parseUseFluxBaseName(grid))
+        , m_use_flux_continue_beyond_data (parseUseFluxContinueBeyondData(grid))
         , m_use_flux_regions   (parseUseFluxRegions(grid))
         , m_flux_type          (parseFluxType(grid))
     {
@@ -369,6 +407,11 @@ namespace Opm {
     const std::vector<int>& IOConfig::getUseFluxRegions() const
     {
         return this->m_use_flux_regions;
+    }
+
+    bool IOConfig::getUseFluxContinueBeyondData() const
+    {
+        return this->m_use_flux_continue_beyond_data;
     }
 
     const std::string& IOConfig::getFluxType() const
@@ -485,6 +528,7 @@ namespace Opm {
             && (this->getUseFlux() == data.getUseFlux())
             && (this->getDumpFlux() == data.getDumpFlux())
             && (this->getUseFluxBaseName() == data.getUseFluxBaseName())
+            && (this->getUseFluxContinueBeyondData() == data.getUseFluxContinueBeyondData())
             && (this->getUseFluxRegions() == data.getUseFluxRegions())
             && (this->getFluxType() == data.getFluxType())
             ;

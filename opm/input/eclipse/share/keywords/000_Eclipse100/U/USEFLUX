@@ -4,12 +4,15 @@
     "GRID"
   ],
   "size": 1,
-  "min_size": 0,
   "items": [
     {
       "name": "FLUX_BASENAME",
+      "value_type": "STRING"
+    },
+    {
+      "name": "CONTINUE_BEYOND_DATA",
       "value_type": "STRING",
-      "default": ""
+      "default": "YES"
     }
   ]
 }

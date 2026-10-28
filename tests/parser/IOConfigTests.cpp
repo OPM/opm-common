@@ -311,56 +311,44 @@ BOOST_AUTO_TEST_CASE(OutputPaths) {
     BOOST_CHECK_EQUAL( testpath, config3.fullBasePath() );
 }
 
-BOOST_AUTO_TEST_CASE(DefaultFluxTypeIsFlux)
+namespace {
+
+IOConfig ioConfigForGrid(const std::string& grid)
 {
-    const char* data = R"(
-RUNSPEC
-DIMENS
- 10 10 10 /
-GRID
-SCHEDULE
-)";
+    return IOConfig {
+        Parser().parseString("RUNSPEC\nDIMENS\n 10 10 10 /\nGRID\n" + grid + "SCHEDULE\n")
+    };
+}
 
-    const auto deck = Parser().parseString(data);
-    IOConfig ioConfig(deck);
+} // namespace
 
-    BOOST_CHECK_EQUAL(ioConfig.getFluxType(), "FLUX");
+BOOST_AUTO_TEST_CASE(FluxTypeDefaultsToPressure)
+{
+    BOOST_CHECK_EQUAL(ioConfigForGrid("").getFluxType(), "PRESSURE");
+    BOOST_CHECK_EQUAL(ioConfigForGrid("DUMPFLUX\n").getFluxType(), "PRESSURE");
+    BOOST_CHECK_EQUAL(ioConfigForGrid("DUMPFLUX\nFLUXTYPE\n 1* /\n").getFluxType(), "PRESSURE");
+    BOOST_CHECK_EQUAL(ioConfigForGrid("USEFLUX\n parent /\n").getFluxType(), "PRESSURE");
 }
 
 BOOST_AUTO_TEST_CASE(FluxTypeIsNormalizedToUpperCase)
 {
-    const char* data = R"(
-RUNSPEC
-DIMENS
- 10 10 10 /
-GRID
-FLUXTYPE
- both /
-SCHEDULE
-)";
+    BOOST_CHECK_EQUAL(ioConfigForGrid("FLUXTYPE\n both /\n").getFluxType(), "BOTH");
+    BOOST_CHECK_EQUAL(ioConfigForGrid("USEFLUX\n parent /\nFLUXTYPE\n flux /\n").getFluxType(),
+                      "FLUX");
+}
 
-    const auto deck = Parser().parseString(data);
-    IOConfig ioConfig(deck);
-
-    BOOST_CHECK_EQUAL(ioConfig.getFluxType(), "BOTH");
+// A reduced run imposes one kind of boundary, so BOTH means nothing there.
+BOOST_AUTO_TEST_CASE(InvalidFluxTypeIsRejected)
+{
+    BOOST_CHECK_THROW(ioConfigForGrid("FLUXTYPE\n banana /\n"), std::exception);
+    BOOST_CHECK_THROW(ioConfigForGrid("DUMPFLUX\nFLUXTYPE\n banana /\n"), std::exception);
+    BOOST_CHECK_THROW(ioConfigForGrid("USEFLUX\n parent /\nFLUXTYPE\n BOTH /\n"), std::exception);
 }
 
 BOOST_AUTO_TEST_CASE(UseFluxIsDetectedFromGridSection)
 {
-    const char* data = R"(
-RUNSPEC
-DIMENS
- 10 10 10 /
-GRID
-USEFLUX
- 1* /
-SCHEDULE
-)";
-
-    const auto deck = Parser().parseString(data);
-    IOConfig ioConfig(deck);
-
-    BOOST_CHECK(ioConfig.getUseFlux());
+    BOOST_CHECK(!ioConfigForGrid("").getUseFlux());
+    BOOST_CHECK(ioConfigForGrid("USEFLUX\n parent /\n").getUseFlux());
 }
 
 // FLUXNUM on its own is just a region array; only DUMPFLUX asks for a FLUX
@@ -377,91 +365,38 @@ BOOST_AUTO_TEST_CASE(DumpFluxIsDetectedFromGridSection)
     BOOST_CHECK(!parse("").getDumpFlux());
     BOOST_CHECK(!parse("FLUXNUM\n 1 2 /\n").getDumpFlux());
     BOOST_CHECK( parse("FLUXNUM\n 1 2 /\nDUMPFLUX\n").getDumpFlux());
-    BOOST_CHECK(!parse("FLUXNUM\n 1 2 /\nDUMPFLUX\nUSEFLUX\n 1* /\n").getDumpFlux());
+    BOOST_CHECK(!parse("FLUXNUM\n 1 2 /\nDUMPFLUX\nUSEFLUX\n parent /\n").getDumpFlux());
 }
 
-BOOST_AUTO_TEST_CASE(UseFluxBaseNameDefaultsToDeckBaseName)
+// USEFLUX names the FLUX file to read; there is no default.
+BOOST_AUTO_TEST_CASE(UseFluxRequiresAFileName)
 {
-    const char* data = R"(
-RUNSPEC
-DIMENS
- 10 10 10 /
-GRID
-USEFLUX
- 1* /
-SCHEDULE
-)";
-
-    const auto deck = Parser().parseString(data);
-    IOConfig ioConfig(deck);
-
-    BOOST_CHECK(ioConfig.getUseFlux());
-    BOOST_CHECK(ioConfig.getUseFluxBaseName().empty());
-    BOOST_CHECK_EQUAL(ioConfig.getUseFluxInputBaseName(), ioConfig.getBaseName());
+    BOOST_CHECK_THROW(ioConfigForGrid("USEFLUX\n 1* /\n"), std::exception);
+    BOOST_CHECK_THROW(ioConfigForGrid("USEFLUX\n '' /\n"), std::exception);
+    BOOST_CHECK_THROW(ioConfigForGrid("USEFLUX\nFLUXREG\n 2 /\n"), std::exception);
 }
 
-// USEFLUX had no record before it took a file name, and a deck that relies on
-// that must still read the deck's own base name instead of eating the next
-// keyword.
-BOOST_AUTO_TEST_CASE(BareUseFluxDefaultsToDeckBaseName)
+BOOST_AUTO_TEST_CASE(UseFluxBaseNameIsRead)
 {
-    const char* data = R"(
-RUNSPEC
-DIMENS
- 10 10 10 /
-GRID
-USEFLUX
-FLUXREG
- 2 /
-SCHEDULE
-)";
-
-    const auto deck = Parser().parseString(data);
-    IOConfig ioConfig(deck);
-
-    BOOST_CHECK(ioConfig.getUseFlux());
-    BOOST_CHECK(ioConfig.getUseFluxBaseName().empty());
-    BOOST_CHECK_EQUAL(ioConfig.getUseFluxInputBaseName(), ioConfig.getBaseName());
-    BOOST_REQUIRE_EQUAL(ioConfig.getUseFluxRegions().size(), 1U);
-    BOOST_CHECK_EQUAL(ioConfig.getUseFluxRegions()[0], 2);
-}
-
-BOOST_AUTO_TEST_CASE(UseFluxBaseNameCanBeOverridden)
-{
-    const char* data = R"(
-RUNSPEC
-DIMENS
- 10 10 10 /
-GRID
-USEFLUX
- parent_case /
-SCHEDULE
-)";
-
-    const auto deck = Parser().parseString(data);
-    IOConfig ioConfig(deck);
+    const auto ioConfig = ioConfigForGrid("USEFLUX\n parent_case /\n");
 
     BOOST_CHECK(ioConfig.getUseFlux());
     BOOST_CHECK_EQUAL(ioConfig.getUseFluxBaseName(), "parent_case");
     BOOST_CHECK_EQUAL(ioConfig.getUseFluxInputBaseName(), "parent_case");
 }
 
+BOOST_AUTO_TEST_CASE(UseFluxContinuesBeyondTheDataUnlessToldNot)
+{
+    BOOST_CHECK(ioConfigForGrid("").getUseFluxContinueBeyondData());
+    BOOST_CHECK(ioConfigForGrid("USEFLUX\n parent /\n").getUseFluxContinueBeyondData());
+    BOOST_CHECK(ioConfigForGrid("USEFLUX\n parent yes /\n").getUseFluxContinueBeyondData());
+    BOOST_CHECK(!ioConfigForGrid("USEFLUX\n parent NO /\n").getUseFluxContinueBeyondData());
+    BOOST_CHECK_THROW(ioConfigForGrid("USEFLUX\n parent maybe /\n"), std::exception);
+}
+
 BOOST_AUTO_TEST_CASE(UseFluxRegionsCanBeParsedFromFluxreg)
 {
-    const char* data = R"(
-RUNSPEC
-DIMENS
- 10 10 10 /
-GRID
-FLUXREG
- 1 3 7 /
-USEFLUX
- 1* /
-SCHEDULE
-)";
-
-    const auto deck = Parser().parseString(data);
-    IOConfig ioConfig(deck);
+    const auto ioConfig = ioConfigForGrid("FLUXREG\n 1 3 7 /\nUSEFLUX\n parent /\n");
 
     BOOST_REQUIRE_EQUAL(ioConfig.getUseFluxRegions().size(), 3U);
     BOOST_CHECK_EQUAL(ioConfig.getUseFluxRegions()[0], 1);
@@ -473,36 +408,6 @@ SCHEDULE
 // the regions it lists. All regions belong in the one record.
 BOOST_AUTO_TEST_CASE(FluxregTakesASingleRecord)
 {
-    const char* data = R"(
-RUNSPEC
-DIMENS
- 10 10 10 /
-GRID
-FLUXREG
- 1 /
- 3 7 /
-USEFLUX
- 1* /
-SCHEDULE
-)";
-
-    BOOST_CHECK_THROW(Parser().parseString(data), std::exception);
-}
-
-BOOST_AUTO_TEST_CASE(InvalidFluxTypeFallsBackToFlux)
-{
-    const char* data = R"(
-RUNSPEC
-DIMENS
- 10 10 10 /
-GRID
-FLUXTYPE
- banana /
-SCHEDULE
-)";
-
-    const auto deck = Parser().parseString(data);
-    IOConfig ioConfig(deck);
-
-    BOOST_CHECK_EQUAL(ioConfig.getFluxType(), "FLUX");
+    BOOST_CHECK_THROW(ioConfigForGrid("FLUXREG\n 1 /\n 3 7 /\nUSEFLUX\n parent /\n"),
+                      std::exception);
 }

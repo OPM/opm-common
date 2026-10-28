@@ -3,14 +3,7 @@
   "sections": [
     "GRID"
   ],
-  "size": 1,
-  "records": [
-    [
-      {
-        "name": "REGIONS",
-        "value_type": "INT",
-        "size_type": "ALL"
-      }
-    ]
-  ]
+  "data": {
+    "value_type": "INT"
+  }
 }
