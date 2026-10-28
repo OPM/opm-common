@@ -885,6 +885,12 @@ Runspec::Runspec(const Deck& deck)
             runspecSection.hasKeyword<ParserKeywords::FULLIMP>() ||
             runspecSection.hasKeyword<ParserKeywords::IMPES>();
 
+        if (runspecSection.hasKeyword<ParserKeywords::HWELLS>()) {
+            const auto& location = runspecSection.get<ParserKeywords::HWELLS>().back().location();
+            OpmLog::note(location.format("\n{keyword} in {file} line {line} is not needed. "
+                                         "Connections in the X and Y directions are always supported."));
+        }
+
         if (runspecSection.hasKeyword<ParserKeywords::MINNPCOL>()) {
             const auto& min_item = runspecSection.get<ParserKeywords::MINNPCOL>()
                 .back().getRecord(0).getItem<ParserKeywords::MINNPCOL::VALUE>();
