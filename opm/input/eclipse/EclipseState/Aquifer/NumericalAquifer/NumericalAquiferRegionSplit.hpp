@@ -31,6 +31,7 @@ namespace Opm {
 
 class EclipseGrid;
 class FieldPropsManager;
+class LgrCollection;
 class NumericalAquifers;
 class UnitSystem;
 
@@ -46,7 +47,11 @@ class UnitSystem;
 ///     cells.  The original aquifer keeps the connections to the region of
 ///     its own cells if possible, otherwise those of the region with most
 ///     connections.  New aquifers are copies of the original one placed in
-///     free, inactive cells, with the depth of the original aquifer cells.
+///     free, inactive cells outside local grid refinements, with the depth
+///     of the original aquifer cells.  Connections transferred to a new
+///     aquifer through a face adjoining a cell of the original aquifer are
+///     declared with ALLOW_INTERNAL_CELLS='YES', since that cell is not
+///     part of the new aquifer.
 ///   - put the cells of each aquifer in the EQLNUM region of its connected
 ///     cells, and use the PVT table of most of these cells.
 ///
@@ -98,10 +103,12 @@ public:
     /// \param aquiferIds Aquifers for which deck changes are requested.
     /// \param grid Input grid.
     /// \param fieldProps Global field properties (EQLNUM and PVTNUM).
+    /// \param lgrs Local grid refinements, which may not contain aquifer cells.
     NumericalAquiferRegionSplit(const NumericalAquifers& aquifers,
                                 const std::vector<std::size_t>& aquiferIds,
                                 const EclipseGrid& grid,
-                                const FieldPropsManager& fieldProps);
+                                const FieldPropsManager& fieldProps,
+                                const LgrCollection& lgrs);
 
     bool empty() const;
 
@@ -124,8 +131,9 @@ public:
     const std::vector<std::size_t>& replacedAquconIds() const
     { return this->replacedAqucon_; }
 
-    /// Aquifers for which no free inactive cell could be found for the
-    /// new aquifers.  No records are generated for these.
+    /// Aquifers for which no free inactive cell outside local grid
+    /// refinements could be found for the new aquifers.  No records are
+    /// generated for these.
     const std::vector<std::size_t>& unresolvedIds() const
     { return this->unresolved_; }
 

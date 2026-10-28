@@ -24,12 +24,15 @@
 #include <opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquifers.hpp>
 #include <opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/SingleNumericalAquifer.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/Carfin.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/LgrCollection.hpp>
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
 #include <algorithm>
 #include <cstddef>
 #include <map>
+#include <optional>
 #include <set>
 #include <string>
 #include <tuple>
@@ -62,6 +65,30 @@ auto mostFrequent(const Map& counts)
         }
     }
     return best->first;
+}
+
+// Cell on the other side of the connecting face, if inside the grid.
+std::optional<std::size_t> faceNeighbour(const Opm::EclipseGrid& grid,
+                                         const Opm::NumericalAquiferConnection& con)
+{
+    auto i = static_cast<long>(con.I), j = static_cast<long>(con.J), k = static_cast<long>(con.K);
+    switch (con.face_dir) {
+    case Opm::FaceDir::XMinus: --i; break;
+    case Opm::FaceDir::XPlus:  ++i; break;
+    case Opm::FaceDir::YMinus: --j; break;
+    case Opm::FaceDir::YPlus:  ++j; break;
+    case Opm::FaceDir::ZMinus: --k; break;
+    case Opm::FaceDir::ZPlus:  ++k; break;
+    default: return std::nullopt;
+    }
+    if (i < 0 || j < 0 || k < 0 ||
+        i >= static_cast<long>(grid.getNX()) ||
+        j >= static_cast<long>(grid.getNY()) ||
+        k >= static_cast<long>(grid.getNZ()))
+    {
+        return std::nullopt;
+    }
+    return grid.getGlobalIndex(i, j, k);
 }
 
 std::string aquconFace(const Opm::FaceDir::DirEnum face)
@@ -179,7 +206,8 @@ NumericalAquiferRegionSplit::
 NumericalAquiferRegionSplit(const NumericalAquifers& aquifers,
                             const std::vector<std::size_t>& aquiferIds,
                             const EclipseGrid& grid,
-                            const FieldPropsManager& fieldProps)
+                            const FieldPropsManager& fieldProps,
+                            const LgrCollection& lgrs)
 {
     const auto& pvtnum = fieldProps.get_int("PVTNUM");
     const std::vector<int> unitEqlnum(grid.getNumActive(), 1);
@@ -221,6 +249,22 @@ NumericalAquiferRegionSplit(const NumericalAquifers& aquifers,
             }
         }
     }
+
+    // Aquifer cells may not lie inside local grid refinements (see
+    // EclipseState::checkNumericalAquifersOutsideLgrs()).
+    auto insideLgr = [&grid, &lgrs](std::size_t globalIndex) {
+        const auto [i, j, k] = grid.getIJK(globalIndex);
+        for (std::size_t n = 0; n < lgrs.size(); ++n) {
+            const auto& lgr = lgrs.getLgr(n);
+            if ((i >= lgr.I1()) && (i <= lgr.I2()) &&
+                (j >= lgr.J1()) && (j <= lgr.J2()) &&
+                (k >= lgr.K1()) && (k <= lgr.K2()))
+            {
+                return true;
+            }
+        }
+        return false;
+    };
 
     std::size_t nextId = 1;
     for (const auto& [id, aquifer] : aquifers.aquifers()) {
@@ -289,7 +333,8 @@ NumericalAquiferRegionSplit(const NumericalAquifers& aquifers,
                     const auto candidate = (first + offset) % ncart;
                     if (inactive.count(candidate) &&
                         !inAquconBox.count(candidate) &&
-                        !nextToConnection.count(candidate))
+                        !nextToConnection.count(candidate) &&
+                        !insideLgr(candidate))
                     {
                         hosts.push_back(candidate);
                     }
@@ -363,6 +408,13 @@ NumericalAquiferRegionSplit(const NumericalAquifers& aquifers,
             }
         }
 
+        // A connection adjoining a cell of its aquifer is kept even without
+        // ALLOW_INTERNAL_CELLS, but only for the aquifer owning that cell.
+        std::unordered_set<std::size_t> sourceCells;
+        for (std::size_t c = 0; c < aquifer.numCells(); ++c) {
+            sourceCells.insert(aquifer.getCellPrt(c)->global_index);
+        }
+
         // AQUCON records.  Boxes of one aquifer must be disjoint, since a
         // cell may only be declared once as a connection of an aquifer.
         const BoxCover boxCover(grid, inactive);
@@ -370,7 +422,14 @@ NumericalAquiferRegionSplit(const NumericalAquifers& aquifers,
             const auto aquId = idOfRegion.at(region);
             std::map<ConnectionAttributes, std::vector<std::size_t>> groups;
             for (const auto* con : cons) {
-                groups[attributes(*con)].push_back(con->global_index);
+                auto attr = attributes(*con);
+                if (aquId != id) {
+                    const auto neighbour = faceNeighbour(grid, *con);
+                    if (neighbour.has_value() && sourceCells.count(*neighbour)) {
+                        std::get<3>(attr) = true;
+                    }
+                }
+                groups[attr].push_back(con->global_index);
             }
             std::unordered_set<std::size_t> boxed;
             for (const auto& [attr, cells] : groups) {
@@ -400,8 +459,9 @@ std::string NumericalAquiferRegionSplit::deckChanges(const UnitSystem& units) co
     std::string out;
     if (this->empty()) {
         if (!this->unresolved_.empty()) {
-            out += fmt::format("No free inactive cells were found for new numerical "
-                               "aquifers to replace aquifer(s) {}.\n", idList(this->unresolved_));
+            out += fmt::format("No free inactive cells outside local grid refinements were "
+                               "found for new numerical aquifers to replace aquifer(s) {}.\n",
+                               idList(this->unresolved_));
         }
         return out;
     }
@@ -490,8 +550,9 @@ std::string NumericalAquiferRegionSplit::deckChanges(const UnitSystem& units) co
     }
 
     if (!this->unresolved_.empty()) {
-        out += fmt::format("\nNo free inactive cells were found for new numerical aquifers "
-                           "to replace aquifer(s) {}.\n", idList(this->unresolved_));
+        out += fmt::format("\nNo free inactive cells outside local grid refinements were "
+                           "found for new numerical aquifers to replace aquifer(s) {}.\n",
+                           idList(this->unresolved_));
     }
 
     return out;
