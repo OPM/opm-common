@@ -17,6 +17,7 @@ void python::common::export_all(py::module& module) {
 
     export_ParseContext(module);
     export_ParserKeywords(module);
+    export_KeywordLocation(module);
     export_DeckKeyword(module);
     export_Deck(module);
     export_Parser(module);
