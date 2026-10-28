@@ -1829,10 +1829,15 @@ namespace {
     // monotonic - increasing, or decreasing under the STRESS option - while
     // the two multiplier columns are unconstrained (matches RocktabTable's
     // own, non-directional schema).
-    TableSchema rocktabhSchema(bool hasStressOption)
+    //
+    // The dilation curve is built with enforceOrder=false: Flow never reads
+    // it, and the elastic curves of a real model commonly all end at the same
+    // maximum pressure, which a strict ordering would reject.
+    TableSchema rocktabhSchema(bool hasStressOption, bool enforceOrder = true)
     {
         TableSchema schema;
-        const auto poOrder = hasStressOption ? Table::STRICTLY_DECREASING : Table::STRICTLY_INCREASING;
+        const auto poOrder = !enforceOrder ? Table::RANDOM
+            : hasStressOption ? Table::STRICTLY_DECREASING : Table::STRICTLY_INCREASING;
         schema.addColumn(ColumnSchema("PO", poOrder, Table::DEFAULT_NONE));
         schema.addColumn(ColumnSchema("PV_MULT", Table::RANDOM, Table::DEFAULT_LINEAR));
         schema.addColumn(ColumnSchema("PV_MULT_TRAN", Table::RANDOM, Table::DEFAULT_LINEAR));
@@ -1846,7 +1851,7 @@ RocktabhTable::RocktabhTable(const DeckKeyword& keyword,
                               bool               hasStressOption,
                               const int          tableID)
     : m_deflationCurve(rocktabhSchema(hasStressOption))
-    , m_dilationCurve(rocktabhSchema(hasStressOption))
+    , m_dilationCurve(rocktabhSchema(hasStressOption, false))
 {
     // Directional ROCKTABH (RKTRMDIR, 5 columns) is rejected by the caller
     // before this constructor runs, so the layout here is always (PRESS,
@@ -1859,8 +1864,9 @@ RocktabhTable::RocktabhTable(const DeckKeyword& keyword,
     // appending each curve's first/last row to the deflation/dilation
     // curves, which share that same schema. All of that is caught below and
     // rethrown as one consistently-worded, location-aware OpmInputError.
+    std::size_t curveIdx = 0;
     try {
-        for (std::size_t recordIdx = firstRecord; recordIdx < lastRecord; ++recordIdx) {
+        for (std::size_t recordIdx = firstRecord; recordIdx < lastRecord; ++recordIdx, ++curveIdx) {
             const auto& item = keyword.getRecord(recordIdx).getItem(0);
 
             this->m_elasticCurves.emplace_back(rocktabhSchema(hasStressOption), "ROCKTABH", item, tableID);
@@ -1895,7 +1901,12 @@ RocktabhTable::RocktabhTable(const DeckKeyword& keyword,
     }
     catch (const std::exception& e) {
         throw OpmInputError {
-            fmt::format("For table ROCKTABH with ID {}: {}", tableID + 1, e.what()),
+            // curveIdx has run past the last record only for the table-level
+            // checks after the loop, which are not about any one curve.
+            curveIdx < lastRecord - firstRecord
+                ? fmt::format("For table ROCKTABH with ID {}, elastic curve {}: {}",
+                              tableID + 1, curveIdx + 1, e.what())
+                : fmt::format("For table ROCKTABH with ID {}: {}", tableID + 1, e.what()),
             keyword.location()
         };
     }

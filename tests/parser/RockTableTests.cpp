@@ -261,6 +261,32 @@ BOOST_AUTO_TEST_CASE( RocktabhCurveTooShort ) {
     BOOST_CHECK_THROW( TableManager tables( deck ), OpmInputError );
 }
 
+BOOST_AUTO_TEST_CASE( RocktabhCommonEndPressure ) {
+    // Elastic curves that all end at the same maximum pressure are valid; the
+    // (unused) dilation curve must not impose strict ordering on them.
+    const char *input =
+            "TABDIMS\n"
+            "1 /\n"
+            "\n"
+            "FIELD\n"
+            "\n"
+            "ROCKCOMP\n"
+            " HYSTER 1 /\n"
+            "\n"
+            "ROCKTABH\n"
+            "1500.0  0.9600  0.9800\n"
+            "5000.0  0.9700  0.9850 /\n"
+            "2500.0  0.9900  0.9900\n"
+            "5000.0  0.9950  0.9950 /\n"
+            "3500.0  1.0000  1.0000\n"
+            "5000.0  1.0100  1.0100 /\n"
+            "/\n";
+
+    auto deck = Parser().parseString( input );
+    TableManager tables( deck );
+    BOOST_CHECK_EQUAL(3U, tables.getRocktabhTables()[0].numElasticCurves());
+}
+
 BOOST_AUTO_TEST_CASE( RocktabhTooFewCurves ) {
     // A single elastic curve (however well-formed) cannot define a pressure
     // reversal/turning point, so it isn't enough for rock compaction
