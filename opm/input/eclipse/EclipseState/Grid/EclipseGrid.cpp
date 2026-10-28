@@ -60,6 +60,7 @@
 #include <opm/input/eclipse/Parser/ParserKeywords/Z.hpp>
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
@@ -67,6 +68,8 @@
 #include <cstring>
 #include <functional>
 #include <initializer_list>
+#include <limits>
+#include <map>
 #include <numbers>
 #include <numeric>
 #include <optional>
@@ -2534,9 +2537,103 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
 
     }
 
+    namespace {
+
+    // Smallest and largest determinant of a cell's trilinear map, sampled at
+    // 5 x 5 x 5 points of the unit cube.
+    std::pair<double, double> sampledJacobianRange(const EclipseGrid& grid,
+                                                   std::size_t i, std::size_t j, std::size_t k)
+    {
+        std::array<std::array<double, 3>, 8> corners;
+        for (std::size_t n = 0; n < corners.size(); ++n) {
+            corners[n] = grid.getCornerPos(i, j, k, n);
+        }
+        double low = std::numeric_limits<double>::max();
+        double high = std::numeric_limits<double>::lowest();
+        for (int a = 0; a <= 4; ++a) {
+            for (int b = 0; b <= 4; ++b) {
+                for (int c = 0; c <= 4; ++c) {
+                    const std::array<double, 3> local {a/4.0, b/4.0, c/4.0};
+                    std::array<std::array<double, 3>, 3> jacobian{};
+                    for (std::size_t n = 0; n < corners.size(); ++n) {
+                        for (int derivative = 0; derivative < 3; ++derivative) {
+                            double weight = 1.0;
+                            for (int dim = 0; dim < 3; ++dim) {
+                                const bool upper = (n >> dim) & 1;
+                                weight *= dim == derivative ? (upper ? 1.0 : -1.0)
+                                    : (upper ? local[dim] : 1.0 - local[dim]);
+                            }
+                            for (int dim = 0; dim < 3; ++dim) {
+                                jacobian[derivative][dim] += weight*corners[n][dim];
+                            }
+                        }
+                    }
+                    const auto& x = jacobian[0];
+                    const auto& y = jacobian[1];
+                    const auto& z = jacobian[2];
+                    const double determinant = x[0]*(y[1]*z[2] - y[2]*z[1])
+                        - x[1]*(y[0]*z[2] - y[2]*z[0]) + x[2]*(y[0]*z[1] - y[1]*z[0]);
+                    low = std::min(low, determinant);
+                    high = std::max(high, determinant);
+                }
+            }
+        }
+        return {low, high};
+    }
+
+    // A refined cell is folded where its map's determinant takes the sign
+    // opposite to its host cell's: part of it is turned inside out, so its pore
+    // volume and transmissibilities are wrong. Hosts that are folded or flat
+    // themselves are skipped; flat refined cells are not folded.
+    void warnFoldedRefinedCells(const EclipseGrid& father, const EclipseGridLGR& lgr)
+    {
+        const auto& first = lgr.get_low_fatherIJK();
+        const auto& columns = lgr.refinedColumns();
+        std::map<std::size_t, double> hostSign;    // the host's sign times its smallest |determinant|
+        std::size_t count = 0;
+        std::string examples;
+        for (std::size_t k = 0; k < lgr.getNZ(); ++k) {
+            for (std::size_t j = 0; j < lgr.getNY(); ++j) {
+                for (std::size_t i = 0; i < lgr.getNX(); ++i) {
+                    const std::array<std::size_t, 3> host {
+                        static_cast<std::size_t>(first[0] + columns[0].parentOffset[i]),
+                        static_cast<std::size_t>(first[1] + columns[1].parentOffset[j]),
+                        static_cast<std::size_t>(first[2] + columns[2].parentOffset[k])};
+                    const auto hostIndex = father.getGlobalIndex(host[0], host[1], host[2]);
+                    auto known = hostSign.find(hostIndex);
+                    if (known == hostSign.end()) {
+                        const auto [low, high] = sampledJacobianRange(father, host[0], host[1], host[2]);
+                        known = hostSign.emplace(hostIndex, (low > 0.0) ? low : (high < 0.0) ? high : 0.0).first;
+                    }
+                    if (known->second == 0.0) {
+                        continue;
+                    }
+                    const auto [low, high] = sampledJacobianRange(lgr, i, j, k);
+                    const double sign = (known->second > 0.0) ? 1.0 : -1.0;
+                    if (std::min(sign*low, sign*high) < -1.0e-10*std::abs(known->second)) {
+                        if (++count <= 5) {
+                            examples += fmt::format(" ({},{},{}) in ({},{},{})", i + 1, j + 1, k + 1,
+                                                    host[0] + 1, host[1] + 1, host[2] + 1);
+                        }
+                    }
+                }
+            }
+        }
+        if (count > 0) {
+            OpmLog::warning(fmt::format("LGR {}: {} refined cell(s) folded, i.e. partly turned inside out; "
+                                        "their pore volumes and transmissibilities are not reliable. "
+                                        "Refined cell (i,j,k) in host cell (I,J,K):{}{}",
+                                        lgr.get_lgr_tag(), count, examples,
+                                        (count > 5) ? fmt::format(" and {} more", count - 5) : std::string{}));
+        }
+    }
+
+    } // anonymous namespace
+
     void EclipseGrid::perform_refinement(){
         for (auto& cell : lgr_children_cells) {
             cell.perform_refinement(getCOORD(), getZCORN(), getNXYZ());
+            warnFoldedRefinedCells(*this, cell);
         }
     }
 

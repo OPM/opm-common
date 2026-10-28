@@ -18,6 +18,9 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/test/test_tools.hpp>
 
+#include <opm/common/OpmLog/LogUtil.hpp>
+#include <opm/common/OpmLog/OpmLog.hpp>
+#include <opm/common/OpmLog/StreamLog.hpp>
 #include <opm/common/utility/OpmInputError.hpp>
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Parser/Parser.hpp>
@@ -31,6 +34,8 @@
 #include <array>
 #include <filesystem>
 #include <limits>
+#include <memory>
+#include <sstream>
 #include <string>
 
 #include <fmt/format.h>
@@ -1207,6 +1212,70 @@ SCHEDULE
             }
         }
     }
+}
+
+// Norne's host cell (10,33,22) alone: its four pillars lean in different
+// directions, and the line rule folds one of its 2 x 2 x 2 refined cells.
+// Refining it warns, naming that cell; an upright cell gives no warning.
+BOOST_AUTO_TEST_CASE(TestLgrWarnsAboutFoldedRefinedCells)
+{
+    const auto warningsFor = [](const std::string& grid) {
+        std::ostringstream warnings;
+        Opm::OpmLog::addBackend("LGRFOLDS", std::make_shared<Opm::StreamLog>(warnings, Opm::Log::MessageType::Warning));
+        const Opm::EclipseState state(Opm::Parser{}.parseString(R"(
+RUNSPEC
+DIMENS
+ 1 1 1 /
+OIL
+WATER
+LGR
+ 1 /
+GRID
+)" + grid + R"(
+CARFIN
+ 'LGR1' 1 1 1 1 1 1 2 2 2 /
+ENDFIN
+PORO
+ 0.25 /
+PERMX
+ 100 /
+COPY
+ PERMX PERMY /
+ PERMX PERMZ /
+/
+PROPS
+REGIONS
+SOLUTION
+SCHEDULE
+)"));
+        Opm::OpmLog::removeBackend("LGRFOLDS");
+        return warnings.str();
+    };
+
+    const auto folded = warningsFor(R"(
+COORD
+ 456901.656 7322248.5 2513.483 456996.812 7322205.5 2802.334
+ 457009.781 7322128.5 2527.199 456982.312 7322165.5 2801.748
+ 456976.5 7322302.0 2526.897 457022.0 7322293.0 2796.347
+ 457059.531 7322200.0 2526.393 457034.0 7322234.5 2803.671 /
+ZCORN
+ 2771.63 2765.843 2766.262 2765.645
+ 2802.334 2795.837 2796.347 2795.715 /
+)");
+    BOOST_CHECK_MESSAGE(folded.find("LGR LGR1: 1 refined cell(s) folded") != std::string::npos, folded);
+    BOOST_CHECK_MESSAGE(folded.find("(1,1,2) in (1,1,1)") != std::string::npos, folded);
+
+    const auto upright = warningsFor(R"(
+COORD
+ 0   0   0   0   0   10
+ 100 0   0   100 0   10
+ 0   100 0   0   100 10
+ 100 100 0   100 100 10 /
+ZCORN
+ 4*0
+ 4*10 /
+)");
+    BOOST_CHECK_MESSAGE(upright.find("fold") == std::string::npos, upright);
 }
 
 BOOST_AUTO_TEST_CASE(TestLgrZeroThicknessFatherGivesFlatRefinedCells)
