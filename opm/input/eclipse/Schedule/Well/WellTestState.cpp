@@ -76,7 +76,7 @@ namespace Opm {
         // the restart file, here we just initialize the well close time to the
         // time of the restart.
         const auto elapsed = std::chrono::duration<double> {
-            start_time - rst_state.header.sim_time()
+            rst_state.header.sim_time() - start_time
         }.count();
         for (const auto& well : rst_state.wells) {
             if (well.wtest_close_reason != 0)
@@ -268,8 +268,15 @@ namespace Opm {
     }
 
     std::optional<WellTestState::RestartWell> WellTestState::restart_well(const Opm::WellTestConfig& config, const std::string& wname) const {
-        if (!config.has(wname))
-            return std::nullopt;
+        if (!config.has(wname)) {
+            // Runtime closures (for example GECON) do not require a WTEST
+            // keyword. Preserve their reason even when no tests are scheduled.
+            const auto state = this->wells.find(wname);
+            if (state == this->wells.end() || !state->second.closed) {
+                return std::nullopt;
+            }
+            return RestartWell(wname, 0.0, 0, 0.0, 0, state->second.int_reason());
+        }
 
         const auto& conf = config.get(wname);
 
