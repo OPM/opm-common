@@ -432,6 +432,10 @@
         "signature": "opm.io.deck.DeckKeyword.name() -> str",
         "doc": "Returns the name of the DeckKeyword.\n\n:return: The name of the DeckKeyword.\n:type: str"
     },
+    "DeckKeyword_location": {
+        "signature": "opm.io.deck.DeckKeyword.location() -> KeywordLocation",
+        "doc": "Returns the location the keyword was read from, that is the file name and the line number within that file.\n\nFor a keyword read from a file included with the INCLUDE keyword, the file name is an absolute path with symbolic links resolved. For a keyword in the top level input file, the file name is the path that was passed to the parser, which may be relative. A keyword that was not read from a file at all, for instance one created in Python and added with Deck.add(), reports the file name '<memory string>' and line number 0.\n\n:return: The location of the keyword in the input.\n:type: KeywordLocation"
+    },
     "DeckKeyword_init_parser_keyword_pydata_int": {
         "signature": "opm.io.deck.DeckKeyword.__init__(parser_keyword: ParserKeyword, py_data: numpy.ndarray[int]) -> None",
         "doc": "Creates a DeckKeyword with a specified ParserKeyword and integer data (as a `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_). For this, the keyword must be a data keyword!\n\n:param parser_keyword: The ParserKeyword to initialize the DeckKeyword with.\n:type parser_keyword: ParserKeyword\n:param py_data: The integer data array.\n:type py_data: numpy.ndarray[int]"
@@ -447,6 +451,35 @@
     "DeckKeyword_get_raw_array": {
         "signature": "opm.io.deck.DeckKeyword.get_raw_array() -> numpy.ndarray[double]",
         "doc": "Returns the raw doule data of the DeckKeyword in a `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_.\n\n:return: The raw double data.\n:type: numpy.ndarray[double]"
+    },
+    "KeywordLocation": {
+        "type": "class",
+        "signature": "opm.io.deck.KeywordLocation",
+        "doc": "Where a keyword was read from: the keyword name, the file, and the line number within that file.\n\nThis is the same information the parser writes to the PRT file while reading a deck. Objects of this class are read only; they are obtained from a parsed deck, for example through DeckKeyword.location."
+    },
+    "KeywordLocation_keyword": {
+        "signature": "opm.io.deck.KeywordLocation.keyword -> str",
+        "doc": "The name of the keyword.\n\n:return: The name of the keyword.\n:type: str"
+    },
+    "KeywordLocation_filename": {
+        "signature": "opm.io.deck.KeywordLocation.filename -> str",
+        "doc": "The name of the file the keyword was read from, or '<memory string>' if the keyword was not read from a file.\n\n:return: The file name.\n:type: str"
+    },
+    "KeywordLocation_lineno": {
+        "signature": "opm.io.deck.KeywordLocation.lineno -> int",
+        "doc": "The line number of the keyword within the file, counting from 1. It is 0 if the keyword was not read from a file.\n\n:return: The line number.\n:type: int"
+    },
+    "KeywordLocation_is_binary": {
+        "signature": "opm.io.deck.KeywordLocation.is_binary() -> bool",
+        "doc": "Returns whether the keyword comes from a binary source rather than from a line of text. Such a location has the line number KeywordLocation.LINENO_BINARY.\n\n:return: True if the keyword comes from a binary source.\n:type: bool"
+    },
+    "KeywordLocation_format": {
+        "signature": "opm.io.deck.KeywordLocation.format(msg_fmt: str) -> str",
+        "doc": "Substitutes the location into a message template. The template may use the named placeholders {keyword}, {file} and {line}; this is the convention used by the parser's own messages.\n\nFor example, format('In {file} line {line}') gives a string such as 'In /path/to/CASE.DATA line 42'.\n\n:param msg_fmt: The message template.\n:type msg_fmt: str\n\n:return: The template with the location substituted into it.\n:type: str"
+    },
+    "KeywordLocation_repr": {
+        "signature": "opm.io.deck.KeywordLocation.__repr__() -> str",
+        "doc": "Returns a string representation of the KeywordLocation.\n\n:return: A string representation of the KeywordLocation.\n:type: str"
     },
     "DeckKeyword_get_SI_array": {
         "signature": "opm.io.deck.DeckKeyword.get_SI_array() -> numpy.ndarray[double]",
