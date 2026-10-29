@@ -410,3 +410,210 @@ BOOST_AUTO_TEST_CASE(RSCONST_ThrowsBelowBubblePoint)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE(GasPvtMultiplexerAssignment)
+
+namespace {
+
+using GasPvt = Opm::GasPvtMultiplexer<double>;
+
+GasPvt makeDryGas(const double bg)
+{
+    GasPvt gasPvt;
+    gasPvt.setApproach(Opm::GasPvtApproach::DryGas);
+    auto& dryGas = gasPvt.getRealPvt<Opm::GasPvtApproach::DryGas>();
+    dryGas.setNumRegions(1);
+    dryGas.setGasFormationVolumeFactor(0, {{1.0e5, bg}, {2.0e5, bg}});
+    return gasPvt;
+}
+
+GasPvt makeWetGas(const double rvSat)
+{
+    GasPvt gasPvt;
+    gasPvt.setApproach(Opm::GasPvtApproach::WetGas);
+    auto& wetGas = gasPvt.getRealPvt<Opm::GasPvtApproach::WetGas>();
+    wetGas.setNumRegions(1);
+    wetGas.setSaturatedGasOilVaporizationFactor(0, {{1.0e5, rvSat}, {2.0e5, rvSat}});
+    return gasPvt;
+}
+
+} // Anonymous namespace
+
+BOOST_AUTO_TEST_CASE(AssignBetweenApproaches)
+{
+    // Assigning a multiplexer with a different approach must release the
+    // previous PVT object using its own type, not the new one.
+    auto gasPvt = makeDryGas(0.005);
+
+    const auto wetGas = makeWetGas(0.15);
+    gasPvt = wetGas;
+    BOOST_CHECK(gasPvt.approach() == Opm::GasPvtApproach::WetGas);
+    BOOST_CHECK_CLOSE(gasPvt.saturatedOilVaporizationFactor(0, 300.0, 1.5e5), 0.15, 1.0e-10);
+
+    const auto dryGas = makeDryGas(0.004);
+    gasPvt = dryGas;
+    BOOST_CHECK(gasPvt.approach() == Opm::GasPvtApproach::DryGas);
+    BOOST_CHECK_CLOSE(gasPvt.inverseFormationVolumeFactor(0, 300.0, 1.5e5, 0.0, 0.0), 250.0, 1.0e-10);
+}
+
+BOOST_AUTO_TEST_CASE(AssignNoGasReleasesPvtObject)
+{
+    auto gasPvt = makeDryGas(0.005);
+
+    gasPvt = GasPvt{};
+    BOOST_CHECK(gasPvt.approach() == Opm::GasPvtApproach::NoGas);
+    BOOST_CHECK(gasPvt.realGasPvt() == nullptr);
+
+    const auto wetGas = makeWetGas(0.15);
+    gasPvt = wetGas;
+    BOOST_CHECK(gasPvt.approach() == Opm::GasPvtApproach::WetGas);
+    BOOST_CHECK_CLOSE(gasPvt.saturatedOilVaporizationFactor(0, 300.0, 1.5e5), 0.15, 1.0e-10);
+}
+
+BOOST_AUTO_TEST_CASE(SelfAssignment)
+{
+    auto gasPvt = makeWetGas(0.15);
+    const void* realPvt = gasPvt.realGasPvt();
+
+    const auto& self = gasPvt;
+    gasPvt = self;
+    BOOST_CHECK(gasPvt.approach() == Opm::GasPvtApproach::WetGas);
+    BOOST_CHECK_EQUAL(gasPvt.realGasPvt(), realPvt);
+    BOOST_CHECK_CLOSE(gasPvt.saturatedOilVaporizationFactor(0, 300.0, 1.5e5), 0.15, 1.0e-10);
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE(OilPvtMultiplexerAssignment)
+
+namespace {
+
+using OilPvt = Opm::OilPvtMultiplexer<double>;
+
+template <Opm::OilPvtApproach approach>
+OilPvt makeOil(const double rhoRefOil)
+{
+    OilPvt oilPvt;
+    oilPvt.setApproach(approach);
+    auto& realPvt = oilPvt.getRealPvt<approach>();
+    realPvt.setNumRegions(1);
+    realPvt.setReferenceDensities(0, rhoRefOil, 1.0, 1000.0);
+    return oilPvt;
+}
+
+} // Anonymous namespace
+
+BOOST_AUTO_TEST_CASE(AssignBetweenApproaches)
+{
+    auto oilPvt = makeOil<Opm::OilPvtApproach::DeadOil>(800.0);
+
+    const auto constRsOil = makeOil<Opm::OilPvtApproach::ConstantRsDeadOil>(850.0);
+    oilPvt = constRsOil;
+    BOOST_CHECK(oilPvt.approach() == Opm::OilPvtApproach::ConstantRsDeadOil);
+    BOOST_CHECK(oilPvt.realOilPvt() != constRsOil.realOilPvt());
+    BOOST_CHECK_CLOSE(oilPvt.oilReferenceDensity(0), 850.0, 1.0e-10);
+
+    const auto deadOil = makeOil<Opm::OilPvtApproach::DeadOil>(820.0);
+    oilPvt = deadOil;
+    BOOST_CHECK(oilPvt.approach() == Opm::OilPvtApproach::DeadOil);
+    BOOST_CHECK_CLOSE(oilPvt.oilReferenceDensity(0), 820.0, 1.0e-10);
+}
+
+BOOST_AUTO_TEST_CASE(AssignNoOilReleasesPvtObject)
+{
+    auto oilPvt = makeOil<Opm::OilPvtApproach::DeadOil>(800.0);
+
+    oilPvt = OilPvt{};
+    BOOST_CHECK(oilPvt.approach() == Opm::OilPvtApproach::NoOil);
+    BOOST_CHECK(oilPvt.realOilPvt() == nullptr);
+}
+
+BOOST_AUTO_TEST_CASE(SelfAssignment)
+{
+    auto oilPvt = makeOil<Opm::OilPvtApproach::DeadOil>(800.0);
+    const void* realPvt = oilPvt.realOilPvt();
+
+    const auto& self = oilPvt;
+    oilPvt = self;
+    BOOST_CHECK(oilPvt.approach() == Opm::OilPvtApproach::DeadOil);
+    BOOST_CHECK_EQUAL(oilPvt.realOilPvt(), realPvt);
+    BOOST_CHECK_CLOSE(oilPvt.oilReferenceDensity(0), 800.0, 1.0e-10);
+}
+
+BOOST_AUTO_TEST_CASE(SetApproachReplacesPvtObject)
+{
+    auto oilPvt = makeOil<Opm::OilPvtApproach::DeadOil>(800.0);
+
+    oilPvt.setApproach(Opm::OilPvtApproach::ConstantRsDeadOil);
+    BOOST_CHECK(oilPvt.approach() == Opm::OilPvtApproach::ConstantRsDeadOil);
+    BOOST_CHECK(oilPvt.realOilPvt() != nullptr);
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE(WaterPvtMultiplexerAssignment)
+
+namespace {
+
+using WaterPvt = Opm::WaterPvtMultiplexer<double>;
+
+template <Opm::WaterPvtApproach approach>
+WaterPvt makeWater(const double rhoRefWater)
+{
+    WaterPvt waterPvt;
+    waterPvt.setApproach(approach);
+    auto& realPvt = waterPvt.getRealPvt<approach>();
+    realPvt.setNumRegions(1);
+    realPvt.setReferenceDensities(0, 800.0, 1.0, rhoRefWater);
+    return waterPvt;
+}
+
+} // Anonymous namespace
+
+BOOST_AUTO_TEST_CASE(AssignBetweenApproaches)
+{
+    auto waterPvt = makeWater<Opm::WaterPvtApproach::ConstantCompressibilityWater>(1000.0);
+
+    const auto brine = makeWater<Opm::WaterPvtApproach::ConstantCompressibilityBrine>(1050.0);
+    waterPvt = brine;
+    BOOST_CHECK(waterPvt.approach() == Opm::WaterPvtApproach::ConstantCompressibilityBrine);
+    BOOST_CHECK(waterPvt.realWaterPvt() != brine.realWaterPvt());
+    BOOST_CHECK_CLOSE(waterPvt.waterReferenceDensity(0), 1050.0, 1.0e-10);
+
+    const auto water = makeWater<Opm::WaterPvtApproach::ConstantCompressibilityWater>(1010.0);
+    waterPvt = water;
+    BOOST_CHECK(waterPvt.approach() == Opm::WaterPvtApproach::ConstantCompressibilityWater);
+    BOOST_CHECK_CLOSE(waterPvt.waterReferenceDensity(0), 1010.0, 1.0e-10);
+}
+
+BOOST_AUTO_TEST_CASE(AssignNoWaterReleasesPvtObject)
+{
+    auto waterPvt = makeWater<Opm::WaterPvtApproach::ConstantCompressibilityWater>(1000.0);
+
+    waterPvt = WaterPvt{};
+    BOOST_CHECK(waterPvt.approach() == Opm::WaterPvtApproach::NoWater);
+    BOOST_CHECK(waterPvt.realWaterPvt() == nullptr);
+}
+
+BOOST_AUTO_TEST_CASE(SelfAssignment)
+{
+    auto waterPvt = makeWater<Opm::WaterPvtApproach::ConstantCompressibilityWater>(1000.0);
+    const void* realPvt = waterPvt.realWaterPvt();
+
+    const auto& self = waterPvt;
+    waterPvt = self;
+    BOOST_CHECK(waterPvt.approach() == Opm::WaterPvtApproach::ConstantCompressibilityWater);
+    BOOST_CHECK_EQUAL(waterPvt.realWaterPvt(), realPvt);
+    BOOST_CHECK_CLOSE(waterPvt.waterReferenceDensity(0), 1000.0, 1.0e-10);
+}
+
+BOOST_AUTO_TEST_CASE(SetApproachReplacesPvtObject)
+{
+    auto waterPvt = makeWater<Opm::WaterPvtApproach::ConstantCompressibilityWater>(1000.0);
+
+    waterPvt.setApproach(Opm::WaterPvtApproach::ConstantCompressibilityBrine);
+    BOOST_CHECK(waterPvt.approach() == Opm::WaterPvtApproach::ConstantCompressibilityBrine);
+    BOOST_CHECK(waterPvt.realWaterPvt() != nullptr);
+}
+
+BOOST_AUTO_TEST_SUITE_END()

@@ -35,6 +35,13 @@ template <class Scalar, bool enableThermal>
 OilPvtMultiplexer<Scalar,enableThermal>::
 ~OilPvtMultiplexer()
 {
+    releaseRealPvt_();
+}
+
+template <class Scalar, bool enableThermal>
+void OilPvtMultiplexer<Scalar,enableThermal>::
+releaseRealPvt_()
+{
     switch (approach_) {
     case OilPvtApproach::LiveOil: {
         delete &getRealPvt<OilPvtApproach::LiveOil>();
@@ -67,6 +74,8 @@ OilPvtMultiplexer<Scalar,enableThermal>::
     case OilPvtApproach::NoOil:
         break;
     }
+
+    realOilPvt_ = nullptr;
 }
 
 template <class Scalar, bool enableThermal>
@@ -136,39 +145,42 @@ template <class Scalar, bool enableThermal>
 void OilPvtMultiplexer<Scalar,enableThermal>::
 setApproach(OilPvtApproach appr)
 {
+    void* newPvt = nullptr;
     switch (appr) {
     case OilPvtApproach::LiveOil:
-        realOilPvt_ = new LiveOilPvt<Scalar>;
+        newPvt = new LiveOilPvt<Scalar>;
         break;
 
     case OilPvtApproach::DeadOil:
-        realOilPvt_ = new DeadOilPvt<Scalar>;
+        newPvt = new DeadOilPvt<Scalar>;
         break;
 
     case OilPvtApproach::ConstantCompressibilityOil:
-        realOilPvt_ = new ConstantCompressibilityOilPvt<Scalar>;
+        newPvt = new ConstantCompressibilityOilPvt<Scalar>;
         break;
 
     case OilPvtApproach::ThermalOil:
-        realOilPvt_ = new OilPvtThermal<Scalar>;
+        newPvt = new OilPvtThermal<Scalar>;
         break;
 
     case OilPvtApproach::BrineCo2:
-        realOilPvt_ = new BrineCo2Pvt<Scalar>;
+        newPvt = new BrineCo2Pvt<Scalar>;
         break;
 
     case OilPvtApproach::BrineH2:
-        realOilPvt_ = new BrineH2Pvt<Scalar>;
+        newPvt = new BrineH2Pvt<Scalar>;
         break;
 
     case OilPvtApproach::ConstantRsDeadOil:
-        realOilPvt_ = new ConstantRsDeadOilPvt<Scalar>;
+        newPvt = new ConstantRsDeadOilPvt<Scalar>;
         break;
 
     case OilPvtApproach::NoOil:
         throw std::logic_error("Not implemented: Oil PVT of this deck!");
     }
 
+    releaseRealPvt_();
+    realOilPvt_ = newPvt;
     approach_ = appr;
 }
 
@@ -177,32 +189,41 @@ OilPvtMultiplexer<Scalar,enableThermal>&
 OilPvtMultiplexer<Scalar,enableThermal>::
 operator=(const OilPvtMultiplexer<Scalar,enableThermal>& data)
 {
-    approach_ = data.approach_;
-    switch (approach_) {
+    if (this == &data) {
+        return *this;
+    }
+
+    // Copy first, then release the current object using the current approach.
+    void* newPvt = nullptr;
+    switch (data.approach_) {
     case OilPvtApproach::ConstantCompressibilityOil:
-        realOilPvt_ = new ConstantCompressibilityOilPvt<Scalar>(*static_cast<const ConstantCompressibilityOilPvt<Scalar>*>(data.realOilPvt_));
+        newPvt = new ConstantCompressibilityOilPvt<Scalar>(*static_cast<const ConstantCompressibilityOilPvt<Scalar>*>(data.realOilPvt_));
         break;
     case OilPvtApproach::DeadOil:
-        realOilPvt_ = new DeadOilPvt<Scalar>(*static_cast<const DeadOilPvt<Scalar>*>(data.realOilPvt_));
+        newPvt = new DeadOilPvt<Scalar>(*static_cast<const DeadOilPvt<Scalar>*>(data.realOilPvt_));
         break;
     case OilPvtApproach::LiveOil:
-        realOilPvt_ = new LiveOilPvt<Scalar>(*static_cast<const LiveOilPvt<Scalar>*>(data.realOilPvt_));
+        newPvt = new LiveOilPvt<Scalar>(*static_cast<const LiveOilPvt<Scalar>*>(data.realOilPvt_));
         break;
     case OilPvtApproach::ThermalOil:
-        realOilPvt_ = new OilPvtThermal<Scalar>(*static_cast<const OilPvtThermal<Scalar>*>(data.realOilPvt_));
+        newPvt = new OilPvtThermal<Scalar>(*static_cast<const OilPvtThermal<Scalar>*>(data.realOilPvt_));
         break;
     case OilPvtApproach::BrineCo2:
-        realOilPvt_ = new BrineCo2Pvt<Scalar>(*static_cast<const BrineCo2Pvt<Scalar>*>(data.realOilPvt_));
+        newPvt = new BrineCo2Pvt<Scalar>(*static_cast<const BrineCo2Pvt<Scalar>*>(data.realOilPvt_));
         break;
     case OilPvtApproach::BrineH2:
-        realOilPvt_ = new BrineH2Pvt<Scalar>(*static_cast<const BrineH2Pvt<Scalar>*>(data.realOilPvt_));
+        newPvt = new BrineH2Pvt<Scalar>(*static_cast<const BrineH2Pvt<Scalar>*>(data.realOilPvt_));
         break;
     case OilPvtApproach::ConstantRsDeadOil:
-        realOilPvt_ = new ConstantRsDeadOilPvt<Scalar>(*static_cast<const ConstantRsDeadOilPvt<Scalar>*>(data.realOilPvt_));
+        newPvt = new ConstantRsDeadOilPvt<Scalar>(*static_cast<const ConstantRsDeadOilPvt<Scalar>*>(data.realOilPvt_));
         break;
-    default:
+    case OilPvtApproach::NoOil:
         break;
     }
+
+    releaseRealPvt_();
+    realOilPvt_ = newPvt;
+    approach_ = data.approach_;
 
     return *this;
 }

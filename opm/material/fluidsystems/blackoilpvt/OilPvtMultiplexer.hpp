@@ -377,6 +377,9 @@ public:
 private:
     OilPvtApproach approach_{OilPvtApproach::NoOil};
     void* realOilPvt_{nullptr};
+
+    // Deletes the current PVT object (according to approach_) and resets the pointer.
+    void releaseRealPvt_();
 };
 
 } // namespace Opm

@@ -116,7 +116,7 @@ public:
 
     GasPvtMultiplexer(GasPvtApproach approach, void* realGasPvt)
         : gasPvtApproach_(approach)
-        , realGasPvt_(realGasPvt, [this](void* ptr){ deleter(ptr); })
+        , realGasPvt_(realGasPvt, [approach](void* ptr){ deleter(approach, ptr); })
     { }
 
     GasPvtMultiplexer(const GasPvtMultiplexer<Scalar,enableThermal>& data)
@@ -408,7 +408,10 @@ private:
     GasPvtApproach gasPvtApproach_{GasPvtApproach::NoGas};
     UniqueVoidPtrWithDeleter realGasPvt_;
 
-    void deleter(void* ptr);
+    // Deletes a PVT object created for the given approach.  The approach is
+    // passed explicitly (rather than read from gasPvtApproach_) since the
+    // multiplexer's approach may change before the old object is released.
+    static void deleter(GasPvtApproach approach, void* ptr);
 };
 
 } // namespace Opm
