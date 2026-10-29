@@ -24,6 +24,7 @@ along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 #include <opm/input/eclipse/EclipseState/Aquifer/Aquifetp.hpp>
 #include <opm/input/eclipse/EclipseState/Aquifer/AquiferFlux.hpp>
 #include <opm/input/eclipse/EclipseState/Aquifer/AquiferConfig.hpp>
+#include <opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquiferRegionSplit.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
 
@@ -34,8 +35,17 @@ along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <opm/common/utility/OpmInputError.hpp>
 
+#include <algorithm>
+#include <array>
 #include <cstddef>
 #include <initializer_list>
+#include <iterator>
+#include <map>
+#include <set>
+#include <string>
+#include <vector>
+#include <utility>
+#include <memory>
 #include <stdexcept>
 
 using namespace Opm;
@@ -1169,4 +1179,400 @@ AQUANCON
        auto cell1 = aquconn.getConnections(1)[0];
        BOOST_CHECK_EQUAL(cell1.influx_coeff, 2*(77 + 3*(0 + 4*100)));
    }
+}
+
+namespace {
+
+// Aquifer 1 connects cells of EQLNUM regions 1 (K=1-2) and 2 (K=4-5).
+// Aquifer 3 has its cell in region 2 but connects to region 1 cells only.
+// Row J=1 and layer K=3 are inactive.
+std::string regionSplitDeck(const std::string& aqunum,
+                            const std::string& aqucon,
+                            const std::string& regionEdits,
+                            const std::string& gridEdits = "")
+{
+    return std::string { R"(
+RUNSPEC
+DIMENS
+ 5 4 5 /
+TABDIMS
+ 1 2 /
+EQLDIMS
+ 2 /
+AQUDIMS
+ 1* 1* 1* 1* 10 50 /
+METRIC
+GRID
+DX
+ 100*100 /
+DY
+ 100*100 /
+DZ
+ 100*10 /
+BOX
+ 1 5 1 4 1 1 /
+TOPS
+ 20*2000 /
+ENDBOX
+PORO
+ 100*0.25 /
+PERMX
+ 100*100 /
+PERMY
+ 100*100 /
+PERMZ
+ 100*10 /
+ACTNUM
+ 5*0 15*1
+ 5*0 15*1
+ 20*0
+ 5*0 15*1
+ 5*0 15*1 /
+)" } + gridEdits + aqunum + aqucon + R"(
+REGIONS
+EQLNUM
+ 40*1 60*2 /
+PVTNUM
+ 40*1 60*2 /
+)" + regionEdits;
+}
+
+const std::string regionSplitAqunum = R"(
+AQUNUM
+ 1 1 1 5 1.0e6 1000 0.25 500 1* 1* 2 1 /
+ 3 5 1 5 2.0e6 2000 0.20 400 1* 250 /
+/
+)";
+
+const std::string regionSplitAqucon1 = R"(
+AQUCON
+ 1 1 5 2 2 1 5 'J-' /
+/
+)";
+
+const std::string regionSplitAqucon3 = R"(
+AQUCON
+ 3 1 5 4 4 1 2 'J+' /
+/
+)";
+
+struct RegionSplitCase
+{
+    explicit RegionSplitCase(const std::string& deckString)
+        : deck { Opm::Parser{}.parseString(deckString) }
+        , state { deck }
+        , aquifers { deck, state.getInputGrid(), state.fieldProps() }
+    {
+        aquifers.postProcessConnections(state.getInputGrid(), state.getInputGrid().getACTNUM());
+    }
+
+    int eqlnum(std::size_t globalIndex) const
+    {
+        const auto& grid = state.getInputGrid();
+        return state.fieldProps().get_int("EQLNUM")[grid.activeIndex(globalIndex)];
+    }
+
+    Opm::Deck deck;
+    Opm::EclipseState state;
+    Opm::NumericalAquifers aquifers;
+};
+
+std::string keywordBlock(const std::string& text, const std::string& keyword)
+{
+    const auto start = text.find("\n" + keyword + "\n");
+    BOOST_REQUIRE(start != std::string::npos);
+    const auto end = text.find("\n/\n", start + 1);
+    BOOST_REQUIRE(end != std::string::npos);
+    return text.substr(start, end + 3 - start);
+}
+
+// Deck records with the aquifer ID of each record.
+using AquiferRecords = std::vector<std::pair<std::size_t, std::string>>;
+
+struct RegionSplitInput
+{
+    AquiferRecords aqunum{};
+    AquiferRecords aqucon{};
+    std::string regionEdits{};
+    std::string gridEdits{};
+};
+
+// Records of a keyword in the suggested deck changes, without the keyword
+// line and the terminating slash.
+std::string suggestedRecords(const std::string& changes, const std::string& keyword)
+{
+    if (changes.find("\n" + keyword + "\n") == std::string::npos) {
+        return "";
+    }
+    const auto block = keywordBlock(changes, keyword);
+    const auto first = block.find('\n', 1) + 1;
+    return block.substr(first, block.size() - 2 - first);
+}
+
+// Deck from the input, with the suggested deck changes applied if given:
+// the AQUNUM/AQUCON records of the replaced aquifers are removed and the
+// suggested records and EQUALS appended.
+std::string regionSplitDeck(const RegionSplitInput& input,
+                            const Opm::NumericalAquiferRegionSplit* split = nullptr,
+                            const std::string& changes = "")
+{
+    auto keyword = [](const std::string& name, const AquiferRecords& records,
+                      const std::vector<std::size_t>& replaced, const std::string& suggested)
+    {
+        auto out = "\n" + name + "\n";
+        for (const auto& [id, record] : records) {
+            if (std::ranges::find(replaced, id) == replaced.end()) {
+                out += record + "\n";
+            }
+        }
+        return out + suggested + "/\n";
+    };
+
+    const std::vector<std::size_t> none{};
+    const auto equals = suggestedRecords(changes, "EQUALS");
+    return regionSplitDeck(
+        keyword("AQUNUM", input.aqunum, split ? split->replacedAqunumIds() : none,
+                suggestedRecords(changes, "AQUNUM")),
+        keyword("AQUCON", input.aqucon, split ? split->replacedAquconIds() : none,
+                suggestedRecords(changes, "AQUCON")),
+        input.regionEdits + (equals.empty() ? "" : "EQUALS\n" + equals + "/\n"),
+        input.gridEdits);
+}
+
+struct AppliedRegionSplit
+{
+    std::unique_ptr<RegionSplitCase> original;
+    std::unique_ptr<Opm::NumericalAquiferRegionSplit> split;
+    std::unique_ptr<RegionSplitCase> fixed;
+};
+
+// Applies the suggested deck changes for the given aquifers, and checks
+// that the resulting deck is accepted, that every aquifer is then in a
+// single EQLNUM region, and that each cell keeps its number of aquifer
+// connections.
+AppliedRegionSplit applyRegionSplit(const RegionSplitInput& input,
+                                    const std::vector<std::size_t>& aquiferIds)
+{
+    AppliedRegionSplit result;
+    result.original = std::make_unique<RegionSplitCase>(regionSplitDeck(input));
+    const auto& original = *result.original;
+
+    result.split = std::make_unique<Opm::NumericalAquiferRegionSplit>(
+        original.aquifers, aquiferIds, original.state.getInputGrid(),
+        original.state.fieldProps(), original.state.getLgrs());
+    const auto changes = result.split->deckChanges(original.state.getDeckUnitSystem());
+    BOOST_TEST_MESSAGE(changes);
+
+    BOOST_REQUIRE_NO_THROW(result.fixed = std::make_unique<RegionSplitCase>(
+                               regionSplitDeck(input, result.split.get(), changes)));
+    const auto& fixed = *result.fixed;
+
+    auto connectionCounts = [](const RegionSplitCase& rsc) {
+        std::map<std::size_t, std::size_t> counts;
+        for (const auto& [id, aquifer] : rsc.aquifers.aquifers()) {
+            for (const auto& con : aquifer.connections()) {
+                ++counts[con.global_index];
+            }
+        }
+        return counts;
+    };
+
+    for (const auto& [id, aquifer] : fixed.aquifers.aquifers()) {
+        std::set<int> regions;
+        for (std::size_t c = 0; c < aquifer.numCells(); ++c) {
+            regions.insert(fixed.eqlnum(aquifer.getCellPrt(c)->global_index));
+        }
+        for (const auto& con : aquifer.connections()) {
+            regions.insert(fixed.eqlnum(con.global_index));
+        }
+        BOOST_CHECK_MESSAGE(regions.size() == 1, "Aquifer " << id << " spans several EQLNUM regions");
+    }
+
+    const auto before = connectionCounts(original);
+    const auto after = connectionCounts(fixed);
+    BOOST_CHECK_MESSAGE(before == after, "Applied deck changes alter the aquifer connections");
+
+    return result;
+}
+
+} // Anonymous namespace
+
+BOOST_AUTO_TEST_CASE(NumericalAquiferRegionSplitRecords)
+{
+    const RegionSplitCase rsc { regionSplitDeck(regionSplitAqunum,
+                                                regionSplitAqucon1 + regionSplitAqucon3, "") };
+    const auto split = Opm::NumericalAquiferRegionSplit {
+        rsc.aquifers, {1, 3}, rsc.state.getInputGrid(), rsc.state.fieldProps(), rsc.state.getLgrs()
+    };
+
+    BOOST_CHECK(!split.empty());
+    BOOST_CHECK(split.unresolvedIds().empty());
+
+    // Aquifer 3 is not split, but gets the PVT table of its connected cells
+    // and its initial pressure defaulted.  New aquifer 4 takes the region 1
+    // connections of aquifer 1, in the first free inactive cell which is not
+    // next to a connected cell.
+    const auto expectAqunum = std::vector<std::size_t>{3};
+    const auto expectAqucon = std::vector<std::size_t>{1};
+    BOOST_CHECK_EQUAL_COLLECTIONS(split.replacedAqunumIds().begin(), split.replacedAqunumIds().end(),
+                                  expectAqunum.begin(), expectAqunum.end());
+    BOOST_CHECK_EQUAL_COLLECTIONS(split.replacedAquconIds().begin(), split.replacedAquconIds().end(),
+                                  expectAqucon.begin(), expectAqucon.end());
+
+    auto aqunumOf = [&split](std::size_t id) {
+        std::vector<Opm::NumericalAquiferRegionSplit::AqunumRecord> recs;
+        std::ranges::copy_if(split.aqunumRecords(), std::back_inserter(recs),
+                             [id](const auto& rec) { return rec.id == id; });
+        return recs;
+    };
+
+    BOOST_CHECK_EQUAL(split.aqunumRecords().size(), std::size_t{2});
+    const auto aqu3 = aqunumOf(3);
+    BOOST_REQUIRE_EQUAL(aqu3.size(), std::size_t{1});
+    BOOST_CHECK_EQUAL(aqu3[0].pvtTable, 1);
+    BOOST_CHECK_EQUAL(aqu3[0].region, 1);
+    BOOST_CHECK(aqu3[0].hadInitialPressure);
+    BOOST_CHECK(aqu3[0].ijk == (std::array<std::size_t, 3>{4, 0, 4}));
+
+    const auto aqu4 = aqunumOf(4);
+    BOOST_REQUIRE_EQUAL(aqu4.size(), std::size_t{1});
+    BOOST_CHECK_EQUAL(aqu4[0].sourceId, std::size_t{1});
+    BOOST_CHECK_EQUAL(aqu4[0].region, 1);
+    BOOST_CHECK_EQUAL(aqu4[0].pvtTable, 1);
+    BOOST_CHECK_EQUAL(aqu4[0].satTable, 1);
+    BOOST_CHECK(aqu4[0].ijk == (std::array<std::size_t, 3>{0, 0, 2}));
+    BOOST_CHECK_CLOSE(aqu4[0].area, 1.0e6, 1.0e-10);
+    BOOST_CHECK_CLOSE(aqu4[0].depth, rsc.aquifers.getAquifer(1).getCellPrt(0)->depth, 1.0e-10);
+
+    // Aquifer 1 keeps the connections to the region of its own cell.  Cell
+    // (5,2,5) is not connected (it adjoins the cell of aquifer 3), so its
+    // layer needs a separate box.
+    using Box = std::array<std::size_t, 6>;
+    std::map<std::size_t, std::vector<Box>> boxes;
+    for (const auto& rec : split.aquconRecords()) {
+        BOOST_CHECK(rec.face == Opm::FaceDir::YMinus);
+        boxes[rec.id].push_back(rec.box);
+    }
+    BOOST_REQUIRE_EQUAL(boxes.size(), std::size_t{2});
+    BOOST_CHECK(boxes[4] == (std::vector<Box>{{0, 4, 1, 1, 0, 1}}));
+    BOOST_CHECK(boxes[1] == (std::vector<Box>{{0, 4, 1, 1, 3, 3}, {0, 3, 1, 1, 4, 4}}));
+
+    std::map<std::size_t, int> eqlnum;
+    for (const auto& rec : split.eqlnumRecords()) {
+        eqlnum[rec.aquiferId] = rec.region;
+    }
+    BOOST_CHECK((eqlnum == std::map<std::size_t, int>{{3, 1}, {4, 1}}));
+}
+
+BOOST_AUTO_TEST_CASE(NumericalAquiferRegionSplitAppliedToDeck)
+{
+    const auto input = RegionSplitInput {
+        { {1, " 1 1 1 5 1.0e6 1000 0.25 500 1* 1* 2 1 /"},
+          {3, " 3 5 1 5 2.0e6 2000 0.20 400 1* 250 /"} },
+        { {1, " 1 1 5 2 2 1 5 'J-' /"},
+          {3, " 3 1 5 4 4 1 2 'J+' /"} },
+    };
+    const auto applied = applyRegionSplit(input, {1, 3});
+    const auto& original = *applied.original;
+    const auto& fixed = *applied.fixed;
+
+    BOOST_CHECK_EQUAL(fixed.aquifers.size(), std::size_t{3});
+
+    // The split aquifer is a copy of the original one.
+    const auto* orig = original.aquifers.getAquifer(1).getCellPrt(0);
+    const auto* copy = fixed.aquifers.getAquifer(4).getCellPrt(0);
+    BOOST_CHECK_CLOSE(copy->area, orig->area, 1.0e-8);
+    BOOST_CHECK_CLOSE(copy->length, orig->length, 1.0e-8);
+    BOOST_CHECK_CLOSE(copy->porosity, orig->porosity, 1.0e-8);
+    BOOST_CHECK_CLOSE(copy->permeability, orig->permeability, 1.0e-8);
+    BOOST_CHECK_CLOSE(copy->depth, orig->depth, 1.0e-8);
+    BOOST_CHECK(!fixed.aquifers.getAquifer(3).getCellPrt(0)->init_pressure.has_value());
+}
+
+BOOST_AUTO_TEST_CASE(NumericalAquiferRegionSplitTransferredConnectionNextToSourceAquifer)
+{
+    // The cell of aquifer 1, (2,1,1), is in EQLNUM region 2 and adjoins
+    // connected cell (2,2,1) of region 1, which is retained without
+    // ALLOW_INTERNAL_CELLS since it adjoins the aquifer's own cell.  The
+    // region 1 connections move to a new aquifer, for which (2,1,1) is an
+    // active cell of another aquifer.
+    const auto input = RegionSplitInput {
+        { {1, " 1 2 1 1 1.0e6 1000 0.25 500 /"} },
+        { {1, " 1 1 5 2 2 1 5 'J-' /"} },
+        "EQUALS\n 'EQLNUM' 2 2 2 1 1 1 1 /\n/\n",
+    };
+    const auto applied = applyRegionSplit(input, {1});
+
+    const auto& grid = applied.original->state.getInputGrid();
+    const auto adjoining = grid.getGlobalIndex(1, 1, 0);
+    const auto& originalCons = applied.original->aquifers.getAquifer(1).connections();
+    BOOST_REQUIRE(std::ranges::any_of(originalCons, [adjoining](const auto& con)
+                                      { return con.global_index == adjoining; }));
+
+    // Only the record of the adjoining cell allows internal cells.
+    std::size_t numInternal = 0;
+    for (const auto& rec : applied.split->aquconRecords()) {
+        if (rec.allowInternalCells) {
+            ++numInternal;
+            BOOST_CHECK_EQUAL(rec.id, std::size_t{2});
+            BOOST_CHECK(rec.box == (std::array<std::size_t, 6>{1, 1, 1, 1, 0, 0}));
+        }
+    }
+    BOOST_CHECK_EQUAL(numInternal, std::size_t{1});
+
+    const auto& fixedCons = applied.fixed->aquifers.getAquifer(2).connections();
+    BOOST_CHECK(std::ranges::any_of(fixedCons, [adjoining](const auto& con)
+                                    { return con.global_index == adjoining; }));
+}
+
+BOOST_AUTO_TEST_CASE(NumericalAquiferRegionSplitAvoidsRefinements)
+{
+    // Column I=1 is not connected.  The refinement box (1,1-2,1) contains
+    // the cell which would otherwise host the new aquifer.
+    auto input = RegionSplitInput {
+        { {1, " 1 1 1 5 1.0e6 1000 0.25 500 1* 1* 2 1 /"} },
+        { {1, " 1 2 5 2 2 1 5 'J-' /"} },
+    };
+
+    auto newAquiferCells = [](const Opm::NumericalAquiferRegionSplit& split) {
+        std::vector<std::array<std::size_t, 3>> cells;
+        for (const auto& rec : split.aqunumRecords()) {
+            if (rec.id != rec.sourceId) {
+                cells.push_back(rec.ijk);
+            }
+        }
+        return cells;
+    };
+
+    {
+        const RegionSplitCase rsc { regionSplitDeck(input) };
+        const auto split = Opm::NumericalAquiferRegionSplit {
+            rsc.aquifers, {1}, rsc.state.getInputGrid(), rsc.state.fieldProps(), rsc.state.getLgrs()
+        };
+        BOOST_CHECK(newAquiferCells(split) == (std::vector<std::array<std::size_t, 3>>{{0, 0, 0}}));
+    }
+
+    input.gridEdits = R"(
+CARFIN
+'LGR1' 1 1 1 2 1 1 2 2 2 /
+ENDFIN
+)";
+    const auto applied = applyRegionSplit(input, {1});
+    BOOST_REQUIRE_EQUAL(applied.original->state.getLgrs().size(), std::size_t{1});
+    BOOST_CHECK(newAquiferCells(*applied.split) == (std::vector<std::array<std::size_t, 3>>{{0, 0, 1}}));
+}
+
+BOOST_AUTO_TEST_CASE(NumericalAquiferRegionSplitConsistentAquifer)
+{
+    // Aquifer 1 restricted to region 2: nothing to change.
+    const RegionSplitCase rsc { regionSplitDeck(regionSplitAqunum, R"(
+AQUCON
+ 1 1 5 2 2 4 5 'J-' /
+/
+)", "") };
+    const auto split = Opm::NumericalAquiferRegionSplit {
+        rsc.aquifers, {1}, rsc.state.getInputGrid(), rsc.state.fieldProps(), rsc.state.getLgrs()
+    };
+    BOOST_CHECK(split.empty());
+    BOOST_CHECK(split.deckChanges(rsc.state.getDeckUnitSystem()).empty());
 }

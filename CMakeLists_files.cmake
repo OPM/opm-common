@@ -103,6 +103,7 @@ list(APPEND MAIN_SOURCE_FILES
   opm/input/eclipse/EclipseState/Aquifer/AquiferHelpers.cpp
   opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquiferCell.cpp
   opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquiferConnection.cpp
+  opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquiferRegionSplit.cpp
   opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/SingleNumericalAquifer.cpp
   opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquifers.cpp
   opm/input/eclipse/EclipseState/Compositional/CompositionalConfig.cpp
@@ -1005,6 +1006,7 @@ list(APPEND PUBLIC_HEADER_FILES
   opm/input/eclipse/EclipseState/Aquifer/Aquifetp.hpp
   opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquiferCell.hpp
   opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquiferConnection.hpp
+  opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquiferRegionSplit.hpp
   opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquifers.hpp
   opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/SingleNumericalAquifer.hpp
   opm/input/eclipse/EclipseState/Co2StoreConfig.hpp
