@@ -55,6 +55,7 @@
 #include <opm/input/eclipse/Parser/InputErrorAction.hpp>
 #include <opm/input/eclipse/Parser/ParseContext.hpp>
 #include <opm/input/eclipse/Parser/Parser.hpp>
+#include <opm/input/eclipse/Parser/raw/StarToken.hpp>
 
 #include <algorithm>
 #include <array>
@@ -413,6 +414,19 @@ namespace {
         }
 
         return earliest;
+    }
+
+    // SACT also stores an action's minimum wait in single precision, which
+    // would bring 0.1 days back 0.13 ms longer.  Reading the shortest
+    // decimal that rounds to the stored value, as the parser reads the
+    // deck, gives back the value entered.
+    double minWait(const float stored, const Opm::UnitSystem& usys)
+    {
+        const auto value = std::isfinite(stored)
+            ? Opm::readValueToken<double>(fmt::format("{}", stored))
+            : static_cast<double>(stored);
+
+        return usys.to_si(Opm::UnitSystem::measure::time, value);
     }
 } // Anonymous namespace
 
@@ -872,7 +886,7 @@ RstState::create_action(ActionData<float>                   actionArrays,
     const auto max_run = iact[5];
     const auto run_count = iact[2] - 1;
 
-    const auto min_wait = this->unit_system.to_si(UnitSystem::measure::time, sact[3]);
+    const auto min_wait = minWait(sact[3], this->unit_system);
 
     if (!this->header.inferred_start_from_elapsed_simtime.has_value()) {
         throw std::runtime_error {

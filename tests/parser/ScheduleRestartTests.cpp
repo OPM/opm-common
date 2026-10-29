@@ -1322,3 +1322,61 @@ TSTEP
         }
     }
 }
+
+BOOST_AUTO_TEST_CASE(RestartActionMinWait)
+{
+    WorkArea work {};
+
+    // Minimum waits in days, all but the last off in single precision.
+    for (const auto* min_wait : { "0.1", "0.3", "0.7", "0.3333333", "1.0E-3", "30" }) {
+        BOOST_TEST_CONTEXT("MIN_WAIT " << min_wait) {
+            const auto schedule = fmt::format(R"(WELSPECS
+  'OP1' 'G1' 1 1 1* 'OIL' /
+/
+
+COMPDAT
+  'OP1' 1 1 1 2 'OPEN' /
+/
+
+WCONPROD
+  'OP1' 'OPEN' 'ORAT' 100 4* 50 /
+/
+
+ACTIONX
+  'A' 10 {} /
+  YEAR >= 2000 /
+/
+
+WCONPROD
+  'OP1' 'OPEN' 'ORAT' 50 4* 50 /
+/
+
+ENDACTIO
+
+TSTEP
+  2*1.0 /
+)", min_wait);
+
+            write_file("BASE.DATA", time_of_day_deck("", schedule));
+
+            // 'A' runs at the restart time, so it is not evaluated when
+            // the restart file is written.
+            const auto deck = Parser{}.parseFile("BASE.DATA");
+            const auto es = EclipseState { deck };
+            const auto sched = Schedule { deck, es, std::make_shared<Python>() };
+
+            auto state = Action::State {};
+            state.add_run(sched[1].actions()["A"], sched.simTime(1), Action::Result { true });
+
+            write_restart_file("BASE", 1, state);
+            write_file("RESTART.DATA",
+                       time_of_day_deck("RESTART\n  'BASE' 1 /\n", "SKIPREST\n\n" + schedule));
+
+            const auto& [base, restarted, rst_state] =
+                load_schedule_pair("BASE.DATA", "RESTART.DATA", "BASE.X0001", 1);
+
+            BOOST_CHECK_EQUAL(restarted[1].actions()["A"].min_wait(),
+                              base[1].actions()["A"].min_wait());
+        }
+    }
+}
