@@ -139,8 +139,9 @@ END
   A PYINPUT block is run while the deck is being parsed, and is handed the deck
   with the keywords parsed so far. This checks that DeckKeyword.location is
   available there, and that it reports the same as it does outside the
-  simulator: the path as it was passed to the parser for the top level file,
-  and a resolved absolute path for a file brought in with INCLUDE.
+  simulator: for the top level file the path as it was given to the parser,
+  normalized but still relative, and for a file brought in with INCLUDE a
+  resolved absolute path.
 
   The checks are made in the Python block itself, which prints every failure
   and adds the keyword OIL to the deck only if all of them hold. The assertion

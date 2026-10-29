@@ -434,7 +434,7 @@
     },
     "DeckKeyword_location": {
         "signature": "opm.io.deck.DeckKeyword.location() -> KeywordLocation",
-        "doc": "Returns the location the keyword was read from, that is the file name and the line number within that file.\n\nFor a keyword read from a file included with the INCLUDE keyword, the file name is an absolute path with symbolic links resolved. For a keyword in the top level input file, the file name is the path that was passed to the parser, which may be relative. A keyword that was not read from a file at all, for instance one created in Python and added with Deck.add(), reports the file name '<memory string>' and line number 0.\n\n:return: The location of the keyword in the input.\n:type: KeywordLocation"
+        "doc": "Returns the location the keyword was read from, that is the file name and the line number within that file.\n\nFor a keyword read from a file included with the INCLUDE keyword, the file name is an absolute path with symbolic links resolved. For a keyword in the top level input file, the file name keeps the relative or absolute form of the path that was given to the parser, but it is normalized in the same way: symbolic links are resolved and redundant elements such as '.' are removed, so it is not necessarily the string that was passed. For a keyword parsed from a string with Parser.parse_string(), the file name is '<memory string>' and the line number is counted within that string. For a keyword that was not parsed at all, for instance one created in Python and added with Deck.add(), the file name is '<memory string>' and the line number is 0.\n\n:return: The location of the keyword in the input.\n:type: KeywordLocation"
     },
     "DeckKeyword_init_parser_keyword_pydata_int": {
         "signature": "opm.io.deck.DeckKeyword.__init__(parser_keyword: ParserKeyword, py_data: numpy.ndarray[int]) -> None",
@@ -463,11 +463,11 @@
     },
     "KeywordLocation_filename": {
         "signature": "opm.io.deck.KeywordLocation.filename -> str",
-        "doc": "The name of the file the keyword was read from, or '<memory string>' if the keyword was not read from a file.\n\n:return: The file name.\n:type: str"
+        "doc": "The name of the file the keyword was read from. A keyword that was not read from a file reports '<memory string>', whether it was parsed from a string or constructed directly.\n\n:return: The file name.\n:type: str"
     },
     "KeywordLocation_lineno": {
         "signature": "opm.io.deck.KeywordLocation.lineno -> int",
-        "doc": "The line number of the keyword within the file, counting from 1. It is 0 if the keyword was not read from a file.\n\n:return: The line number.\n:type: int"
+        "doc": "The line number of the keyword within the file, counting from 1. For a keyword parsed from a string it is the line number within that string. It is 0 for a keyword that was never parsed from any input, for instance one constructed in Python. For a keyword that comes from a binary source it is the sentinel value KeywordLocation.LINENO_BINARY rather than a line of text, which is_binary() tests for.\n\n:return: The line number.\n:type: int"
     },
     "KeywordLocation_is_binary": {
         "signature": "opm.io.deck.KeywordLocation.is_binary() -> bool",
