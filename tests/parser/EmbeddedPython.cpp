@@ -40,11 +40,14 @@
 #include <opm/input/eclipse/Parser/Parser.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/P.hpp>
 
+#include <fstream>
 #include <map>
 #include <memory>
 #include <stdexcept>
 #include <string>
 #include <vector>
+
+#include "tests/WorkArea.hpp"
 
 using namespace Opm;
 
@@ -130,6 +133,95 @@ END
     }
 
     BOOST_CHECK_MESSAGE(deck.hasKeyword("DY"), "DY keyword must be present");
+}
+
+/*
+  A PYINPUT block is run while the deck is being parsed, and is handed the deck
+  with the keywords parsed so far. This checks that DeckKeyword.location is
+  available there, and that it reports the same as it does outside the
+  simulator: the path as it was passed to the parser for the top level file,
+  and a resolved absolute path for a file brought in with INCLUDE.
+
+  The checks are made in the Python block itself, which prints every failure
+  and adds the keyword OIL to the deck only if all of them hold. The assertion
+  here is therefore on OIL; the messages above it say what went wrong.
+*/
+BOOST_AUTO_TEST_CASE(PYINPUT_KEYWORD_LOCATION)
+{
+    const WorkArea work_area{};
+
+    {
+        std::ofstream include_file { "grid.inc" };
+        include_file << "-- The WATER keyword below is on line 2 of this file.\n"
+                     << "WATER\n";
+    }
+
+    {
+        std::ofstream data_file { "LOCATION.DATA" };
+        data_file << R"~~(RUNSPEC
+
+DIMENS
+2 2 1 /
+
+INCLUDE
+'grid.inc' /
+
+PYINPUT
+import os.path
+
+failures = []
+dimens = None
+water = None
+
+for kw in context.deck:
+    if kw.name == 'DIMENS':
+        dimens = kw.location
+    elif kw.name == 'WATER':
+        water = kw.location
+
+if dimens is None:
+    failures.append('the deck has no DIMENS keyword')
+else:
+    if dimens.keyword != 'DIMENS':
+        failures.append('dimens.keyword is ' + dimens.keyword)
+    if dimens.filename != 'LOCATION.DATA':
+        failures.append('the top level file is reported as ' + dimens.filename)
+    if dimens.lineno != 3:
+        failures.append('DIMENS is reported on line %d' % dimens.lineno)
+    if dimens.is_binary():
+        failures.append('DIMENS is reported as coming from a binary source')
+
+if water is None:
+    failures.append('the deck has no WATER keyword')
+else:
+    if not os.path.isabs(water.filename):
+        failures.append('the included file is not an absolute path: ' + water.filename)
+    if os.path.basename(water.filename) != 'grid.inc':
+        failures.append('the included file is reported as ' + water.filename)
+    if water.lineno != 2:
+        failures.append('WATER is reported on line %d' % water.lineno)
+    if water.format('{keyword} in {file} line {line}') != 'WATER in ' + water.filename + ' line 2':
+        failures.append('format() gave ' + water.format('{keyword} in {file} line {line}'))
+
+for failure in failures:
+    print('PYINPUT keyword location check failed: ' + failure)
+
+if not failures:
+    context.deck.add(context.DeckKeyword(context.parser['OIL']))
+PYEND
+
+END
+)~~";
+    }
+
+    const auto deck = Parser{}.parseFile("LOCATION.DATA");
+
+    BOOST_CHECK_MESSAGE(deck.hasKeyword("WATER"),
+                        "The INCLUDE'd file must have been read");
+
+    BOOST_CHECK_MESSAGE(deck.hasKeyword("OIL"),
+                        "Every keyword location check in the PYINPUT block must "
+                        "hold -- the failing ones are printed above");
 }
 
 BOOST_AUTO_TEST_CASE(PYACTION)
