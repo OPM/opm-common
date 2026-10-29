@@ -131,7 +131,7 @@ public:
         const std::unordered_set<std::size_t> target(cells.begin(), cells.end());
         auto allowed = [&](std::size_t i, std::size_t j, std::size_t k) {
             const auto g = grid_.getGlobalIndex(i, j, k);
-            return !boxed.count(g) && (target.count(g) || filler_.count(g));
+            return !boxed.contains(g) && (target.contains(g) || filler_.contains(g));
         };
         auto planeAllowed = [&](std::size_t i1, std::size_t i2,
                                 std::size_t j1, std::size_t j2,
@@ -154,7 +154,7 @@ public:
 
         std::vector<std::array<std::size_t, 6>> boxes;
         for (const auto g : sorted) {
-            if (boxed.count(g)) {
+            if (boxed.contains(g)) {
                 continue;
             }
 
@@ -173,7 +173,7 @@ public:
             for (auto k = k0; k <= k1; ++k) {
                 for (auto j = j0; j <= j1; ++j) {
                     for (auto i = i0; i <= i1; ++i) {
-                        if (target.count(grid_.getGlobalIndex(i, j, k))) {
+                        if (target.contains(grid_.getGlobalIndex(i, j, k))) {
                             hi = { std::max(hi[0], i), std::max(hi[1], j), std::max(hi[2], k) };
                         }
                     }
@@ -227,7 +227,7 @@ NumericalAquiferRegionSplit(const NumericalAquifers& aquifers,
     }
     std::unordered_set<std::size_t> inactive;
     for (std::size_t g = 0; g < grid.getCartesianSize(); ++g) {
-        if (!grid.cellActive(g) && !usedCells.count(g)) {
+        if (!grid.cellActive(g) && !usedCells.contains(g)) {
             inactive.insert(g);
         }
     }
@@ -293,7 +293,7 @@ NumericalAquiferRegionSplit(const NumericalAquifers& aquifers,
         // Connections of active cells grouped by the EQLNUM region of the cell.
         std::map<int, std::vector<const NumericalAquiferConnection*>> connectionsByRegion;
         for (const auto& con : aquifer.connections()) {
-            if (grid.cellActive(con.global_index) && !usedCells.count(con.global_index)) {
+            if (grid.cellActive(con.global_index) && !usedCells.contains(con.global_index)) {
                 connectionsByRegion[regionOf(con.global_index)].push_back(&con);
             }
         }
@@ -313,7 +313,7 @@ NumericalAquiferRegionSplit(const NumericalAquifers& aquifers,
             connectionCount[region] = cons.size();
         }
         int keepRegion = mostFrequent(connectionCount);
-        if (hostRegions.size() == 1 && connectionsByRegion.count(hostRegions.begin()->first)) {
+        if (hostRegions.size() == 1 && connectionsByRegion.contains(hostRegions.begin()->first)) {
             keepRegion = hostRegions.begin()->first;
         }
 
@@ -331,9 +331,9 @@ NumericalAquiferRegionSplit(const NumericalAquifers& aquifers,
                 auto& hosts = newHosts[region];
                 for (; offset < ncart && hosts.size() < aquifer.numCells(); ++offset) {
                     const auto candidate = (first + offset) % ncart;
-                    if (inactive.count(candidate) &&
-                        !inAquconBox.count(candidate) &&
-                        !nextToConnection.count(candidate) &&
+                    if (inactive.contains(candidate) &&
+                        !inAquconBox.contains(candidate) &&
+                        !nextToConnection.contains(candidate) &&
                         !insideLgr(candidate))
                     {
                         hosts.push_back(candidate);
@@ -425,7 +425,7 @@ NumericalAquiferRegionSplit(const NumericalAquifers& aquifers,
                 auto attr = attributes(*con);
                 if (aquId != id) {
                     const auto neighbour = faceNeighbour(grid, *con);
-                    if (neighbour.has_value() && sourceCells.count(*neighbour)) {
+                    if (neighbour.has_value() && sourceCells.contains(*neighbour)) {
                         std::get<3>(attr) = true;
                     }
                 }
