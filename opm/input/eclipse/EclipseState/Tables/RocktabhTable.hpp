@@ -45,7 +45,9 @@ namespace Opm {
     /// (pressure), "PV_MULT" (pore volume multiplier) and "PV_MULT_TRAN"
     /// (transmissibility multiplier).  Pressure-monotonicity (increasing, or
     /// decreasing under the STRESS option) is enforced at load time by the
-    /// column schema shared by all of them.
+    /// column schema of the elastic and deflation curves.  The dilation curve
+    /// is not order-checked: elastic curves commonly share the same end
+    /// pressure and Flow does not use that table.
     class RocktabhTable {
     public:
         RocktabhTable() = default;
