@@ -63,9 +63,14 @@ public:
         return phaseIsActive_[phaseIdx];
     }
 
-    [[nodiscard, gnu::noinline]] OPM_HOST_DEVICE  short canonicalToActivePhaseIdx(unsigned phaseIdx) const {
+    // Inline: two-phase fluid states map every phase access through this.
+    [[nodiscard]] OPM_HOST_DEVICE short canonicalToActivePhaseIdx(unsigned phaseIdx) const {
         if (!phaseIsActive(phaseIdx)) {
-            OPM_THROW(std::logic_error, "Canonical phase " + std::to_string(phaseIdx) + " is not active.");
+#if OPM_IS_INSIDE_HOST_FUNCTION
+            throwInactivePhase_(phaseIdx);
+#else
+            OPM_THROW(std::logic_error, "Canonical phase is not active.");
+#endif
         }
         return canonicalToActivePhaseIdx_[phaseIdx];
     }
@@ -181,6 +186,11 @@ private:
 
     void reset_();
 
+    // Out of line so the string building is not inlined (-Wstringop-overflow).
+    [[noreturn, gnu::cold, gnu::noinline]] static void throwInactivePhase_(unsigned phaseIdx)
+    {
+        OPM_THROW(std::logic_error, "Canonical phase " + std::to_string(phaseIdx) + " is not active.");
+    }
 };
 
 }
