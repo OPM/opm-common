@@ -216,6 +216,7 @@ DATES
     BOOST_CHECK( !ioConfig.getFMTIN() );
     /*If no FMTOUT keyword is specified, verify FMTOUT false (default is unformatted) */
     BOOST_CHECK( !ioConfig.getFMTOUT() );
+    BOOST_CHECK( !ioConfig.getUseFlux() );
 }
 
 BOOST_AUTO_TEST_CASE(OutputProperties) {
@@ -308,4 +309,104 @@ BOOST_AUTO_TEST_CASE(OutputPaths) {
     BOOST_CHECK_EQUAL( output_dir3,  config3.getOutputDir() );
     BOOST_CHECK_EQUAL( "TESTSTRING", config3.getBaseName() );
     BOOST_CHECK_EQUAL( testpath, config3.fullBasePath() );
+}
+
+namespace {
+
+IOConfig ioConfigForGrid(const std::string& grid)
+{
+    return IOConfig {
+        Parser().parseString("RUNSPEC\nDIMENS\n 10 10 10 /\nGRID\n" + grid + "SCHEDULE\n")
+    };
+}
+
+} // namespace
+
+BOOST_AUTO_TEST_CASE(FluxTypeDefaultsToPressure)
+{
+    BOOST_CHECK_EQUAL(ioConfigForGrid("").getFluxType(), "PRESSURE");
+    BOOST_CHECK_EQUAL(ioConfigForGrid("DUMPFLUX\n").getFluxType(), "PRESSURE");
+    BOOST_CHECK_EQUAL(ioConfigForGrid("DUMPFLUX\nFLUXTYPE\n 1* /\n").getFluxType(), "PRESSURE");
+    BOOST_CHECK_EQUAL(ioConfigForGrid("USEFLUX\n parent /\n").getFluxType(), "PRESSURE");
+}
+
+BOOST_AUTO_TEST_CASE(FluxTypeIsNormalizedToUpperCase)
+{
+    BOOST_CHECK_EQUAL(ioConfigForGrid("FLUXTYPE\n both /\n").getFluxType(), "BOTH");
+    BOOST_CHECK_EQUAL(ioConfigForGrid("USEFLUX\n parent /\nFLUXTYPE\n flux /\n").getFluxType(),
+                      "FLUX");
+}
+
+// A reduced run imposes one kind of boundary, so BOTH means nothing there.
+BOOST_AUTO_TEST_CASE(InvalidFluxTypeIsRejected)
+{
+    BOOST_CHECK_THROW(ioConfigForGrid("FLUXTYPE\n banana /\n"), std::exception);
+    BOOST_CHECK_THROW(ioConfigForGrid("DUMPFLUX\nFLUXTYPE\n banana /\n"), std::exception);
+    BOOST_CHECK_THROW(ioConfigForGrid("USEFLUX\n parent /\nFLUXTYPE\n BOTH /\n"), std::exception);
+}
+
+BOOST_AUTO_TEST_CASE(UseFluxIsDetectedFromGridSection)
+{
+    BOOST_CHECK(!ioConfigForGrid("").getUseFlux());
+    BOOST_CHECK(ioConfigForGrid("USEFLUX\n parent /\n").getUseFlux());
+}
+
+// FLUXNUM on its own is just a region array; only DUMPFLUX asks for a FLUX
+// file to be written, and USEFLUX overrides it.
+BOOST_AUTO_TEST_CASE(DumpFluxIsDetectedFromGridSection)
+{
+    const auto parse = [](const std::string& grid)
+    {
+        return IOConfig {
+            Parser().parseString("RUNSPEC\nDIMENS\n 2 1 1 /\nGRID\n" + grid + "SCHEDULE\n")
+        };
+    };
+
+    BOOST_CHECK(!parse("").getDumpFlux());
+    BOOST_CHECK(!parse("FLUXNUM\n 1 2 /\n").getDumpFlux());
+    BOOST_CHECK( parse("FLUXNUM\n 1 2 /\nDUMPFLUX\n").getDumpFlux());
+    BOOST_CHECK(!parse("FLUXNUM\n 1 2 /\nDUMPFLUX\nUSEFLUX\n parent /\n").getDumpFlux());
+}
+
+// USEFLUX names the FLUX file to read; there is no default.
+BOOST_AUTO_TEST_CASE(UseFluxRequiresAFileName)
+{
+    BOOST_CHECK_THROW(ioConfigForGrid("USEFLUX\n 1* /\n"), std::exception);
+    BOOST_CHECK_THROW(ioConfigForGrid("USEFLUX\n '' /\n"), std::exception);
+    BOOST_CHECK_THROW(ioConfigForGrid("USEFLUX\nFLUXREG\n 2 /\n"), std::exception);
+}
+
+BOOST_AUTO_TEST_CASE(UseFluxBaseNameIsRead)
+{
+    const auto ioConfig = ioConfigForGrid("USEFLUX\n parent_case /\n");
+
+    BOOST_CHECK(ioConfig.getUseFlux());
+    BOOST_CHECK_EQUAL(ioConfig.getUseFluxBaseName(), "parent_case");
+}
+
+BOOST_AUTO_TEST_CASE(UseFluxContinuesBeyondTheDataUnlessToldNot)
+{
+    BOOST_CHECK(ioConfigForGrid("").getUseFluxContinueBeyondData());
+    BOOST_CHECK(ioConfigForGrid("USEFLUX\n parent /\n").getUseFluxContinueBeyondData());
+    BOOST_CHECK(ioConfigForGrid("USEFLUX\n parent yes /\n").getUseFluxContinueBeyondData());
+    BOOST_CHECK(!ioConfigForGrid("USEFLUX\n parent NO /\n").getUseFluxContinueBeyondData());
+    BOOST_CHECK_THROW(ioConfigForGrid("USEFLUX\n parent maybe /\n"), std::exception);
+}
+
+BOOST_AUTO_TEST_CASE(UseFluxRegionsCanBeParsedFromFluxreg)
+{
+    const auto ioConfig = ioConfigForGrid("FLUXREG\n 1 3 7 /\nUSEFLUX\n parent /\n");
+
+    BOOST_REQUIRE_EQUAL(ioConfig.getUseFluxRegions().size(), 3U);
+    BOOST_CHECK_EQUAL(ioConfig.getUseFluxRegions()[0], 1);
+    BOOST_CHECK_EQUAL(ioConfig.getUseFluxRegions()[1], 3);
+    BOOST_CHECK_EQUAL(ioConfig.getUseFluxRegions()[2], 7);
+}
+
+// Only the first record would be read, so a second one would silently drop
+// the regions it lists. All regions belong in the one record.
+BOOST_AUTO_TEST_CASE(FluxregTakesASingleRecord)
+{
+    BOOST_CHECK_THROW(ioConfigForGrid("FLUXREG\n 1 /\n 3 7 /\nUSEFLUX\n parent /\n"),
+                      std::exception);
 }

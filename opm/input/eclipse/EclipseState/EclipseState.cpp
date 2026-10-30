@@ -640,7 +640,15 @@ namespace Opm {
     }
 
     void EclipseState::reset_actnum(const std::vector<int>& new_actnum) {
-        this->field_props.reset_actnum(new_actnum);
+        // Keep grid and field-property activity masks aligned.
+        this->m_inputGrid.resetACTNUM(new_actnum);
+        // The grid keeps numerical aquifer cells active; follow its mask.
+        this->field_props.reset_actnum(this->m_inputGrid.getACTNUM());
+
+        // Edited depths are indexed by active cell, so they move with it.
+        if (this->field_props.depth_edited()) {
+            this->m_inputGrid.setDEPTH(this->field_props.get_double("DEPTH"));
+        }
     }
 
     void EclipseState::set_active_indices(const std::vector<int>& indices)
