@@ -175,10 +175,17 @@ bool WellTestConfig::operator==(const WellTestConfig& data) const {
 WellTestConfig::WellTestConfig(const RestartIO::RstState& rst_state, int report_step) {
     for (const auto& well : rst_state.wells) {
         if (well.wtest_config_reasons != 0) {
+            // wtest_remaining is negative if there is no limit.
+            int num_test = 0;
+            if (well.wtest_remaining > 0)
+                num_test = well.wtest_remaining;
+            else if (well.wtest_remaining == 0)
+                num_test = -1;
+
             this->add_well(well.name,
                            WellTestConfig::WTESTWell::inverse_ecl_reasons(well.wtest_config_reasons),
                            well.wtest_interval,
-                           well.wtest_remaining,
+                           num_test,
                            well.wtest_startup,
                            report_step);
         }
