@@ -3,6 +3,9 @@
   "sections": [
     "PROPS"
   ],
+  "requires": [
+    "DISGAS"
+  ],
   "num_tables": {
     "keyword": "TABDIMS",
     "item": "NTPVT"

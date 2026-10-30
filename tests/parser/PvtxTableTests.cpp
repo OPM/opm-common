@@ -104,6 +104,7 @@ BOOST_AUTO_TEST_CASE( PvtxNumTables2 ) {
 
 BOOST_AUTO_TEST_CASE( PvtxNumTables3 ) {
     const char *deckData =
+        "DISGAS\n"
         "TABDIMS\n"
         "1 2 /\n"
         "\n"

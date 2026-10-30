@@ -970,6 +970,7 @@ BOOST_AUTO_TEST_CASE(PvtoTable_Tests) {
     const auto deck = Opm::Parser{}.parseString(R"(RUNSPEC
 OIL
 GAS
+DISGAS
 TABDIMS
 1 2 /
 PROPS
@@ -1152,6 +1153,7 @@ BOOST_AUTO_TEST_CASE(PvtgTable_Tests) {
     const auto deck = Opm::Parser{}.parseString(R"(RUNSPEC
 OIL
 GAS
+VAPOIL
 TABDIMS
 1 2 /
 PROPS

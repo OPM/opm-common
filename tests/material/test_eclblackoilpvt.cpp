@@ -74,6 +74,7 @@ static constexpr const char* deckString1 =
     "WATER\n"
     "\n"
     "DISGAS\n"
+    "VAPOIL\n"
     "\n"
     "METRIC\n"
     "\n"
