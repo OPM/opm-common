@@ -2730,11 +2730,11 @@ bool SummaryConfig::require3DField(const std::string& keyword) const
     const auto required_fields = std::unordered_map<std::string, std::vector<std::string>> {
          {"PRESSURE", {"FPR", "RPR*", "BPR"}},
          {"RPV",      {"FRPV", "RRPV*"}},
-         {"OIP",      {"ROIP*", "FOIP", "FOE"}},
+         {"OIP",      {"ROIP*", "FOIP", "FOE", "ROE", "ROE_*"}},
          {"OIPR",     {"FOIPR"}},
          {"OIPL",     {"ROIPL*", "FOIPL"}},
          {"OIPG",     {"ROIPG*", "FOIPG"}},
-         {"GIP",      {"RGIP*", "FGIP", "FGE"}},
+         {"GIP",      {"RGIP*", "FGIP", "FGE", "RGE*"}},
          {"GIPR",     {"FGIPR"}},
          {"GIPL",     {"RGIPL*", "FGIPL"}},
          {"GIPG",     {"RGIPG*", "FGIPG"}},

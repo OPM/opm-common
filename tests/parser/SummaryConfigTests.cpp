@@ -1100,6 +1100,47 @@ BOOST_AUTO_TEST_CASE( summary_require3DField ) {
     }
 }
 
+BOOST_AUTO_TEST_CASE( require3DField_recovery_efficiency ) {
+    // Each efficiency vector is requested on its own, so that no other
+    // in-place vector can mask a missing dependency.
+    {
+        const auto summary = createSummary( "FOE\n" );
+        BOOST_CHECK(  summary.require3DField( "OIP" ));
+        BOOST_CHECK( !summary.require3DField( "GIP" ));
+    }
+
+    {
+        const auto summary = createSummary( "FGE\n" );
+        BOOST_CHECK(  summary.require3DField( "GIP" ));
+        BOOST_CHECK( !summary.require3DField( "OIP" ));
+    }
+
+    {
+        const auto summary = createSummary( "ROE\n/\n" );
+        BOOST_CHECK(  summary.require3DField( "OIP" ));
+        BOOST_CHECK( !summary.require3DField( "GIP" ));
+    }
+
+    {
+        const auto summary = createSummary( "RGE\n/\n" );
+        BOOST_CHECK(  summary.require3DField( "GIP" ));
+        BOOST_CHECK( !summary.require3DField( "OIP" ));
+    }
+
+    // Named region sets (FIPREG, FIPXYZ)
+    {
+        const auto summary = createSummary( "ROE__REG\n/\n" );
+        BOOST_CHECK( summary.hasSummaryKey( "ROE__REG:10" ));
+        BOOST_CHECK( summary.require3DField( "OIP" ));
+    }
+
+    {
+        const auto summary = createSummary( "RGE__XYZ\n/\n" );
+        BOOST_CHECK( summary.hasSummaryKey( "RGE__XYZ:3" ));
+        BOOST_CHECK( summary.require3DField( "GIP" ));
+    }
+}
+
 
 BOOST_AUTO_TEST_CASE( SUMMARY_MISC) {
     {
