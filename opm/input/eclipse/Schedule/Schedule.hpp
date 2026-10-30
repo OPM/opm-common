@@ -620,7 +620,12 @@ namespace Opm {
                            std::unordered_map<std::string, double>& wpimult_global_factor,
                            WelSegsSet* welsegs_wells = nullptr,
                            std::set<std::string>* compsegs_wells = nullptr,
-                           std::set<std::string>* comptraj_wells = nullptr);
+                           std::set<std::string>* comptraj_wells = nullptr,
+                           std::set<std::string>* connection_order_wells = nullptr);
+
+        /// Order the connections of a set of wells in the current
+        /// (back) schedule state.
+        void orderConnections(const std::set<std::string>& well_names);
 
         void internalWELLSTATUSACTIONXFromPYACTION(const std::string& well_name, std::size_t report_step, const std::string& wellStatus);
         void prefetchPossibleFutureConnections(const ScheduleGrid& grid, const DeckKeyword& keyword,

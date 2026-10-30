@@ -542,7 +542,21 @@ public:
     bool updateDrainageRadius(std::optional<double> drainage_radius);
     void updateSegments(std::shared_ptr<WellSegments> segments_arg);
     bool updateConnections(std::shared_ptr<WellConnections> connections, bool force);
+    bool replaceConnections(std::shared_ptr<WellConnections> connections, bool force);
     bool updateConnections(std::shared_ptr<WellConnections> connections, const ScheduleGrid& grid);
+
+    /// Update connection structure without ordering the connections.
+    ///
+    /// Caller is responsible for subsequently calling orderConnections().
+    /// Reference depth is not inferred from the connections here either.
+    bool updateConnectionsUnordered(std::shared_ptr<WellConnections> connections,
+                                    const ScheduleGrid&              grid);
+
+    /// Order the well's connections and, if necessary, derive the
+    /// reference depth from the first connection.
+    ///
+    /// \return Whether or not the well object changed.
+    bool orderConnections();
     bool updateStatus(Status status);
     bool updateGroup(const std::string& group);
     bool updateWellGuideRate(bool available, double guide_rate, GuideRateTarget guide_phase, double scale_factor);
@@ -784,6 +798,10 @@ private:
     InjMultMode inj_mult_mode = InjMultMode::NONE;
     std::optional<InjMult> well_inj_mult{};
     UDAValue m_filter_concentration{};
+
+    bool replaceConnections(std::shared_ptr<WellConnections> connections,
+                            bool force,
+                            bool (WellConnections::*isSame)(const WellConnections&) const);
 };
 
 std::ostream& operator<<( std::ostream&, const Well::WellInjectionProperties& );

@@ -52,9 +52,11 @@
 
 #include <opm/input/eclipse/Parser/Parser.hpp>
 
+#include <algorithm>
 #include <array>
 #include <cstddef>
 #include <memory>
+#include <numeric>
 #include <ostream>
 #include <stdexcept>
 #include <string>
@@ -1460,4 +1462,41 @@ In <memory string> line 53
 Connection (2,1,2) for well P not attached to a segment because the
 connection does not exist, likely having been ignored due to zero permeability
    PERMX=0.000e+00 mD, PERMY=0.000e+00 mD, and PERMZ=1.000e+01 mD.)");
+}
+
+BOOST_AUTO_TEST_CASE(Predicate_Same_Except_For_Ordering)
+{
+    const auto deck = zeroPermMSWDeck();
+
+    const auto ctx = Opm::ParseContext{};
+    auto errors = Opm::ErrorGuard{};
+
+    const auto es = Opm::EclipseState { deck };
+    const auto sched = Opm::Schedule {
+        deck, es, ctx, errors,
+        std::make_shared<Opm::Python>()
+    };
+
+    const auto& well_p = sched.back().wells("P");
+    const auto& conns = well_p.getConnections();
+
+    auto permuted = Opm::WellConnections {
+        conns.ordering(),
+        conns.getHeadI(),
+        conns.getHeadJ(),
+    };
+
+    {
+        auto ix = std::vector<std::size_t>(conns.size());
+        std::iota(ix.begin(), ix.end(), 0);
+        std::ranges::reverse(ix);
+
+        for (const auto& idx : ix) {
+            permuted.add(conns[idx]);
+        }
+    }
+
+    BOOST_CHECK_MESSAGE(conns != permuted, "Permuted connections should not be equal to the original ordering");
+    BOOST_CHECK_MESSAGE(permuted.isSameExceptForOrdering(conns),
+                        "Permuted connections should be the same as the original except for ordering");
 }
