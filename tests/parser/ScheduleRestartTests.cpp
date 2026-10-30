@@ -23,6 +23,8 @@
 
 #include <opm/io/eclipse/rst/state.hpp>
 #include <opm/io/eclipse/ERst.hpp>
+#include <opm/io/eclipse/EclFile.hpp>
+#include <opm/io/eclipse/EclOutput.hpp>
 #include <opm/io/eclipse/OutputStream.hpp>
 #include <opm/io/eclipse/RestartFileView.hpp>
 
@@ -1047,7 +1049,8 @@ SCHEDULE
 // step, as the simulator does.
 void write_restart_file(const std::string&   case_name,
                         const int            report_step,
-                        const Action::State& action_state = Action::State {})
+                        const Action::State& action_state = Action::State {},
+                        const bool           formatted = false)
 {
     namespace OS = EclIO::OutputStream;
     using measure = UnitSystem::measure;
@@ -1067,7 +1070,7 @@ void write_restart_file(const std::string&   case_name,
     auto aquifer_data = std::optional<RestartIO::Helpers::AggregateAquiferData>{};
     auto rst_file = OS::Restart {
         OS::ResultSet { "./", case_name }, report_step,
-        OS::Formatted { false }, OS::Unified { false }
+        OS::Formatted { formatted }, OS::Unified { false }
     };
 
     RestartIO::save(rst_file, report_step, sched.seconds(report_step),
@@ -1076,6 +1079,43 @@ void write_restart_file(const std::string&   case_name,
                     action_state, WellTestState{},
                     SummaryState { TimeService::now(), 0.0 }, UDQState{ 1 },
                     aquifer_data);
+}
+
+// Rewrite a restart file without XACT, as from a program that writes the
+// action times to SACT only.
+void drop_xact(const std::string& fname)
+{
+    auto in = EclIO::EclFile { fname, true };
+    BOOST_REQUIRE_MESSAGE(in.hasKey("XACT"), "Missing XACT in " << fname);
+
+    const auto& element_sizes = in.getElementSizeList();
+    const auto entries = in.getList();
+
+    {
+        auto out = EclIO::EclOutput { fname + ".tmp", in.formattedInput() };
+
+        for (auto i = 0*entries.size(); i < entries.size(); ++i) {
+            const auto& name = std::get<0>(entries[i]);
+            const auto ix = static_cast<int>(i);
+
+            switch (std::get<1>(entries[i])) {
+            case EclIO::INTE: out.write(name, in.get<int>(ix));    break;
+            case EclIO::REAL: out.write(name, in.get<float>(ix));  break;
+            case EclIO::DOUB:
+                if (name != "XACT") {
+                    out.write(name, in.get<double>(ix));
+                }
+                break;
+            case EclIO::LOGI: out.write(name, in.get<bool>(ix));   break;
+            case EclIO::CHAR: out.write<std::string>(name, in.get<std::string>(ix)); break;
+            case EclIO::C0NN: out.write(name, in.get<std::string>(ix), element_sizes[i]); break;
+            case EclIO::MESS: out.message(name); break;
+            }
+        }
+    }
+
+    fs::rename(fname + ".tmp", fname);
+    BOOST_REQUIRE(! EclIO::EclFile { fname }.hasKey("XACT"));
 }
 
 } // Anonymous namespace
@@ -1244,15 +1284,20 @@ TSTEP
     const auto usys = UnitSystem::newMETRIC();
 
     // Last run of 'A' as restored from a restart file written at the end
-    // of 'restart_step', and the action as restored with it.
+    // of 'restart_step', with or without XACT, and the action as restored
+    // with it.
     const auto restore = [&schedule](const Action::ActionX& action,
                                      const time_point       run_time,
-                                     const int              restart_step)
+                                     const int              restart_step,
+                                     const bool             keep_xact)
     {
         auto state = Action::State {};
         state.add_run(action, run_time, Action::Result { true });
 
         write_restart_file("BASE", restart_step, state);
+        if (! keep_xact) {
+            drop_xact(fmt::format("BASE.X{:04d}", restart_step));
+        }
         write_file("RESTART.DATA",
                    time_of_day_deck(fmt::format("RESTART\n  'BASE' {} /\n", restart_step),
                                     "SKIPREST\n\n" + schedule));
@@ -1276,10 +1321,62 @@ TSTEP
 
     using ms = std::chrono::milliseconds;
 
-    // Elapsed time of the last run, the report step of the restart, and
-    // whether the run is at a whole day or hour, restored exactly.  The
-    // others restore no later than the run.  16384.001953125 days lies
-    // midway between two single precision values.
+    const auto check = [&](const ms last_run, const int restart_step,
+                           const bool keep_xact, const bool exact)
+    {
+        const auto& action = sched[restart_step].actions()["A"];
+        const auto run_time = sched.getStartTime() + last_run;
+
+        auto state = Action::State {};
+        state.add_run(action, run_time, Action::Result { true });
+
+        const auto& [rst_action, rst_state] = restore(action, run_time, restart_step, keep_xact);
+        const auto rst_run_time = rst_state.run_time(rst_action);
+
+        BOOST_CHECK_EQUAL(in_days(rst_run_time), in_days(run_time));
+        if (exact) {
+            BOOST_CHECK(rst_run_time == run_time);
+        }
+        else {
+            BOOST_CHECK(rst_run_time < run_time);
+        }
+
+        // Ready one minimum wait after the run, with or without the
+        // restart, and not before when the run is restored exactly.
+        const auto due = run_time + std::chrono::days { 1 };
+        BOOST_CHECK(action.ready(state, due));
+        BOOST_CHECK(rst_action.ready(rst_state, due));
+
+        BOOST_CHECK(! action.ready(state, due - ms { 1 }));
+        if (exact) {
+            BOOST_CHECK(! rst_action.ready(rst_state, due - ms { 1 }));
+        }
+
+        // Writing the restored run again restores the same time.
+        const auto& [again, again_state] =
+            restore(action, rst_run_time, restart_step + 1, keep_xact);
+        BOOST_CHECK(again_state.run_time(again) == rst_run_time);
+    };
+
+    // Last runs that single precision days cannot represent, and the report
+    // step of the restart.  365 days and 3599 seconds lies just before a
+    // whole hour, 16384.001953125 days midway between two single precision
+    // values.  XACT restores each exactly.
+    for (const auto& [last_run, restart_step] : {
+             std::pair { ms {        86'400'400 },  2 },
+             std::pair { ms {       867'600'000 }, 11 },
+             std::pair { ms {       872'640'000 }, 11 },
+             std::pair { ms {    31'536'000'000 }, 13 },
+             std::pair { ms {    31'539'599'000 }, 13 },
+             std::pair { ms { 1'415'577'768'750 }, 16 } })
+    {
+        BOOST_TEST_CONTEXT("XACT, last run " << last_run.count() << " ms after start") {
+            check(last_run, restart_step, true, true);
+        }
+    }
+
+    // Without XACT, SACT restores whole days and hours exactly and the
+    // other runs here earlier than they happened.
     for (const auto& [last_run, restart_step, exact] : {
              std::tuple { ms {        86'400'400 },  2, false },
              std::tuple { ms {       867'600'000 }, 11, true  },
@@ -1287,38 +1384,8 @@ TSTEP
              std::tuple { ms {    31'536'000'000 }, 13, true  },
              std::tuple { ms { 1'415'577'768'750 }, 16, false } })
     {
-        BOOST_TEST_CONTEXT("Last run " << last_run.count() << " ms after start") {
-            const auto& action = sched[restart_step].actions()["A"];
-            const auto run_time = sched.getStartTime() + last_run;
-
-            auto state = Action::State {};
-            state.add_run(action, run_time, Action::Result { true });
-
-            const auto& [rst_action, rst_state] = restore(action, run_time, restart_step);
-            const auto rst_run_time = rst_state.run_time(rst_action);
-
-            BOOST_CHECK_EQUAL(in_days(rst_run_time), in_days(run_time));
-            if (exact) {
-                BOOST_CHECK(rst_run_time == run_time);
-            }
-            else {
-                BOOST_CHECK(rst_run_time <= run_time);
-            }
-
-            // Ready one minimum wait after the run, with or without the
-            // restart, and not before when the run is restored exactly.
-            const auto due = run_time + std::chrono::days { 1 };
-            BOOST_CHECK(action.ready(state, due));
-            BOOST_CHECK(rst_action.ready(rst_state, due));
-
-            BOOST_CHECK(! action.ready(state, due - ms { 1 }));
-            if (exact) {
-                BOOST_CHECK(! rst_action.ready(rst_state, due - ms { 1 }));
-            }
-
-            // Writing the restored run again restores the same time.
-            const auto& [again, again_state] = restore(action, rst_run_time, restart_step + 1);
-            BOOST_CHECK(again_state.run_time(again) == rst_run_time);
+        BOOST_TEST_CONTEXT("SACT, last run " << last_run.count() << " ms after start") {
+            check(last_run, restart_step, false, exact);
         }
     }
 }
@@ -1327,10 +1394,12 @@ BOOST_AUTO_TEST_CASE(RestartActionMinWait)
 {
     WorkArea work {};
 
-    // Minimum waits in days, all but the last off in single precision.
-    for (const auto* min_wait : { "0.1", "0.3", "0.7", "0.3333333", "1.0E-3", "30" }) {
-        BOOST_TEST_CONTEXT("MIN_WAIT " << min_wait) {
-            const auto schedule = fmt::format(R"(WELSPECS
+    // Minimum waits in days, all but the last off in single precision,
+    // restored from XACT and, without it, from SACT.
+    for (const auto keep_xact : { true, false }) {
+        for (const auto* min_wait : { "0.1", "0.3", "0.7", "0.3333333", "1.0E-3", "30" }) {
+            BOOST_TEST_CONTEXT((keep_xact ? "XACT" : "SACT") << ", MIN_WAIT " << min_wait) {
+                const auto schedule = fmt::format(R"(WELSPECS
   'OP1' 'G1' 1 1 1* 'OIL' /
 /
 
@@ -1357,26 +1426,106 @@ TSTEP
   2*1.0 /
 )", min_wait);
 
-            write_file("BASE.DATA", time_of_day_deck("", schedule));
+                write_file("BASE.DATA", time_of_day_deck("", schedule));
 
-            // 'A' runs at the restart time, so it is not evaluated when
-            // the restart file is written.
-            const auto deck = Parser{}.parseFile("BASE.DATA");
-            const auto es = EclipseState { deck };
-            const auto sched = Schedule { deck, es, std::make_shared<Python>() };
+                // 'A' runs at the restart time, so it is not evaluated when
+                // the restart file is written.
+                const auto deck = Parser{}.parseFile("BASE.DATA");
+                const auto es = EclipseState { deck };
+                const auto sched = Schedule { deck, es, std::make_shared<Python>() };
 
-            auto state = Action::State {};
-            state.add_run(sched[1].actions()["A"], sched.simTime(1), Action::Result { true });
+                auto state = Action::State {};
+                state.add_run(sched[1].actions()["A"], sched.simTime(1), Action::Result { true });
 
-            write_restart_file("BASE", 1, state);
-            write_file("RESTART.DATA",
-                       time_of_day_deck("RESTART\n  'BASE' 1 /\n", "SKIPREST\n\n" + schedule));
+                write_restart_file("BASE", 1, state);
+                if (! keep_xact) {
+                    drop_xact("BASE.X0001");
+                }
+
+                write_file("RESTART.DATA",
+                           time_of_day_deck("RESTART\n  'BASE' 1 /\n", "SKIPREST\n\n" + schedule));
+
+                const auto& [base, restarted, rst_state] =
+                    load_schedule_pair("BASE.DATA", "RESTART.DATA", "BASE.X0001", 1);
+
+                BOOST_CHECK_EQUAL(restarted[1].actions()["A"].min_wait(),
+                                  base[1].actions()["A"].min_wait());
+            }
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(RestartActionMinWaitOutputFormats)
+{
+    WorkArea work {};
+
+    // The parsed minimum wait can lie just above 6048 seconds.  Rounding
+    // it in a formatted restart must not change readiness at that boundary.
+    const auto schedule = std::string { R"(WELSPECS
+  'OP1' 'G1' 1 1 1* 'OIL' /
+/
+
+COMPDAT
+  'OP1' 1 1 1 2 'OPEN' /
+/
+
+WCONPROD
+  'OP1' 'OPEN' 'ORAT' 100 4* 50 /
+/
+
+ACTIONX
+  'A' 10 0.07 /
+  YEAR >= 2000 /
+/
+
+WCONPROD
+  'OP1' 'OPEN' 'ORAT' 50 4* 50 /
+/
+
+ENDACTIO
+
+TSTEP
+  2*1.0 /
+)" };
+
+    write_file("BASE.DATA", time_of_day_deck("", schedule));
+    write_file("RESTART.DATA",
+               time_of_day_deck("RESTART\n  'BASE' 1 /\n", "SKIPREST\n\n" + schedule));
+
+    const auto deck = Parser{}.parseFile("BASE.DATA");
+    const auto es = EclipseState { deck };
+    const auto sched = Schedule { deck, es, std::make_shared<Python>() };
+    const auto& action = sched[1].actions()["A"];
+    const auto last_run = sched.simTime(1);
+
+    auto state = Action::State {};
+    state.add_run(action, last_run, Action::Result { true });
+
+    for (const auto formatted : { false, true }) {
+        BOOST_TEST_CONTEXT((formatted ? "Formatted restart" : "Binary restart")) {
+            write_restart_file("BASE", 1, state, formatted);
+            const auto* restart_file = formatted ? "BASE.F0001" : "BASE.X0001";
 
             const auto& [base, restarted, rst_state] =
-                load_schedule_pair("BASE.DATA", "RESTART.DATA", "BASE.X0001", 1);
+                load_schedule_pair("BASE.DATA", "RESTART.DATA", restart_file, 1);
 
-            BOOST_CHECK_EQUAL(restarted[1].actions()["A"].min_wait(),
-                              base[1].actions()["A"].min_wait());
+            const auto& rst_actions = restarted[1].actions();
+            const auto& rst_action = rst_actions["A"];
+            auto rst_action_state = Action::State {};
+            rst_action_state.load_rst(rst_actions, rst_state);
+
+            BOOST_CHECK_EQUAL(rst_action.min_wait(), action.min_wait());
+
+            const auto boundary = last_run + std::chrono::seconds { 6048 };
+            const auto before = boundary - std::chrono::milliseconds { 1 };
+            const auto after = boundary + std::chrono::milliseconds { 1 };
+
+            BOOST_CHECK(! action.ready(state, before));
+            BOOST_CHECK(! rst_action.ready(rst_action_state, before));
+            BOOST_CHECK_EQUAL(rst_action.ready(rst_action_state, boundary),
+                              action.ready(state, boundary));
+            BOOST_CHECK(action.ready(state, after));
+            BOOST_CHECK(rst_action.ready(rst_action_state, after));
         }
     }
 }
