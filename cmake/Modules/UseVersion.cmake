@@ -77,24 +77,25 @@ else ()
     endif ()
   endif ()
 endif ()
+file (MAKE_DIRECTORY "${PROJECT_BINARY_DIR}/generated/include")
 
 # Write header file with build timestamp
-file (WRITE "${PROJECT_BINARY_DIR}/project-timestamp.h"
+file (WRITE "${PROJECT_BINARY_DIR}/generated/include/project-timestamp.h"
   "#ifndef OPM_GENERATED_OPM_TIMESTAMP_HEADER_INCLUDED\n"
   "#define OPM_GENERATED_OPM_TIMESTAMP_HEADER_INCLUDED\n")
 if (_BINARY_PACKAGE_VERSION_LENGTH EQUAL 0 AND OPM_USE_BUILD_TIMESTAMP)
-  file(APPEND "${PROJECT_BINARY_DIR}/project-timestamp.h"
+  file(APPEND "${PROJECT_BINARY_DIR}/generated/include/project-timestamp.h"
 "#define BUILD_TIMESTAMP \"${build_timestamp}\"\n")
 endif()
 if (_BINARY_PACKAGE_VERSION_LENGTH GREATER 0)
-  file(APPEND "${PROJECT_BINARY_DIR}/project-timestamp.h"
+  file(APPEND "${PROJECT_BINARY_DIR}/generated/include/project-timestamp.h"
        "// Build timestamp disabled for binary package\n")
 endif()
 if (NOT OPM_USE_BUILD_TIMESTAMP)
-  file(APPEND "${PROJECT_BINARY_DIR}/project-timestamp.h"
+  file(APPEND "${PROJECT_BINARY_DIR}/generated/include/project-timestamp.h"
        "// Build timestamp disabled in build system\n")
 endif()
-file(APPEND "${PROJECT_BINARY_DIR}/project-timestamp.h"
+file(APPEND "${PROJECT_BINARY_DIR}/generated/include/project-timestamp.h"
   "#endif // OPM_GENERATED_OPM_TIMESTAMP_HEADER_INCLUDED\n")
 
 # safety precaution: check that we don't have version number mismatch.

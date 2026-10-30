@@ -43,7 +43,7 @@ if (sha1)
 endif ()
 
 # write the content to a temporary file in a C compatible format
-file (WRITE "${PROJECT_BINARY_DIR}/project-version.tmp"
+file (WRITE "${PROJECT_BINARY_DIR}/tmp_gen/project-version.h"
       "#ifndef OPM_GENERATED_OPM_VERSION_HEADER_INCLUDED\n"
       "#define OPM_GENERATED_OPM_VERSION_HEADER_INCLUDED\n"
       "#define PROJECT_VERSION_NAME \"${PROJECT_LABEL}\"\n"
@@ -54,14 +54,14 @@ file (WRITE "${PROJECT_BINARY_DIR}/project-version.tmp"
 
 # only commit this to source code if it actually changed.
 execute_process (COMMAND
-  ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_BINARY_DIR}/project-version.tmp" "${PROJECT_BINARY_DIR}/project-version.h"
+  ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_BINARY_DIR}/tmp_gen/project-version.h" "${PROJECT_BINARY_DIR}/generated/include/project-version.h"
   )
 
 # Write header file with build timestamp
 if(OPM_USE_BUILD_TIMESTAMP)
   string (TIMESTAMP build_timestamp "%Y-%m-%d at %H:%M:%S hrs")
 
-  file (WRITE "${PROJECT_BINARY_DIR}/project-timestamp.h"
+  file (WRITE "${PROJECT_BINARY_DIR}/generated/include/project-timestamp.h"
         "#ifndef OPM_GENERATED_OPM_TIMESTAMP_HEADER_INCLUDED\n"
         "#define OPM_GENERATED_OPM_TIMESTAMP_HEADER_INCLUDED\n"
         "#define BUILD_TIMESTAMP \"${build_timestamp}\"\n"
