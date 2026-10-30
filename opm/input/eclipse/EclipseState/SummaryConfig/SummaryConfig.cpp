@@ -2734,7 +2734,7 @@ bool SummaryConfig::require3DField(const std::string& keyword) const
          {"OIPR",     {"FOIPR"}},
          {"OIPL",     {"ROIPL*", "FOIPL"}},
          {"OIPG",     {"ROIPG*", "FOIPG"}},
-         {"GIP",      {"RGIP*", "FGIP" }},
+         {"GIP",      {"RGIP*", "FGIP", "FGE"}},
          {"GIPR",     {"FGIPR"}},
          {"GIPL",     {"RGIPL*", "FGIPL"}},
          {"GIPG",     {"RGIPG*", "FGIPG"}},

@@ -345,6 +345,29 @@ BOOST_AUTO_TEST_CASE(field_oil_efficiency) {
     BOOST_CHECK_EQUAL( true , summary.hasKeyword( "FOE"));
 }
 
+BOOST_AUTO_TEST_CASE(field_gas_efficiency) {
+    const auto input = "FGE\n";
+    const auto summary = createSummary( input );
+
+    BOOST_CHECK_EQUAL( true , summary.hasKeyword( "FGE"));
+    BOOST_CHECK( summary.require3DField( "GIP" ));
+}
+
+BOOST_AUTO_TEST_CASE(region_efficiency) {
+    const auto input = "ROE\n"
+                       "1 2 /\n"
+                       "RGE\n"
+                       "/\n";
+
+    const auto summary = createSummary( input );
+    const auto keywords = { "RGE", "RGE", "RGE", "ROE", "ROE" };
+    const auto names = sorted_keywords( summary );
+
+    BOOST_CHECK_EQUAL_COLLECTIONS(
+            keywords.begin(), keywords.end(),
+            names.begin(), names.end() );
+}
+
 BOOST_AUTO_TEST_CASE(blocks) {
     const auto input = "BPR\n"
                        "3 3 6 /\n"
