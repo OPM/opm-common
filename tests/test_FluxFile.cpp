@@ -257,6 +257,34 @@ BOOST_AUTO_TEST_CASE(ThermalTransmissibilitySurvivesTheRoundTrip)
     BOOST_CHECK_EQUAL(readBack.boundaryFaces[1].thermalTransmissibility, 0.0);
 }
 
+BOOST_AUTO_TEST_CASE(FluxModeKeepsTemperatures)
+{
+    using FluxFile = Opm::EclIO::FluxFile;
+    WorkArea work;
+
+    auto written = sampleData();
+    written.header.mode = FluxFile::Mode::Flux;
+    for (auto& step : written.reportSteps) {
+        step.pressures.clear();
+        step.swat.clear();
+        step.sgas.clear();
+        step.rs.clear();
+        step.rv.clear();
+        step.relPerm.clear();
+        step.capPressure.clear();
+    }
+
+    writeAll("FLUXTEMP.FLUX", false, written);
+    const auto readBack = FluxFile::read("FLUXTEMP.FLUX");
+
+    BOOST_CHECK(readBack.header.hasTemperature);
+    BOOST_REQUIRE_EQUAL(readBack.reportSteps.size(), written.reportSteps.size());
+    for (std::size_t i = 0; i < written.reportSteps.size(); ++i) {
+        BOOST_CHECK(readBack.reportSteps[i].pressures.empty());
+        BOOST_CHECK(readBack.reportSteps[i].temperature == written.reportSteps[i].temperature);
+    }
+}
+
 BOOST_AUTO_TEST_CASE(ThresholdPressuresSurviveTheRoundTrip)
 {
     // A defaulted THPRES entry is the largest initial potential difference

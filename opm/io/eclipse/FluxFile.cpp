@@ -489,11 +489,12 @@ void FluxFile::Writer::appendRecords(const std::vector<ReportStep>& records)
 
         emit("FLXRS", &ReportStep::rs, perFaceValues);
         emit("FLXRV", &ReportStep::rv, perFaceValues);
-        emit("FLXTEMP", &ReportStep::temperature, perFaceValues);
         emit("FLXKR", &ReportStep::relPerm, perFacePhaseValues);
         emit("FLXPC", &ReportStep::capPressure, perFacePhaseValues);
     }
 
+    // Both kinds of boundary carry enthalpy in a thermal run.
+    emit("FLXTEMP", &ReportStep::temperature, perFaceValues);
     emit("FLXRCON", &ReportStep::externalRegionSums, externalRegionSumCount);
 
     output.flushStream();
@@ -919,6 +920,12 @@ void FluxFile::validateRecordsForWrite(const Data& data,
                                   step.externalRegionSums.size()));
         }
 
+        if (!step.temperature.empty() && (step.temperature.size() != perFaceValues)) {
+            OPM_THROW(std::invalid_argument,
+                      fmt::format("Each FLXTEMP step must contain {} values, got {}",
+                                  perFaceValues, step.temperature.size()));
+        }
+
         if (pressureEnabled) {
             const auto checkSize = [](const std::vector<double>& values,
                                       const std::string& name,
@@ -953,10 +960,6 @@ void FluxFile::validateRecordsForWrite(const Data& data,
 
             if (!step.rv.empty()) {
                 checkSize(step.rv, "FLXRV", perFaceValues);
-            }
-
-            if (!step.temperature.empty()) {
-                checkSize(step.temperature, "FLXTEMP", perFaceValues);
             }
 
             if (!step.relPerm.empty()) {
