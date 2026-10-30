@@ -23,6 +23,8 @@ along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 #include <limits>
 #include <string>
 
+#include <opm/input/eclipse/Deck/UDAValue.hpp>
+
 namespace Opm {
 
 class KeywordLocation;
@@ -36,7 +38,7 @@ struct InjMult {
         NONE,
     };
 
-    double fracture_pressure {std::numeric_limits<double>::max()};
+    UDAValue fracture_pressure{};
     double multiplier_gradient {0.};
 
     static InjMultMode injMultModeFromString(const std::string& str,
