@@ -1,5 +1,7 @@
 #include <fmt/format.h>
 
+#include <opm/common/OpmLog/KeywordLocation.hpp>
+
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
 #include <opm/input/eclipse/Parser/ParserKeyword.hpp>
@@ -163,7 +165,36 @@ std::string get_string(DeckItem * item, std::size_t index) {
 }
 
 
+/*
+  The location is returned by value: it is three small members, and a copy
+  spares the caller from having to keep the DeckKeyword alive for as long as
+  the location object is used.
+*/
+KeywordLocation get_location(const DeckKeyword& kw) {
+    return kw.location();
 }
+
+
+}
+
+void python::common::export_KeywordLocation(py::module& module) {
+
+    using namespace Opm::Common::DocStrings;
+
+    py::class_<KeywordLocation>(module, "KeywordLocation", KeywordLocation_docstring)
+        .def_readonly("keyword", &KeywordLocation::keyword, KeywordLocation_keyword_docstring)
+        .def_readonly("filename", &KeywordLocation::filename, KeywordLocation_filename_docstring)
+        .def_readonly("lineno", &KeywordLocation::lineno, KeywordLocation_lineno_docstring)
+        .def("is_binary", &KeywordLocation::is_binary, KeywordLocation_is_binary_docstring)
+        .def("format", &KeywordLocation::format, py::arg("msg_fmt"), KeywordLocation_format_docstring)
+        .def("__repr__", [](const KeywordLocation& loc) {
+            return fmt::format("KeywordLocation(keyword = {}, filename = {}, lineno = {})",
+                               loc.keyword, loc.filename, loc.lineno);
+        }, KeywordLocation_repr_docstring);
+
+    module.attr("KeywordLocation").attr("LINENO_BINARY") = KeywordLocation::LINENO_BINARY;
+}
+
 void python::common::export_DeckKeyword(py::module& module) {
 
     using namespace Opm::Common::DocStrings;
@@ -228,6 +259,7 @@ void python::common::export_DeckKeyword(py::module& module) {
         .def("__getitem__", getRecord, ref_internal, py::arg("index"), DeckKeyword_getitem_docstring)
         .def("__len__", &DeckKeyword::size, DeckKeyword_len_docstring)
         .def_property_readonly("name", &DeckKeyword::name, DeckKeyword_name_docstring)
+        .def_property_readonly("location", &get_location, DeckKeyword_location_docstring)
 
         .def(py::init([](const ParserKeyword& parser_keyword, py::array_t<int> py_data) {
             return DeckKeyword(parser_keyword, convert::vector(py_data));

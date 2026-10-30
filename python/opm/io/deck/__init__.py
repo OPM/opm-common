@@ -1,4 +1,5 @@
 from opm._common import DeckKeyword
+from opm._common import KeywordLocation
 from opm._common import DeckItem
 from opm._common import UDAValue
 

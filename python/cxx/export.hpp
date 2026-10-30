@@ -18,6 +18,7 @@ void export_UnitSystem(py::module& module);
 void export_Connection(py::module& module);
 void export_Deck(py::module& module);
 void export_DeckKeyword(py::module& module);
+void export_KeywordLocation(py::module& module);
 void export_FieldProperties(py::module& module);
 void export_EclipseConfig(py::module& module);
 void export_EclipseGrid(py::module& module);
