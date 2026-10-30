@@ -15,7 +15,7 @@ if(TARGET opmcommon)
     find_package(Python3 COMPONENTS Development.Embed REQUIRED)
   endif()
 
-  if(opm-common_LIBS MATCHES dunecommon)
+  if(opm-common_LIBS MATCHES Dune::Common)
     find_package(dune-common REQUIRED)
   endif()
 
