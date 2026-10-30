@@ -226,15 +226,6 @@ void ExtNetwork::update_node(Node node)
     // entry (or equivalent from restart file). So the node should
     // already exist, added in add_branch() from BRANPROP entries.
     std::string name = node.name();
-    auto branch = std::find_if(this->m_branches.begin(), this->m_branches.end(),
-                               [&name](const Branch& b) { return b.uptree_node() == name || b.downtree_node() == name;});
-
-    if (branch != this->m_branches.end() && branch->downtree_node() == name) {
-        if (node.as_choke() && branch->vfp_table().has_value())
-            throw std::invalid_argument("Node: " + name + " should serve as a choke => upstream branch can not have VFP table");
-    }
-
-
     this->m_nodes.insert_or_assign(name, std::move(node) );
 }
 
