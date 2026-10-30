@@ -399,11 +399,6 @@ namespace Opm {
         return this->m_use_flux_base_name;
     }
 
-    std::string IOConfig::getUseFluxInputBaseName() const
-    {
-        return this->m_use_flux_base_name.empty() ? this->getBaseName() : this->m_use_flux_base_name;
-    }
-
     const std::vector<int>& IOConfig::getUseFluxRegions() const
     {
         return this->m_use_flux_regions;

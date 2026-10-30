@@ -382,7 +382,6 @@ BOOST_AUTO_TEST_CASE(UseFluxBaseNameIsRead)
 
     BOOST_CHECK(ioConfig.getUseFlux());
     BOOST_CHECK_EQUAL(ioConfig.getUseFluxBaseName(), "parent_case");
-    BOOST_CHECK_EQUAL(ioConfig.getUseFluxInputBaseName(), "parent_case");
 }
 
 BOOST_AUTO_TEST_CASE(UseFluxContinuesBeyondTheDataUnlessToldNot)

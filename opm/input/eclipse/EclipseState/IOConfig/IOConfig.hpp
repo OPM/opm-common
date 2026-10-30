@@ -164,7 +164,6 @@ namespace Opm {
         bool getDumpFlux() const;
 
         const std::string& getUseFluxBaseName() const;
-        std::string getUseFluxInputBaseName() const;
         const std::vector<int>& getUseFluxRegions() const;
 
         /// Whether a USEFLUX run may go on past the last record of its FLUX
