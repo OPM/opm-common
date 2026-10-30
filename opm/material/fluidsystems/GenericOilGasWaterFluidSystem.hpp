@@ -143,10 +143,11 @@ namespace Opm {
                 component_param_.push_back(param);
             } else {
                 // Adding another component would exceed the limit.
-                const std::string msg = fmt::format("The fluid system has reached its maximum capacity of {} components,"
-                                                    "the component '{}' will not be added.", NumComp, param.name);
-                OpmLog::note(msg);
-                // Optionally, throw an exception?
+                throw std::runtime_error {
+                    fmt::format("The fluid system has reached its maximum capacity of {} "
+                                "components, the component '{}' cannot be added.",
+                                NumComp, param.name)
+                };
             }
         }
 

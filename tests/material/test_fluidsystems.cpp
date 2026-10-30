@@ -75,6 +75,9 @@
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 
+#include <stdexcept>
+#include <string_view>
+
 // check that the blackoil fluid system implements all non-standard functions
 template <class Evaluation, class FluidSystem>
 void ensureBlackoilApi()
@@ -421,4 +424,30 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(GenericFluidSystemNoWater, Scalar, ScalarTypes)
     checkFluidSystem<Scalar, FluidSystem, Scalar, Scalar>(initializeFluidSystem);
     checkFluidSystem<Scalar, FluidSystem, Evaluation, Scalar>(initializeFluidSystem);
     checkFluidSystem<Scalar, FluidSystem, Evaluation, Evaluation>(initializeFluidSystem);
+}
+
+BOOST_AUTO_TEST_CASE_TEMPLATE(GenericFluidSystemCapacity, Scalar, ScalarTypes)
+{
+    using FluidSystem = Opm::GenericOilGasWaterFluidSystem<Scalar, 2, false>;
+
+    FluidSystem::init();
+    registerComponent<FluidSystem, Opm::C1<Scalar>>();
+    registerComponent<FluidSystem, Opm::C10<Scalar>>();
+
+    // A third component exceeds the capacity: it is rejected by name and the
+    // two configured components stay as they are.
+    const auto names_the_component = [](const std::runtime_error& error) {
+        return std::string_view{error.what()}.find("'N2'") != std::string_view::npos;
+    };
+    BOOST_CHECK_EXCEPTION((registerComponent<FluidSystem, Opm::N2<Scalar>>()),
+                          std::runtime_error,
+                          names_the_component);
+    BOOST_CHECK_EQUAL(FluidSystem::componentName(0), Opm::C1<Scalar>::name());
+    BOOST_CHECK_EQUAL(FluidSystem::componentName(1), Opm::C10<Scalar>::name());
+
+    // init() discards the components, so the capacity is available again.
+    FluidSystem::init();
+    registerComponent<FluidSystem, Opm::N2<Scalar>>();
+    registerComponent<FluidSystem, Opm::C1<Scalar>>();
+    BOOST_CHECK_EQUAL(FluidSystem::componentName(0), Opm::N2<Scalar>::name());
 }
