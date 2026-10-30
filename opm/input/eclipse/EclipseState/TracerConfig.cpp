@@ -76,6 +76,7 @@ TracerConfig::TracerConfig([[maybe_unused]] const UnitSystem& unit_system,
                            const Deck&                        deck)
 {
     using TR = ParserKeywords::TRACER;
+    using TRCDIFF = ParserKeywords::TRCDIFF;
 
     this->supportsSolutionGasTracer_ = deck.hasKeyword<ParserKeywords::DISGAS>();
     this->supportsVaporisedOilTracer_ = deck.hasKeyword<ParserKeywords::VAPOIL>();
@@ -194,6 +195,35 @@ TracerConfig::TracerConfig([[maybe_unused]] const UnitSystem& unit_system,
 
         this->tracers.emplace_back(name, unit_string, phase);
     }
+
+    if (deck.hasKeyword<TRCDIFF>()) {
+        this->applyDiffusion(deck.get<TRCDIFF>().back());
+    }
+}
+
+void TracerConfig::applyDiffusion(const DeckKeyword& keyword)
+{
+    using TRCDIFF = ParserKeywords::TRCDIFF;
+
+    for (const auto& record : keyword) {
+        const auto& name = record.getItem<TRCDIFF::TRACER>().getTrimmedString(0);
+        const auto iter = std::ranges::find_if(this->tracers,
+                                               [&name](const TracerEntry& tracer)
+                                               { return tracer.name == name; });
+        if (iter == this->tracers.end()) {
+            throw OpmInputError(fmt::format("Tracer {} is not declared in TRACER", name),
+                                keyword.location());
+        }
+
+        const double diffusion = record.getItem<TRCDIFF::D_MOL>().getSIDouble(0);
+        if (diffusion < 0.0) {
+            throw OpmInputError(fmt::format("The diffusion coefficient of tracer {} "
+                                            "must not be negative", name),
+                                keyword.location());
+        }
+
+        iter->diffusion_coefficient = diffusion;
+    }
 }
 
 TracerConfig TracerConfig::serializationTestObject()
@@ -201,6 +231,7 @@ TracerConfig TracerConfig::serializationTestObject()
     TracerConfig result;
 
     result.tracers = {{"test", "", Phase::OIL, {1.0}}};
+    result.tracers.front().diffusion_coefficient = 2.5e-9;
     result.supportsSolutionGasTracer_ = true;
     result.supportsVaporisedOilTracer_ = true;
 
