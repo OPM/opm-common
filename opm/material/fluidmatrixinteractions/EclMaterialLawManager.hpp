@@ -191,6 +191,18 @@ public:
         return this->isTwoPhaseGasWater_() ? info.maxPcgo : info.maxPcow;
     }
 
+    /// Whether SWATINIT may scale the maximum capillary pressure up in
+    /// cells where the SWATINIT value is at or below the connate water
+    /// saturation.  If disabled, the capillary pressure curve of such a
+    /// cell is only scaled down, and left unscaled if honouring SWATINIT
+    /// would require a larger maximum capillary pressure.  Disabled by
+    /// default.
+    void setSwatinitScaleUpAtConnate(const bool enable)
+    { swatinitScaleUpAtConnate_ = enable; }
+
+    bool swatinitScaleUpAtConnate() const
+    { return swatinitScaleUpAtConnate_; }
+
     bool enableEndPointScaling() const
     { return enableEndPointScaling_; }
 
@@ -615,6 +627,8 @@ private:
     bool enablePpcwmax_{false};
     std::vector<Scalar> maxAllowPc_;
     std::vector<bool> modifySwl_;
+
+    bool swatinitScaleUpAtConnate_{false};
 
     bool hasGas_{true};
     bool hasOil_{true};
