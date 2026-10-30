@@ -53,15 +53,12 @@
 #include <opm/material/fluidstates/CompositionalFluidState.hpp>
 #include <opm/material/fluidsystems/GenericOilGasWaterFluidSystem.hpp>
 
-#include <opm/input/eclipse/EclipseState/Compositional/CompositionalConfig.hpp>
-
 #include <dune/common/fvector.hh>
 
 #include <cmath>
 #include <string_view>
 
 using Scalar = double;
-using EOSType = Opm::CompositionalConfig::EOSType;
 using PTFlashMethod = Opm::PTFlashMethod;
 using FluidSystem = Opm::GenericOilGasWaterFluidSystem<Scalar, 3, false>;
 
@@ -187,10 +184,10 @@ BOOST_AUTO_TEST_CASE(ColdAndWarmHybridClassifySinglePhase)
 {
     auto cold = makeRecordedState();
     cold.setLvalue(-1.0);
-    BOOST_REQUIRE(PtFlash::solve(cold, PTFlashMethod::SsiNewton, flashTolerance, EOSType::PR));
+    BOOST_REQUIRE(PtFlash::solve(cold, PTFlashMethod::SsiNewton, flashTolerance, /*eosRegionIdx=*/0));
 
     auto warm = makeRecordedState();
-    BOOST_REQUIRE(PtFlash::solve(warm, PTFlashMethod::SsiNewton, flashTolerance, EOSType::PR));
+    BOOST_REQUIRE(PtFlash::solve(warm, PTFlashMethod::SsiNewton, flashTolerance, /*eosRegionIdx=*/0));
 
     BOOST_CHECK_SMALL(Opm::getValue(cold.L()), flashTolerance);
     BOOST_CHECK_SMALL(Opm::getValue(warm.L()), flashTolerance);
@@ -200,7 +197,7 @@ BOOST_AUTO_TEST_CASE(ColdAndWarmHybridClassifySinglePhase)
 BOOST_AUTO_TEST_CASE(WarmHybridReturnsSinglePhaseDerivatives)
 {
     auto fs = makeDifferentiatedRecordedState();
-    BOOST_REQUIRE(PtFlash::solve(fs, PTFlashMethod::SsiNewton, flashTolerance, EOSType::PR));
+    BOOST_REQUIRE(PtFlash::solve(fs, PTFlashMethod::SsiNewton, flashTolerance, /*eosRegionIdx=*/0));
 
     BOOST_CHECK(isMoleFractionLike(fs.L()));
     BOOST_CHECK_SMALL(Opm::getValue(fs.L()), flashTolerance);
@@ -222,10 +219,10 @@ BOOST_AUTO_TEST_CASE(WarmHybridReturnsSinglePhaseDerivatives)
 BOOST_AUTO_TEST_CASE(WarmSsiAndHybridClassifySinglePhase)
 {
     auto fs_ssi = makeRecordedState();
-    BOOST_REQUIRE(PtFlash::solve(fs_ssi, PTFlashMethod::Ssi, flashTolerance, EOSType::PR));
+    BOOST_REQUIRE(PtFlash::solve(fs_ssi, PTFlashMethod::Ssi, flashTolerance, /*eosRegionIdx=*/0));
 
     auto fs_hybrid = makeRecordedState();
-    BOOST_REQUIRE(PtFlash::solve(fs_hybrid, PTFlashMethod::SsiNewton, flashTolerance, EOSType::PR));
+    BOOST_REQUIRE(PtFlash::solve(fs_hybrid, PTFlashMethod::SsiNewton, flashTolerance, /*eosRegionIdx=*/0));
 
     BOOST_CHECK_SMALL(std::abs(Opm::getValue(fs_hybrid.L()) - Opm::getValue(fs_ssi.L())),
                       flashTolerance);
@@ -243,7 +240,7 @@ BOOST_AUTO_TEST_CASE(WarmSsiAndHybridClassifySinglePhase)
 BOOST_AUTO_TEST_CASE(NewtonReassessesNonPhysicalRoot)
 {
     auto fs = makeRecordedState();
-    BOOST_REQUIRE(PtFlash::solve(fs, PTFlashMethod::Newton, flashTolerance, EOSType::PR));
+    BOOST_REQUIRE(PtFlash::solve(fs, PTFlashMethod::Newton, flashTolerance, /*eosRegionIdx=*/0));
     BOOST_CHECK_SMALL(Opm::getValue(fs.L()), flashTolerance);
 }
 
@@ -254,10 +251,10 @@ BOOST_AUTO_TEST_CASE(WarmSsiReassessesOutOfRangeSplits)
     constexpr Scalar pressures[] = {180.e5, 220.e5};
     for (const Scalar pressure : pressures) {
         auto cold = makePhaseTransitionState(pressure, -1.0);
-        BOOST_REQUIRE(PtFlash::solve(cold, PTFlashMethod::Ssi, flashTolerance, EOSType::PR));
+        BOOST_REQUIRE(PtFlash::solve(cold, PTFlashMethod::Ssi, flashTolerance, /*eosRegionIdx=*/0));
 
         auto warm = makePhaseTransitionState(pressure, 0.5);
-        BOOST_REQUIRE(PtFlash::solve(warm, PTFlashMethod::Ssi, flashTolerance, EOSType::PR));
+        BOOST_REQUIRE(PtFlash::solve(warm, PTFlashMethod::Ssi, flashTolerance, /*eosRegionIdx=*/0));
 
         BOOST_CHECK_SMALL(Opm::getValue(cold.L()) - 1.0, flashTolerance);
         BOOST_CHECK_SMALL(Opm::getValue(warm.L()) - 1.0, flashTolerance);
@@ -272,10 +269,10 @@ BOOST_AUTO_TEST_CASE(NegativeFlashPreservesVapourDirection)
         auto fs = makePhaseTransitionState(1.e5, 0.5);
         fs.setTemperature(400.0);
         for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
-            fs.setKvalue(compIdx, fs.wilsonK_(compIdx));
+            fs.setKvalue(compIdx, fs.wilsonK_(compIdx, /*eosRegionIdx=*/0));
         }
 
-        BOOST_REQUIRE(PtFlash::solve(fs, method, flashTolerance, EOSType::PR));
+        BOOST_REQUIRE(PtFlash::solve(fs, method, flashTolerance, /*eosRegionIdx=*/0));
         BOOST_CHECK_SMALL(Opm::getValue(fs.L()), flashTolerance);
     }
 }
@@ -307,7 +304,7 @@ BOOST_AUTO_TEST_CASE(NewtonRejectsCoincidentInitialPhases)
             != std::string_view::npos;
     };
     BOOST_CHECK_EXCEPTION(ExposedPtFlash::flash_2ph(
-                              z, PTFlashMethod::Newton, K, L, fs, flashTolerance, EOSType::PR),
+                              z, PTFlashMethod::Newton, K, L, fs, flashTolerance, /*eosRegionIdx=*/0),
                           Opm::NumericalProblem,
                           reports_initial_trivial_solution);
 }
@@ -321,7 +318,7 @@ BOOST_AUTO_TEST_CASE(HybridAllowsAbsentComponent)
     fs.setMoleFraction(0, 0.0);
     fs.setMoleFraction(1, 0.5);
     fs.setMoleFraction(2, 0.5);
-    BOOST_REQUIRE(!PtFlash::solve(fs, PTFlashMethod::SsiNewton, flashTolerance, EOSType::PR));
+    BOOST_REQUIRE(!PtFlash::solve(fs, PTFlashMethod::SsiNewton, flashTolerance, /*eosRegionIdx=*/0));
 
     BOOST_CHECK_GT(Opm::getValue(fs.L()), 0.0);
     BOOST_CHECK_LT(Opm::getValue(fs.L()), 1.0);

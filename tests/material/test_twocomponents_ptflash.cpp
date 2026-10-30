@@ -51,7 +51,6 @@
 #include <vector>
 
 using Scalar = double;
-using EOSType = Opm::CompositionalConfig::EOSType;
 using Opm::FlashTest::ExpectedPhase;
 using Opm::FlashTest::FlashCase;
 using Opm::FlashTest::FlashResult;
@@ -124,8 +123,7 @@ void checkExpectedPhase(const FlashCase<numComponents>& testCase,
 // fugacityCoefficient path PTFlash itself uses.
 template <class FluidSystem, class FluidState>
 void checkTwoPhaseInvariants(const FluidState& fluid_state,
-                             const std::array<double, FluidSystem::numComponents>& z,
-                             const EOSType eos_type)
+                             const std::array<double, FluidSystem::numComponents>& z)
 {
     constexpr int numComponents = FluidSystem::numComponents;
 
@@ -137,7 +135,7 @@ void checkTwoPhaseInvariants(const FluidState& fluid_state,
     // fugacity coefficients must be captured before updatePhase(gas); do not
     // interleave the phases in a refactor.
     using ParamCache = typename FluidSystem::template ParameterCache<typename FluidState::ValueType>;
-    ParamCache paramCache(eos_type);
+    ParamCache paramCache(/*eosRegionIdx=*/0);
     paramCache.updatePhase(fluid_state, FluidSystem::oilPhaseIdx);
     std::array<double, numComponents> phi_oil;
     for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
@@ -222,7 +220,7 @@ BOOST_AUTO_TEST_CASE(TwoPhaseInvariantsF1)
 
     const auto outcome = runFlash<FluidSystemF1, EvaluationF1>(testCase);
     checkExpectedPhase(testCase, outcome.summary);
-    checkTwoPhaseInvariants<FluidSystemF1>(outcome.state, testCase.z, testCase.eos_type);
+    checkTwoPhaseInvariants<FluidSystemF1>(outcome.state, testCase.z);
 }
 
 // ssi / newton / ssi+newton converge to the same solution
@@ -266,5 +264,5 @@ BOOST_AUTO_TEST_CASE(TernaryInvariantsF2)
 
     const auto outcome = runFlash<FluidSystemF2, EvaluationF2>(testCase);
     checkExpectedPhase(testCase, outcome.summary);
-    checkTwoPhaseInvariants<FluidSystemF2>(outcome.state, testCase.z, testCase.eos_type);
+    checkTwoPhaseInvariants<FluidSystemF2>(outcome.state, testCase.z);
 }
