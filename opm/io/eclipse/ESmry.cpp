@@ -445,10 +445,10 @@ ESmry::ESmry(const std::filesystem::path &filename, bool loadBaseRunData) :
         const std::vector<std::string> keywords = smspecList[specInd].get<std::string>("KEYWORDS");
         std::vector<std::string> wgnames;
 
-        if (smspecList.back().hasKey("WGNAMES"))
-            wgnames = smspecList.back().get<std::string>("WGNAMES");
+        if (smspecList[specInd].hasKey("WGNAMES"))
+            wgnames = smspecList[specInd].get<std::string>("WGNAMES");
         else
-            wgnames = smspecList.back().get<std::string>("NAMES");
+            wgnames = smspecList[specInd].get<std::string>("NAMES");
 
         const std::vector<int> nums = smspecList[specInd].get<int>("NUMS");
 
@@ -860,6 +860,29 @@ void ESmry::loadData() const
 
     std::vector<int> keywpos = makeKeywPosVector(specInd);
 
+    // Vectors added in a restarted run are not in its base run's file,
+    // and are NaN at that file's time steps.
+    auto missingVectors = [this](const std::vector<int>& positions)
+    {
+        std::vector<bool> inFile(this->nVect, false);
+        for (const auto ind : positions) {
+            if (ind > -1) {
+                inFile[ind] = true;
+            }
+        }
+
+        std::vector<std::size_t> missing;
+        for (std::size_t ind = 0; ind < this->nVect; ++ind) {
+            if (! inFile[ind]) {
+                missing.push_back(ind);
+            }
+        }
+
+        return missing;
+    };
+
+    auto missing = missingVectors(keywpos);
+
     auto openMode = formattedFiles[specInd]
                     ? std::ios::in
                     : std::ios::in | std::ios::binary;
@@ -873,6 +896,7 @@ void ESmry::loadData() const
             if (specInd != std::get<0>(ministep)) {
                 specInd = std::get<0>(ministep);
                 keywpos = makeKeywPosVector(specInd);
+                missing = missingVectors(keywpos);
             }
 
             dataFileIndex = std::get<1>(ministep);
@@ -953,6 +977,12 @@ void ESmry::loadData() const
 
                 if (dhead != dtail)
                     OPM_THROW(std::runtime_error, "Error reading binary data, tail not matching header.");
+            }
+        }
+
+        for (const auto ind : missing) {
+            if (! vectorLoaded[ind]) {
+                vectorData[ind].push_back(std::nanf(""));
             }
         }
     }
