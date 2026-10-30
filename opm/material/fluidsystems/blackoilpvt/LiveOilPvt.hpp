@@ -27,15 +27,25 @@
 #ifndef OPM_LIVE_OIL_PVT_HPP
 #define OPM_LIVE_OIL_PVT_HPP
 
+#include <opm/common/ErrorMacros.hpp>
 #include <opm/common/Exceptions.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
+#include <opm/common/utility/gpuDecorators.hpp>
+#include <opm/common/utility/gpuistl_if_available.hpp>
+#include <opm/common/utility/VectorWithDefaultAllocator.hpp>
 
+#include <opm/material/common/ConditionalStorage.hpp>
 #include <opm/material/common/MathToolbox.hpp>
 #include <opm/material/common/UniformXTabulated2DFunction.hpp>
 #include <opm/material/common/UniformXTabulated2DFunctionBuilder.hpp>
 #include <opm/material/common/Tabulated1DFunction.hpp>
 
+#include <algorithm>
 #include <cstddef>
+#include <memory>
+#include <type_traits>
+#include <utility>
+#include <vector>
 
 namespace Opm {
 
@@ -43,19 +53,106 @@ class EclipseState;
 class Schedule;
 class SimpleTable;
 
+// Forward declaration, so that copy_to_gpu() and make_view() can be declared before
+// the class definition. The default template arguments are given here (and only here).
+template <class Scalar,
+          template<class> class Storage = VectorWithDefaultAllocator,
+          template<class> class TableStorage = VectorWithDefaultAllocator>
+class LiveOilPvt;
+
+namespace gpuistl
+{
+template <class T>
+class GpuBuffer;
+
+template <class T>
+class GpuView;
+} // namespace gpuistl
+
+#if HAVE_CUDA
+// Declarations of copy_to_gpu() and make_view(), so that they can be declared as
+// friends in the class.
+namespace gpuistl {
+    template <class ScalarT>
+    LiveOilPvt<ScalarT, GpuBuffer, GpuView>
+    copy_to_gpu(const LiveOilPvt<ScalarT>&);
+
+    template <class ScalarT>
+    LiveOilPvt<ScalarT, GpuView, GpuView>
+    make_view(LiveOilPvt<ScalarT, GpuBuffer, GpuView>&);
+} // namespace gpuistl
+#endif // HAVE_CUDA
+
 /*!
- * \brief This class represents the Pressure-Volume-Temperature relations of the oil phas
+ * \brief This class represents the Pressure-Volume-Temperature relations of the oil phase
  *        with dissolved gas.
+ *
+ * The class is used with four combinations of \c Storage (the per-region arrays) and
+ * \c TableStorage (the data inside each table):
+ *
+ * - \c VectorWithDefaultAllocator, \c VectorWithDefaultAllocator: the CPU object, set up
+ *   by initFromState(), or by setNumRegions(), the setters and initEnd().
+ * - \c VectorWithDefaultAllocator, \c gpuistl::GpuBuffer: the device table owner, holding
+ *   one owning device table per region. It is created by and internal to
+ *   gpuistl::copy_to_gpu(), and owned by the owning GPU object.
+ * - \c gpuistl::GpuBuffer, \c gpuistl::GpuView: the owning GPU object, returned by
+ *   gpuistl::copy_to_gpu(). It holds device arrays of views into the device table
+ *   owner's tables, and it is move-only.
+ * - \c gpuistl::GpuView, \c gpuistl::GpuView: the GPU view, returned by
+ *   gpuistl::make_view(). It owns no memory, is trivially copyable, and is passed to
+ *   kernels by value.
+ *
+ * \code
+ * auto gpuPvt = Opm::gpuistl::copy_to_gpu(cpuPvt);  // owning GPU object
+ * auto gpuView = Opm::gpuistl::make_view(gpuPvt);   // GPU view
+ * kernel<<<...>>>(gpuView);
+ * \endcode
+ *
+ * The owning GPU object must outlive every kernel that uses a view made from it. Moving
+ * it does not invalidate such views.
  */
-template <class Scalar>
+template <class Scalar,
+          template<class> class Storage,
+          template<class> class TableStorage>
 class LiveOilPvt
 {
     using SamplingPoints = std::vector<std::pair<Scalar, Scalar>>;
 
 public:
-    using TabulatedTwoDFunction = UniformXTabulated2DFunction<Scalar>;
+    using TabulatedTwoDFunction = UniformXTabulated2DFunction<Scalar, TableStorage>;
     using TabulatedTwoDFunctionBuilder = UniformXTabulated2DFunctionBuilder<Scalar>;
-    using TabulatedOneDFunction = Tabulated1DFunction<Scalar>;
+    using TabulatedOneDFunction = Tabulated1DFunction<Scalar, TableStorage>;
+
+    //! True for the CPU object. Used to restrict the host-only methods that would otherwise
+    //! compile for a GPU instantiation and then read or write device memory from the host
+    //! (setInverseOilFormationVolumeFactor(), setOilViscosity() and saturationPressure()),
+    //! and setVapPars(), which on a GPU object would not reach the views made from it.
+    //! The other host-only methods are defined in the .cpp file for CPU storage only, so
+    //! misusing them already fails at link time.
+    static constexpr bool isCpuStorage
+        = std::is_same_v<Storage<Scalar>, VectorWithDefaultAllocator<Scalar>>
+       && std::is_same_v<TableStorage<Scalar>, VectorWithDefaultAllocator<Scalar>>;
+
+    //! True for the host-side owner of the per-region device tables. Only created by,
+    //! and owned through, gpuistl::copy_to_gpu().
+    static constexpr bool isGpuTableOwner
+        = std::is_same_v<Storage<Scalar>, VectorWithDefaultAllocator<Scalar>>
+       && std::is_same_v<TableStorage<Scalar>, gpuistl::GpuBuffer<Scalar>>;
+
+    //! True if this object owns device memory (created by gpuistl::copy_to_gpu()).
+    static constexpr bool isOwningGpu
+        = std::is_same_v<Storage<Scalar>, gpuistl::GpuBuffer<Scalar>>
+       && std::is_same_v<TableStorage<Scalar>, gpuistl::GpuView<Scalar>>;
+
+    //! True if this object is a non-owning view of device memory (created by gpuistl::make_view()).
+    static constexpr bool isGpuView
+        = std::is_same_v<Storage<Scalar>, gpuistl::GpuView<Scalar>>
+       && std::is_same_v<TableStorage<Scalar>, gpuistl::GpuView<Scalar>>;
+
+    static_assert(isCpuStorage || isGpuTableOwner || isOwningGpu || isGpuView,
+                  "LiveOilPvt: unsupported combination of Storage and TableStorage");
+
+    LiveOilPvt() = default;
 
     /*!
      * \brief Initialize the oil parameters via the data specified by the PVTO ECL keyword.
@@ -73,6 +170,7 @@ public:
     void setNumRegions(std::size_t numRegions);
 
     void setVapPars(const Scalar, const Scalar par2)
+        requires isCpuStorage
     {
         vapPar2_ = par2;
     }
@@ -121,6 +219,7 @@ public:
      */
     void setInverseOilFormationVolumeFactor(unsigned regionIdx,
                                             const TabulatedTwoDFunction& invBo)
+        requires isCpuStorage
     { inverseOilBTable_[regionIdx] = invBo; }
 
     /*!
@@ -129,6 +228,7 @@ public:
      * This is a function of \f$(R_s, p_o)\f$...
      */
     void setOilViscosity(unsigned regionIdx, const TabulatedTwoDFunction& muo)
+        requires isCpuStorage
     { oilMuTable_[regionIdx] = muo; }
 
     /*!
@@ -149,36 +249,36 @@ public:
     /*!
      * \brief Return the number of PVT regions which are considered by this PVT-object.
      */
-    unsigned numRegions() const
+    OPM_HOST_DEVICE unsigned numRegions() const
     { return inverseOilBMuTable_.size(); }
 
     /*!
      * \brief Returns the specific enthalpy [J/kg] of oil given a set of parameters.
      */
     template <class Evaluation>
-    Evaluation internalEnergy(unsigned,
-                        const Evaluation&,
-                        const Evaluation&,
-                        const Evaluation&) const
+    OPM_HOST_DEVICE Evaluation internalEnergy(unsigned,
+                                              const Evaluation&,
+                                              const Evaluation&,
+                                              const Evaluation&) const
     {
-        throw std::runtime_error("Requested the enthalpy of oil but the thermal "
-                                 "option is not enabled");
+        OPM_THROW(std::runtime_error, "Requested the enthalpy of oil but the thermal "
+                                      "option is not enabled");
     }
 
-    Scalar hVap(unsigned) const
+    OPM_HOST_DEVICE Scalar hVap(unsigned) const
     {
-        throw std::runtime_error("Requested the hvap of oil but the thermal "
-                                 "option is not enabled");
+        OPM_THROW(std::runtime_error, "Requested the hvap of oil but the thermal "
+                                      "option is not enabled");
     }
 
     /*!
      * \brief Returns the dynamic viscosity [Pa s] of the fluid phase given a set of parameters.
      */
     template <class Evaluation>
-    Evaluation viscosity(unsigned regionIdx,
-                         const Evaluation& /*temperature*/,
-                         const Evaluation& pressure,
-                         const Evaluation& Rs) const
+    OPM_HOST_DEVICE Evaluation viscosity(unsigned regionIdx,
+                                         const Evaluation& /*temperature*/,
+                                         const Evaluation& pressure,
+                                         const Evaluation& Rs) const
     {
         // ATTENTION: Rs is the first axis!
         const Evaluation& invBo = inverseOilBTable_[regionIdx].eval(Rs, pressure, /*extrapolate=*/true);
@@ -191,9 +291,9 @@ public:
      * \brief Returns the dynamic viscosity [Pa s] of the fluid phase given a set of parameters.
      */
     template <class Evaluation>
-    Evaluation saturatedViscosity(unsigned regionIdx,
-                                  const Evaluation& /*temperature*/,
-                                  const Evaluation& pressure) const
+    OPM_HOST_DEVICE Evaluation saturatedViscosity(unsigned regionIdx,
+                                                  const Evaluation& /*temperature*/,
+                                                  const Evaluation& pressure) const
     {
         // ATTENTION: Rs is the first axis!
         const Evaluation& invBo = inverseSaturatedOilBTable_[regionIdx].eval(pressure, /*extrapolate=*/true);
@@ -206,10 +306,10 @@ public:
      * \brief Returns the formation volume factor [-] of the fluid phase.
      */
     template <class Evaluation>
-    Evaluation inverseFormationVolumeFactor(unsigned regionIdx,
-                                            const Evaluation& /*temperature*/,
-                                            const Evaluation& pressure,
-                                            const Evaluation& Rs) const
+    OPM_HOST_DEVICE Evaluation inverseFormationVolumeFactor(unsigned regionIdx,
+                                                            const Evaluation& /*temperature*/,
+                                                            const Evaluation& pressure,
+                                                            const Evaluation& Rs) const
     {
         // ATTENTION: Rs is represented by the _first_ axis!
         return inverseOilBTable_[regionIdx].eval(Rs, pressure, /*extrapolate=*/true);
@@ -219,8 +319,8 @@ public:
      * \brief Returns the formation volume factor [-] and viscosity [Pa s] of the fluid phase.
      */
     template <class FluidState, class LhsEval = typename FluidState::ValueType>
-    std::pair<LhsEval, LhsEval>
-    inverseFormationVolumeFactorAndViscosity(const FluidState& fluidState, unsigned regionIdx)
+    OPM_HOST_DEVICE std::pair<LhsEval, LhsEval>
+    inverseFormationVolumeFactorAndViscosity(const FluidState& fluidState, unsigned regionIdx) const
     {
         const LhsEval& p = decay<LhsEval>(fluidState.pressure(FluidState::oilPhaseIdx));
         const LhsEval& Rs = decay<LhsEval>(fluidState.Rs());
@@ -249,9 +349,9 @@ public:
      * \brief Returns the formation volume factor [-] of the fluid phase.
      */
     template <class Evaluation>
-    Evaluation saturatedInverseFormationVolumeFactor(unsigned regionIdx,
-                                                     const Evaluation& /*temperature*/,
-                                                     const Evaluation& pressure) const
+    OPM_HOST_DEVICE Evaluation saturatedInverseFormationVolumeFactor(unsigned regionIdx,
+                                                                     const Evaluation& /*temperature*/,
+                                                                     const Evaluation& pressure) const
     {
         // ATTENTION: Rs is represented by the _first_ axis!
         return inverseSaturatedOilBTable_[regionIdx].eval(pressure, /*extrapolate=*/true);
@@ -261,9 +361,9 @@ public:
      * \brief Returns the gas dissolution factor \f$R_s\f$ [m^3/m^3] of the oil phase.
      */
     template <class Evaluation>
-    Evaluation saturatedGasDissolutionFactor(unsigned regionIdx,
-                                             const Evaluation& /*temperature*/,
-                                             const Evaluation& pressure) const
+    OPM_HOST_DEVICE Evaluation saturatedGasDissolutionFactor(unsigned regionIdx,
+                                                             const Evaluation& /*temperature*/,
+                                                             const Evaluation& pressure) const
     { return saturatedGasDissolutionFactorTable_[regionIdx].eval(pressure, /*extrapolate=*/true); }
 
     /*!
@@ -274,11 +374,11 @@ public:
      * to how the Eclipse 100 simulator handles this. (cf the VAPPARS keyword.)
      */
     template <class Evaluation>
-    Evaluation saturatedGasDissolutionFactor(unsigned regionIdx,
-                                             const Evaluation& /*temperature*/,
-                                             const Evaluation& pressure,
-                                             const Evaluation& oilSaturation,
-                                             Evaluation maxOilSaturation) const
+    OPM_HOST_DEVICE Evaluation saturatedGasDissolutionFactor(unsigned regionIdx,
+                                                             const Evaluation& /*temperature*/,
+                                                             const Evaluation& pressure,
+                                                             const Evaluation& oilSaturation,
+                                                             Evaluation maxOilSaturation) const
     {
         Evaluation tmp =
             saturatedGasDissolutionFactorTable_[regionIdx].eval(pressure, /*extrapolate=*/true);
@@ -306,6 +406,7 @@ public:
     Evaluation saturationPressure(unsigned regionIdx,
                                   const Evaluation&,
                                   const Evaluation& Rs) const
+        requires isCpuStorage
     {
         using Toolbox = MathToolbox<Evaluation>;
 
@@ -358,64 +459,246 @@ public:
     }
 
     template <class Evaluation>
-    Evaluation diffusionCoefficient(const Evaluation& /*temperature*/,
-                                    const Evaluation& /*pressure*/,
-                                    unsigned /*compIdx*/) const
+    OPM_HOST_DEVICE Evaluation diffusionCoefficient(const Evaluation& /*temperature*/,
+                                                    const Evaluation& /*pressure*/,
+                                                    unsigned /*compIdx*/) const
     {
-        throw std::runtime_error("Not implemented: The PVT model does not provide "
-                                 "a diffusionCoefficient()");
+        OPM_THROW(std::runtime_error, "Not implemented: The PVT model does not provide "
+                                      "a diffusionCoefficient()");
     }
 
-    Scalar gasReferenceDensity(unsigned regionIdx) const
+    OPM_HOST_DEVICE Scalar gasReferenceDensity(unsigned regionIdx) const
     { return gasReferenceDensity_[regionIdx]; }
 
-    Scalar oilReferenceDensity(unsigned regionIdx) const
+    OPM_HOST_DEVICE Scalar oilReferenceDensity(unsigned regionIdx) const
     { return oilReferenceDensity_[regionIdx]; }
 
-    const std::vector<TabulatedTwoDFunction>& inverseOilBTable() const
+    const Storage<TabulatedTwoDFunction>& inverseOilBTable() const
     { return inverseOilBTable_; }
 
-    const std::vector<TabulatedTwoDFunction>& oilMuTable() const
+    const Storage<TabulatedTwoDFunction>& oilMuTable() const
     { return oilMuTable_; }
 
-    const std::vector<TabulatedTwoDFunction>& inverseOilBMuTable() const
+    const Storage<TabulatedTwoDFunction>& inverseOilBMuTable() const
     { return inverseOilBMuTable_; }
 
-    const std::vector<TabulatedOneDFunction>& saturatedOilMuTable() const
+    const Storage<TabulatedOneDFunction>& saturatedOilMuTable() const
     { return saturatedOilMuTable_; }
 
-    const std::vector<TabulatedOneDFunction>& inverseSaturatedOilBTable() const
+    const Storage<TabulatedOneDFunction>& inverseSaturatedOilBTable() const
     { return inverseSaturatedOilBTable_; }
 
-    const std::vector<TabulatedOneDFunction>& inverseSaturatedOilBMuTable() const
+    const Storage<TabulatedOneDFunction>& inverseSaturatedOilBMuTable() const
     { return inverseSaturatedOilBMuTable_; }
 
-    const std::vector<TabulatedOneDFunction>& saturatedGasDissolutionFactorTable() const
+    const Storage<TabulatedOneDFunction>& saturatedGasDissolutionFactorTable() const
     { return saturatedGasDissolutionFactorTable_; }
 
-    const std::vector<TabulatedOneDFunction>& saturationPressure() const
+    const Storage<TabulatedOneDFunction>& saturationPressure() const
     { return saturationPressure_; }
 
-    Scalar vapPar2() const
+    OPM_HOST_DEVICE Scalar vapPar2() const
     { return vapPar2_; }
 
 private:
     void updateSaturationPressure_(unsigned regionIdx);
 
-    std::vector<Scalar> gasReferenceDensity_{};
-    std::vector<Scalar> oilReferenceDensity_{};
-    std::vector<TabulatedTwoDFunction> inverseOilBTable_{};
-    std::vector<TabulatedTwoDFunction> oilMuTable_{};
-    std::vector<TabulatedTwoDFunction> inverseOilBMuTable_{};
-    std::vector<TabulatedOneDFunction> saturatedOilMuTable_{};
-    std::vector<TabulatedOneDFunction> inverseSaturatedOilBTable_{};
-    std::vector<TabulatedOneDFunction> inverseSaturatedOilBMuTable_{};
-    std::vector<TabulatedOneDFunction> saturatedGasDissolutionFactorTable_{};
-    std::vector<TabulatedOneDFunction> saturationPressure_{};
+    //! The device table owner. Only the owning GPU object stores one; the table views in
+    //! the owning GPU object and in the GPU view point into device memory owned by its
+    //! tables. Held through a unique_ptr so that the owning GPU object is move-only.
+    using GpuTables = LiveOilPvt<Scalar, VectorWithDefaultAllocator, gpuistl::GpuBuffer>;
+    using GpuTablesStorage = ConditionalStorage<isOwningGpu, std::unique_ptr<GpuTables>>;
+
+    GpuTablesStorage gpuTables_{};
+
+    Storage<Scalar> gasReferenceDensity_{};
+    Storage<Scalar> oilReferenceDensity_{};
+    Storage<TabulatedTwoDFunction> inverseOilBTable_{};
+    Storage<TabulatedTwoDFunction> oilMuTable_{};
+    Storage<TabulatedTwoDFunction> inverseOilBMuTable_{};
+    Storage<TabulatedOneDFunction> saturatedOilMuTable_{};
+    Storage<TabulatedOneDFunction> inverseSaturatedOilBTable_{};
+    Storage<TabulatedOneDFunction> inverseSaturatedOilBMuTable_{};
+    Storage<TabulatedOneDFunction> saturatedGasDissolutionFactorTable_{};
+    Storage<TabulatedOneDFunction> saturationPressure_{};
 
     Scalar vapPar2_ = 0.0;
+
+#if HAVE_CUDA
+    /*!
+     * \brief Constructor for the GPU objects, used by gpuistl::copy_to_gpu() and
+     *        gpuistl::make_view().
+     *
+     * \param gpuTables The device table owner for the owning GPU object. The table
+     *                  views passed in the other arguments must point into its tables.
+     *                  For the other GPU objects this is the empty storage; pass {}.
+     */
+    LiveOilPvt(GpuTablesStorage&& gpuTables,
+               Storage<Scalar>&& gasReferenceDensity,
+               Storage<Scalar>&& oilReferenceDensity,
+               Storage<TabulatedTwoDFunction>&& inverseOilBTable,
+               Storage<TabulatedTwoDFunction>&& oilMuTable,
+               Storage<TabulatedTwoDFunction>&& inverseOilBMuTable,
+               Storage<TabulatedOneDFunction>&& saturatedOilMuTable,
+               Storage<TabulatedOneDFunction>&& inverseSaturatedOilBTable,
+               Storage<TabulatedOneDFunction>&& inverseSaturatedOilBMuTable,
+               Storage<TabulatedOneDFunction>&& saturatedGasDissolutionFactorTable,
+               Storage<TabulatedOneDFunction>&& saturationPressure,
+               Scalar vapPar2)
+        requires (!isCpuStorage)
+        : gpuTables_(std::move(gpuTables))
+        , gasReferenceDensity_(std::move(gasReferenceDensity))
+        , oilReferenceDensity_(std::move(oilReferenceDensity))
+        , inverseOilBTable_(std::move(inverseOilBTable))
+        , oilMuTable_(std::move(oilMuTable))
+        , inverseOilBMuTable_(std::move(inverseOilBMuTable))
+        , saturatedOilMuTable_(std::move(saturatedOilMuTable))
+        , inverseSaturatedOilBTable_(std::move(inverseSaturatedOilBTable))
+        , inverseSaturatedOilBMuTable_(std::move(inverseSaturatedOilBMuTable))
+        , saturatedGasDissolutionFactorTable_(std::move(saturatedGasDissolutionFactorTable))
+        , saturationPressure_(std::move(saturationPressure))
+        , vapPar2_(vapPar2)
+    { }
+
+    template <class ScalarT>
+    friend LiveOilPvt<ScalarT, gpuistl::GpuBuffer, gpuistl::GpuView>
+    gpuistl::copy_to_gpu(const LiveOilPvt<ScalarT>&);
+
+    template <class ScalarT>
+    friend LiveOilPvt<ScalarT, gpuistl::GpuView, gpuistl::GpuView>
+    gpuistl::make_view(LiveOilPvt<ScalarT, gpuistl::GpuBuffer, gpuistl::GpuView>&);
+#endif // HAVE_CUDA
 };
 
 } // namespace Opm
+
+#if HAVE_CUDA
+namespace Opm::gpuistl {
+
+/*!
+ * \brief Copy a CPU LiveOilPvt to the GPU.
+ *
+ * Each per-region table is uploaded to its own GpuBuffer-based table. These tables are
+ * held by a device table owner (LiveOilPvt<ScalarT, VectorWithDefaultAllocator,
+ * GpuBuffer>), which the returned object owns. The views into these tables are then
+ * collected on the host and uploaded as one GpuBuffer per table member.
+ *
+ * \param cpu A fully initialized CPU object (i.e. initEnd() has been called).
+ * \return An owning GPU object. It is move-only. Use make_view() to obtain an object
+ *         that can be passed to kernels; the owning GPU object must outlive every
+ *         kernel that uses such a view.
+ */
+template <class ScalarT>
+LiveOilPvt<ScalarT, GpuBuffer, GpuView>
+copy_to_gpu(const LiveOilPvt<ScalarT>& cpu)
+{
+    using GpuTables = LiveOilPvt<ScalarT, VectorWithDefaultAllocator, GpuBuffer>;
+    using GpuPvt = LiveOilPvt<ScalarT, GpuBuffer, GpuView>;
+
+    // inverseOilBMuTable_ is only filled by initEnd(); after setNumRegions() alone its
+    // tables are empty.
+    const bool initialized = cpu.numRegions() > 0
+        && std::ranges::none_of(cpu.inverseOilBMuTable(),
+                                [](const auto& table) { return table.numX() == 0; });
+    OPM_ERROR_IF(!initialized,
+                 "copy_to_gpu: LiveOilPvt is not initialized (call initFromState() or initEnd() first).");
+
+    // Uploads each per-region table to its own owning table on the GPU.
+    auto upload = [](const auto& cpuTables) {
+        std::vector<decltype(copy_to_gpu(cpuTables.front()))> ownedTables;
+        ownedTables.reserve(cpuTables.size());
+        for (const auto& cpuTable : cpuTables) {
+            ownedTables.push_back(copy_to_gpu(cpuTable));
+        }
+        return ownedTables;
+    };
+
+    // Not std::make_unique: the constructor is private, and std::make_unique is not a friend.
+    std::unique_ptr<GpuTables> tables(new GpuTables(typename GpuTables::GpuTablesStorage{},
+                                                    std::vector<ScalarT>(cpu.gasReferenceDensity_),
+                                                    std::vector<ScalarT>(cpu.oilReferenceDensity_),
+                                                    upload(cpu.inverseOilBTable_),
+                                                    upload(cpu.oilMuTable_),
+                                                    upload(cpu.inverseOilBMuTable_),
+                                                    upload(cpu.saturatedOilMuTable_),
+                                                    upload(cpu.inverseSaturatedOilBTable_),
+                                                    upload(cpu.inverseSaturatedOilBMuTable_),
+                                                    upload(cpu.saturatedGasDissolutionFactorTable_),
+                                                    upload(cpu.saturationPressure_),
+                                                    cpu.vapPar2_));
+
+    // Returns a GpuBuffer of views into the owning tables.
+    auto viewsOf = [](auto& ownedTables) {
+        using ViewTable = decltype(make_view(ownedTables.front()));
+        static_assert(std::is_trivially_copyable_v<ViewTable>,
+                      "The table views are copied to the GPU with memcpy.");
+
+        std::vector<ViewTable> views;
+        views.reserve(ownedTables.size());
+        for (auto& ownedTable : ownedTables) {
+            views.push_back(make_view(ownedTable));
+        }
+        return GpuBuffer<ViewTable>(views);
+    };
+
+    // Everything that reads through `tables` is done before `tables` is moved into the
+    // returned object: the order in which function arguments are evaluated is
+    // unspecified, so reading and moving `tables` in the same call would be a bug.
+    auto gasReferenceDensity = GpuBuffer<ScalarT>(tables->gasReferenceDensity_);
+    auto oilReferenceDensity = GpuBuffer<ScalarT>(tables->oilReferenceDensity_);
+    auto inverseOilB = viewsOf(tables->inverseOilBTable_);
+    auto oilMu = viewsOf(tables->oilMuTable_);
+    auto inverseOilBMu = viewsOf(tables->inverseOilBMuTable_);
+    auto saturatedOilMu = viewsOf(tables->saturatedOilMuTable_);
+    auto inverseSaturatedOilB = viewsOf(tables->inverseSaturatedOilBTable_);
+    auto inverseSaturatedOilBMu = viewsOf(tables->inverseSaturatedOilBMuTable_);
+    auto saturatedGasDissolutionFactor = viewsOf(tables->saturatedGasDissolutionFactorTable_);
+    auto saturationPressure = viewsOf(tables->saturationPressure_);
+    const ScalarT vapPar2 = tables->vapPar2_;
+
+    return GpuPvt(typename GpuPvt::GpuTablesStorage(std::move(tables)),
+                  std::move(gasReferenceDensity),
+                  std::move(oilReferenceDensity),
+                  std::move(inverseOilB),
+                  std::move(oilMu),
+                  std::move(inverseOilBMu),
+                  std::move(saturatedOilMu),
+                  std::move(inverseSaturatedOilB),
+                  std::move(inverseSaturatedOilBMu),
+                  std::move(saturatedGasDissolutionFactor),
+                  std::move(saturationPressure),
+                  vapPar2);
+}
+
+/*!
+ * \brief Create a GPU view of an owning GPU LiveOilPvt.
+ *
+ * The view can be passed by value to kernels. It does not own any memory, so
+ * \p gpuPvt must outlive every use of the view.
+ */
+template <class ScalarT>
+LiveOilPvt<ScalarT, GpuView, GpuView>
+make_view(LiveOilPvt<ScalarT, GpuBuffer, GpuView>& gpuPvt)
+{
+    using GpuPvtView = LiveOilPvt<ScalarT, GpuView, GpuView>;
+    static_assert(std::is_trivially_copyable_v<GpuPvtView>,
+                  "The view is passed by value to kernels.");
+
+    return GpuPvtView(typename GpuPvtView::GpuTablesStorage{},
+                      make_view(gpuPvt.gasReferenceDensity_),
+                      make_view(gpuPvt.oilReferenceDensity_),
+                      make_view(gpuPvt.inverseOilBTable_),
+                      make_view(gpuPvt.oilMuTable_),
+                      make_view(gpuPvt.inverseOilBMuTable_),
+                      make_view(gpuPvt.saturatedOilMuTable_),
+                      make_view(gpuPvt.inverseSaturatedOilBTable_),
+                      make_view(gpuPvt.inverseSaturatedOilBMuTable_),
+                      make_view(gpuPvt.saturatedGasDissolutionFactorTable_),
+                      make_view(gpuPvt.saturationPressure_),
+                      gpuPvt.vapPar2_);
+}
+
+} // namespace Opm::gpuistl
+#endif // HAVE_CUDA
 
 #endif
