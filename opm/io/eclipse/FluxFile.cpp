@@ -328,6 +328,7 @@ bool FluxFile::BoundaryFace::operator==(const BoundaryFace& other) const
         && (this->transmissibility == other.transmissibility)
         && (this->exteriorPvtRegion == other.exteriorPvtRegion)
         && (this->exteriorEquilRegion == other.exteriorEquilRegion)
+        && (this->thermalTransmissibility == other.thermalTransmissibility)
         && sameDepth;
 }
 
@@ -397,6 +398,10 @@ void FluxFile::Writer::writeStaticSection()
     output.write("FLXPVTN", flattenBoundary(data.boundaryFaces, &BoundaryFace::exteriorPvtRegion));
     output.write("FLXEXDP", flattenBoundary(data.boundaryFaces, &BoundaryFace::exteriorDepth));
     output.write("FLXEQLN", flattenBoundary(data.boundaryFaces, &BoundaryFace::exteriorEquilRegion));
+    if (std::ranges::any_of(data.boundaryFaces,
+                            [](const auto& face) { return face.thermalTransmissibility != 0.0; })) {
+        output.write("FLXTHTR", flattenBoundary(data.boundaryFaces, &BoundaryFace::thermalTransmissibility));
+    }
 
     if (!data.thresholdPressure.empty()) {
         output.write("FLXTHPR", data.thresholdPressure);
@@ -484,11 +489,12 @@ void FluxFile::Writer::appendRecords(const std::vector<ReportStep>& records)
 
         emit("FLXRS", &ReportStep::rs, perFaceValues);
         emit("FLXRV", &ReportStep::rv, perFaceValues);
-        emit("FLXTEMP", &ReportStep::temperature, perFaceValues);
         emit("FLXKR", &ReportStep::relPerm, perFacePhaseValues);
         emit("FLXPC", &ReportStep::capPressure, perFacePhaseValues);
     }
 
+    // Both kinds of boundary carry enthalpy in a thermal run.
+    emit("FLXTEMP", &ReportStep::temperature, perFaceValues);
     emit("FLXRCON", &ReportStep::externalRegionSums, externalRegionSumCount);
 
     output.flushStream();
@@ -583,6 +589,7 @@ FluxFile::Data FluxFile::read(const std::string& filename, bool preload)
     const auto& fluxPvtn = optionalArray<int>(file, "FLXPVTN");
     const auto& fluxExDp = optionalArray<double>(file, "FLXEXDP");
     const auto& fluxEqln = optionalArray<int>(file, "FLXEQLN");
+    const auto& fluxThtr = optionalArray<double>(file, "FLXTHTR");
     for (std::size_t index = 0; index < fluxCell.size(); ++index) {
         data.boundaryFaces.push_back(BoundaryFace{fluxCell[index], fluxDir[index], fluxNnc[index],
                                                   fluxTran[index],
@@ -590,7 +597,8 @@ FluxFile::Data FluxFile::read(const std::string& filename, bool preload)
                                                   (index < fluxExDp.size())
                                                   ? fluxExDp[index]
                                                   : std::numeric_limits<double>::quiet_NaN(),
-                                                  (index < fluxEqln.size()) ? fluxEqln[index] : -1});
+                                                  (index < fluxEqln.size()) ? fluxEqln[index] : -1,
+                                                  (index < fluxThtr.size()) ? fluxThtr[index] : 0.0});
     }
 
     data.thresholdPressure = optionalArray<double>(file, "FLXTHPR");
@@ -912,6 +920,12 @@ void FluxFile::validateRecordsForWrite(const Data& data,
                                   step.externalRegionSums.size()));
         }
 
+        if (!step.temperature.empty() && (step.temperature.size() != perFaceValues)) {
+            OPM_THROW(std::invalid_argument,
+                      fmt::format("Each FLXTEMP step must contain {} values, got {}",
+                                  perFaceValues, step.temperature.size()));
+        }
+
         if (pressureEnabled) {
             const auto checkSize = [](const std::vector<double>& values,
                                       const std::string& name,
@@ -946,10 +960,6 @@ void FluxFile::validateRecordsForWrite(const Data& data,
 
             if (!step.rv.empty()) {
                 checkSize(step.rv, "FLXRV", perFaceValues);
-            }
-
-            if (!step.temperature.empty()) {
-                checkSize(step.temperature, "FLXTEMP", perFaceValues);
             }
 
             if (!step.relPerm.empty()) {
