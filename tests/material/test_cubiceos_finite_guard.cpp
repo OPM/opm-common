@@ -42,6 +42,7 @@
 
 #include <opm/common/Exceptions.hpp>
 
+#include <opm/material/common/PolynomialUtils.hpp>
 #include <opm/material/components/C1.hpp>
 #include <opm/material/components/N2.hpp>
 #include <opm/material/constraintsolvers/PTFlash.hpp>
@@ -55,8 +56,13 @@
 
 #include <opm/input/eclipse/EclipseState/Compositional/CompositionalConfig.hpp>
 
+#include <array>
+#include <cmath>
 #include <stdexcept>
 #include <string_view>
+#include <type_traits>
+#include <utility>
+#include <vector>
 
 namespace Opm {
 
@@ -215,6 +221,53 @@ FluidState makeState(const Scalar p, const Scalar t)
     return fs;
 }
 
+// Coefficients of the Peng-Robinson cubic in Z, highest power first.
+template <class Value>
+std::array<Value, 4>
+pengRobinsonCubic(const Value& A, const Value& B)
+{
+    const Scalar m1 = 1 + std::sqrt(2.0);
+    const Scalar m2 = 1 - std::sqrt(2.0);
+    return {Value(1.0),
+            (m1 + m2 - 1) * B - 1,
+            A + m1 * m2 * B * B - (m1 + m2) * B * (B + 1),
+            -A * B - m1 * m2 * B * B * (B + 1)};
+}
+
+// Whether every root cubicRoots() returns is finite, in value and
+// derivatives, and solves the cubic to within rounding.
+template <class Value>
+bool
+cubicRootsAreSound(const Value& A, const Value& B)
+{
+    const auto c = pengRobinsonCubic(A, B);
+    Value Z[3] = {0.0, 0.0, 0.0};
+    const unsigned numRoots = Opm::cubicRoots(Z, c[0], c[1], c[2], c[3]);
+    for (unsigned rootIdx = 0; rootIdx < numRoots; ++rootIdx) {
+        const Scalar z = Opm::getValue(Z[rootIdx]);
+        if (!std::isfinite(z)) {
+            return false;
+        }
+        if constexpr (!std::is_same_v<Value, Scalar>) {
+            for (int varIdx = 0; varIdx < Z[rootIdx].size(); ++varIdx) {
+                if (!std::isfinite(Z[rootIdx].derivative(varIdx))) {
+                    return false;
+                }
+            }
+        }
+        Scalar residual = 0.0;
+        Scalar scale = 0.0;
+        for (const auto& coefficient : c) {
+            residual = residual * z + Opm::getValue(coefficient);
+            scale = scale * std::abs(z) + std::abs(Opm::getValue(coefficient));
+        }
+        if (std::abs(residual) > 1e-8 * scale) {
+            return false;
+        }
+    }
+    return numRoots == 1 || numRoots == 3;
+}
+
 } // anonymous namespace
 
 // the recorded divergence case must report as a catchable exception —
@@ -238,6 +291,100 @@ BOOST_AUTO_TEST_CASE(SsiStillFailsLoudlyNotFatally)
     BOOST_CHECK_THROW(
         PtFlash::solve(fs, PTFlashMethod::Ssi, 1e-8, EOSType::PR),
         std::runtime_error);
+}
+
+// Where one and three real roots meet, rounding put the acos or acosh
+// argument outside its domain and cubicRoots() returned NaN.
+BOOST_AUTO_TEST_CASE(CubicRootsSoundWhereRootCountChanges)
+{
+    using Eval = Opm::DenseAd::Evaluation<Scalar, 1>;
+    std::vector<std::pair<Scalar, Scalar>> unsound;
+    const auto check = [&unsound](const Scalar A, const Scalar B) {
+        if (!cubicRootsAreSound(A, B) || !cubicRootsAreSound(Eval(A), Eval::createVariable(B, 0))) {
+            unsound.emplace_back(A, B);
+        }
+    };
+
+    check(0.85500000000000009, 0.43664024846283928);
+    const auto numRoots = [](const Scalar A, const Scalar B) {
+        const auto c = pengRobinsonCubic(A, B);
+        Scalar Z[3];
+        return Opm::cubicRoots(Z, c[0], c[1], c[2], c[3]);
+    };
+    for (int i = 0; i < 200; ++i) {
+        const Scalar A = 0.05 + 0.05 * i;
+        Scalar lower = 1e-4;
+        Scalar upper = 3.0;
+        if (numRoots(A, lower) == numRoots(A, upper)) {
+            continue;
+        }
+        for (int iteration = 0; iteration < 100; ++iteration) {
+            const Scalar middle = (lower + upper) / 2;
+            (numRoots(A, middle) == numRoots(A, lower) ? lower : upper) = middle;
+        }
+        for (int step = -50; step <= 50; ++step) {
+            check(A, lower * (1 + step * 1e-15));
+        }
+    }
+
+    const auto first = unsound.empty() ? std::pair<Scalar, Scalar> {} : unsound.front();
+    BOOST_CHECK_MESSAGE(unsound.empty(),
+                        unsound.size() << " cubics with an unsound root, the first at A = "
+                                       << first.first << ", B = " << first.second);
+}
+
+// Without a linear term the depressed cubic t^3 + q = 0 has the one real root
+// -cbrt(q). cubicRoots() threw std::runtime_error there, which the flash does
+// not recover from.
+BOOST_AUTO_TEST_CASE(CubicRootsWithoutLinearTerm)
+{
+    // x^3 - 3x^2 + 3x + d = (x - 1)^3 + 1 + d has the single real root 0 at
+    // d = 0, where dx/dd = -1/3.
+    Scalar Z[3] = {};
+    BOOST_REQUIRE_EQUAL(Opm::cubicRoots(Z, 1.0, -3.0, 3.0, 0.0), 1u);
+    BOOST_CHECK_SMALL(Z[0], 1e-14);
+
+    using Eval = Opm::DenseAd::Evaluation<Scalar, 1>;
+    Eval ZAd[3];
+    BOOST_REQUIRE_EQUAL(
+        Opm::cubicRoots(ZAd, Eval(1.0), Eval(-3.0), Eval(3.0), Eval::createVariable(0.0, 0)), 1u);
+    BOOST_CHECK_SMALL(ZAd[0].value(), 1e-14);
+    BOOST_CHECK_CLOSE(ZAd[0].derivative(0), -1.0 / 3.0, 1e-10);
+}
+
+// The closed forms of the limiting branches miss derivatives: those of p for a
+// cubic without a linear term, and those off the double-root manifold for the
+// simple root beside a double root. Both roots take them from the full cubic.
+BOOST_AUTO_TEST_CASE(CubicRootsLimitingBranchDerivatives)
+{
+    using Eval = Opm::DenseAd::Evaluation<Scalar, 2>;
+
+    // The Peng-Robinson cubic Z^3 + (B - 1) Z^2 + (A - 3B^2 - 2B) Z - AB + B^2 + B^3
+    // at A = 7/8 and B = 1/4 has p = 0 exactly and the single root Z = 3/4, where
+    // dZ/dA = -(Z - B) / f'(Z) = -2/3 and dZ/dB = 3.
+    const Eval A = Eval::createVariable(0.875, 0);
+    const Eval B = Eval::createVariable(0.25, 1);
+    Eval Z[3];
+    BOOST_REQUIRE_EQUAL(
+        Opm::cubicRoots(
+            Z, Eval(1.0), B - 1.0, A - 3.0 * B * B - 2.0 * B, -A * B + B * B + B * B * B),
+        1u);
+    BOOST_CHECK_CLOSE(Z[0].value(), 0.75, 1e-12);
+    BOOST_CHECK_CLOSE(Z[0].derivative(0), -2.0 / 3.0, 1e-10);
+    BOOST_CHECK_CLOSE(Z[0].derivative(1), 3.0, 1e-10);
+
+    // x^3 - 3x + 2 = (x - 1)^2 (x + 2) has an exact double root. Its simple root
+    // -2 has dx/dc = -x / f'(x) = 2/9 and dx/dd = -1/9.
+    Eval x[3];
+    BOOST_REQUIRE_EQUAL(
+        Opm::cubicRoots(
+            x, Eval(1.0), Eval(0.0), Eval::createVariable(-3.0, 0), Eval::createVariable(2.0, 1)),
+        3u);
+    BOOST_CHECK_CLOSE(x[0].value(), -2.0, 1e-12);
+    BOOST_CHECK_CLOSE(x[0].derivative(0), 2.0 / 9.0, 1e-10);
+    BOOST_CHECK_CLOSE(x[0].derivative(1), -1.0 / 9.0, 1e-10);
+    BOOST_CHECK_CLOSE(x[1].value(), 1.0, 1e-12);
+    BOOST_CHECK_CLOSE(x[2].value(), 1.0, 1e-12);
 }
 
 // an ordinary state keeps flashing under both methods — the guard costs
