@@ -1928,7 +1928,10 @@ quantity roew(const fn_args& args)
     return zero;
 }
 
-quantity roe(const fn_args& args)
+// Region level recovery efficiency (ROE, RGE): fraction of the initial
+// in-place volume of 'phase' that has been removed from the region.
+template <Opm::Inplace::Phase phase>
+quantity region_efficiency(const fn_args& args)
 {
     const auto zero = quantity { 0.0, measure::identity };
 
@@ -1941,16 +1944,16 @@ quantity roe(const fn_args& args)
 
     const auto& region_name = std::get<std::string>(*args.extra_data);
 
-    if (! args.initial_inplace->has(region_name, Opm::Inplace::Phase::OIL, args.num)) {
+    if (! args.initial_inplace->has(region_name, phase, args.num)) {
         return zero;
     }
 
-    const auto initial = args.initial_inplace->get(region_name, Opm::Inplace::Phase::OIL, args.num);
+    const auto initial = args.initial_inplace->get(region_name, phase, args.num);
     if (initial < 1.0e-15) {
         return zero;
     }
 
-    const auto current = args.inplace.get(region_name, Opm::Inplace::Phase::OIL, args.num);
+    const auto current = args.inplace.get(region_name, phase, args.num);
     return { (initial - current) / initial, measure::identity };
 }
 
@@ -3931,7 +3934,8 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "RGPT"  , mul( region_rate< rt::gas, producer >, duration ) },
     { "RWPT"  , mul( region_rate< rt::wat, producer >, duration ) },
     { "RHPV"  , rhpv },
-    { "ROE"   , roe },
+    { "ROE"   , region_efficiency<Opm::Inplace::Phase::OIL> },
+    { "RGE"   , region_efficiency<Opm::Inplace::Phase::GAS> },
 
     // Segment summary vectors for multi-segmented wells.
     { "SDENM", segment_density<Opm::data::SegmentPhaseDensity::Item::Mixture> },
@@ -4128,6 +4132,7 @@ static const auto single_values_units = UnitTable {
     {"FOE"      , Opm::UnitSystem::measure::identity },
     {"FGIP"     , Opm::UnitSystem::measure::gas_surface_volume },
     {"FGIPR"    , Opm::UnitSystem::measure::volume },
+    {"FGE"      , Opm::UnitSystem::measure::identity },
     {"FSIP"     , Opm::UnitSystem::measure::mass },
     {"FOIPL"    , Opm::UnitSystem::measure::liquid_surface_volume },
     {"FOIPG"    , Opm::UnitSystem::measure::liquid_surface_volume },
