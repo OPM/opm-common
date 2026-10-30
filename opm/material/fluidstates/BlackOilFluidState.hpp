@@ -32,91 +32,72 @@
 
 #include <opm/common/utility/gpuDecorators.hpp>
 #include <opm/material/fluidsystems/BlackOilFluidSystem.hpp>
-#include <opm/material/common/HasMemberGeneratorMacros.hpp>
+#include <opm/material/fluidsystems/BlackOilFunctions.hpp>
 
 #include <opm/material/common/Valgrind.hpp>
 #include <opm/material/common/ConditionalStorage.hpp>
 
 namespace Opm {
 
-OPM_GENERATE_HAS_MEMBER(pvtRegionIndex, ) // Creates 'HasMember_pvtRegionIndex<T>'.
-
 template <class FluidState>
-OPM_HOST_DEVICE unsigned getPvtRegionIndex_(typename std::enable_if<HasMember_pvtRegionIndex<FluidState>::value,
-                                            const FluidState&>::type fluidState)
-{ return fluidState.pvtRegionIndex(); }
-
-template <class FluidState>
-OPM_HOST_DEVICE unsigned getPvtRegionIndex_(typename std::enable_if<!HasMember_pvtRegionIndex<FluidState>::value,
-                                            const FluidState&>::type)
-{ return 0; }
-
-OPM_GENERATE_HAS_MEMBER(invB, /*phaseIdx=*/0) // Creates 'HasMember_invB<T>'.
-
-template <class FluidSystem, class FluidState, class LhsEval>
-OPM_HOST_DEVICE
-auto getInvB_(typename std::enable_if<HasMember_invB<FluidState>::value,
-                                      const FluidState&>::type fluidState,
-              unsigned phaseIdx,
-              unsigned,
-              [[maybe_unused]] const FluidSystem& fluidSystem = FluidSystem{})
-    -> decltype(decay<LhsEval>(fluidState.invB(phaseIdx)))
-{ return decay<LhsEval>(fluidState.invB(phaseIdx)); }
-
-template <class FluidSystem, class FluidState, class LhsEval>
-OPM_HOST_DEVICE
-LhsEval getInvB_(typename std::enable_if<!HasMember_invB<FluidState>::value,
-                                          const FluidState&>::type fluidState,
-                 unsigned phaseIdx,
-                 unsigned pvtRegionIdx,
-                 const FluidSystem& fluidSystem = FluidSystem{})
+OPM_HOST_DEVICE unsigned getPvtRegionIndex_(const FluidState& fluidState)
 {
-    const auto& rho = fluidState.density(phaseIdx);
-    const auto& Xsolvent =
-        fluidState.massFraction(phaseIdx, fluidSystem.solventComponentIndex(phaseIdx));
-
-    return
-        decay<LhsEval>(rho)
-        *decay<LhsEval>(Xsolvent)
-        /fluidSystem.referenceDensity(phaseIdx, pvtRegionIdx);
+    if constexpr (FluidStateConcepts::HasPvtRegionIndex<FluidState>) {
+        return fluidState.pvtRegionIndex();
+    } else {
+        return 0;
+    }
 }
 
-OPM_GENERATE_HAS_MEMBER(saltConcentration, ) // Creates 'HasMember_saltConcentration<T>'.
+template <class FluidSystem, class FluidState, class LhsEval>
+OPM_HOST_DEVICE LhsEval
+getInvB_(const FluidState& fluidState,
+         unsigned phaseIdx,
+         unsigned pvtRegionIdx,
+         const FluidSystem& fluidSystem = FluidSystem{})
+{
+    if constexpr (FluidStateConcepts::HasInvB<FluidState>) {
+        return decay<LhsEval>(fluidState.invB(phaseIdx));
+    } else {
+        const auto& rho = fluidState.density(phaseIdx);
+        const auto& Xsolvent = fluidState.massFraction(
+            phaseIdx, fluidSystem.solventComponentIndex(phaseIdx));
+
+        return decay<LhsEval>(rho)
+            * decay<LhsEval>(Xsolvent)
+            / fluidSystem.referenceDensity(phaseIdx, pvtRegionIdx);
+    }
+}
 
 template <class FluidState>
-OPM_HOST_DEVICE auto getSaltConcentration_(typename std::enable_if<HasMember_saltConcentration<FluidState>::value,
-                                           const FluidState&>::type fluidState)
-{ return fluidState.saltConcentration(); }
+OPM_HOST_DEVICE auto getSaltConcentration_(const FluidState& fluidState)
+{
+    if constexpr (FluidStateConcepts::HasSaltConcentration<FluidState>) {
+        return fluidState.saltConcentration();
+    } else {
+        return 0.0;
+    }
+}
 
 template <class FluidState>
-OPM_HOST_DEVICE auto getSaltConcentration_(typename std::enable_if<!HasMember_saltConcentration<FluidState>::value,
-                                           const FluidState&>::type)
-{ return 0.0; }
-
-OPM_GENERATE_HAS_MEMBER(saltSaturation, ) // Creates 'HasMember_saltSaturation<T>'.
-
-template <class FluidState>
-OPM_HOST_DEVICE auto getSaltSaturation_(typename std::enable_if<HasMember_saltSaturation<FluidState>::value,
-                                        const FluidState&>::type fluidState)
-{ return fluidState.saltSaturation(); }
-
+OPM_HOST_DEVICE auto getSaltSaturation_(const FluidState& fluidState)
+{
+    if constexpr (FluidStateConcepts::HasSaltSaturation<FluidState>) {
+        return fluidState.saltSaturation();
+    } else {
+        return 0.0;
+    }
+}
 
 template <class FluidState>
-OPM_HOST_DEVICE auto getSaltSaturation_(typename std::enable_if<!HasMember_saltSaturation<FluidState>::value,
-                                        const FluidState&>::type)
-{ return 0.0; }
-
-OPM_GENERATE_HAS_MEMBER(solventSaturation, ) // Creates 'HasMember_solventSaturation<T>'.
-
-template <class FluidState>
-OPM_HOST_DEVICE auto getSolventSaturation_(typename std::enable_if<HasMember_solventSaturation<FluidState>::value,
-                                           const FluidState&>::type fluidState)
-{ return fluidState.solventSaturation(); }
-
-template <class FluidState>
-OPM_HOST_DEVICE auto getSolventSaturation_(typename std::enable_if<!HasMember_solventSaturation<FluidState>::value,
-                                           const FluidState&>::type)
-{ return 0.0; }
+OPM_HOST_DEVICE auto getSolventSaturation_(const FluidState& fluidState)
+{
+    if constexpr (FluidStateConcepts::HasSolventSaturation<FluidState>) {
+        return fluidState.solventSaturation();
+    } else {
+        return 0.0;
+    }
+}
 
 /*!
  * \brief Implements a "tailor-made" fluid state class for the black-oil model.
