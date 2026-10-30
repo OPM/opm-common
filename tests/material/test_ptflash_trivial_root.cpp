@@ -57,6 +57,7 @@
 
 #include <dune/common/fvector.hh>
 
+#include <array>
 #include <cmath>
 #include <string_view>
 
@@ -214,6 +215,73 @@ BOOST_AUTO_TEST_CASE(WarmHybridReturnsSinglePhaseDerivatives)
                 Opm::getValue(fs.moleFraction(phaseIdx, compIdx)
                               - fs.moleFraction(compIdx)),
                 flashTolerance);
+        }
+    }
+}
+
+// A two-phase result hands its converged ratios back, so the next warm start
+// begins at the equilibrium. A single-phase result keeps the incoming ones.
+BOOST_AUTO_TEST_CASE(SolveReturnsConvergedRatios)
+{
+    constexpr Scalar z[numComponents] = {0.1, 0.6, 0.3};
+    const auto makeColdState = [&z](const Scalar pressure, const Scalar temperature) {
+        FluidState fs;
+        for (unsigned phaseIdx = 0; phaseIdx < FluidSystem::numPhases; ++phaseIdx) {
+            fs.setPressure(phaseIdx, pressure);
+        }
+        fs.setTemperature(temperature);
+        for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+            fs.setMoleFraction(compIdx, z[compIdx]);
+            fs.setKvalue(compIdx, fs.wilsonK_(compIdx));
+        }
+        fs.setLvalue(-1.0);
+        return fs;
+    };
+
+    auto twoPhase = makeColdState(40.e5, 470.0);
+    BOOST_REQUIRE(!PtFlash::solve(twoPhase, PTFlashMethod::SsiNewton, flashTolerance, EOSType::PR));
+    for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+        BOOST_CHECK_CLOSE(Opm::getValue(twoPhase.K(compIdx)),
+                          Opm::getValue(twoPhase.moleFraction(FluidSystem::gasPhaseIdx, compIdx)
+                                        / twoPhase.moleFraction(FluidSystem::oilPhaseIdx, compIdx)),
+                          1e-10);
+    }
+    auto warm = twoPhase;
+    BOOST_REQUIRE(!PtFlash::solve(warm, PTFlashMethod::SsiNewton, flashTolerance, EOSType::PR));
+    BOOST_CHECK_SMALL(Opm::getValue(warm.L() - twoPhase.L()), 1e-7);
+
+    auto singlePhase = makeColdState(970.e5, 400.0);
+    std::array<Scalar, numComponents> incoming;
+    for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+        incoming[compIdx] = Opm::getValue(singlePhase.K(compIdx));
+    }
+    BOOST_REQUIRE(
+        PtFlash::solve(singlePhase, PTFlashMethod::SsiNewton, flashTolerance, EOSType::PR));
+    for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+        BOOST_CHECK_EQUAL(Opm::getValue(singlePhase.K(compIdx)), incoming[compIdx]);
+    }
+}
+
+// Newton's y/x is 0/0 for an absent component. Its incoming ratio must
+// survive, or the next warm start fails in Rachford-Rice.
+BOOST_AUTO_TEST_CASE(SolveKeepsRatiosOfAbsentComponents)
+{
+    for (const auto method :
+         {PTFlashMethod::Newton, PTFlashMethod::Ssi, PTFlashMethod::SsiNewton}) {
+        BOOST_TEST_CONTEXT("method " << static_cast<int>(method))
+        {
+            auto fs = makeRecordedState();
+            fs.setMoleFraction(0, 0.0);
+            fs.setMoleFraction(1, 0.5);
+            fs.setMoleFraction(2, 0.5);
+            for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+                fs.setKvalue(compIdx, fs.wilsonK_(compIdx));
+            }
+            fs.setLvalue(-1.0);
+            const Scalar incoming = Opm::getValue(fs.K(0));
+
+            BOOST_REQUIRE(!PtFlash::solve(fs, method, flashTolerance, EOSType::PR));
+            BOOST_CHECK_EQUAL(Opm::getValue(fs.K(0)), incoming);
         }
     }
 }
