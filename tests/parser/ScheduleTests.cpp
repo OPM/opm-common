@@ -6322,6 +6322,16 @@ GINJGAS
 /
 TSTEP
  1 /
+WINJGAS
+ 'INJ' 'STREAM' 'LEAN' /
+/
+TSTEP
+ 1 /
+GINJGAS
+ 'FIELD' 'STREAM' 'LEAN' /
+/
+TSTEP
+ 1 /
 )"));
 
     const auto composition = [&sched](const std::string& well, const std::size_t step) {
@@ -6332,11 +6342,27 @@ TSTEP
     // hands the choice back up. OWN keeps its WINJGAS stream throughout.
     BOOST_CHECK_CLOSE(composition("INJ", 0)[1], 1.0, 1.0e-10);
     BOOST_CHECK_CLOSE(composition("INJ", 1)[0], 0.9, 1.0e-10);
-    BOOST_CHECK(
-        sched[1].wellgroup_events().hasEvent("INJ", ScheduleEvents::Events::INJECTION_UPDATE));
     BOOST_CHECK_CLOSE(composition("INJ", 2)[1], 1.0, 1.0e-10);
-    for (const std::size_t step : {0, 1, 2}) {
+    for (const std::size_t step : {0, 1, 2, 3, 4}) {
         BOOST_CHECK_CLOSE(composition("OWN", step)[0], 0.9, 1.0e-10);
+    }
+    for (const std::size_t step : {1, 2}) {
+        BOOST_CHECK(
+            sched[step].wellgroup_events().hasEvent("INJ", ScheduleEvents::Events::INJECTION_UPDATE));
+        BOOST_CHECK(
+            !sched[step].wellgroup_events().hasEvent("OWN", ScheduleEvents::Events::INJECTION_UPDATE));
+    }
+
+    // Both wells now use WINJGAS. Updating their unused group stream must
+    // still refresh the fallback, but must not reset controls or limit time steps.
+    BOOST_CHECK_CLOSE(composition("INJ", 4)[0], 0.9, 1.0e-10);
+    const auto& group_stream = sched.getWell("OWN", 4).getInjectionProperties().groupGasInjComposition();
+    BOOST_REQUIRE(group_stream.has_value());
+    BOOST_CHECK_CLOSE((*group_stream)[0], 0.9, 1.0e-10);
+    BOOST_CHECK(!sched[4].events().hasEvent(ScheduleEvents::Events::INJECTION_UPDATE));
+    for (const auto& well : {"INJ", "OWN"}) {
+        BOOST_CHECK(
+            !sched[4].wellgroup_events().hasEvent(well, ScheduleEvents::Events::INJECTION_UPDATE));
     }
 }
 

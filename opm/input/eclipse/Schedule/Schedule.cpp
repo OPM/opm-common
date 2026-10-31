@@ -1799,11 +1799,18 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
             if (injection.groupGasInjComposition() != stream) {
                 auto new_injection = std::make_shared<Well::WellInjectionProperties>(injection);
                 new_injection->setGroupGasInjComposition(stream);
+                // WINJGAS can keep the selected composition unchanged.
+                const bool composition_changed =
+                    has_composition != new_injection->hasGasInjComposition()
+                    || (has_composition
+                        && injection.gasInjComposition() != new_injection->gasInjComposition());
                 has_composition = new_injection->hasGasInjComposition();
                 well.updateInjectionProperties(std::move(new_injection));
                 state.wells.update(std::move(well));
-                state.events().addEvent(ScheduleEvents::INJECTION_UPDATE);
-                state.wellgroup_events().addEvent(well_name, ScheduleEvents::INJECTION_UPDATE);
+                if (composition_changed) {
+                    state.events().addEvent(ScheduleEvents::INJECTION_UPDATE);
+                    state.wellgroup_events().addEvent(well_name, ScheduleEvents::INJECTION_UPDATE);
+                }
             }
 
             if (open && !has_composition) {
