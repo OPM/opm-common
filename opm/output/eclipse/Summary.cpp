@@ -374,7 +374,9 @@ namespace {
                     entities.emplace_back(vectorName(tracer.name), cat,
                                           tvec.type, name, dflt_num);
 
-                    if (tracer.phase == ::Opm::Phase::OIL || tracer.phase == ::Opm::Phase::GAS) {
+                    if (!tracer.component.has_value()
+                        && (tracer.phase == ::Opm::Phase::OIL || tracer.phase == ::Opm::Phase::GAS))
+                    {
                         entities.emplace_back(vectorName(tracer.wellfname()), cat,
                                               tvec.type, name, dflt_num);
 

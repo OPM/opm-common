@@ -291,7 +291,7 @@ global_kw_info(const std::string& name, bool)
         return kwPos->second;
     }
 
-    if (isFipxxx(name)) {
+    if (isFipxxx(name) || isTnumxxx(name)) {
         return keyword_info<int>{}.init(1);
     }
 
@@ -1325,7 +1325,8 @@ bool FieldProps::supported<int>(const std::string& keyword)
         return true;
     }
 
-    return Fieldprops::keywords::isFipxxx(keyword);
+    return Fieldprops::keywords::isFipxxx(keyword)
+        || Fieldprops::keywords::isTnumxxx(keyword);
 }
 
 std::pair<std::vector<Box::cell_index>,bool>
@@ -2768,7 +2769,7 @@ void FieldProps::scanREGIONSSection(const REGIONSSection& regions_section)
             continue;
         }
 
-        if (Fieldprops::keywords::isFipxxx(name)) {
+        if (Fieldprops::keywords::isFipxxx(name) || Fieldprops::keywords::isTnumxxx(name)) {
             auto kw_info = Fieldprops::keywords::keyword_info<int>{};
             kw_info.init(1);
             this->handle_int_keyword(kw_info, keyword, box);

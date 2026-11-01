@@ -1318,6 +1318,12 @@ namespace {
             const auto voil = tracers.supportsVaporisedOilTracer();
 
             for (const auto& tracer : tracers) {
+                // The restart arrays hold the tracers declared in TRACERS, which
+                // does not cover component tracers.
+                if (tracer.component.has_value()) {
+                    continue;
+                }
+
                 if (tracer.phase == Opm::Phase::WATER) {
                     sWell[output_index++] = conc(tracer.name);
                 }
@@ -1590,6 +1596,12 @@ namespace {
             ix += processTemperature(&xWell[ix]);
 
             for (const auto& tracer : tracers) {
+                // The restart arrays hold the tracers declared in TRACERS, which
+                // does not cover component tracers.
+                if (tracer.component.has_value()) {
+                    continue;
+                }
+
                 if (tracer.phase == Opm::Phase::WATER) {
                     ix += processWaterTracer(tracer, &xWell[ix]);
                 }
