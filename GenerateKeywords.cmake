@@ -43,6 +43,10 @@ target_include_directories(genkw PRIVATE ${PROJECT_BINARY_DIR})
 if(FNMATCH_H_FOUND)
   target_compile_definitions(genkw PRIVATE HAVE_FNMATCH_H=1)
 endif()
+if(EMSCRIPTEN)
+  # genkw runs at build time through node; give it access to the host file system
+  target_link_options(genkw PRIVATE -sNODERAWFS=1 -sALLOW_MEMORY_GROWTH=1)
+endif()
 
 # Generate keyword list
 include(opm/input/eclipse/share/keywords/keyword_list.cmake)

@@ -717,7 +717,7 @@ std::string ESmry::read_string_from_disk(std::fstream& fileH, std::uint64_t size
     std::vector<char> buffer(size);
     fileH.read (buffer.data(), size);
 
-    return { buffer.data(), size };
+    return { buffer.data(), static_cast<std::size_t>(size) };
 }
 
 
