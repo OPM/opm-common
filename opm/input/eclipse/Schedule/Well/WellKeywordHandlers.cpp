@@ -718,20 +718,36 @@ void setInjectionStream(HandlerContext& handlerContext,
 
 void handleWINJGAS(HandlerContext& handlerContext)
 {
+    auto& well_streams = handlerContext.state().well_gas_inj_streams;
+
     // \Note: we do not support the item 4 MAKEUPGAS and item 5 STAGE in WINJGAS keyword yet
     for (const auto& record : handlerContext.keyword) {
         const std::string fluid_nature = record.getItem<ParserKeywords::WINJGAS::FLUID>().getTrimmedString(0);
+        const std::string well_pattern
+            = record.getItem<ParserKeywords::WINJGAS::WELL>().getTrimmedString(0);
 
-        // STREAM is the only supported fluid nature.
+        // GRUP, the default, makes the wells inject the GINJGAS stream of
+        // their nearest group.
+        if (fluid_nature.starts_with("GR")) {
+            for (const auto& well_name : handlerContext.wellNames(well_pattern, false)) {
+                if (well_streams.has(well_name)) {
+                    well_streams.erase(well_name);
+                    injectionStreamChanged(handlerContext, well_name);
+                }
+            }
+            continue;
+        }
+
+        // STREAM is the only other supported fluid nature.
         if (!isStreamFluid(fluid_nature)) {
             const std::string msg = fmt::format("The fluid nature '{}' is not supported in WINJGAS keyword.", fluid_nature);
             throw OpmInputError(msg, handlerContext.keyword.location());
         }
 
         setInjectionStream(handlerContext,
-                           record.getItem<ParserKeywords::WINJGAS::WELL>().getTrimmedString(0),
+                           well_pattern,
                            record.getItem<ParserKeywords::WINJGAS::STREAM>(),
-                           handlerContext.state().well_gas_inj_streams);
+                           well_streams);
     }
 }
 

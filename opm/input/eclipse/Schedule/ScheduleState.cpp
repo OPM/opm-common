@@ -602,7 +602,23 @@ bool ScheduleState::has_gpmaint() const
 
 const std::vector<double>* ScheduleState::gas_injection_stream(const std::string& well_name) const
 {
-    return this->well_gas_inj_streams.get_ptr(well_name).get();
+    if (const auto stream = this->well_gas_inj_streams.get_ptr(well_name)) {
+        return stream.get();
+    }
+
+    // Without a stream of its own, the well injects the GINJGAS stream of
+    // its nearest group.
+    for (auto group_name = this->wells.get(well_name).groupName();;) {
+        if (const auto stream = this->group_gas_inj_streams.get_ptr(group_name)) {
+            return stream.get();
+        }
+
+        const auto& group = this->groups.get(group_name);
+        if (group.is_field()) {
+            return nullptr;
+        }
+        group_name = group.parent();
+    }
 }
 
 const std::vector<double>* ScheduleState::oil_injection_stream(const std::string& well_name) const
