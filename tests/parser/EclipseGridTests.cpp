@@ -118,9 +118,9 @@ Opm::Deck createDeckMissingDIMS() {
 BOOST_AUTO_TEST_CASE(CreateMissingDIMENS_throws) {
     Opm::Deck deck;
     Opm::Parser parser;
-    deck.addKeyword( Opm::DeckKeyword( parser.getKeyword("RUNSPEC" )));
-    deck.addKeyword( Opm::DeckKeyword( parser.getKeyword("GRID" )));
-    deck.addKeyword( Opm::DeckKeyword( parser.getKeyword("EDIT" )));
+    deck.addKeyword( Opm::DeckKeyword( parser.getKeyword("RUNSPEC" )), Opm::Ecl::RUNSPEC);
+    deck.addKeyword( Opm::DeckKeyword( parser.getKeyword("GRID" )), Opm::Ecl::GRID);
+    deck.addKeyword( Opm::DeckKeyword( parser.getKeyword("EDIT" )), Opm::Ecl::EDIT);
 
     BOOST_CHECK_THROW(Opm::EclipseGrid{ deck } , std::invalid_argument);
 }
@@ -3671,7 +3671,7 @@ BOOST_AUTO_TEST_CASE(TEST_GDFILE_1_ADDZCORN) {
     2002.0000  2002.0000   100.0000   1999.8255  1999.9127   108.4935
     2011.9939  2000.0000   100.3490   2009.8194  1999.9127   108.8425
     2015.9878  2000.0000   100.6980   2019.8133  1999.9127   109.1915
-    2000.0000  2009.9985   100.1745   1999.8255  2009.9112   108.6681 
+    2000.0000  2009.9985   100.1745   1999.8255  2009.9112   108.6681
     2010.9939  2011.9985   100.5235   2009.8194  2009.9112   109.0170
     2019.9878  2009.9985   100.8725   2019.8133  2009.9112   109.3660
     2005.0000  2019.9970   100.3490   1999.8255  2019.9097   108.8426
@@ -4028,4 +4028,3 @@ END
     // Cell 1 (region 2): depth shifted by -100 m → 5 m.
     BOOST_CHECK_CLOSE(grid.getCellDepth(1), 5.0, 1e-12);
 }
-

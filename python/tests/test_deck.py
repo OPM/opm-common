@@ -1,6 +1,7 @@
 import unittest
 
-from opm.io.parser import Parser
+from opm.io.parser import Parser, eclSectionType
+from opm.io.deck import DeckKeyword
 
 class TestParse(unittest.TestCase):
 
@@ -61,6 +62,32 @@ FIPNUM
                 self.assertTrue( len(rec) > 0 )
                 for item in rec:
                     self.assertTrue(len(item) > 0)
+
+    def test_add_unit_keyword_with_section(self):
+        parser = Parser()
+        deck = parser.parse_string("RUNSPEC\n")
+        deck.add(DeckKeyword(parser["FIELD"]), eclSectionType.RUNSPEC)
+        self.assertEqual(deck.active_unit_system().name, "Field")
+
+        # The supplied section applies even without a stored section header.
+        deck.add(DeckKeyword(parser["METRIC"]), eclSectionType.PROPS)
+        self.assertNotIn("PROPS", deck)
+        self.assertEqual(deck.active_unit_system().name, "Field")
+
+        deck.add(DeckKeyword(parser["GRID"]), eclSectionType.GRID)
+        deck.add(DeckKeyword(parser["METRIC"]), eclSectionType.GRID)
+        self.assertEqual(deck.active_unit_system().name, "Field")
+        self.assertEqual(deck.count("METRIC"), 2)
+
+    def test_add_requires_section(self):
+        parser = Parser()
+        deck = parser.parse_string("RUNSPEC\n")
+        keyword = DeckKeyword(parser["FIELD"])
+        with self.assertRaises(TypeError):
+            deck.add(keyword)
+        with self.assertRaises(TypeError):
+            deck.add(keyword, None)
+        self.assertNotIn("FIELD", deck)
 
     def test_deck_FIPNUM(self):
         self.assertIn('FIPNUM', self.deck)

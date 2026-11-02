@@ -997,6 +997,7 @@ list(APPEND PUBLIC_HEADER_FILES
   opm/input/eclipse/Deck/DeckView.hpp
   opm/input/eclipse/Deck/FileDeck.hpp
   opm/input/eclipse/Deck/ImportContainer.hpp
+  opm/input/eclipse/Deck/SectionType.hpp
   opm/input/eclipse/Deck/UDAValue.hpp
   opm/input/eclipse/Deck/value_status.hpp
   opm/input/eclipse/EclipseState/Aquifer/Aquancon.hpp

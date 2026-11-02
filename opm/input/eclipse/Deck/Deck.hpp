@@ -23,6 +23,7 @@
 #include <opm/input/eclipse/Deck/DeckView.hpp>
 #include <opm/input/eclipse/Deck/DeckTree.hpp>
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
+#include <opm/input/eclipse/Deck/SectionType.hpp>
 
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
@@ -57,8 +58,12 @@ namespace Opm {
             Deck& operator=(const Deck& rhs);
             bool operator==(const Deck& data) const;
 
-            void addKeyword( DeckKeyword&& keyword );
-            void addKeyword( const DeckKeyword& keyword );
+            /// Append a keyword in the supplied section.
+            /// Unit declarations change the active units only in RUNSPEC.
+            void addKeyword(DeckKeyword&& keyword,
+                            Ecl::SectionType currentSection);
+            void addKeyword(const DeckKeyword& keyword,
+                            Ecl::SectionType currentSection);
 
             const UnitSystem& getDefaultUnitSystem() const;
             const UnitSystem& getActiveUnitSystem() const;
@@ -137,6 +142,9 @@ namespace Opm {
             DeckView lgrBlock(const std::string& lgrName) const;
 
         private:
+
+            void updateUnitSystem(const DeckKeyword& keyword,
+                                  Ecl::SectionType currentSection);
 
             std::vector< DeckKeyword > keywordList;
             UnitSystem defaultUnits;

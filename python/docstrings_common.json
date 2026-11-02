@@ -392,8 +392,8 @@
         "doc": "Returns the number of occurrences of the specified keyword in the deck.\n\n:param keyword: The keyword to count.\n:type keyword: str\n:return: The number of occurrences of the keyword.\n:type return: int"
     },
     "Deck_add": {
-        "signature": "Deck.add(keyword: DeckKeyword) -> None",
-        "doc": "Adds a new keyword to the deck.\n\n:param keyword: The keyword to add.\n:type keyword: DeckKeyword"
+        "signature": "Deck.add(keyword: DeckKeyword, section: eclSectionType) -> None",
+        "doc": "Adds a new keyword to the deck in the supplied current section. The section controls whether a unit declaration can change the active unit system; it does not insert a section header.\n\n:param keyword: The keyword to add.\n:param section: The current deck section.\n:type keyword: DeckKeyword\n:type section: eclSectionType"
     },
     "DeckKeyword": {
         "type": "class",

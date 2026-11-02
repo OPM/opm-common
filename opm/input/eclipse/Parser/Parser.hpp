@@ -20,6 +20,8 @@
 #ifndef OPM_PARSER_HPP
 #define OPM_PARSER_HPP
 
+#include <opm/input/eclipse/Deck/SectionType.hpp>
+
 #include <opm/input/eclipse/Parser/ParserKeyword.hpp>
 
 #include <cstddef>
@@ -37,13 +39,6 @@ namespace Json {
 }
 
 namespace Opm {
-
-    namespace Ecl {
-
-        enum SectionType {
-            RUNSPEC, GRID, EDIT, PROPS, REGIONS, SOLUTION, SUMMARY, SCHEDULE
-        };
-    }
 
     class Deck;
     class EclipseGrid;

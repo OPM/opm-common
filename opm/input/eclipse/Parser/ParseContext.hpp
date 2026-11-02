@@ -378,6 +378,13 @@ namespace Opm {
         /// present), this error situation occurs.
         const static std::string PARSE_INVALID_KEYWORD_COMBINATION;
 
+        /// A unit keyword outside RUNSPEC repeats the active unit system,
+        /// including the default METRIC system. It remains in the deck and
+        /// does not change unit conversions. Conflicting unit declarations,
+        /// other misplaced keywords and field-property operation targets
+        /// retain their existing fatal error handling. The default is WARN.
+        const static std::string PARSE_INVALID_UNIT_SECTION;
+
         /// Dynamic number of wells exceeds maximum declared in
         /// RUNSPEC keyword WELLDIMS (item 1).
         const static std::string RUNSPEC_NUMWELLS_TOO_LARGE;

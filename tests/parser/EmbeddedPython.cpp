@@ -40,6 +40,8 @@
 #include <opm/input/eclipse/Parser/Parser.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/P.hpp>
 
+#include <opm/input/eclipse/Units/UnitSystem.hpp>
+
 #include <map>
 #include <memory>
 #include <stdexcept>
@@ -79,7 +81,7 @@ BOOST_AUTO_TEST_CASE(INSTANTIATE)
 print('Parser: {}'.format(context.parser))
 print('Deck: {}'.format(context.deck))
 kw = context.DeckKeyword( context.parser['FIELD'] )
-context.deck.add(kw)
+context.deck.add(kw, context.eclSectionType.RUNSPEC)
 )";
     BOOST_CHECK_NO_THROW(python->exec(python_code, parser, deck));
     BOOST_CHECK(deck.hasKeyword("FIELD"));
@@ -93,7 +95,7 @@ START             -- 0
 
 PYINPUT
 kw = context.DeckKeyword(context.parser['FIELD'])
-context.deck.add(kw)
+context.deck.add(kw, context.eclSectionType.RUNSPEC)
 PYEND
 
 DIMENS
@@ -106,7 +108,7 @@ try:
     active_unit_system = context.deck.active_unit_system()
     default_unit_system = context.deck.default_unit_system()
     kw = context.DeckKeyword(context.parser['DX'], dx, active_unit_system, default_unit_system)
-    context.deck.add(kw)
+    context.deck.add(kw, context.eclSectionType.RUNSPEC)
 except ImportError:
     # NumPy might not be available on host. Nothing to do in this case.
     pass
@@ -131,6 +133,27 @@ END
 
     BOOST_CHECK_MESSAGE(deck.hasKeyword("DY"), "DY keyword must be present");
 }
+
+BOOST_AUTO_TEST_CASE(PYINPUT_SECTION_UNIT_SELECTION)
+{
+    const auto deck = Parser{}.parseString(R"(RUNSPEC
+PYINPUT
+for section in ['GRID', 'PROPS']:
+    context.deck.add(context.DeckKeyword(context.parser[section]),
+                     getattr(context.eclSectionType, section))
+PYEND
+FIELD
+DX
+  10 /
+)");
+
+    BOOST_CHECK(deck.hasKeyword("GRID"));
+    BOOST_CHECK(deck.hasKeyword("PROPS"));
+    BOOST_CHECK(deck.hasKeyword("FIELD"));
+    BOOST_CHECK(deck.getActiveUnitSystem().getType() == UnitSystem::UnitType::UNIT_TYPE_METRIC);
+    BOOST_CHECK_EQUAL(deck["DX"].back().getRecord(0).getItem(0).getSIDouble(0), 10.0);
+}
+
 
 BOOST_AUTO_TEST_CASE(PYACTION)
 {

@@ -171,7 +171,7 @@ BOOST_AUTO_TEST_CASE(RUN) {
             const int report_step = 50;
             {
                 const KeywordLocation location {"SKIPREST", "SPE1CASE1.DATA", 388};
-                deck.addKeyword({location, "SKIPREST"});
+                deck.addKeyword({location, "SKIPREST"}, Ecl::SCHEDULE);
             }
             auto rst_view = std::make_shared<EclIO::RestartFileView>(std::move(rst), report_step);
             const auto rst_state = Opm::RestartIO::RstState::load(std::move(rst_view), state.runspec(), parser);
