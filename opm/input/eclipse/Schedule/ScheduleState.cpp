@@ -411,6 +411,8 @@ bool ScheduleState::operator==(const ScheduleState& other) const {
         && this->injectionNetwork == other.injectionNetwork
         && this->inj_streams == other.inj_streams
         && this->group_gas_inj_streams == other.group_gas_inj_streams
+        && this->well_gas_inj_streams == other.well_gas_inj_streams
+        && this->well_oil_inj_streams == other.well_oil_inj_streams
         && this->groups == other.groups
         && this->vfpprod == other.vfpprod
         && this->vfpinj == other.vfpinj
@@ -475,6 +477,10 @@ ScheduleState ScheduleState::serializationTestObject() {
 
     ts.group_gas_inj_streams.update("G1",
         std::make_shared<std::vector<double>>(std::vector<double>{0.7, 0.2, 0.1}));
+    ts.well_gas_inj_streams.update("W1",
+        std::make_shared<std::vector<double>>(std::vector<double>{0.8, 0.1, 0.1}));
+    ts.well_oil_inj_streams.update("W1",
+        std::make_shared<std::vector<double>>(std::vector<double>{0.1, 0.3, 0.6}));
 
     return ts;
 }
@@ -592,6 +598,16 @@ bool ScheduleState::has_gpmaint() const
     return std::ranges::any_of(this->groups,
                                [](const auto& name_group)
                                { return name_group.second->gpmaint().has_value(); });
+}
+
+const std::vector<double>* ScheduleState::gas_injection_stream(const std::string& well_name) const
+{
+    return this->well_gas_inj_streams.get_ptr(well_name).get();
+}
+
+const std::vector<double>* ScheduleState::oil_injection_stream(const std::string& well_name) const
+{
+    return this->well_oil_inj_streams.get_ptr(well_name).get();
 }
 
 

@@ -668,13 +668,24 @@ bool isStreamFluid(std::string_view fluid_nature)
     return fluid_nature.starts_with("ST");
 }
 
-using SetInjComposition = void (Well::WellInjectionProperties::*)(const std::vector<double>&);
+using WellStreams = ScheduleState::map_member<std::string, std::vector<double>>;
 
-// Apply a WELLSTRE stream to the injection properties of the wells matching the pattern.
+// A changed stream updates an injector. A producer only uses it once it injects.
+void injectionStreamChanged(HandlerContext& handlerContext, const std::string& well_name)
+{
+    if (handlerContext.state().wells.get(well_name).isInjector()) {
+        handlerContext.state().events().addEvent(ScheduleEvents::INJECTION_UPDATE);
+        handlerContext.state().wellgroup_events()
+            .addEvent(well_name, ScheduleEvents::INJECTION_UPDATE);
+        handlerContext.affected_well(well_name);
+    }
+}
+
+// Give the wells matching the pattern a WELLSTRE stream.
 void setInjectionStream(HandlerContext& handlerContext,
                         const std::string& wellNamePattern,
                         const DeckItem& stream_item,
-                        const SetInjComposition setComposition)
+                        WellStreams& well_streams)
 {
     if (!stream_item.hasValue(0) || stream_item.defaultApplied(0)) {
         throw OpmInputError {
@@ -695,23 +706,13 @@ void setInjectionStream(HandlerContext& handlerContext,
 
     const auto& composition = inj_streams.get(stream_name);
     for (const auto& well_name : handlerContext.wellNames(wellNamePattern, false)) {
-        auto well = handlerContext.state().wells.get(well_name);
-        auto injection
-            = std::make_shared<Well::WellInjectionProperties>(well.getInjectionProperties());
-        std::invoke(setComposition, *injection, composition);
-
-        // The stream only matters once the well injects, so a producer stays a producer.
-        if (well.updateInjectionProperties(std::move(injection))) {
-            const bool injector = well.isInjector();
-            handlerContext.state().wells.update(std::move(well));
-
-            if (injector) {
-                handlerContext.state().events().addEvent(ScheduleEvents::INJECTION_UPDATE);
-                handlerContext.state().wellgroup_events()
-                    .addEvent(well_name, ScheduleEvents::INJECTION_UPDATE);
-                handlerContext.affected_well(well_name);
-            }
+        if (well_streams.has(well_name) && (well_streams.get(well_name) == composition)) {
+            continue;
         }
+
+        // A copy per well, as for the GINJGAS streams of groups.
+        well_streams.update(well_name, std::make_shared<std::vector<double>>(composition));
+        injectionStreamChanged(handlerContext, well_name);
     }
 }
 
@@ -730,7 +731,7 @@ void handleWINJGAS(HandlerContext& handlerContext)
         setInjectionStream(handlerContext,
                            record.getItem<ParserKeywords::WINJGAS::WELL>().getTrimmedString(0),
                            record.getItem<ParserKeywords::WINJGAS::STREAM>(),
-                           &Well::WellInjectionProperties::setGasInjComposition);
+                           handlerContext.state().well_gas_inj_streams);
     }
 }
 
@@ -750,7 +751,7 @@ void handleWINJOIL(HandlerContext& handlerContext)
         setInjectionStream(handlerContext,
                            record.getItem<Kw::WELL>().getTrimmedString(0),
                            record.getItem<Kw::STREAM>(),
-                           &Well::WellInjectionProperties::setOilInjComposition);
+                           handlerContext.state().well_oil_inj_streams);
     }
 }
 

@@ -5395,6 +5395,24 @@ ENDBOX
 SCHEDULE
 )" } + schedule_body;
     }
+
+    // The WINJGAS stream of a well, which must have one.
+    const std::vector<double>& gas_stream(const Schedule& sched, const std::string& well,
+                                          const std::size_t step)
+    {
+        const auto* stream = sched[step].gas_injection_stream(well);
+        BOOST_REQUIRE(stream != nullptr);
+        return *stream;
+    }
+
+    // The WINJOIL stream of a well, which must have one.
+    const std::vector<double>& oil_stream(const Schedule& sched, const std::string& well,
+                                          const std::size_t step)
+    {
+        const auto* stream = sched[step].oil_injection_stream(well);
+        BOOST_REQUIRE(stream != nullptr);
+        return *stream;
+    }
 }
 
 BOOST_AUTO_TEST_CASE(WELLSTRE_rounded_composition_is_normalized) {
@@ -5415,7 +5433,7 @@ TSTEP
  1 /
 )"));
 
-    const auto& composition = sched.getWell("INJ", 0).getInjectionProperties().gasInjComposition();
+    const auto& composition = gas_stream(sched, "INJ", 0);
     BOOST_REQUIRE_EQUAL(composition.size(), std::size_t{3});
 
     const double sum = std::accumulate(composition.begin(), composition.end(), 0.0);
@@ -5585,8 +5603,7 @@ TSTEP
 )"));
 
     for (const auto* well : { "INJ1", "INJ2" }) {
-        const auto& composition
-            = sched.getWell(well, 0).getInjectionProperties().oilInjComposition();
+        const auto& composition = oil_stream(sched, well, 0);
         BOOST_REQUIRE_EQUAL(composition.size(), std::size_t{3});
         BOOST_CHECK_CLOSE(composition[0], 0.1, 1.0e-10);
         BOOST_CHECK_CLOSE(composition[1], 0.3, 1.0e-10);
@@ -5594,10 +5611,8 @@ TSTEP
     }
 
     // The gas stream is kept apart from the oil stream.
-    BOOST_CHECK_CLOSE(sched.getWell("INJ1", 0).getInjectionProperties().gasInjComposition()[0],
-                      0.8, 1.0e-10);
-    BOOST_CHECK_THROW(sched.getWell("INJ2", 0).getInjectionProperties().gasInjComposition(),
-                      std::invalid_argument);
+    BOOST_CHECK_CLOSE(gas_stream(sched, "INJ1", 0)[0], 0.8, 1.0e-10);
+    BOOST_CHECK(sched[0].gas_injection_stream("INJ2") == nullptr);
 }
 
 BOOST_AUTO_TEST_CASE(WINJOIL_rejects_other_fluids_and_unknown_streams) {
@@ -5640,7 +5655,7 @@ WINJGAS
 /
 )"));
 
-    const auto& composition = sched.getWell("INJ", 0).getInjectionProperties().gasInjComposition();
+    const auto& composition = gas_stream(sched, "INJ", 0);
     BOOST_REQUIRE_EQUAL(composition.size(), std::size_t{3});
     BOOST_CHECK_CLOSE(composition[0], 0.8, 1.0e-10);
 }
@@ -5742,9 +5757,8 @@ TSTEP
     BOOST_CHECK(sched.getWell("P2", 0).isProducer());
     BOOST_CHECK(sched.getWell("I1", 0).isInjector());
     for (const auto* well : { "P1", "P2", "I1" }) {
-        const auto& injection = sched.getWell(well, 0).getInjectionProperties();
-        BOOST_CHECK_CLOSE(injection.gasInjComposition()[0], 0.8, 1.0e-10);
-        BOOST_CHECK_CLOSE(injection.oilInjComposition()[0], 0.1, 1.0e-10);
+        BOOST_CHECK_CLOSE(gas_stream(sched, well, 0)[0], 0.8, 1.0e-10);
+        BOOST_CHECK_CLOSE(oil_stream(sched, well, 0)[0], 0.1, 1.0e-10);
     }
 
     // Streams given before the production keywords.
@@ -5752,8 +5766,7 @@ TSTEP
         BOOST_CHECK(sched.getWell(well, 1).isProducer());
         BOOST_CHECK(!sched[1].wellgroup_events().hasEvent(
             well, ScheduleEvents::Events::WELL_SWITCHED_INJECTOR_PRODUCER));
-        const auto& injection = sched.getWell(well, 1).getInjectionProperties();
-        BOOST_CHECK_CLOSE(injection.gasInjComposition()[0], 0.7, 1.0e-10);
+        BOOST_CHECK_CLOSE(gas_stream(sched, well, 1)[0], 0.7, 1.0e-10);
     }
 }
 
@@ -5798,14 +5811,12 @@ TSTEP
     BOOST_CHECK(sched.getWell("W", 1).isInjector());
     BOOST_CHECK(sched[1].wellgroup_events().hasEvent(
         "W", ScheduleEvents::Events::WELL_SWITCHED_INJECTOR_PRODUCER));
-    BOOST_CHECK_CLOSE(sched.getWell("W", 1).getInjectionProperties().oilInjComposition()[0],
-                      0.1, 1.0e-10);
+    BOOST_CHECK_CLOSE(oil_stream(sched, "W", 1)[0], 0.1, 1.0e-10);
 
     // The gas stream given while the well produced is used once it injects gas.
     BOOST_CHECK(sched.getWell("W", 2).isProducer());
     BOOST_CHECK(sched.getWell("W", 3).injectorType() == InjectorType::GAS);
-    BOOST_CHECK_CLOSE(sched.getWell("W", 3).getInjectionProperties().gasInjComposition()[0],
-                      0.8, 1.0e-10);
+    BOOST_CHECK_CLOSE(gas_stream(sched, "W", 3)[0], 0.8, 1.0e-10);
 }
 
 BOOST_AUTO_TEST_CASE(Injection_stream_change_is_an_injection_update) {
