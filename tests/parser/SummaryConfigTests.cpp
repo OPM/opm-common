@@ -1127,7 +1127,19 @@ BOOST_AUTO_TEST_CASE( require3DField_recovery_efficiency ) {
         BOOST_CHECK( !summary.require3DField( "OIP" ));
     }
 
+    {
+        const auto summary = createSummary( "ROEW\n/\n" );
+        BOOST_CHECK(  summary.require3DField( "OIP" ));
+        BOOST_CHECK( !summary.require3DField( "GIP" ));
+    }
+
     // Named region sets (FIPREG, FIPXYZ)
+    {
+        const auto summary = createSummary( "ROEW_REG\n/\n" );
+        BOOST_CHECK( summary.hasSummaryKey( "ROEW_REG:10" ));
+        BOOST_CHECK( summary.require3DField( "OIP" ));
+    }
+
     {
         const auto summary = createSummary( "ROE__REG\n/\n" );
         BOOST_CHECK( summary.hasSummaryKey( "ROE__REG:10" ));
