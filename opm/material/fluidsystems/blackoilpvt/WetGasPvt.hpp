@@ -122,7 +122,12 @@ public:
     using TabulatedTwoDFunctionBuilder = UniformXTabulated2DFunctionBuilder<Scalar>;
     using TabulatedOneDFunction = Tabulated1DFunction<Scalar, TableStorage>;
 
-    //! True for the CPU object.
+    //! True for the CPU object. Used to restrict the host-only methods that would otherwise
+    //! compile for a GPU instantiation and then read or write device memory from the host
+    //! (setInverseGasFormationVolumeFactor(), setGasViscosity() and saturationPressure()),
+    //! and setVapPars(), which on a GPU object would not reach the views made from it.
+    //! The other host-only methods are defined in the .cpp file for CPU storage only, so
+    //! misusing them already fails at link time.
     static constexpr bool isCpuStorage
         = std::is_same_v<Storage<Scalar>, VectorWithDefaultAllocator<Scalar>>
        && std::is_same_v<TableStorage<Scalar>, VectorWithDefaultAllocator<Scalar>>;
@@ -166,6 +171,7 @@ public:
     void setNumRegions(std::size_t numRegions);
 
     void setVapPars(const Scalar par1, const Scalar)
+        requires isCpuStorage
     {
         vapPar1_ = par1;
     }
@@ -214,6 +220,7 @@ public:
      */
     void setInverseGasFormationVolumeFactor(unsigned regionIdx,
                                             const TabulatedTwoDFunction& invBg)
+        requires isCpuStorage
     { inverseGasB_[regionIdx] = invBg; }
 
     /*!
@@ -222,6 +229,7 @@ public:
      * This is a function of \f$(R_s, p_o)\f$...
      */
     void setGasViscosity(unsigned regionIdx, const TabulatedTwoDFunction& mug)
+        requires isCpuStorage
     { gasMu_[regionIdx] = mug; }
 
     /*!
@@ -419,6 +427,7 @@ public:
     Evaluation saturationPressure(unsigned regionIdx,
                                   const Evaluation&,
                                   const Evaluation& Rv) const
+        requires isCpuStorage
     {
         using Toolbox = MathToolbox<Evaluation>;
 
