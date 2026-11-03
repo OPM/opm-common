@@ -29,14 +29,19 @@
 
 #include <opm/common/Exceptions.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
+#include <opm/common/utility/gpuDecorators.hpp>
+#include <opm/common/utility/gpuistl_if_available.hpp>
 #include <opm/common/utility/VectorWithDefaultAllocator.hpp>
 
+#include <opm/material/common/ConditionalStorage.hpp>
 #include <opm/material/common/MathToolbox.hpp>
 #include <opm/material/common/UniformXTabulated2DFunction.hpp>
 #include <opm/material/common/UniformXTabulated2DFunctionBuilder.hpp>
 #include <opm/material/common/Tabulated1DFunction.hpp>
 
 #include <cstddef>
+#include <memory>
+#include <type_traits>
 
 namespace Opm {
 
@@ -51,9 +56,56 @@ template <class Scalar,
           template<class> class TableStorage = VectorWithDefaultAllocator>
 class WetGasPvt;
 
+namespace gpuistl
+{
+template <class T>
+class GpuBuffer;
+
+template <class T>
+class GpuView;
+} // namespace gpuistl
+
+#if HAVE_CUDA
+// Declarations of copy_to_gpu() and make_view(), so that they can be declared as
+// friends in the class.
+namespace gpuistl {
+    template <class ScalarT>
+    WetGasPvt<ScalarT, GpuBuffer, GpuView>
+    copy_to_gpu(const WetGasPvt<ScalarT>&);
+
+    template <class ScalarT>
+    WetGasPvt<ScalarT, GpuView, GpuView>
+    make_view(WetGasPvt<ScalarT, GpuBuffer, GpuView>&);
+} // namespace gpuistl
+#endif // HAVE_CUDA
+
 /*!
- * \brief This class represents the Pressure-Volume-Temperature relations of the gas phas
+ * \brief This class represents the Pressure-Volume-Temperature relations of the gas phase
  *        with vaporized oil.
+ *
+ * The class is used with four combinations of \c Storage (the per-region arrays) and
+ * \c TableStorage (the data inside each table):
+ *
+ * - \c VectorWithDefaultAllocator, \c VectorWithDefaultAllocator: the CPU object, set up
+ *   by initFromState(), or by setNumRegions(), the setters and initEnd().
+ * - \c VectorWithDefaultAllocator, \c gpuistl::GpuBuffer: the device table owner, holding
+ *   one owning device table per region. It is created by and internal to
+ *   gpuistl::copy_to_gpu(), and owned by the owning GPU object.
+ * - \c gpuistl::GpuBuffer, \c gpuistl::GpuView: the owning GPU object, returned by
+ *   gpuistl::copy_to_gpu(). It holds device arrays of views into the device table
+ *   owner's tables, and it is move-only.
+ * - \c gpuistl::GpuView, \c gpuistl::GpuView: the GPU view, returned by
+ *   gpuistl::make_view(). It owns no memory, is trivially copyable, and is passed to
+ *   kernels by value.
+ *
+ * \code
+ * auto gpuPvt = Opm::gpuistl::copy_to_gpu(cpuPvt);  // owning GPU object
+ * auto gpuView = Opm::gpuistl::make_view(gpuPvt);   // GPU view
+ * kernel<<<...>>>(gpuView);
+ * \endcode
+ *
+ * The owning GPU object must outlive every kernel that uses a view made from it. Moving
+ * it does not invalidate such views.
  */
 template <class Scalar,
           template<class> class Storage,
@@ -66,6 +118,32 @@ public:
     using TabulatedTwoDFunction = UniformXTabulated2DFunction<Scalar, TableStorage>;
     using TabulatedTwoDFunctionBuilder = UniformXTabulated2DFunctionBuilder<Scalar>;
     using TabulatedOneDFunction = Tabulated1DFunction<Scalar, TableStorage>;
+
+    //! True for the CPU object.
+    static constexpr bool isCpuStorage
+        = std::is_same_v<Storage<Scalar>, VectorWithDefaultAllocator<Scalar>>
+       && std::is_same_v<TableStorage<Scalar>, VectorWithDefaultAllocator<Scalar>>;
+
+    //! True for the host-side owner of the per-region device tables. Only created by,
+    //! and owned through, gpuistl::copy_to_gpu().
+    static constexpr bool isGpuTableOwner
+        = std::is_same_v<Storage<Scalar>, VectorWithDefaultAllocator<Scalar>>
+       && std::is_same_v<TableStorage<Scalar>, gpuistl::GpuBuffer<Scalar>>;
+
+    //! True if this object owns device memory (created by gpuistl::copy_to_gpu()).
+    static constexpr bool isOwningGpu
+        = std::is_same_v<Storage<Scalar>, gpuistl::GpuBuffer<Scalar>>
+       && std::is_same_v<TableStorage<Scalar>, gpuistl::GpuView<Scalar>>;
+
+    //! True if this object is a non-owning view of device memory (created by gpuistl::make_view()).
+    static constexpr bool isGpuView
+        = std::is_same_v<Storage<Scalar>, gpuistl::GpuView<Scalar>>
+       && std::is_same_v<TableStorage<Scalar>, gpuistl::GpuView<Scalar>>;
+
+    static_assert(isCpuStorage || isGpuTableOwner || isOwningGpu || isGpuView,
+                  "WetGasPvt: unsupported combination of Storage and TableStorage");
+
+    WetGasPvt() = default;
 
     /*!
      * \brief Initialize the parameters for wet gas using an ECL deck.
@@ -431,6 +509,14 @@ public:
 private:
     void updateSaturationPressure_(unsigned regionIdx);
 
+    //! The device table owner. Only the owning GPU object stores one; the table views in
+    //! the owning GPU object and in the GPU view point into device memory owned by its
+    //! tables. Held through a unique_ptr so that the owning GPU object is move-only.
+    using GpuTables = WetGasPvt<Scalar, VectorWithDefaultAllocator, gpuistl::GpuBuffer>;
+    using GpuTablesStorage = ConditionalStorage<isOwningGpu, std::unique_ptr<GpuTables>>;
+
+    GpuTablesStorage gpuTables_{};
+
     Storage<Scalar> gasReferenceDensity_{};
     Storage<Scalar> oilReferenceDensity_{};
     Storage<TabulatedTwoDFunction> inverseGasB_{};
@@ -442,6 +528,49 @@ private:
     Storage<TabulatedOneDFunction> saturationPressure_{};
 
     Scalar vapPar1_ = 0.0;
+
+#if HAVE_CUDA
+    /*!
+     * \brief Constructor for the GPU objects, used by gpuistl::copy_to_gpu() and
+     *        gpuistl::make_view().
+     *
+     * \param gpuTables The device table owner for the owning GPU object. The table
+     *                  views passed in the other arguments must point into its tables.
+     *                  For the other GPU objects this is the empty storage; pass {}.
+     */
+    WetGasPvt(GpuTablesStorage&& gpuTables,
+              Storage<Scalar>&& gasReferenceDensity,
+              Storage<Scalar>&& oilReferenceDensity,
+              Storage<TabulatedTwoDFunction>&& inverseGasB,
+              Storage<TabulatedOneDFunction>&& inverseSaturatedGasB,
+              Storage<TabulatedTwoDFunction>&& gasMu,
+              Storage<TabulatedTwoDFunction>&& inverseGasBMu,
+              Storage<TabulatedOneDFunction>&& inverseSaturatedGasBMu,
+              Storage<TabulatedOneDFunction>&& saturatedOilVaporizationFactorTable,
+              Storage<TabulatedOneDFunction>&& saturationPressure,
+              Scalar vapPar1)
+        requires (!isCpuStorage)
+        : gpuTables_(std::move(gpuTables))
+        , gasReferenceDensity_(std::move(gasReferenceDensity))
+        , oilReferenceDensity_(std::move(oilReferenceDensity))
+        , inverseGasB_(std::move(inverseGasB))
+        , inverseSaturatedGasB_(std::move(inverseSaturatedGasB))
+        , gasMu_(std::move(gasMu))
+        , inverseGasBMu_(std::move(inverseGasBMu))
+        , inverseSaturatedGasBMu_(std::move(inverseSaturatedGasBMu))
+        , saturatedOilVaporizationFactorTable_(std::move(saturatedOilVaporizationFactorTable))
+        , saturationPressure_(std::move(saturationPressure))
+        , vapPar1_(vapPar1)
+    { }
+
+    template <class ScalarT>
+    friend WetGasPvt<ScalarT, gpuistl::GpuBuffer, gpuistl::GpuView>
+    gpuistl::copy_to_gpu(const WetGasPvt<ScalarT>&);
+
+    template <class ScalarT>
+    friend WetGasPvt<ScalarT, gpuistl::GpuView, gpuistl::GpuView>
+    gpuistl::make_view(WetGasPvt<ScalarT, gpuistl::GpuBuffer, gpuistl::GpuView>&);
+#endif // HAVE_CUDA
 };
 
 } // namespace Opm
