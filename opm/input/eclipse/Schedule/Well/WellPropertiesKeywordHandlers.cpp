@@ -370,6 +370,7 @@ void handleWINJMULT(HandlerContext& handlerContext)
             auto well = handlerContext.state().wells( well_name );
             if (well.handleWINJMULT(record, handlerContext.keyword.location())) {
                 handlerContext.state().wells.update(std::move(well));
+                handlerContext.affected_well(well_name);
             }
         }
     }

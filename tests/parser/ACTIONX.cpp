@@ -2356,3 +2356,67 @@ END
         BOOST_CHECK_EQUAL(sim_update.affected_wells.count("PROD1"), 1);
     }
 }
+
+BOOST_AUTO_TEST_CASE(Action_WINJMULT)
+{
+    const auto deck_string = std::string{ R"(
+RUNSPEC
+OIL
+WATER
+GRID
+PORO
+    1000*0.1 /
+PERMX
+    1000*1 /
+PERMY
+    1000*1 /
+PERMZ
+    1000*1 /
+SCHEDULE
+
+WELSPECS
+    'INJ1' 'G1'  5 5 1* 'WATER' /
+/
+
+COMPDAT
+ 'INJ1'  5  5   1   3 'OPEN' 1* 100 /
+/
+
+WCONINJE
+ 'INJ1' 'WATER' 'OPEN' 'RATE' 1000 /
+/
+
+ACTIONX
+'FRAC' /
+FPR < 100 /
+/
+WINJMULT
+ 'INJ1' 280.0 0.2 'CREV' 5 5 2 /
+/
+ENDACTIO
+
+TSTEP
+10 /
+END
+)"};
+
+    Schedule sched = make_schedule(deck_string);
+    BOOST_CHECK(!sched.getWell("INJ1", 0).hasActiveInjMult());
+
+    const Action::Result action_result(true);
+    const auto sim_update = sched.applyAction(0, sched[0].actions.get()["FRAC"],
+                                              action_result.matches(),
+                                              std::unordered_map<std::string,double>{}, true);
+
+    // The simulator only refreshes affected wells within a report step
+    BOOST_CHECK_EQUAL(sim_update.affected_wells.count("INJ1"), 1);
+
+    for (const std::size_t step : { 0, 1 }) {
+        const auto& well = sched.getWell("INJ1", step);
+        BOOST_CHECK(well.hasActiveInjMult());
+        BOOST_CHECK(well.getInjMultMode() == Well::InjMultMode::CREV);
+        for (const auto& conn : well.getConnections()) {
+            BOOST_CHECK_EQUAL(conn.activeInjMult(), conn.getK() == 1);
+        }
+    }
+}

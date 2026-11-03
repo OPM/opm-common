@@ -122,6 +122,7 @@ bool ActionX::valid_keyword(const std::string& keyword)
         "WECON", "WEFAC",
         "WELOPEN", "WELPI", "WELSEGS", "WELSPECS", "WELTARG",
         "WGRUPCON",
+        "WINJMULT",
         "WLIST",
         "WPIMULT",
         "WSEGVALV",
