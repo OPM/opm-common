@@ -399,8 +399,8 @@ DRSDT
 -- trajectory (the first cell intersected by the trajectory).
 WELSPECS
 -- Item #: 1	 2	3	4	5	 6
-	'INJ'	  'G1'  1*	1*	8335	'GAS' /
-	'PROD'	'G1'  2	2	8335	'OIL' /
+	'INJ'	  'G1'  1*	1*	1*	'GAS' /
+	'PROD'	'G1'  2	2	1*	'OIL' /
 /
 
 -- The trajectory of INJ starts at the surface, above the reservoir.
