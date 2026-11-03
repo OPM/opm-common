@@ -39,17 +39,23 @@
 
 #include <external/resinsight/LibGeometry/cvfBoundingBox.h>
 
+#include <external/resinsight/cafPdmCore/cafAssert.h>
+
+#include <algorithm>
+#include <array>
+#include <cmath>
 #include <cstddef>
 #include <map>
+#include <utility>
 
 namespace external {
 
  RigEclipseWellLogExtractor::RigEclipseWellLogExtractor( const RigWellPath* wellpath,
                                                          const Opm::EclipseGrid& grid,
-                                                         cvf::ref<cvf::BoundingBoxTree>& cellSearchTree )
+                                                         RigEclipseGridSearchData& gridSearchData )
     : RigWellLogExtractor( wellpath, "" )
       ,m_grid(grid)
-      ,m_cellSearchTree(cellSearchTree)
+      ,m_gridSearchData(gridSearchData)
 {
     calculateIntersection();
 }
@@ -62,6 +68,12 @@ void RigEclipseWellLogExtractor::calculateIntersection()
     if ( m_wellPathGeometry->wellPathPoints().empty() ) return;
 
     buildCellSearchTree();
+
+    if ( !m_gridSearchData.lengthThreshold.has_value() )
+    {
+        m_gridSearchData.lengthThreshold = computeLengthThreshold();
+    }
+    double tolerance = m_gridSearchData.lengthThreshold.value();
 
     for ( std::size_t wpp = 0; wpp < m_wellPathGeometry->wellPathPoints().size() - 1; ++wpp )
     {
@@ -78,8 +90,7 @@ void RigEclipseWellLogExtractor::calculateIntersection()
 
         for ( const auto& globalCellIndex : closeCellIndices )
         {
-            cvf::Vec3d    hexCorners[8];  //resinsight numbering, see RigCellGeometryTools.cpp
-            RigEclipseWellLogExtractor::hexCornersOpmToResinsight( hexCorners, globalCellIndex);
+            std::array<cvf::Vec3d, 8> hexCorners = hexCornersOpmToResinsight( globalCellIndex );
             RigHexIntersectionTools::lineHexCellIntersection( p1, p2, hexCorners, globalCellIndex, &intersections );
         }
 
@@ -92,7 +103,7 @@ void RigEclipseWellLogExtractor::calculateIntersection()
         double md1 = m_wellPathGeometry->measuredDepths()[wpp];
         double md2 = m_wellPathGeometry->measuredDepths()[wpp + 1];
 
-        insertIntersectionsInMap( intersections, p1, md1, p2, md2, &uniqueIntersections );
+        insertIntersectionsInMap( intersections, p1, md1, p2, md2, tolerance, &uniqueIntersections );
     }
 
     this->populateReturnArrays( uniqueIntersections );
@@ -103,14 +114,9 @@ cvf::Vec3d RigEclipseWellLogExtractor::calculateLengthInCell( std::size_t       
                                                               const cvf::Vec3d& startPoint,
                                                               const cvf::Vec3d& endPoint ) const
 {
-    cvf::Vec3d hexCorners[8];  //resinsight numbering, see RigCellGeometryTools.cpp
-    RigEclipseWellLogExtractor::hexCornersOpmToResinsight( hexCorners, cellIndex );
+    std::array<cvf::Vec3d, 8> hexCorners = hexCornersOpmToResinsight( cellIndex );
 
-    std::array<cvf::Vec3d, 8> hexCorners2;
-    for (std::size_t i = 0; i < 8; i++)
-           hexCorners2[i] =  hexCorners[i];
-
-    return RigEclipseWellLogExtractor::calculateLengthInCell( hexCorners2, startPoint, endPoint );
+    return RigEclipseWellLogExtractor::calculateLengthInCell( hexCorners, startPoint, endPoint );
 }
 
 // Modified version of ApplicationLibCode\ReservoirDataModel\RigWellPathIntersectionTools.cpp
@@ -186,94 +192,133 @@ void RigEclipseWellLogExtractor::findCellLocalXYZ( const std::array<cvf::Vec3d, 
 }
 
 // Convert opm to resinsight numbering of cornerpoints, see RigCellGeometryTools.cpp
-void RigEclipseWellLogExtractor::hexCornersOpmToResinsight( cvf::Vec3d hexCorners[8], std::size_t cellIndex ) const
+std::array<cvf::Vec3d, 8> RigEclipseWellLogExtractor::hexCornersOpmToResinsight( std::size_t cellIndex ) const
 {
     const auto[i,j,k] = m_grid.getIJK(cellIndex);
     std::array<std::size_t, 8> opm2resinsight = {0, 1, 3, 2, 4, 5, 7, 6};
 
+    std::array<cvf::Vec3d, 8> hexCorners;
     for (std::size_t l = 0; l < 8; l++) {
          std::array<double, 3> cornerPointArray;
          cornerPointArray = m_grid.getCornerPos(i,j,k,l);
          hexCorners[opm2resinsight[l]]= cvf::Vec3d(cornerPointArray[0], cornerPointArray[1], cornerPointArray[2]);
     }
+    return hexCorners;
+}
+
+// Modified version of ApplicationLibCode\ReservoirDataModel\RigMainGrid.cpp
+cvf::BoundingBox RigEclipseWellLogExtractor::cellBoundingBox( std::size_t cellIndex ) const
+{
+    cvf::BoundingBox cellBB;
+    for ( const auto& corner : hexCornersOpmToResinsight( cellIndex ) )
+    {
+        cellBB.add( corner );
+    }
+    return cellBB;
 }
 
 // Modified version of ApplicationLibCode\ReservoirDataModel\RigMainGrid.cpp
 void RigEclipseWellLogExtractor::buildCellSearchTree()
 {
-    if (m_cellSearchTree.isNull()) {
+    if (m_gridSearchData.cellSearchTree.isNull()) {
 
         auto nx = m_grid.getNX();
         auto ny = m_grid.getNY();
         auto nz = m_grid.getNZ();
 
-        std::size_t cellCount = nx * ny * nz;
-        std::vector<std::size_t>           cellIndicesForBoundingBoxes;
+        // Each leaf of the tree contains several cells along K. A tree with one cell per leaf becomes very deep for large
+        // grids and is slow to build. For very large grids, increase the number of cells per leaf to limit the memory use.
+        const std::size_t minCellsPerBoundingBox = 8;
+        const double      maxNumberOfLeafNodes   = 4000000;
+        const double      factor                 = std::ceil( static_cast<double>( nx * ny * nz ) / maxNumberOfLeafNodes );
+        const std::size_t cellsPerBoundingBox    = std::max( minCellsPerBoundingBox, static_cast<std::size_t>( factor ) );
+
+        std::vector<std::vector<int>> cellIndicesForBoundingBoxes;
         std::vector<cvf::BoundingBox> cellBoundingBoxes;
 
-// #pragma omp parallel
-//         {
-            std::size_t threadCellCount = cellCount;
+        for ( std::size_t i = 0; i < nx; i++ )
+        {
+            for ( std::size_t j = 0; j < ny; j++ )
+            {
+                std::size_t k = 0;
+                while ( k < nz )
+                {
+                    std::size_t kCount = 0;
 
-            std::vector<std::size_t>           threadIndicesForBoundingBoxes;
-            std::vector<cvf::BoundingBox> threadBoundingBoxes;
+                    std::vector<int> aggregatedCellIndices;
+                    cvf::BoundingBox accumulatedBB;
 
-            threadIndicesForBoundingBoxes.reserve( threadCellCount );
-            threadBoundingBoxes.reserve( threadCellCount );
+                    while ( ( kCount < cellsPerBoundingBox ) && ( k + kCount < nz ) )
+                    {
+                        std::size_t cellIdx = m_grid.getGlobalIndex( i, j, k + kCount );
 
-            std::array<double, 3> cornerPointArray;
-            cvf::Vec3d cornerPoint;
+                        cvf::BoundingBox cellBB = cellBoundingBox( cellIdx );
+                        if ( cellBB.isValid() )
+                        {
+                            aggregatedCellIndices.push_back( static_cast<int>( cellIdx ) );
+                            accumulatedBB.add( cellBB );
+                        }
+                        kCount++;
+                    }
 
-// #pragma omp for
-            for (int cIdx = 0; cIdx < (int)cellCount; ++cIdx) {
-                const auto[i,j,k] = m_grid.getIJK(cIdx);
-                cvf::BoundingBox cellBB;
-                for (std::size_t l = 0; l < 8; l++) {
-                     cornerPointArray = m_grid.getCornerPos(i,j,k,l);
-                     cornerPoint = cvf::Vec3d(cornerPointArray[0], cornerPointArray[1], cornerPointArray[2]);
-                     cellBB.add(cornerPoint);
-                }
+                    k += kCount;
 
-                if (cellBB.isValid()) {
-                    threadIndicesForBoundingBoxes.emplace_back(cIdx);
-                    threadBoundingBoxes.emplace_back(cellBB);
+                    cellIndicesForBoundingBoxes.emplace_back( std::move( aggregatedCellIndices ) );
+                    cellBoundingBoxes.emplace_back( accumulatedBB );
                 }
             }
+        }
 
-            threadIndicesForBoundingBoxes.shrink_to_fit();
-            threadBoundingBoxes.shrink_to_fit();
-// #pragma omp critical
-//          {
-             cellIndicesForBoundingBoxes.insert( cellIndicesForBoundingBoxes.end(),
-                                                 threadIndicesForBoundingBoxes.begin(),
-                                                 threadIndicesForBoundingBoxes.end() );
-
-             cellBoundingBoxes.insert( cellBoundingBoxes.end(), threadBoundingBoxes.begin(), threadBoundingBoxes.end() );
-        //  }
-    // } #pragma omp parallel
-         m_cellSearchTree = new cvf::BoundingBoxTree;
-         m_cellSearchTree->buildTreeFromBoundingBoxes( cellBoundingBoxes, &cellIndicesForBoundingBoxes );
+        m_gridSearchData.cellSearchTree = new cvf::BoundingBoxTree;
+        m_gridSearchData.cellSearchTree->buildTreeFromBoundingBoxesOptimized( cellBoundingBoxes, cellIndicesForBoundingBoxes );
     }
 }
 
-// From ApplicationLibCode\ReservoirDataModel\RigMainGrid.cpp
-void RigEclipseWellLogExtractor::findIntersectingCells( const cvf::BoundingBox& inputBB, std::vector<std::size_t>* cellIndices ) const
+// Modified version of ApplicationLibCode\ReservoirDataModel\RigMainGrid.cpp
+std::vector<std::size_t> RigEclipseWellLogExtractor::findIntersectingCells( const cvf::BoundingBox& inputBB ) const
 {
-    CVF_ASSERT( m_cellSearchTree.notNull() );
+    CAF_ASSERT( m_gridSearchData.cellSearchTree.notNull() );
 
-    m_cellSearchTree->findIntersections( inputBB, cellIndices );
+    std::vector<std::size_t> cellIndices;
+    m_gridSearchData.cellSearchTree->findIntersections( inputBB, &cellIndices );
+
+    // A leaf of the tree contains several cells. Remove the cells not intersecting the input bounding box, so
+    // the result is the same as for a tree with one cell per leaf.
+    std::erase_if( cellIndices, [&]( std::size_t cellIndex ) { return !cellBoundingBox( cellIndex ).intersects( inputBB ); } );
+
+    return cellIndices;
 }
 
 // Modified version of ApplicationLibCode\ReservoirDataModel\RigEclipseWellLogExtractor.cpp
 std::vector<std::size_t> RigEclipseWellLogExtractor::findCloseCellIndices( const cvf::BoundingBox& bb )
 {
-    std::vector<std::size_t> closeCells;
-    this->findIntersectingCells( bb, &closeCells );
-    return closeCells;
+    return this->findIntersectingCells( bb );
 }
 
- cvf::ref<cvf::BoundingBoxTree> RigEclipseWellLogExtractor::getCellSearchTree()
- {
-    return m_cellSearchTree;
- }
+// Modified version of ApplicationLibCode\ReservoirDataModel\RigEclipseWellLogExtractor.cpp
+double RigEclipseWellLogExtractor::computeLengthThreshold() const
+{
+    // Default length tolerance for most common grid sizes
+    double tolerance = 0.01;
+
+    // For grids with very thin z-layers, reduce the tolerance to be able to find the intersections
+    // If not, the intersection will be considered as non-valid cell edge intersection and discarded
+    // https://github.com/OPM/ResInsight/issues/9244
+
+    const std::size_t numActive = m_grid.getNumActive();
+    if ( numActive > 0 )
+    {
+        double sumDZ = 0.0;
+        for ( std::size_t activeIndex = 0; activeIndex < numActive; ++activeIndex )
+        {
+            sumDZ += std::abs( m_grid.getCellThickness( m_grid.getGlobalIndex( activeIndex ) ) );
+        }
+        const double averageDZ = sumDZ / numActive;
+
+        const double scaleFactor = 0.05;
+        tolerance                = std::min( tolerance, averageDZ * scaleFactor );
+    }
+
+    return tolerance;
+}
  } //namespace external

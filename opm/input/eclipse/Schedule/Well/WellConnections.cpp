@@ -832,18 +832,13 @@ The cell ({},{},{}) in well {} is not active and the connection will be ignored)
         points.push_back(p_bot);
         measured_depths.push_back(m_bot);
 
-        wellTraj.wellPathGeometry->setWellPathPoints(points);
-        wellTraj.wellPathGeometry->setMeasuredDepths(measured_depths);
+        wellTraj.wellPathGeometry->setWellPathPoints(points, measured_depths);
 
         external::cvf::ref<external::RigEclipseWellLogExtractor> e {
             new external::RigEclipseWellLogExtractor {
-                wellTraj.wellPathGeometry.p(), *ecl_grid, wellTraj.cellSearchTree
+                wellTraj.wellPathGeometry.p(), *ecl_grid, wellTraj.gridSearchData
             }
         };
-
-        // Keep the AABB search tree of the grid to avoid redoing an
-        // expensive calulation.
-        wellTraj.cellSearchTree = e->getCellSearchTree();
 
         // This gives the intersected grid cells IJK, cell face entrance &
         // exit cell face point and connection length.
