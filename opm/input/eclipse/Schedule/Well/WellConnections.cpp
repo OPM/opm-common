@@ -25,9 +25,9 @@
 
 #include <opm/common/OpmLog/KeywordLocation.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
+#include <opm/common/utility/OpmInputError.hpp>
 
 #include <opm/common/utility/ActiveGridCells.hpp>
-#include <opm/common/utility/numeric/linearInterpolation.hpp>
 
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
@@ -48,11 +48,12 @@
 #include <opm/input/eclipse/Parser/ParserKeywords/C.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
 
+#include <opm/input/eclipse/Schedule/Well/GridIndependentWellKeywordHandlers.hpp>
+
 #include <external/resinsight/LibCore/cvfVector3.h>
 #include <external/resinsight/ReservoirDataModel/RigHexIntersectionTools.h>
 #include <external/resinsight/ReservoirDataModel/RigWellLogExtractionTools.h>
 #include <external/resinsight/ReservoirDataModel/RigWellLogExtractor.h>
-#include <external/resinsight/ReservoirDataModel/RigWellPath.h>
 
 #include "../WellTraj/RigEclipseWellLogExtractor.hpp"
 #include "WellTrajInfo.hpp"
@@ -770,9 +771,26 @@ The cell ({},{},{}) in well {} is not active and the connection will be ignored)
                                   const KeywordLocation& location,
                                   WellTrajInfo&          wellTraj)
     {
-        if (this->coord[0].size() == 0) return;  // No path.
-
         using Kw = ParserKeywords::COMPTRAJ;
+
+        const auto branch = record.getItem<Kw::BRANCH_NUMBER>().get<int>(0);
+
+        if (branch <= 0) {
+            throw OpmInputError {
+                fmt::format("Branch number {} for well {} must be a positive "
+                            "integer. Branch 1 is the main branch.", branch, wname),
+                location
+            };
+        }
+
+        if (! this->coord.contains(branch)) {
+            throw OpmInputError {
+                fmt::format("Well {} has no WELTRAJ trajectory for branch {}. "
+                            "Every branch referenced by COMPTRAJ must first be "
+                            "defined by WELTRAJ.", wname, branch),
+                location
+            };
+        }
 
         const auto& perf_top = record.getItem<Kw::PERF_TOP>();
         const auto& perf_bot = record.getItem<Kw::PERF_BOT>();
@@ -806,33 +824,10 @@ The cell ({},{},{}) in well {} is not active and the connection will be ignored)
         // Get the grid
         const auto& ecl_grid = grid.get_grid();
 
-        std::vector<external::cvf::Vec3d> points;
-        std::vector<double> measured_depths;
-
         // Calulate the x,y,z coordinates of the begin and end of a perforation
-        const auto m_top = perf_top.getSIDouble(0);
-        const auto m_bot = perf_bot.getSIDouble(0);
-        external::cvf::Vec3d p_top, p_bot;
-        for (std::size_t i = 0; i < 3 ; ++i) {
-            p_top[i] = linearInterpolation(this->md, this->coord[i], m_top);
-            p_bot[i] = linearInterpolation(this->md, this->coord[i], m_bot);
-        }
-        points.push_back(p_top);
-        measured_depths.push_back(m_top);
-
-        points.reserve(this->coord[0].size());
-        measured_depths.reserve(this->coord[0].size());
-        for (std::size_t i = 0; i < coord[0].size(); ++i) {
-            if (this->md[i] > m_top and this->md[i] < m_bot) {
-                points.push_back(external::cvf::Vec3d(coord[0][i], coord[1][i], coord[2][i]));
-                measured_depths.push_back(this->md[i]);
-            }
-        }
-
-        points.push_back(p_bot);
-        measured_depths.push_back(m_bot);
-
-        wellTraj.wellPathGeometry->setWellPathPoints(points, measured_depths);
+        initWellPathGeometry(wellTraj.wellPathGeometry,
+                             this->coord.at(branch), this->md.at(branch),
+                             perf_top.getSIDouble(0), perf_bot.getSIDouble(0));
 
         external::cvf::ref<external::RigEclipseWellLogExtractor> e {
             new external::RigEclipseWellLogExtractor {
@@ -989,6 +984,16 @@ CF and Kh items for well {} must both be specified or both defaulted/negative)",
     {
         using Kw = ParserKeywords::WELTRAJ;
 
+        const auto branch = record.getItem<Kw::BRANCH_NUMBER>().get<int>(0);
+
+        if (branch <= 0) {
+            throw OpmInputError {
+                fmt::format("Branch number {} for well {} must be a positive "
+                            "integer. Branch 1 is the main branch.", branch, wname),
+                location
+            };
+        }
+
         double x = record.getItem<Kw::X>().getSIDouble(0);
         double y = record.getItem<Kw::Y>().getSIDouble(0);
 
@@ -998,11 +1003,11 @@ CF and Kh items for well {} must both be specified or both defaulted/negative)",
             mapaxes->inv_transform(x, y);
         }
 
-        this->coord[0].push_back(x);
-        this->coord[1].push_back(y);
-        this->coord[2].push_back(record.getItem<Kw::TVD>().getSIDouble(0));
+        this->coord[branch][0].push_back(x);
+        this->coord[branch][1].push_back(y);
+        this->coord[branch][2].push_back(record.getItem<Kw::TVD>().getSIDouble(0));
 
-        this->md.push_back(record.getItem<Kw::MD>().getSIDouble(0));
+        this->md[branch].push_back(record.getItem<Kw::MD>().getSIDouble(0));
     }
 
     void WellConnections::applyDFactorCorrelation(const ScheduleGrid& grid,
@@ -1219,9 +1224,14 @@ CF and Kh items for well {} must both be specified or both defaulted/negative)",
         return this->headJ;
     }
 
-    const std::vector<double>& WellConnections::getMD() const
+    const std::map<int, std::vector<double>>& WellConnections::getMD() const
     {
         return this->md;
+    }
+
+    const std::map<int, std::array<std::vector<double>, 3>>& WellConnections::getCoord() const
+    {
+        return this->coord;
     }
 
     std::optional<int>
