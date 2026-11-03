@@ -19,14 +19,15 @@
 
 #include "cvfGeometryTools.h"
 
+#include "../cafPdmCore/cafAssert.h"
+
 namespace external {
 namespace cvf
 {
 //--------------------------------------------------------------------------------------------------
 ///
 //--------------------------------------------------------------------------------------------------
-cvf::Vec3d
-    GeometryTools::computeFaceCenter( const cvf::Vec3d& v0, const cvf::Vec3d& v1, const cvf::Vec3d& v2, const cvf::Vec3d& v3 )
+cvf::Vec3d GeometryTools::computeFaceCenter( const cvf::Vec3d& v0, const cvf::Vec3d& v1, const cvf::Vec3d& v2, const cvf::Vec3d& v3 )
 {
     cvf::Vec3d centerCoord = v0;
     centerCoord += v1;
@@ -169,6 +170,21 @@ double GeometryTools::getAngle( const cvf::Vec3d& v1, const cvf::Vec3d& v2 )
 //--------------------------------------------------------------------------------------------------
 ///
 //--------------------------------------------------------------------------------------------------
+cvf::Mat4d GeometryTools::rotationMatrixBetweenVectors( const cvf::Vec3d& v1, const cvf::Vec3d& v2 )
+{
+    cvf::Vec3d rotAxis = v1 ^ v2;
+    rotAxis.normalize();
+
+    // Guard acos against out-of-domain input
+    const double dotProduct = cvf::Math::clamp( v1 * v2, -1.0, 1.0 );
+    const double angle      = cvf::Math::acos( dotProduct );
+    cvf::Mat4d   rotMat     = cvf::Mat4d::fromRotation( rotAxis, angle );
+    return rotMat;
+}
+
+//--------------------------------------------------------------------------------------------------
+///
+//--------------------------------------------------------------------------------------------------
 double GeometryTools::signedAreaPlanarPolygon( const cvf::Vec3d& planeNormal, const std::vector<cvf::Vec3d>& polygon )
 {
     int Z = findClosestAxis( planeNormal );
@@ -180,8 +196,7 @@ double GeometryTools::signedAreaPlanarPolygon( const cvf::Vec3d& planeNormal, co
     double signedArea = 0.0;
     for ( size_t i = 0; i < polygon.size(); ++i )
     {
-        signedArea += ( polygon[( i + 1 ) % polygon.size()][X] - polygon[i][X] ) *
-                      ( polygon[( i + 1 ) % polygon.size()][Y] + polygon[i][Y] );
+        signedArea += ( polygon[( i + 1 ) % polygon.size()][X] - polygon[i][X] ) * ( polygon[( i + 1 ) % polygon.size()][Y] + polygon[i][Y] );
     }
     return signedArea;
 }
@@ -189,7 +204,7 @@ double GeometryTools::signedAreaPlanarPolygon( const cvf::Vec3d& planeNormal, co
 //--------------------------------------------------------------------------------------------------
 /// This method below is more correct than the one above, both in naming and behaviour.
 /// Should be replaced, but is not done now to avoid possible sideeffects
-/// The difference is the sign of the area. The one below retuns correct sign according to the plane normal
+/// The difference is the sign of the area. The one below returns correct sign according to the plane normal
 /// provided
 //--------------------------------------------------------------------------------------------------
 template <typename Vec3Type>
@@ -204,8 +219,7 @@ double closestAxisSignedAreaPlanarPolygon( const cvf::Vec3d& planeNormal, const 
     double signedArea = 0.0;
     for ( size_t i = 0; i < polygon.size(); ++i )
     {
-        signedArea += ( polygon[( i + 1 ) % polygon.size()][X] + polygon[i][X] ) *
-                      ( polygon[( i + 1 ) % polygon.size()][Y] - polygon[i][Y] );
+        signedArea += ( polygon[( i + 1 ) % polygon.size()][X] + polygon[i][X] ) * ( polygon[( i + 1 ) % polygon.size()][Y] - polygon[i][Y] );
     }
 
     return ( planeNormal[Z] > 0 ) ? signedArea : -signedArea;
@@ -214,7 +228,7 @@ double closestAxisSignedAreaPlanarPolygon( const cvf::Vec3d& planeNormal, const 
 /*
    Determine the intersection point of two line segments
    From Paul Bourke, but modified to really handle coincident lines
-   and lines with touching vertexes.
+   and lines with touching vertices.
    Returns an intersection status telling what kind of intersection it is (if any)
    */
 
@@ -229,30 +243,20 @@ GeometryTools::IntersectionStatus inPlaneLineIntersect( double  x1,
                                                         double  y4,
                                                         double  l1NormalizedTolerance,
                                                         double  l2NormalizedTolerance,
-                                                        double* x,
-                                                        double* y,
-                                                        double* fractionAlongLine1,
-                                                        double* fractionAlongLine2 )
+                                                        double& x,
+                                                        double& y,
+                                                        double& fractionAlongLine1,
+                                                        double& fractionAlongLine2 )
 {
-    double mua, mub;
-    double denom, numera, numerb;
-
-    denom  = ( y4 - y3 ) * ( x2 - x1 ) - ( x4 - x3 ) * ( y2 - y1 );
-    numera = ( x4 - x3 ) * ( y1 - y3 ) - ( y4 - y3 ) * ( x1 - x3 );
-    numerb = ( x2 - x1 ) * ( y1 - y3 ) - ( y2 - y1 ) * ( x1 - x3 );
+    auto denom  = ( y4 - y3 ) * ( x2 - x1 ) - ( x4 - x3 ) * ( y2 - y1 );
+    auto numera = ( x4 - x3 ) * ( y1 - y3 ) - ( y4 - y3 ) * ( x1 - x3 );
+    auto numerb = ( x2 - x1 ) * ( y1 - y3 ) - ( y2 - y1 ) * ( x1 - x3 );
 
     double EPS = 1e-40;
 
     // Are the line coincident?
     if ( fabs( numera ) < EPS && fabs( numerb ) < EPS && fabs( denom ) < EPS )
     {
-#if 0
-       *x = 0;
-       *y = 0;
-       *fractionAlongLine1 = 0;
-       *fractionAlongLine2 = 0;
-       return GeometryTools::LINES_OVERLAP;
-#else
         cvf::Vec3d p12( x2 - x1, y2 - y1, 0 );
         cvf::Vec3d p13( x3 - x1, y3 - y1, 0 );
         cvf::Vec3d p34( x4 - x3, y4 - y3, 0 );
@@ -264,10 +268,10 @@ GeometryTools::IntersectionStatus inPlaneLineIntersect( double  x1,
 
         if ( length12 < EPS )
         {
-            *x                  = x1;
-            *y                  = y1;
-            *fractionAlongLine1 = 1;
-            *fractionAlongLine2 = p13.length() / p34.length();
+            x                  = x1;
+            y                  = y1;
+            fractionAlongLine1 = 1;
+            fractionAlongLine2 = p13.length() / p34.length();
             return GeometryTools::LINES_OVERLAP;
         }
 
@@ -282,10 +286,10 @@ GeometryTools::IntersectionStatus inPlaneLineIntersect( double  x1,
         if ( ( normDist13 < 0 - l1NormalizedTolerance && normDist14 < 0 - l1NormalizedTolerance ) ||
              ( normDist13 > 1 + l1NormalizedTolerance && normDist14 > 1 + l1NormalizedTolerance ) )
         {
-            *x                  = 0;
-            *y                  = 0;
-            *fractionAlongLine1 = 0;
-            *fractionAlongLine2 = 0;
+            x                  = 0;
+            y                  = 0;
+            fractionAlongLine1 = 0;
+            fractionAlongLine2 = 0;
             return GeometryTools::NO_INTERSECTION;
         }
 
@@ -295,89 +299,86 @@ GeometryTools::IntersectionStatus inPlaneLineIntersect( double  x1,
         /// if two, select the one furthest from the start
         bool pt3IsInside = false;
         bool pt4IsInside = false;
-        if ( ( 0.0 - l1NormalizedTolerance ) <= normDist13 && normDist13 <= ( 1.0 + l1NormalizedTolerance ) )
-            pt3IsInside = true;
-        if ( ( 0.0 - l1NormalizedTolerance ) <= normDist14 && normDist14 <= ( 1.0 + l1NormalizedTolerance ) )
-            pt4IsInside = true;
+        if ( ( 0.0 - l1NormalizedTolerance ) <= normDist13 && normDist13 <= ( 1.0 + l1NormalizedTolerance ) ) pt3IsInside = true;
+        if ( ( 0.0 - l1NormalizedTolerance ) <= normDist14 && normDist14 <= ( 1.0 + l1NormalizedTolerance ) ) pt4IsInside = true;
 
         if ( pt3IsInside && !pt4IsInside )
         {
-            *fractionAlongLine1 = normDist13;
-            *fractionAlongLine2 = 0.0;
-            *x                  = x3;
-            *y                  = y3;
+            fractionAlongLine1 = normDist13;
+            fractionAlongLine2 = 0.0;
+            x                  = x3;
+            y                  = y3;
         }
         else if ( pt4IsInside && !pt3IsInside )
         {
-            *fractionAlongLine1 = normDist14;
-            *fractionAlongLine2 = 1.0;
-            *x                  = x4;
-            *y                  = y4;
+            fractionAlongLine1 = normDist14;
+            fractionAlongLine2 = 1.0;
+            x                  = x4;
+            y                  = y4;
         }
         else if ( pt3IsInside && pt4IsInside )
         {
             // Return edge 2 vertex furthest along edge 1
             if ( normDist13 <= normDist14 )
             {
-                *fractionAlongLine1 = normDist14;
-                *fractionAlongLine2 = 1.0;
-                *x                  = x4;
-                *y                  = y4;
+                fractionAlongLine1 = normDist14;
+                fractionAlongLine2 = 1.0;
+                x                  = x4;
+                y                  = y4;
             }
             else
             {
-                *fractionAlongLine1 = normDist13;
-                *fractionAlongLine2 = 0.0;
-                *x                  = x3;
-                *y                  = y3;
+                fractionAlongLine1 = normDist13;
+                fractionAlongLine2 = 0.0;
+                x                  = x3;
+                y                  = y3;
             }
         }
         else // both outside on each side
         {
             double normDist32 = e12 * p32 / length34;
             // Return End of edge 1
-            *fractionAlongLine1 = 1.0;
-            *fractionAlongLine2 = normDist32;
-            *x                  = x2;
-            *y                  = y2;
+            fractionAlongLine1 = 1.0;
+            fractionAlongLine2 = normDist32;
+            x                  = x2;
+            y                  = y2;
         }
 
         return GeometryTools::LINES_OVERLAP;
-#endif
     }
 
     /* Are the line parallel */
     if ( fabs( denom ) < EPS )
     {
-        *x                  = 0;
-        *y                  = 0;
-        *fractionAlongLine1 = 0;
-        *fractionAlongLine2 = 0;
+        x                  = 0;
+        y                  = 0;
+        fractionAlongLine1 = 0;
+        fractionAlongLine2 = 0;
 
         return GeometryTools::NO_INTERSECTION;
     }
 
     /* Is the intersection along the the segments */
-    mua = numera / denom;
-    mub = numerb / denom;
+    auto mua = numera / denom;
+    auto mub = numerb / denom;
 
-    *x                  = x1 + mua * ( x2 - x1 );
-    *y                  = y1 + mua * ( y2 - y1 );
-    *fractionAlongLine1 = mua;
-    *fractionAlongLine2 = mub;
+    x                  = x1 + mua * ( x2 - x1 );
+    y                  = y1 + mua * ( y2 - y1 );
+    fractionAlongLine1 = mua;
+    fractionAlongLine2 = mub;
 
     if ( mua < 0 - l1NormalizedTolerance || 1 + l1NormalizedTolerance < mua || mub < 0 - l2NormalizedTolerance ||
          1 + l2NormalizedTolerance < mub )
     {
         return GeometryTools::LINES_INTERSECT_OUTSIDE;
     }
-    else if ( fabs( mua ) < l1NormalizedTolerance || fabs( 1 - mua ) < l1NormalizedTolerance ||
-              fabs( mub ) < l2NormalizedTolerance || fabs( 1 - mub ) < l2NormalizedTolerance )
+    else if ( fabs( mua ) < l1NormalizedTolerance || fabs( 1 - mua ) < l1NormalizedTolerance || fabs( mub ) < l2NormalizedTolerance ||
+              fabs( 1 - mub ) < l2NormalizedTolerance )
     {
-        if ( fabs( mua ) < l1NormalizedTolerance ) *fractionAlongLine1 = 0;
-        if ( fabs( 1 - mua ) < l1NormalizedTolerance ) *fractionAlongLine1 = 1;
-        if ( fabs( mub ) < l2NormalizedTolerance ) *fractionAlongLine2 = 0;
-        if ( fabs( 1 - mub ) < l2NormalizedTolerance ) *fractionAlongLine2 = 1;
+        if ( fabs( mua ) < l1NormalizedTolerance ) fractionAlongLine1 = 0;
+        if ( fabs( 1 - mua ) < l1NormalizedTolerance ) fractionAlongLine1 = 1;
+        if ( fabs( mub ) < l2NormalizedTolerance ) fractionAlongLine2 = 0;
+        if ( fabs( 1 - mub ) < l2NormalizedTolerance ) fractionAlongLine2 = 1;
         return GeometryTools::LINES_TOUCH;
     }
     else
@@ -395,13 +396,11 @@ GeometryTools::IntersectionStatus GeometryTools::inPlaneLineIntersect3D( const c
                                                                          const cvf::Vec3d& p2,
                                                                          const cvf::Vec3d& p3,
                                                                          const cvf::Vec3d& p4,
-                                                                         cvf::Vec3d*       intersectionPoint,
-                                                                         double*           fractionAlongLine1,
-                                                                         double*           fractionAlongLine2,
+                                                                         cvf::Vec3d&       intersectionPoint,
+                                                                         double&           fractionAlongLine1,
+                                                                         double&           fractionAlongLine2,
                                                                          double            tolerance )
 {
-    CVF_ASSERT( intersectionPoint != nullptr );
-
     int    Z = findClosestAxis( planeNormal );
     int    X = ( Z + 1 ) % 3;
     int    Y = ( Z + 2 ) % 3;
@@ -411,29 +410,17 @@ GeometryTools::IntersectionStatus GeometryTools::inPlaneLineIntersect3D( const c
     double l1NormTol = tolerance / ( p2 - p1 ).length();
     double l2NormTol = tolerance / ( p4 - p3 ).length();
 
-    IntersectionStatus intersectionStatus = inPlaneLineIntersect( p1[X],
-                                                                  p1[Y],
-                                                                  p2[X],
-                                                                  p2[Y],
-                                                                  p3[X],
-                                                                  p3[Y],
-                                                                  p4[X],
-                                                                  p4[Y],
-                                                                  l1NormTol,
-                                                                  l2NormTol,
-                                                                  &x,
-                                                                  &y,
-                                                                  fractionAlongLine1,
-                                                                  fractionAlongLine2 );
+    IntersectionStatus intersectionStatus =
+        inPlaneLineIntersect( p1[X], p1[Y], p2[X], p2[Y], p3[X], p3[Y], p4[X], p4[Y], l1NormTol, l2NormTol, x, y, fractionAlongLine1, fractionAlongLine2 );
 
     // Check if we have a valid intersection point
     if ( intersectionStatus == NO_INTERSECTION || intersectionStatus == LINES_OVERLAP )
     {
-        intersectionPoint->setZero();
+        intersectionPoint.setZero();
     }
     else
     {
-        *intersectionPoint = p1 + ( *fractionAlongLine1 ) * ( p2 - p1 );
+        intersectionPoint = p1 + ( fractionAlongLine1 ) * ( p2 - p1 );
     }
 
     return intersectionStatus;
@@ -443,10 +430,7 @@ GeometryTools::IntersectionStatus GeometryTools::inPlaneLineIntersect3D( const c
 /// Compute projection of point p3 on the line p1 - p2
 //  If projection is out side the line segment, the end of line is returned
 //--------------------------------------------------------------------------------------------------
-cvf::Vec3d GeometryTools::projectPointOnLine( const cvf::Vec3d& p1,
-                                              const cvf::Vec3d& p2,
-                                              const cvf::Vec3d& p3,
-                                              double*           normalizedIntersection )
+cvf::Vec3d GeometryTools::projectPointOnLine( const cvf::Vec3d& p1, const cvf::Vec3d& p2, const cvf::Vec3d& p3, double* normalizedIntersection )
 {
     cvf::Vec3d v31 = p3 - p1;
     cvf::Vec3d v21 = p2 - p1;
@@ -525,8 +509,8 @@ int GeometryTools::intersectLineSegmentTriangle( const cvf::Vec3d& p0,
                                                  cvf::Vec3d*       intersectionPoint,
                                                  bool*             isLineDirDotNormalNegative )
 {
-    CVF_TIGHT_ASSERT( intersectionPoint != nullptr );
-    CVF_TIGHT_ASSERT( isLineDirDotNormalNegative != nullptr );
+    CAF_ASSERT( intersectionPoint != nullptr );
+    CAF_ASSERT( isLineDirDotNormalNegative != nullptr );
 
     cvf::Vec3d u, v, n; // triangle vectors
     cvf::Vec3d dir, w0, w; // ray vectors
@@ -617,8 +601,7 @@ inline double TriArea2D( double x1, double y1, double x2, double y2, double x3, 
 // These can be used as weights for interpolating scalar values across the triangle
 // Based on section 3.4 in "Real Time collision detection" by Christer Ericson
 //--------------------------------------------------------------------------------------------------
-cvf::Vec3d
-    GeometryTools::barycentricCoords( const cvf::Vec3d& t0, const cvf::Vec3d& t1, const cvf::Vec3d& t2, const cvf::Vec3d& p )
+cvf::Vec3d GeometryTools::barycentricCoords( const cvf::Vec3d& t0, const cvf::Vec3d& t1, const cvf::Vec3d& t2, const cvf::Vec3d& p )
 {
     // Unnormalized triangle normal
     cvf::Vec3d m = ( ( t1 - t0 ) ^ ( t2 - t0 ) );
@@ -672,11 +655,8 @@ inline double triArea3D( const cvf::Vec3d& v0, const cvf::Vec3d& v1, const cvf::
 /// a_i = Area(v_(i-1), v_i, v_(i+1))*Area(p, v_(i-2), v_(i-1))*Area(p, v_(i+1), v_(i+2))
 
 //--------------------------------------------------------------------------------------------------
-cvf::Vec4d GeometryTools::barycentricCoords( const cvf::Vec3d& v0,
-                                             const cvf::Vec3d& v1,
-                                             const cvf::Vec3d& v2,
-                                             const cvf::Vec3d& v3,
-                                             const cvf::Vec3d& p )
+cvf::Vec4d
+    GeometryTools::barycentricCoords( const cvf::Vec3d& v0, const cvf::Vec3d& v1, const cvf::Vec3d& v2, const cvf::Vec3d& v3, const cvf::Vec3d& p )
 {
     cvf::Vec4d w;
     cvf::Vec4d a;
@@ -722,10 +702,8 @@ void GeometryTools::addMidEdgeNodes( std::list<std::pair<cvf::uint, bool>>* poly
         if ( !edgeSplitStorage.findSplitPoint( it->first, it2->first, &midPointIndex ) )
         {
             midEdgeCoord.setZero();
-            midEdgeCoord += ( it->first < nodes.size() ) ? nodes[it->first]
-                                                         : ( *createdVertexes )[it->first - nodes.size()];
-            midEdgeCoord += ( it2->first < nodes.size() ) ? nodes[it2->first]
-                                                          : ( *createdVertexes )[it2->first - nodes.size()];
+            midEdgeCoord += ( it->first < nodes.size() ) ? nodes[it->first] : ( *createdVertexes )[it->first - nodes.size()];
+            midEdgeCoord += ( it2->first < nodes.size() ) ? nodes[it2->first] : ( *createdVertexes )[it2->first - nodes.size()];
             midEdgeCoord *= 0.5;
 
             midPointIndex = newVertexIndex;
@@ -888,7 +866,7 @@ void EdgeSplitStorage::setVertexCount( size_t size )
 bool EdgeSplitStorage::findSplitPoint( size_t edgeP1Index, size_t edgeP2Index, size_t* splitPointIndex )
 {
     canonizeAddress( edgeP1Index, edgeP2Index );
-    CVF_ASSERT( edgeP1Index < m_edgeSplitMap.size() );
+    CAF_ASSERT( edgeP1Index < m_edgeSplitMap.size() );
 
     std::map<size_t, size_t>::iterator it;
 
@@ -905,7 +883,7 @@ bool EdgeSplitStorage::findSplitPoint( size_t edgeP1Index, size_t edgeP2Index, s
 void EdgeSplitStorage::addSplitPoint( size_t edgeP1Index, size_t edgeP2Index, size_t splitPointIndex )
 {
     canonizeAddress( edgeP1Index, edgeP2Index );
-    CVF_ASSERT( edgeP1Index < m_edgeSplitMap.size() );
+    CAF_ASSERT( edgeP1Index < m_edgeSplitMap.size() );
     m_edgeSplitMap[edgeP1Index][edgeP2Index] = splitPointIndex;
 }
 
@@ -937,13 +915,13 @@ EarClipTesselator::EarClipTesselator()
 //--------------------------------------------------------------------------------------------------
 /// \brief      Do the main processing/actual triangulation
 /// \param      triangleIndices Array that will receive the indices of the triangles resulting from the triangulation
-/// \return        true when a tesselation was successully created
+/// \return        true when a tessellation was successfully created
 //--------------------------------------------------------------------------------------------------
 
 bool EarClipTesselator::calculateTriangles( std::vector<size_t>* triangleIndices )
 {
-    CVF_ASSERT( m_nodeCoords != nullptr );
-    CVF_ASSERT( m_X > -1 && m_Y > -1 );
+    CAF_ASSERT( m_nodeCoords != nullptr );
+    CAF_ASSERT( m_X > -1 && m_Y > -1 );
 
     size_t numVertices = m_polygonIndices.size();
 
@@ -1022,14 +1000,13 @@ EarClipTesselator::TriangleStatus EarClipTesselator::calculateTriangleStatus( st
                                                                               std::list<size_t>::const_iterator v,
                                                                               std::list<size_t>::const_iterator w ) const
 {
-    CVF_ASSERT( m_X > -1 && m_Y > -1 );
+    CAF_ASSERT( m_X > -1 && m_Y > -1 );
 
     cvf::Vec3d A = ( *m_nodeCoords )[*u];
     cvf::Vec3d B = ( *m_nodeCoords )[*v];
     cvf::Vec3d C = ( *m_nodeCoords )[*w];
 
-    double mainAxisProjectedArea = ( ( B[m_X] - A[m_X] ) * ( C[m_Y] - A[m_Y] ) ) -
-                                   ( ( B[m_Y] - A[m_Y] ) * ( C[m_X] - A[m_X] ) );
+    double mainAxisProjectedArea = ( ( B[m_X] - A[m_X] ) * ( C[m_Y] - A[m_Y] ) ) - ( ( B[m_Y] - A[m_Y] ) * ( C[m_X] - A[m_X] ) );
     if ( -m_areaTolerance > mainAxisProjectedArea )
     {
         // Definite negative triangle
@@ -1082,12 +1059,9 @@ EarClipTesselator::TriangleStatus EarClipTesselator::calculateTriangleStatus( st
 /// If cross product is negative, the point is outside
 //--------------------------------------------------------------------------------------------------
 
-bool EarClipTesselator::isPointInsideTriangle( const cvf::Vec3d& A,
-                                               const cvf::Vec3d& B,
-                                               const cvf::Vec3d& C,
-                                               const cvf::Vec3d& P ) const
+bool EarClipTesselator::isPointInsideTriangle( const cvf::Vec3d& A, const cvf::Vec3d& B, const cvf::Vec3d& C, const cvf::Vec3d& P ) const
 {
-    CVF_ASSERT( m_X > -1 && m_Y > -1 );
+    CAF_ASSERT( m_X > -1 && m_Y > -1 );
 
     double ax = C[m_X] - B[m_X];
     double ay = C[m_Y] - B[m_Y];
@@ -1117,7 +1091,7 @@ bool EarClipTesselator::isPointInsideTriangle( const cvf::Vec3d& A,
 
 double EarClipTesselator::calculateProjectedPolygonArea() const
 {
-    CVF_ASSERT( m_X > -1 && m_Y > -1 );
+    CAF_ASSERT( m_X > -1 && m_Y > -1 );
 
     double A = 0;
 
@@ -1127,8 +1101,7 @@ double EarClipTesselator::calculateProjectedPolygonArea() const
     std::list<size_t>::const_iterator q = m_polygonIndices.begin();
     while ( q != m_polygonIndices.end() )
     {
-        A += ( *m_nodeCoords )[*p][m_X] * ( *m_nodeCoords )[*q][m_Y] -
-             ( *m_nodeCoords )[*q][m_X] * ( *m_nodeCoords )[*p][m_Y];
+        A += ( *m_nodeCoords )[*p][m_X] * ( *m_nodeCoords )[*q][m_Y] - ( *m_nodeCoords )[*q][m_X] * ( *m_nodeCoords )[*p][m_Y];
 
         p = q;
         ++q;
@@ -1197,9 +1170,9 @@ FanEarClipTesselator::FanEarClipTesselator()
 //--------------------------------------------------------------------------------------------------
 bool FanEarClipTesselator::calculateTriangles( std::vector<size_t>* triangles )
 {
-    CVF_ASSERT( m_centerNodeIndex != std::numeric_limits<size_t>::max() );
-    CVF_ASSERT( m_nodeCoords != nullptr );
-    CVF_ASSERT( m_X > -1 && m_Y > -1 );
+    CAF_ASSERT( m_centerNodeIndex != std::numeric_limits<size_t>::max() );
+    CAF_ASSERT( m_nodeCoords != nullptr );
+    CAF_ASSERT( m_X > -1 && m_Y > -1 );
 
     size_t nv = m_polygonIndices.size();
 
@@ -1270,14 +1243,13 @@ bool FanEarClipTesselator::calculateTriangles( std::vector<size_t>* triangles )
 //--------------------------------------------------------------------------------------------------
 bool FanEarClipTesselator::isTriangleValid( size_t u, size_t v, size_t w )
 {
-    CVF_ASSERT( m_X > -1 && m_Y > -1 );
+    CAF_ASSERT( m_X > -1 && m_Y > -1 );
 
     cvf::Vec3d A = ( *m_nodeCoords )[u];
     cvf::Vec3d B = ( *m_nodeCoords )[v];
     cvf::Vec3d C = ( *m_nodeCoords )[w];
 
-    if ( m_areaTolerance > ( ( ( B[m_X] - A[m_X] ) * ( C[m_Y] - A[m_Y] ) ) - ( ( B[m_Y] - A[m_Y] ) * ( C[m_X] - A[m_X] ) ) ) )
-        return false;
+    if ( m_areaTolerance > ( ( ( B[m_X] - A[m_X] ) * ( C[m_Y] - A[m_Y] ) ) - ( ( B[m_Y] - A[m_Y] ) * ( C[m_X] - A[m_X] ) ) ) ) return false;
 
     std::list<size_t>::const_iterator c;
     for ( c = m_polygonIndices.begin(); c != m_polygonIndices.end(); ++c )
