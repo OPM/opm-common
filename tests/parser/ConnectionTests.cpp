@@ -1947,6 +1947,80 @@ BOOST_AUTO_TEST_CASE(Comptraj_Input_And_Calculated_CTF_Sharing_A_Cell)
     }
 }
 
+BOOST_AUTO_TEST_CASE(Comptraj_Overlapping_Intervals_Of_One_Keyword_Are_Rejected)
+{
+    // Partially overlapping, nested, and repeated intervals of a branch.
+    for (const auto* records : {
+            R"(  'W1'    1    2000   2020   2*     1*    1*   10.0  0.25  100  0 /
+  'W1'    1    2010   2030   2*     1*    1*   30.0  0.25  300  0 /
+)",
+            R"(  'W1'    1    2000   2030   2*     1*    1*   10.0  0.25  100  0 /
+  'W1'    1    2010   2020   2*     1*    1*   30.0  0.25  300  0 /
+)",
+            R"(  'W1'    1    2000   2010   2*     1*    1*   10.0  0.25  100  0 /
+  'W1'    1    2000   2010   2*     1*    1*   30.0  0.25  300  0 /
+)" })
+    {
+        const auto deck = comptrajDeck(weltraj_two_branches + "COMPTRAJ\n" + records + "/\n");
+
+        BOOST_CHECK_THROW(comptrajSchedule(deck), Opm::OpmInputError);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(Comptraj_Touching_Intervals_Of_One_Keyword_Are_Accepted)
+{
+    // The intervals meet at MD 2015, inside cell (3,3,2).
+    const auto deck = comptrajDeck(weltraj_two_branches + R"(COMPTRAJ
+-- WELL BRANCH  TOP    BOT   REF NO STATE SAT   CF   DIAM   KH  SKIN
+  'W1'    1    2000   2015   2*     1*    1*   10.0  0.25  100  0 /
+  'W1'    1    2015   2030   2*     1*    1*   30.0  0.25  300  0 /
+/
+)");
+
+    const auto sched = comptrajSchedule(deck);
+    const auto& connections = sched.getWell("W1", 0).getConnections();
+
+    BOOST_REQUIRE_EQUAL(connections.size(), std::size_t{3});
+
+    const auto& shared = connectionAt(connections, 2, 2, 1);
+    BOOST_CHECK_EQUAL(shared.intervalContributions().size(), std::size_t{2});
+    BOOST_CHECK_CLOSE(shared.CF(), siCF(deck, 10.0 + 30.0), 1.0e-8);
+    BOOST_CHECK_CLOSE(shared.Kh(), siKh(deck, 100.0 + 300.0), 1.0e-8);
+}
+
+BOOST_AUTO_TEST_CASE(Comptraj_Earlier_Intervals_Can_Only_Be_Respecified_As_A_Whole)
+{
+    const auto comptraj = [](const int branch, const int top, const int bottom)
+    {
+        return fmt::format(R"(COMPTRAJ
+  'W1'    {}    {}   {}   2*     1*    1*   10.0  0.25  100  0 /
+/
+)", branch, top, bottom);
+    };
+
+    const auto schedule = [](const std::string& earlier, const std::string& later)
+    {
+        return comptrajSchedule(comptrajDeck(weltraj_two_branches + earlier + later));
+    };
+
+    // Overlapping the top or the bottom of an earlier interval, nested in
+    // it, or containing it.
+    BOOST_CHECK_THROW(schedule(comptraj(1, 2005, 2015), comptraj(1, 2000, 2010)),
+                      Opm::OpmInputError);
+    BOOST_CHECK_THROW(schedule(comptraj(1, 2005, 2015), comptraj(1, 2010, 2030)),
+                      Opm::OpmInputError);
+    BOOST_CHECK_THROW(schedule(comptraj(1, 2005, 2025), comptraj(1, 2008, 2022)),
+                      Opm::OpmInputError);
+    BOOST_CHECK_THROW(schedule(comptraj(1, 2008, 2022), comptraj(1, 2005, 2025)),
+                      Opm::OpmInputError);
+
+    // Re-specifying it, touching it, or covering the same measured depths
+    // on another branch.
+    BOOST_CHECK_NO_THROW(schedule(comptraj(1, 2005, 2015), comptraj(1, 2005, 2015)));
+    BOOST_CHECK_NO_THROW(schedule(comptraj(1, 2005, 2015), comptraj(1, 2015, 2030)));
+    BOOST_CHECK_NO_THROW(schedule(comptraj(2, 2015, 2115), comptraj(1, 2010, 2030)));
+}
+
 BOOST_AUTO_TEST_CASE(Comptraj_Respecified_Interval_Releases_Cells_It_No_Longer_Perforates)
 {
     // Cell (3,3,2) has no lateral permeability, so a connection factor

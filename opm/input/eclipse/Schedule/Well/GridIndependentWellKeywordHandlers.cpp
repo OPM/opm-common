@@ -30,8 +30,11 @@
 #include <opm/input/eclipse/Schedule/ScheduleGrid.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleState.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleStatic.hpp>
+#include <opm/input/eclipse/Schedule/Well/Connection.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
+
+#include <opm/input/eclipse/Units/UnitSystem.hpp>
 
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 
@@ -45,6 +48,7 @@
 
 #include <algorithm>
 #include <functional>
+#include <map>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -79,6 +83,78 @@ namespace
 
         return msg;
     }
+
+    using PerforationInterval = Connection::PerforationInterval;
+
+    /// Reject a COMPTRAJ perforation interval overlapping another interval
+    /// of the same branch of a well.
+    ///
+    /// The intervals of a branch given in one keyword must not overlap,
+    /// although they may touch.  An interval given by an earlier keyword may
+    /// be re-specified, which replaces it, but only as a whole, so a later
+    /// interval must either match it exactly or not overlap it at all.
+    ///
+    /// \param[in] interval Perforation interval of the current record.
+    ///
+    /// \param[in] keyword_intervals Perforation intervals of the well given
+    /// by the preceding records of the current keyword.
+    ///
+    /// \param[in] connections Current connections of the well, recording
+    /// the perforation intervals perforating their cells.
+    ///
+    /// \param[in] well_name Name of the well.
+    ///
+    /// \param[in] handlerContext Context of the current keyword.
+    void checkPerforationInterval(const PerforationInterval&              interval,
+                                  const std::vector<PerforationInterval>& keyword_intervals,
+                                  const WellConnections&                  connections,
+                                  const std::string&                      well_name,
+                                  const HandlerContext&                   handlerContext)
+    {
+        const auto& units = handlerContext.static_schedule().m_unit_system;
+        const auto toDeckLength = [&units](const double si)
+        { return units.from_si(UnitSystem::measure::length, si); };
+
+        const auto overlaps = [&interval](const PerforationInterval& other)
+        {
+            return (other.branch == interval.branch)
+                && (std::max(other.top, interval.top) < std::min(other.bottom, interval.bottom));
+        };
+
+        for (const auto& other : keyword_intervals) {
+            if (overlaps(other)) {
+                const auto msg = fmt::format(
+                    "The perforation interval from {:g} to {:g} of branch {} of well {} "
+                    "overlaps the interval from {:g} to {:g} given earlier in the same "
+                    "keyword. The perforation intervals of a branch must not overlap.",
+                    toDeckLength(interval.top), toDeckLength(interval.bottom), interval.branch,
+                    well_name, toDeckLength(other.top), toDeckLength(other.bottom));
+
+                throw OpmInputError(msg, handlerContext.keyword.location());
+            }
+        }
+
+        // The intervals of the current keyword do not overlap, so any
+        // overlapping interval found here was given by an earlier keyword.
+        for (const auto& connection : connections) {
+            for (const auto& contribution : connection.intervalContributions()) {
+                const auto& other = contribution.interval;
+
+                if ((other != interval) && overlaps(other)) {
+                    const auto msg = fmt::format(
+                        "The perforation interval from {:g} to {:g} of branch {} of well {} "
+                        "overlaps the interval from {:g} to {:g} given by an earlier COMPTRAJ "
+                        "keyword. An earlier interval can only be re-specified as a whole, with "
+                        "the same top and bottom, which replaces it.",
+                        toDeckLength(interval.top), toDeckLength(interval.bottom), interval.branch,
+                        well_name, toDeckLength(other.top), toDeckLength(other.bottom));
+
+                    throw OpmInputError(msg, handlerContext.keyword.location());
+                }
+            }
+        }
+    }
+
 
     std::pair<std::vector<Compsegs::TrajectorySegment>, std::vector<std::pair<double, double>>>
     get_segment_geometries(HandlerContext&                                            handlerContext,
@@ -157,6 +233,9 @@ namespace
     {
         using Kw = ParserKeywords::COMPTRAJ;
 
+        // Perforation intervals given by the keyword, per well.
+        auto keyword_intervals = std::map<std::string, std::vector<PerforationInterval>>{};
+
         WellTrajInfo wellTraj;
         for (const auto& record : handlerContext.keyword) {
             const auto wellNamePattern = record.getItem<Kw::WELL>().getTrimmedString(0);
@@ -175,6 +254,17 @@ namespace
 
                     throw OpmInputError(msg, handlerContext.keyword.location());
                 }
+
+                const auto interval = PerforationInterval {
+                    .branch = record.getItem<Kw::BRANCH_NUMBER>().get<int>(0),
+                    .top = record.getItem<Kw::PERF_TOP>().getSIDouble(0),
+                    .bottom = record.getItem<Kw::PERF_BOT>().getSIDouble(0),
+                };
+
+                auto& well_intervals = keyword_intervals[name];
+                checkPerforationInterval(interval, well_intervals, existing_connections,
+                                         name, handlerContext);
+                well_intervals.push_back(interval);
 
                 // cellsearchTree is calculated only once and is used to
                 // calculate cell intersections of the specified perforations.
