@@ -395,9 +395,11 @@ DRSDT
 -- if DRSDT is set to 0, GOR cannot rise and free gas does not
 -- dissolve in undersaturated oil -> constant bubble point pressure
 
+-- The well head of INJ is defaulted; it is derived from the WELTRAJ
+-- trajectory (the first cell intersected by the trajectory).
 WELSPECS
 -- Item #: 1	 2	3	4	5	 6
-	'INJ'	  'G1'  9	9	8335	'GAS' /
+	'INJ'	  'G1'  1*	1*	8335	'GAS' /
 	'PROD'	'G1'  2	2	8335	'OIL' /
 /
 
