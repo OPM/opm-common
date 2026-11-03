@@ -151,6 +151,10 @@ public:
         /// it.
         int exteriorEquilRegion = -1;
 
+        /// Geometric thermal transmissibility across the face in the producing
+        /// run, both half-cells in series.  Zero when not recorded.
+        double thermalTransmissibility = 0.0;
+
         bool operator==(const BoundaryFace& other) const;
     };
 
