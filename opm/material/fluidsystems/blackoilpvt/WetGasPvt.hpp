@@ -242,38 +242,38 @@ public:
     /*!
      * \brief Return the number of PVT regions which are considered by this PVT-object.
      */
-    unsigned numRegions() const
+    OPM_HOST_DEVICE unsigned numRegions() const
     { return gasReferenceDensity_.size(); }
 
     /*!
      * \brief Returns the specific enthalpy [J/kg] of gas given a set of parameters.
      */
     template <class Evaluation>
-    Evaluation internalEnergy(unsigned,
-                              const Evaluation&,
-                              const Evaluation&,
-                              const Evaluation&,
-                              const Evaluation&) const
+    OPM_HOST_DEVICE Evaluation internalEnergy(unsigned,
+                                              const Evaluation&,
+                                              const Evaluation&,
+                                              const Evaluation&,
+                                              const Evaluation&) const
     {
-        throw std::runtime_error("Requested the enthalpy of gas but the thermal "
-                                 "option is not enabled");
+        OPM_THROW(std::runtime_error, "Requested the enthalpy of gas but the thermal "
+                                      "option is not enabled");
     }
 
-    Scalar hVap(unsigned) const
+    OPM_HOST_DEVICE Scalar hVap(unsigned) const
     {
-        throw std::runtime_error("Requested the hvap of oil but the thermal "
-                                 "option is not enabled");
+        OPM_THROW(std::runtime_error, "Requested the hvap of gas but the thermal "
+                                      "option is not enabled");
     }
 
     /*!
      * \brief Returns the dynamic viscosity [Pa s] of the fluid phase given a set of parameters.
      */
     template <class Evaluation>
-    Evaluation viscosity(unsigned regionIdx,
-                         const Evaluation& /*temperature*/,
-                         const Evaluation& pressure,
-                         const Evaluation& Rv,
-                         const Evaluation& /*Rvw*/) const
+    OPM_HOST_DEVICE Evaluation viscosity(unsigned regionIdx,
+                                         const Evaluation& /*temperature*/,
+                                         const Evaluation& pressure,
+                                         const Evaluation& Rv,
+                                         const Evaluation& /*Rvw*/) const
     {
         const Evaluation& invBg = inverseGasB_[regionIdx].eval(pressure, Rv, /*extrapolate=*/true);
         const Evaluation& invMugBg = inverseGasBMu_[regionIdx].eval(pressure, Rv, /*extrapolate=*/true);
@@ -285,9 +285,9 @@ public:
      * \brief Returns the dynamic viscosity [Pa s] of oil saturated gas at a given pressure.
      */
     template <class Evaluation>
-    Evaluation saturatedViscosity(unsigned regionIdx,
-                                  const Evaluation& /*temperature*/,
-                                  const Evaluation& pressure) const
+    OPM_HOST_DEVICE Evaluation saturatedViscosity(unsigned regionIdx,
+                                                  const Evaluation& /*temperature*/,
+                                                  const Evaluation& pressure) const
     {
         const Evaluation& invBg = inverseSaturatedGasB_[regionIdx].eval(pressure, /*extrapolate=*/true);
         const Evaluation& invMugBg = inverseSaturatedGasBMu_[regionIdx].eval(pressure, /*extrapolate=*/true);
@@ -299,18 +299,18 @@ public:
      * \brief Returns the formation volume factor [-] of the fluid phase.
      */
     template <class Evaluation>
-    Evaluation inverseFormationVolumeFactor(unsigned regionIdx,
-                                            const Evaluation& /*temperature*/,
-                                            const Evaluation& pressure,
-                                            const Evaluation& Rv,
-                                            const Evaluation& /*Rvw*/) const
+    OPM_HOST_DEVICE Evaluation inverseFormationVolumeFactor(unsigned regionIdx,
+                                                            const Evaluation& /*temperature*/,
+                                                            const Evaluation& pressure,
+                                                            const Evaluation& Rv,
+                                                            const Evaluation& /*Rvw*/) const
     { return inverseGasB_[regionIdx].eval(pressure, Rv, /*extrapolate=*/true); }
 
     /*!
      * \brief Returns the formation volume factor [-] and viscosity [Pa s] of the fluid phase.
      */
     template <class FluidState, class LhsEval = typename FluidState::ValueType>
-    std::pair<LhsEval, LhsEval>
+    OPM_HOST_DEVICE std::pair<LhsEval, LhsEval>
     inverseFormationVolumeFactorAndViscosity(const FluidState& fluidState, unsigned regionIdx) const
     {
         const LhsEval& p = decay<LhsEval>(fluidState.pressure(FluidState::gasPhaseIdx));
@@ -340,37 +340,37 @@ public:
      * \brief Returns the formation volume factor [-] of oil saturated gas at a given pressure.
      */
     template <class Evaluation>
-    Evaluation saturatedInverseFormationVolumeFactor(unsigned regionIdx,
-                                                     const Evaluation& /*temperature*/,
-                                                     const Evaluation& pressure) const
+    OPM_HOST_DEVICE Evaluation saturatedInverseFormationVolumeFactor(unsigned regionIdx,
+                                                                     const Evaluation& /*temperature*/,
+                                                                     const Evaluation& pressure) const
     { return inverseSaturatedGasB_[regionIdx].eval(pressure, /*extrapolate=*/true); }
 
     /*!
      * \brief Returns the water vaporization factor \f$R_vw\f$ [m^3/m^3] of the gasphase.
      */
     template <class Evaluation>
-    Evaluation saturatedWaterVaporizationFactor(unsigned /*regionIdx*/,
-                                                const Evaluation& /*temperature*/,
-                                                const Evaluation& /*pressure*/) const
+    OPM_HOST_DEVICE Evaluation saturatedWaterVaporizationFactor(unsigned /*regionIdx*/,
+                                                                const Evaluation& /*temperature*/,
+                                                                const Evaluation& /*pressure*/) const
     { return 0.0; /* this is non-humid gas! */ }
 
     /*!
     * \brief Returns the water vaporization factor \f$R_vw\f$ [m^3/m^3] of water saturated gas.
     */
     template <class Evaluation = Scalar>
-    Evaluation saturatedWaterVaporizationFactor(unsigned /*regionIdx*/,
-                                                const Evaluation& /*temperature*/,
-                                                const Evaluation& /*pressure*/,
-                                                const Evaluation& /*saltConcentration*/) const
+    OPM_HOST_DEVICE Evaluation saturatedWaterVaporizationFactor(unsigned /*regionIdx*/,
+                                                                const Evaluation& /*temperature*/,
+                                                                const Evaluation& /*pressure*/,
+                                                                const Evaluation& /*saltConcentration*/) const
     { return 0.0; }
 
     /*!
      * \brief Returns the oil vaporization factor \f$R_v\f$ [m^3/m^3] of the gas phase.
      */
     template <class Evaluation>
-    Evaluation saturatedOilVaporizationFactor(unsigned regionIdx,
-                                              const Evaluation& /*temperature*/,
-                                              const Evaluation& pressure) const
+    OPM_HOST_DEVICE Evaluation saturatedOilVaporizationFactor(unsigned regionIdx,
+                                                              const Evaluation& /*temperature*/,
+                                                              const Evaluation& pressure) const
     {
         return saturatedOilVaporizationFactorTable_[regionIdx].eval(pressure, /*extrapolate=*/true);
     }
@@ -383,11 +383,11 @@ public:
      * to how the Eclipse 100 simulator handles this. (cf the VAPPARS keyword.)
      */
     template <class Evaluation>
-    Evaluation saturatedOilVaporizationFactor(unsigned regionIdx,
-                                              const Evaluation& /*temperature*/,
-                                              const Evaluation& pressure,
-                                              const Evaluation& oilSaturation,
-                                              Evaluation maxOilSaturation) const
+    OPM_HOST_DEVICE Evaluation saturatedOilVaporizationFactor(unsigned regionIdx,
+                                                              const Evaluation& /*temperature*/,
+                                                              const Evaluation& pressure,
+                                                              const Evaluation& oilSaturation,
+                                                              Evaluation maxOilSaturation) const
     {
         Evaluation tmp =
             saturatedOilVaporizationFactorTable_[regionIdx].eval(pressure, /*extrapolate=*/true);
@@ -471,18 +471,18 @@ public:
     }
 
     template <class Evaluation>
-    Evaluation diffusionCoefficient(const Evaluation& /*temperature*/,
-                                    const Evaluation& /*pressure*/,
-                                    unsigned /*compIdx*/) const
+    OPM_HOST_DEVICE Evaluation diffusionCoefficient(const Evaluation& /*temperature*/,
+                                                    const Evaluation& /*pressure*/,
+                                                    unsigned /*compIdx*/) const
     {
-        throw std::runtime_error("Not implemented: The PVT model does not provide "
-                                 "a diffusionCoefficient()");
+        OPM_THROW(std::runtime_error, "Not implemented: The PVT model does not provide "
+                                      "a diffusionCoefficient()");
     }
 
-    Scalar gasReferenceDensity(unsigned regionIdx) const
+    OPM_HOST_DEVICE Scalar gasReferenceDensity(unsigned regionIdx) const
     { return gasReferenceDensity_[regionIdx]; }
 
-    Scalar oilReferenceDensity(unsigned regionIdx) const
+    OPM_HOST_DEVICE Scalar oilReferenceDensity(unsigned regionIdx) const
     { return oilReferenceDensity_[regionIdx]; }
 
     const Storage<TabulatedTwoDFunction>& inverseGasB() const
@@ -506,7 +506,7 @@ public:
     const Storage<TabulatedOneDFunction>& saturationPressure() const
     { return saturationPressure_; }
 
-    Scalar vapPar1() const
+    OPM_HOST_DEVICE Scalar vapPar1() const
     { return vapPar1_; }
 
 private:
