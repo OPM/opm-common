@@ -21,6 +21,7 @@
 
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/utility/OpmInputError.hpp>
+#include <opm/common/utility/numeric/linearInterpolation.hpp>
 
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 
@@ -44,6 +45,7 @@
 #include <algorithm>
 #include <functional>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <unordered_set>
 #include <utility>
@@ -207,13 +209,18 @@ Well {} has no connections to the grid. The well will remain SHUT)", name);
                 connections->loadWELTRAJ(record, name, handlerContext.grid,
                                          handlerContext.keyword.location());
 
-                if (const auto& md = connections->getMD(); md.size() > 1) {
+                for (const auto& [branch, md] : connections->getMD()) {
+                    if (md.size() < 2) {
+                        continue;
+                    }
+
                     const bool strictly_increasing = std::adjacent_find
                         (md.begin(), md.end(), std::greater_equal<>{}) == md.end();
 
                     if (!strictly_increasing) {
                         const auto msg = fmt::format("Well {} measured depth column "
-                                                     "is not strictly increasing", name);
+                                                     "for branch {} is not strictly increasing",
+                                                     name, branch);
 
                         throw OpmInputError(msg, handlerContext.keyword.location());
                     }
@@ -241,6 +248,55 @@ getGridIndependentWellKeywordHandlers()
         {"COMPTRAJ", &handleCOMPTRAJ},
         {"WELTRAJ", &handleWELTRAJ},
     };
+}
+
+void initWellPathGeometry(external::cvf::ref<external::RigWellPath>& wellPathGeometry,
+                          const std::array<std::vector<double>, 3>&  coords,
+                          const std::vector<double>&                 mds,
+                          std::optional<double>                      top_opt,
+                          std::optional<double>                      bot_opt)
+{
+    const double top = top_opt.value_or(mds.front());
+    const double bot = bot_opt.value_or(mds.back());
+
+    if ((top < mds.front()) || (bot > mds.back()) || (bot < top)) {
+        // linearInterpolation() clamps to the end points, so an interval
+        // reaching past the trajectory would be silently truncated and one
+        // that runs backwards would collapse to a point.
+        throw std::logic_error {
+            fmt::format("Perforation interval {} to {} is not contained in the "
+                        "branch's trajectory, which covers measured depths "
+                        "{} to {}.", top, bot, mds.front(), mds.back())
+        };
+    }
+
+    std::vector<external::cvf::Vec3d> points;
+    std::vector<double> measured_depths;
+
+    points.reserve(coords[0].size());
+    measured_depths.reserve(coords[0].size());
+
+    // Calculate the x,y,z coordinates of the begin and end of the interval
+    external::cvf::Vec3d p_top, p_bot;
+    for (std::size_t i = 0; i < 3; ++i) {
+        p_top[i] = linearInterpolation(mds, coords[i], top);
+        p_bot[i] = linearInterpolation(mds, coords[i], bot);
+    }
+
+    points.push_back(p_top);
+    measured_depths.push_back(top);
+
+    for (std::size_t i = 0; i < coords[0].size(); ++i) {
+        if ((mds[i] > top) && (mds[i] < bot)) {
+            points.push_back(external::cvf::Vec3d(coords[0][i], coords[1][i], coords[2][i]));
+            measured_depths.push_back(mds[i]);
+        }
+    }
+
+    points.push_back(p_bot);
+    measured_depths.push_back(bot);
+
+    wellPathGeometry->setWellPathPoints(points, measured_depths);
 }
 
 } // namespace Opm

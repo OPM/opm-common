@@ -1328,6 +1328,159 @@ Connection (2,1,2) (direction 'Y') for well P ignored because
 
 namespace {
 
+    /// Build a deck around \p schedule with a 5x5x3 grid of 100x100x10 m
+    /// cells whose top layer starts at 2000 m.  Keywords in \p extra_grid
+    /// are added to the end of the GRID section.
+    Opm::Deck comptrajDeck(const std::string& schedule,
+                           const std::string& extra_grid = {})
+    {
+        return Opm::Parser{}.parseString(R"(RUNSPEC
+START
+  18 MAR 2026 /
+OIL
+WATER
+DIMENS
+  5 5 3 /
+TABDIMS
+/
+EQLDIMS
+/
+WELLDIMS
+  2 20 1 2 /
+WSEGDIMS
+  2 20 3 /
+GRID
+DXV
+  5*100 /
+DYV
+  5*100 /
+DZV
+  3*10 /
+DEPTHZ
+  36*2000 /
+EQUALS
+  PERMX 100 /
+  PERMY 100 /
+  PERMZ  10 /
+  PORO    0.3 /
+/
+)" + extra_grid + R"(
+PROPS
+DENSITY
+  800 1000 1 /
+SOLUTION
+EQUIL
+  2010 200 2010 1.23 1995 0.0 1* 1* -5 /
+SCHEDULE
+)" + schedule + R"(
+TSTEP
+  5*10 /
+END
+)");
+    }
+
+    Opm::Schedule comptrajSchedule(const Opm::Deck& deck)
+    {
+        const auto es = Opm::EclipseState { deck };
+
+        return Opm::Schedule {
+            deck, es, Opm::ParseContext{}, *std::make_unique<Opm::ErrorGuard>(),
+            std::make_shared<Opm::Python>()
+        };
+    }
+
+    // A vertical main branch through column (3,3) and a lateral running in
+    // the X direction through the middle layer, so that cell (3,3,2) is
+    // perforated by both.  Measured depths are chosen so that MD == TVD along
+    // the vertical part.
+    const std::string weltraj_two_branches = R"(WELSPECS
+  'W1' 'G' 3 3 2000.0 OIL /
+/
+WELTRAJ
+-- WELL BRANCH   X      Y      TVD     MD
+  'W1'    1     250    250    2000    2000 /
+  'W1'    1     250    250    2030    2030 /
+  'W1'    2     250    250    2015    2015 /
+  'W1'    2     450    250    2015    2215 /
+/
+)";
+
+} // Anonymous namespace
+
+BOOST_AUTO_TEST_CASE(Comptraj_Branch_Number_Must_Be_Positive)
+{
+    // WELTRAJ.
+    {
+        const auto deck = comptrajDeck(R"(WELSPECS
+  'W1' 'G' 3 3 2000.0 OIL /
+/
+WELTRAJ
+  'W1'    0     250    250    2000    2000 /
+  'W1'    0     250    250    2030    2030 /
+/
+)");
+
+        BOOST_CHECK_THROW(comptrajSchedule(deck), Opm::OpmInputError);
+    }
+
+    // COMPTRAJ.
+    {
+        const auto deck = comptrajDeck(weltraj_two_branches + R"(COMPTRAJ
+  'W1'   -1    2000   2010   2*     1*    1*   10.0  0.25  100  0 /
+/
+)");
+
+        BOOST_CHECK_THROW(comptrajSchedule(deck), Opm::OpmInputError);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(Comptraj_Unknown_Branch_Is_An_Input_Error)
+{
+    // Branch 3 is never given a trajectory.  This used to escape as a raw
+    // std::out_of_range from the trajectory lookup.
+    const auto deck = comptrajDeck(weltraj_two_branches + R"(COMPTRAJ
+  'W1'    3    2000   2010   2*     1*    1*   10.0  0.25  100  0 /
+/
+)");
+
+    BOOST_CHECK_THROW(comptrajSchedule(deck), Opm::OpmInputError);
+}
+
+BOOST_AUTO_TEST_CASE(Comptraj_Perforation_Interval_Must_Lie_On_The_Branch)
+{
+    // Past the end of the branch's trajectory.
+    {
+        const auto deck = comptrajDeck(weltraj_two_branches + R"(COMPTRAJ
+  'W1'    1    2000   2100   2*     1*    1*   10.0  0.25  100  0 /
+/
+)");
+
+        BOOST_CHECK_THROW(comptrajSchedule(deck), Opm::OpmInputError);
+    }
+
+    // Before its start.
+    {
+        const auto deck = comptrajDeck(weltraj_two_branches + R"(COMPTRAJ
+  'W1'    2    2000   2100   2*     1*    1*   10.0  0.25  100  0 /
+/
+)");
+
+        BOOST_CHECK_THROW(comptrajSchedule(deck), Opm::OpmInputError);
+    }
+
+    // Reversed.
+    {
+        const auto deck = comptrajDeck(weltraj_two_branches + R"(COMPTRAJ
+  'W1'    1    2020   2010   2*     1*    1*   10.0  0.25  100  0 /
+/
+)");
+
+        BOOST_CHECK_THROW(comptrajSchedule(deck), Opm::OpmInputError);
+    }
+}
+
+namespace {
+
     Opm::Deck zeroPermMSWDeck()
     {
         return Opm::Parser{}.parseString(R"(RUNSPEC
