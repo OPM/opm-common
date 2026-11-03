@@ -283,7 +283,6 @@ namespace
                 // the headI/J are calculated based on the well trajectory data
                 well.updateHead(connections->getHeadI(), connections->getHeadJ());
                 if (well.updateConnections(std::move(connections), handlerContext.grid)) {
-                    well.updateRefDepth();
                     handlerContext.record_well_structure_change();
                 }
 
@@ -314,7 +313,7 @@ Well {} has no connections to the grid. The well will remain SHUT)", name);
         }
 
         for (const auto& name : comptraj_wells) {
-            const auto& well = handlerContext.state().wells.get(name);
+            auto well = handlerContext.state().wells.get(name);
 
             // Reported once per keyword, rather than once per record.
             if ((well.getHeadI() < 0) || (well.getHeadJ() < 0)) {
@@ -328,6 +327,14 @@ The head location of well {} is defaulted in WELSPECS and cannot be derived from
 
                 OpmLog::warning(OpmInputError::format(msg, handlerContext.keyword.location()));
             }
+
+            // Like for COMPDAT, a defaulted reference depth is that of the
+            // first connection once all of the keyword's records are known.
+            if (! well.getConnections().empty()) {
+                well.updateRefDepth();
+            }
+
+            handlerContext.state().wells.update(std::move(well));
         }
 
         handlerContext.state().events().addEvent(ScheduleEvents::COMPLETION_CHANGE);
