@@ -1920,6 +1920,108 @@ BOOST_AUTO_TEST_CASE(Comptraj_Same_Branch_Intervals_Sharing_A_Cell)
     BOOST_CHECK(reversed.ctfProperties() == conn.ctfProperties());
 }
 
+BOOST_AUTO_TEST_CASE(Comptraj_Interval_Wholly_Within_One_Cell_Creates_Connection)
+{
+    const auto schedule = R"(WELSPECS
+  'W1' 'G' 3 3 2000.0 OIL /
+/
+WELTRAJ
+  'W1'    1     250    250    2002    2002 /
+  'W1'    1     260    250    2004    2004 /
+  'W1'    1     260    260    2008    2008 /
+/
+COMPTRAJ
+-- CF and Kh defaulted, so they are calculated from the cell properties.
+  'W1'    1    2002   2008   2*     1*    1*   1*  0.25  1*  0 /
+/
+)";
+    const auto deck = comptrajDeck(schedule);
+    const auto sched = comptrajSchedule(deck);
+    const auto& connections = sched.getWell("W1", 0).getConnections();
+
+    BOOST_REQUIRE_EQUAL(connections.size(), std::size_t{1});
+    const auto& conn = connectionAt(connections, 2, 2, 0);
+    BOOST_REQUIRE_EQUAL(conn.intervalContributions().size(), std::size_t{1});
+    BOOST_CHECK(conn.CF() > 0.0);
+    BOOST_CHECK(conn.Kh() > 0.0);
+    // A single straight piece from the first to the last point of the interval.
+    BOOST_CHECK_CLOSE(conn.ctfProperties().connection_length,
+                      std::hypot(10.0, 10.0, 6.0),
+                      1.0e-8);
+
+}
+
+BOOST_AUTO_TEST_CASE(Comptraj_Interval_On_Shared_Cell_Face_Creates_One_Connection)
+{
+    // Vertical intervals in the face between two cells, and on the edge between four cells.
+    for (const auto* weltraj : {
+            R"(  'W1'    1     300    250.25    2002    2002 /
+  'W1'    1     300    250.25    2008    2008 /
+)",
+            R"(  'W1'    1     250.5    300    2002    2002 /
+  'W1'    1     250.5    300    2008    2008 /
+)",
+            R"(  'W1'    1     300    300    2002    2002 /
+  'W1'    1     300    300    2008    2008 /
+)" })
+    {
+        const auto schedule = std::string { R"(WELSPECS
+  'W1' 'G' 3 3 2000.0 OIL /
+/
+WELTRAJ
+)" } + weltraj + R"(/
+COMPTRAJ
+  'W1'    1    2002   2008   2*     1*    1*   1*  0.25  1*  0 /
+/
+)";
+        const auto sched = comptrajSchedule(comptrajDeck(schedule));
+        const auto& connections = sched.getWell("W1", 0).getConnections();
+
+        BOOST_REQUIRE_EQUAL(connections.size(), std::size_t{1});
+        BOOST_CHECK_CLOSE(connections[0].ctfProperties().connection_length, 6.0, 1.0e-8);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(Comptraj_Interval_On_Shared_Face_Skips_Inactive_Cell)
+{
+    const auto schedule = R"(WELSPECS
+  'W1' 'G' 3 3 2000.0 OIL /
+/
+WELTRAJ
+  'W1'    1     300    250.25    2002    2002 /
+  'W1'    1     300    250.25    2008    2008 /
+/
+COMPTRAJ
+  'W1'    1    2002   2008   2*     1*    1*   1*  0.25  1*  0 /
+/
+)";
+    const auto sched = comptrajSchedule(comptrajDeck(
+        schedule,
+        R"(EQUALS
+  ACTNUM 0 3 3 3 3 1 1 /
+/
+)"));
+    const auto& connections = sched.getWell("W1", 0).getConnections();
+
+    BOOST_REQUIRE_EQUAL(connections.size(), std::size_t{1});
+    BOOST_CHECK(connectionAt(connections, 3, 2, 0).state() == Opm::Connection::State::OPEN);
+}
+
+BOOST_AUTO_TEST_CASE(Comptraj_Overlapping_Single_Cell_Intervals_Across_Keywords_Are_Rejected)
+{
+    const auto first = std::string { R"(COMPTRAJ
+  'W1'    1    2002   2008   2*     1*    1*   1*  0.25  1*  0 /
+/
+)" };
+    const auto overlapping = std::string { R"(COMPTRAJ
+  'W1'    1    2004   2010   2*     1*    1*   1*  0.25  1*  0 /
+/
+)" };
+
+    BOOST_CHECK_THROW(comptrajSchedule(comptrajDeck(weltraj_two_branches + first + overlapping)),
+                      Opm::OpmInputError);
+}
+
 BOOST_AUTO_TEST_CASE(Comptraj_Input_And_Calculated_CTF_Sharing_A_Cell)
 {
     const auto input = std::string { R"(COMPTRAJ

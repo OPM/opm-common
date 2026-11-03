@@ -2411,6 +2411,24 @@ BOOST_AUTO_TEST_CASE(Comptraj_MSW_Shared_Cell_Attached_Through_Last_Branch)
     BOOST_CHECK_EQUAL(segmentOfCell(connections, 4, 2, 1), 7);
 }
 
+BOOST_AUTO_TEST_CASE(Comptraj_MSW_Interval_Wholly_Within_One_Cell_Is_Attached)
+{
+    const auto schedule = msw_two_branch_prelude + R"(COMPTRAJ
+  'W1'    1    2002   2004   2*     1*    1*   1*  0.15  1*  0 /
+/
+)";
+    const auto sched = mswTrajectorySchedule(schedule);
+    const auto& connections = sched.getWell("W1", 0).getConnections();
+
+    BOOST_REQUIRE_EQUAL(connections.size(), std::size_t{1});
+    BOOST_CHECK_EQUAL(segmentOfCell(connections, 2, 2, 0), 2);
+
+    const auto& conn = connections[0];
+    BOOST_REQUIRE(conn.perf_range().has_value());
+    BOOST_CHECK_CLOSE(conn.perf_range()->first, 2002.0, 1.0e-8);
+    BOOST_CHECK_CLOSE(conn.perf_range()->second, 2004.0, 1.0e-8);
+}
+
 BOOST_AUTO_TEST_CASE(Comptraj_MSW_Segment_Attachment_Follows_Record_Order)
 {
     for (const auto& [records, expected_segment] : {
