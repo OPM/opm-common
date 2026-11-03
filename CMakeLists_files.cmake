@@ -25,7 +25,6 @@
 
 list(APPEND MAIN_SOURCE_FILES
   external/resinsight/LibCore/cvfAssert.cpp
-  external/resinsight/LibCore/cvfAtomicCounter.cpp
   external/resinsight/LibCore/cvfCharArray.cpp
   external/resinsight/LibCore/cvfMath.cpp
   external/resinsight/LibCore/cvfObject.cpp
@@ -33,7 +32,6 @@ list(APPEND MAIN_SOURCE_FILES
   external/resinsight/LibCore/cvfString.cpp
   external/resinsight/LibCore/cvfSystem.cpp
   external/resinsight/LibCore/cvfTrace.cpp
-  external/resinsight/LibCore/cvfVector3.cpp
   external/resinsight/LibGeometry/cvfBoundingBox.cpp
   external/resinsight/LibGeometry/cvfBoundingBoxTree.cpp
   external/resinsight/LibGeometry/cvfRay.cpp
@@ -1648,7 +1646,6 @@ list(APPEND PRIVATE_HEADER_FILES
   external/resinsight/LibCore/cvfArray.inl
   external/resinsight/LibCore/cvfArrayWrapperConst.h
   external/resinsight/LibCore/cvfAssert.h
-  external/resinsight/LibCore/cvfAtomicCounter.h
   external/resinsight/LibCore/cvfBase.h
   external/resinsight/LibCore/cvfBase64.h
   external/resinsight/LibCore/cvfCharArray.h
@@ -1703,7 +1700,6 @@ list(APPEND PRIVATE_HEADER_FILES
   external/resinsight/ReservoirDataModel/cvfGeometryTools.h
   external/resinsight/ReservoirDataModel/cvfGeometryTools.inl
   external/resinsight/cafHexGridIntersectionTools/cafHexGridIntersectionTools.h
-  external/resinsight/cafPdmCore/cafAppEnum.h
   external/resinsight/cafPdmCore/cafAssert.h
   external/resinsight/cafPdmCore/cafSignal.h
   opm/input/eclipse/Schedule/HandlerContext.hpp
