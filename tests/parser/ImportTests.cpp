@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(CreateImportContainer) {
     Deck deck;
 
     for (auto kw : container1)
-        deck.addKeyword(std::move(kw));
+        deck.addKeyword(std::move(kw), Ecl::GRID);
 
     BOOST_CHECK_EQUAL(deck.size(), 0);
 
@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(CreateImportContainer) {
 
     ImportContainer container2(parser, unit_system, "FILE_NAME", false, 0);
     for (auto kw : container2)
-        deck.addKeyword(std::move(kw));
+        deck.addKeyword(std::move(kw), Ecl::GRID);
 
     BOOST_CHECK_EQUAL(deck.size(), 4);
     BOOST_CHECK( deck.hasKeyword<ParserKeywords::MAPAXES>());

@@ -28,6 +28,7 @@ namespace Opm {
 
 class Deck;
 class ErrorGuard;
+class ParseContext;
 
 enum class Section {
     RUNSPEC,
@@ -60,10 +61,19 @@ class DeckSection : public DeckView {
         static bool hasSUMMARY( const Deck& );
         static bool hasSCHEDULE( const Deck& );
 
-        // returns whether the deck has all mandatory sections and if all sections are in
-        // the right order
+        /// Check mandatory sections, section order and, optionally, keyword placement.
+        /// Returns false for invalid input even when the unit-keyword diagnostic
+        /// is configured as WARN or IGNORE. Other placement and structural errors
+        /// are added to errorGuard.
         static bool checkSectionTopology(const Deck& deck,
-                                         const Parser&,
+                                         const Parser& parser,
+                                         const ParseContext& parseContext,
+                                         ErrorGuard& errorGuard,
+                                         bool ensureKeywordSectionAffiliation = false);
+
+        /// Check using the default ParseContext, including environment overrides.
+        static bool checkSectionTopology(const Deck& deck,
+                                         const Parser& parser,
                                          ErrorGuard& errorGuard,
                                          bool ensureKeywordSectionAffiliation = false);
 

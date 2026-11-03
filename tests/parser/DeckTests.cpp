@@ -64,6 +64,21 @@ class CommaNumpunct : public std::numpunct<char> {
 
 } // Anonymous namespace
 
+BOOST_AUTO_TEST_CASE(AddUnitKeywordWithSection)
+{
+    const Parser parser;
+    const DeckKeyword field(parser.getKeyword("FIELD"));
+    const DeckKeyword metric(parser.getKeyword("METRIC"));
+
+    Deck deck;
+    deck.addKeyword(field, Ecl::RUNSPEC);
+    // The supplied section is authoritative even without stored section headers.
+    deck.addKeyword(DeckKeyword(metric), Ecl::PROPS);
+    deck.addKeyword(metric, Ecl::SCHEDULE);
+    BOOST_CHECK(deck.getActiveUnitSystem().getType() == UnitSystem::UnitType::UNIT_TYPE_FIELD);
+    BOOST_CHECK_EQUAL(deck.count("METRIC"), 2U);
+}
+
 BOOST_AUTO_TEST_CASE(hasKeyword_empty_returnFalse) {
     Deck deck;
     BOOST_CHECK_EQUAL(false, deck.hasKeyword("Bjarne"));
@@ -88,7 +103,7 @@ BOOST_AUTO_TEST_CASE(getKeywordList_empty_list) {
 BOOST_AUTO_TEST_CASE(getKeyword_singlekeyword_outRange_throws) {
     Deck deck;
     Parser parser;
-    deck.addKeyword( DeckKeyword( parser.getKeyword("GRID")));
+    deck.addKeyword( DeckKeyword( parser.getKeyword("GRID")), Ecl::GRID);
     BOOST_CHECK_THROW(deck["GRID"][10], std::exception);
 }
 
@@ -96,7 +111,7 @@ BOOST_AUTO_TEST_CASE(getKeyword_singlekeyword_outRange_throws) {
 BOOST_AUTO_TEST_CASE(getKeywordList_returnOK) {
     Deck deck;
     Parser parser;
-    deck.addKeyword( DeckKeyword( parser.getKeyword("GRID")));
+    deck.addKeyword( DeckKeyword( parser.getKeyword("GRID")), Ecl::GRID);
     BOOST_CHECK_NO_THROW( deck.getKeywordList("GRID") );
 }
 
@@ -104,14 +119,14 @@ BOOST_AUTO_TEST_CASE(getKeywordList_returnOK) {
 BOOST_AUTO_TEST_CASE(getKeyword_indexok_returnskeyword) {
     Deck deck;
     Parser parser;
-    deck.addKeyword( DeckKeyword( parser.getKeyword("GRID")));
+    deck.addKeyword( DeckKeyword( parser.getKeyword("GRID")), Ecl::GRID);
     BOOST_CHECK_NO_THROW(deck[0]);
 }
 
 BOOST_AUTO_TEST_CASE(numKeyword_singlekeyword_return1) {
     Deck deck;
     Parser parser;
-    deck.addKeyword( DeckKeyword( parser.getKeyword("GRID")));
+    deck.addKeyword( DeckKeyword( parser.getKeyword("GRID")), Ecl::GRID);
     BOOST_CHECK_EQUAL(1U , deck.count("GRID"));
 }
 
@@ -119,8 +134,8 @@ BOOST_AUTO_TEST_CASE(numKeyword_singlekeyword_return1) {
 BOOST_AUTO_TEST_CASE(numKeyword_twokeyword_return2) {
     Deck deck;
     Parser parser;
-    deck.addKeyword( DeckKeyword( parser.getKeyword("GRID")));
-    deck.addKeyword( DeckKeyword( parser.getKeyword("GRID")));
+    deck.addKeyword( DeckKeyword( parser.getKeyword("GRID")), Ecl::GRID);
+    deck.addKeyword( DeckKeyword( parser.getKeyword("GRID")), Ecl::GRID);
     BOOST_CHECK_EQUAL(2U , deck.count("GRID"));
     BOOST_CHECK_EQUAL(0U , deck.count("GRID_BUG"));
 }
@@ -130,8 +145,8 @@ BOOST_AUTO_TEST_CASE(size_twokeyword_return2) {
     Deck deck;
     Parser parser;
     DeckKeyword keyword( parser.getKeyword("GRID"));
-    deck.addKeyword(keyword);
-    deck.addKeyword(keyword);
+    deck.addKeyword(keyword, Ecl::GRID);
+    deck.addKeyword(keyword, Ecl::GRID);
     BOOST_CHECK_EQUAL(2U , deck.size());
 
     BOOST_CHECK_THROW( deck["GRID"][3], std::exception);
@@ -140,9 +155,9 @@ BOOST_AUTO_TEST_CASE(size_twokeyword_return2) {
 BOOST_AUTO_TEST_CASE(getKeywordList_OK) {
     Deck deck;
     Parser parser;
-    deck.addKeyword( DeckKeyword( parser.getKeyword("GRID")));
-    deck.addKeyword( DeckKeyword( parser.getKeyword("GRID")));
-    deck.addKeyword( DeckKeyword( parser.getKeyword("GRID")));
+    deck.addKeyword( DeckKeyword( parser.getKeyword("GRID")), Ecl::GRID);
+    deck.addKeyword( DeckKeyword( parser.getKeyword("GRID")), Ecl::GRID);
+    deck.addKeyword( DeckKeyword( parser.getKeyword("GRID")), Ecl::GRID);
 
     const auto& keywordList = deck.getKeywordList("GRID");
     BOOST_CHECK_EQUAL( 3U , keywordList.size() );
@@ -153,9 +168,9 @@ BOOST_AUTO_TEST_CASE(keywordList_getbyindexoutofbounds_exceptionthrown) {
     Parser parser;
     Deck deck;
     BOOST_CHECK_THROW(deck[0], std::exception);
-    deck.addKeyword( DeckKeyword( parser.getKeyword("GRID")));
-    deck.addKeyword( DeckKeyword( parser.getKeyword("GRID")));
-    deck.addKeyword( DeckKeyword( parser.getKeyword("INIT")));
+    deck.addKeyword( DeckKeyword( parser.getKeyword("GRID")), Ecl::GRID);
+    deck.addKeyword( DeckKeyword( parser.getKeyword("GRID")), Ecl::GRID);
+    deck.addKeyword( DeckKeyword( parser.getKeyword("INIT")), Ecl::GRID);
     BOOST_CHECK_NO_THROW(deck[2]);
     BOOST_CHECK_THROW(deck[3], std::exception);
 }
@@ -163,9 +178,9 @@ BOOST_AUTO_TEST_CASE(keywordList_getbyindexoutofbounds_exceptionthrown) {
 BOOST_AUTO_TEST_CASE(keywordList_getbyindex_correctkeywordreturned) {
     Deck deck;
     Parser parser;
-    deck.addKeyword( DeckKeyword( parser.getKeyword("GRID")));
-    deck.addKeyword( DeckKeyword( parser.getKeyword("GRID")));
-    deck.addKeyword( DeckKeyword( parser.getKeyword("INIT")));
+    deck.addKeyword( DeckKeyword( parser.getKeyword("GRID")), Ecl::GRID);
+    deck.addKeyword( DeckKeyword( parser.getKeyword("GRID")), Ecl::GRID);
+    deck.addKeyword( DeckKeyword( parser.getKeyword("INIT")), Ecl::GRID);
     BOOST_CHECK_EQUAL("GRID",  deck[0].name());
     BOOST_CHECK_EQUAL("GRID",  deck[1].name());
     BOOST_CHECK_EQUAL("INIT", deck[2].name());

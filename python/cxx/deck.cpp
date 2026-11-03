@@ -37,8 +37,8 @@ namespace {
     }
 
     //This adds a keyword by copy
-    void addKeyword(Deck& deck, const DeckKeyword kw) {
-         deck.addKeyword(kw);
+    void addKeyword(Deck& deck, const DeckKeyword kw, const Ecl::SectionType section) {
+         deck.addKeyword(kw, section);
     }
 
 
@@ -72,6 +72,6 @@ void python::common::export_Deck(py::module &module) {
              [](const Deck& deck) -> const UnitSystem& { return deck.getDefaultUnitSystem(); },
              Deck_default_unit_system_docstring)
         .def("count", &count, py::arg("keyword"), Deck_count_docstring)
-        .def("add", &addKeyword, py::arg("keyword"), Deck_add_docstring);
+        .def("add", &addKeyword, py::arg("keyword"), py::arg("section"), Deck_add_docstring);
 
 }

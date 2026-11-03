@@ -52,8 +52,11 @@
 #include "../../opm/input/eclipse/Parser/raw/RawKeyword.hpp"
 #include "../../opm/input/eclipse/Parser/raw/RawRecord.hpp"
 
+#include "tests/WorkArea.hpp"
+
 #include <cstddef>
 #include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <memory>
 #include <sstream>
@@ -2484,6 +2487,30 @@ GUIDERAT
 
 
 
+BOOST_AUTO_TEST_CASE(IgnoredSectionKeywordDoesNotAffectUnitSelection)
+{
+    Parser parser(false);
+    ParserKeywords::Builtin builtin;
+    for (const auto* keyword : {"RUNSPEC", "FIELD", "DX"}) {
+        parser.addParserKeyword(builtin[keyword]);
+    }
+
+    ParseContext parseContext;
+    parseContext.update(ParseContext::PARSE_UNKNOWN_KEYWORD, InputErrorAction::IGNORE);
+    const auto deck = parser.parseString(R"(RUNSPEC
+GRID
+FIELD
+DX
+  10 /
+)", parseContext);
+
+    BOOST_CHECK(!deck.hasKeyword("GRID"));
+    BOOST_CHECK(deck.getActiveUnitSystem().getType() == UnitSystem::UnitType::UNIT_TYPE_FIELD);
+    BOOST_CHECK_CLOSE(deck["DX"].back().getRecord(0).getItem(0).getSIDouble(0),
+                      3.048, 1.0e-10);
+}
+
+
 BOOST_AUTO_TEST_CASE(parseSections) {
 
     Opm::Parser parser;
@@ -2531,6 +2558,94 @@ BOOST_AUTO_TEST_CASE(parseSections) {
 
 
     BOOST_CHECK_THROW(parser.parseFile("./tests/SPE1CASE1B.DATA", parseContext, grid_section), std::runtime_error);
+}
+
+
+BOOST_AUTO_TEST_CASE(UnitSelectionAcrossIncludeBoundaries)
+{
+    WorkArea work;
+    std::ofstream{"units.inc"} << "FIELD\n";
+    std::ofstream{"props.inc"} << "PROPS\nMETRIC\n";
+    std::ofstream{"CASE.DATA"} << R"(RUNSPEC
+TABDIMS
+  1 1 /
+INCLUDE
+  'units.inc' /
+GRID
+INCLUDE
+  'props.inc' /
+DENSITY
+  1 1 1 /
+SOLUTION
+SCHEDULE
+)";
+
+    const auto deck = Parser{}.parseFile("CASE.DATA");
+
+    BOOST_CHECK(deck.getActiveUnitSystem().getType() == UnitSystem::UnitType::UNIT_TYPE_FIELD);
+    BOOST_CHECK(deck.hasKeyword("METRIC"));
+    // The section entered in props.inc also applies after returning to CASE.DATA.
+    BOOST_CHECK_CLOSE(deck["DENSITY"].back().getRecord(0).getItem(0).getSIDouble(0),
+                      16.01846337396014, 1.0e-10);
+}
+
+BOOST_AUTO_TEST_CASE(UnitSelectionWhenSkippingSections)
+{
+    WorkArea work;
+    std::ofstream{"CASE.DATA"} << R"(RUNSPEC
+FIELD
+DIMENS
+  1 1 1 /
+TABDIMS
+  1 1 /
+GRID
+DX
+  10 /
+PROPS
+METRIC
+DENSITY
+  1 1 1 /
+SOLUTION
+METRIC
+PRESSURE
+  1 /
+SCHEDULE
+)";
+
+    const Parser parser;
+    const ParseContext parseContext;
+    for (const auto section : {Ecl::PROPS, Ecl::SOLUTION}) {
+        const auto deck = parser.parseFile("CASE.DATA", parseContext, {section});
+
+        BOOST_CHECK(deck.getActiveUnitSystem().getType() == UnitSystem::UnitType::UNIT_TYPE_FIELD);
+        BOOST_CHECK(deck.hasKeyword("METRIC"));
+        BOOST_CHECK(!deck.hasKeyword("DX"));
+        if (section == Ecl::PROPS) {
+            BOOST_CHECK_CLOSE(deck["DENSITY"].back().getRecord(0).getItem(0).getSIDouble(0),
+                              16.01846337396014, 1.0e-10);
+        } else {
+            BOOST_CHECK_CLOSE(deck["PRESSURE"].back().getRecord(0).getItem(0).getSIDouble(0),
+                              6894.75729316836, 1.0e-10);
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(SkippedSectionDoesNotAffectUnitSelection)
+{
+    const auto deck = Parser{}.parseString(R"(RUNSPEC
+SKIP
+PROPS
+ENDSKIP
+FIELD
+GRID
+DX
+  10 /
+)");
+
+    BOOST_CHECK(!deck.hasKeyword("PROPS"));
+    BOOST_CHECK(deck.getActiveUnitSystem().getType() == UnitSystem::UnitType::UNIT_TYPE_FIELD);
+    BOOST_CHECK_CLOSE(deck["DX"].back().getRecord(0).getItem(0).getSIDouble(0),
+                      3.048, 1.0e-10);
 }
 
 

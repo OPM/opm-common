@@ -43,16 +43,9 @@ namespace {
 
 }
 
-void python::common::export_Parser(py::module& module) {
+void python::common::export_SectionType(py::module& module) {
 
     using namespace Opm::Common::DocStrings;
-
-    module.def( "create_deck", &create_deck );
-    module.def( "create_deck_string", &create_deck_string);
-
-
-    py::class_<ParserKeyword>(module, "ParserKeyword", ParserKeyword_docstring)
-        .def_property_readonly("name", &ParserKeyword::getName, ParserKeyword_name_docstring);
 
     py::enum_<Opm::Ecl::SectionType>(module, "eclSectionType", py::arithmetic(), eclSectionType_docstring)
         .value("RUNSPEC",   Opm::Ecl::RUNSPEC,   eclSectionType_RUNSPEC_docstring)
@@ -64,6 +57,18 @@ void python::common::export_Parser(py::module& module) {
         .value("SUMMARY",   Opm::Ecl::SUMMARY,   eclSectionType_SUMMARY_docstring)
         .value("SCHEDULE",  Opm::Ecl::SCHEDULE,  eclSectionType_SCHEDULE_docstring)
         .export_values();
+}
+
+void python::common::export_Parser(py::module& module) {
+
+    using namespace Opm::Common::DocStrings;
+
+    module.def( "create_deck", &create_deck );
+    module.def( "create_deck_string", &create_deck_string);
+
+
+    py::class_<ParserKeyword>(module, "ParserKeyword", ParserKeyword_docstring)
+        .def_property_readonly("name", &ParserKeyword::getName, ParserKeyword_name_docstring);
 
     py::class_<Parser>(module, "Parser", Parser_docstring)
         .def(py::init<bool>(), py::arg("add_default") = true, Parser_init_docstring)

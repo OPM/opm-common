@@ -406,7 +406,7 @@ WELSPECS
 BOOST_AUTO_TEST_CASE(CreateScheduleDeckMissingReturnsDefaults) {
     Deck deck;
     Parser parser;
-    deck.addKeyword( DeckKeyword( parser.getKeyword("SCHEDULE" )));
+    deck.addKeyword( DeckKeyword( parser.getKeyword("SCHEDULE" )), Ecl::SCHEDULE);
     EclipseGrid grid(10,10,10);
     const TableManager table ( deck );
     const FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);

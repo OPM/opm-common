@@ -47,6 +47,8 @@
 
 #include <opm/input/eclipse/Python/Python.hpp>
 
+#include <opm/input/eclipse/Units/UnitSystem.hpp>
+
 #include <opm/json/JsonObject.hpp>
 
 #include <opm/common/utility/String.hpp>
@@ -1066,10 +1068,6 @@ std::unique_ptr<RawKeyword> tryParseKeyword( ParserState& parserState, const Par
             parserState.setRestartedRun();
         }
 
-        if (const auto sect = sectionKeyword(deck_name); sect.has_value()) {
-            parserState.setCurrentSection(*sect);
-        }
-
         if (parserState.parseContext.isActiveSkipKeyword(deck_name)) {
             skip = true;
             auto msg = fmt::format("{:5} Reading {:<8} in {} line {} \n      ... ignoring everything until 'ENDSKIP' ... ", "", "SKIP", parserState.current_path().string(), parserState.line());
@@ -1109,6 +1107,11 @@ std::unique_ptr<RawKeyword> tryParseKeyword( ParserState& parserState, const Par
             if (ParserKeyword::validDeckName(deck_name)) {
                 const auto ptr = newRawKeyword( deck_name, parserState, parser, line );
                 if (ptr) {
+                    // Only consumed, recognized section keywords change the state.
+                    // Skipped input and parser lookahead must not affect it.
+                    if (const auto sect = sectionKeyword(deck_name); sect.has_value()) {
+                        parserState.setCurrentSection(*sect);
+                    }
                     rawKeyword.reset( ptr );
                     parserKeyword = parser.getParserKeywordFromDeckName(rawKeyword->getKeywordName());
                     parserState.lastSizeType = parserKeyword->getSizeType();
@@ -1251,12 +1254,14 @@ std::string_view advance_parser_state( ParserState& parserState, const std::stri
 
 void addSectionKeyword(ParserState& parserState, const std::string& keyw)
 {
+    // Skipping a section consumes the next header without tryParseKeyword().
+    parserState.setCurrentSection(sectionKeyword(keyw).value());
     if (!parserState.deck.hasKeyword(keyw)){
 
         Opm::ParserKeyword section_keyw(keyw);
         Opm::DeckKeyword dk_keyw(section_keyw);
 
-        parserState.deck.addKeyword(dk_keyw);
+        parserState.deck.addKeyword(dk_keyw, parserState.currentSection());
     }
 }
 
@@ -1560,7 +1565,17 @@ bool parseState( ParserState& parserState, const Parser& parser, ErrorGuard& err
                 if (rawKeyword->getKeywordName() ==  Opm::RawConsts::pyinput) {
                     if (parserState.python) {
                         std::string python_string = rawKeyword->getFirstRecord().getRecordString();
+                        const auto firstAddedKeyword = parserState.deck.size();
                         parserState.python->exec(python_string, parser, parserState.deck);
+                        // PYINPUT can append section headers through Deck.add().
+                        // Inspect only the new keywords to keep parser state in sync.
+                        for (auto index = firstAddedKeyword; index < parserState.deck.size(); ++index) {
+                            if (const auto sect = sectionKeyword(parserState.deck[index].name());
+                                sect.has_value())
+                            {
+                                parserState.setCurrentSection(*sect);
+                            }
+                        }
                     }
                     else
                         throw std::logic_error("Cannot yet embed Python while still running Python.");
@@ -1578,10 +1593,10 @@ bool parseState( ParserState& parserState, const Parser& parser, ErrorGuard& err
 
                         ImportContainer import(parser, parserState.deck.getActiveUnitSystem(), import_file.value().string(), formatted, parserState.deck.size());
                         for (auto kw : import)
-                            parserState.deck.addKeyword(std::move(kw));
+                            parserState.deck.addKeyword(std::move(kw), parserState.currentSection());
                     } else
                         if (!do_not_add)
-                            parserState.deck.addKeyword( std::move(deck_keyword) );
+                            parserState.deck.addKeyword(std::move(deck_keyword), parserState.currentSection());
                 }
             } catch (const OpmInputError& opm_error) {
                 throw;
@@ -1987,6 +2002,16 @@ std::vector<std::string> Parser::getAllDeckNames () const {
                                            Opm::ErrorGuard& errorGuard,
                                            bool ensureKeywordSectionAffiliation)
     {
+        return checkSectionTopology(deck, parser, ParseContext{}, errorGuard,
+                                    ensureKeywordSectionAffiliation);
+    }
+
+    bool DeckSection::checkSectionTopology(const Deck& deck,
+                                           const Parser& parser,
+                                           const ParseContext& parseContext,
+                                           Opm::ErrorGuard& errorGuard,
+                                           bool ensureKeywordSectionAffiliation)
+    {
         if( deck.size() == 0 ) {
             std::string msg = "empty decks are invalid\n";
             OpmLog::warning(msg);
@@ -2017,21 +2042,25 @@ std::vector<std::string> Parser::getAllDeckNames () const {
         std::string curSectionName = validKwIdx? deck[curKwIdx].name() : "";
 
         for (++curKwIdx; curKwIdx < deck.size(); ++curKwIdx) {
-                auto checker = [&errorGuard, &deckValid, &parser, curSectionName,
+                auto checker = [&errorGuard, &deckValid, &parser, &parseContext, curSectionName,
                                 ensureKeywordSectionAffiliation, errorKey]
-                    (const std::string& curKeywordName, const KeywordLocation& location)
+                    (const std::string& curKeywordName, const KeywordLocation& location,
+                     const bool redundantUnit = false)
                 {
                     const auto& parserKeyword =
                         parser.getParserKeywordFromDeckName( curKeywordName );
                     if (ensureKeywordSectionAffiliation && !parserKeyword.isValidSection(curSectionName)) {
                         constexpr std::string_view msg =
                             "The keyword '{}' is located in the '{}' section where it is invalid";
-                        errorGuard.addError(errorKey,
-                                            Log::fileMessage(location,
-                                                             fmt::format(msg,
-                                                                         curKeywordName,
-                                                                         curSectionName)
-                                                         ) );
+                        const auto message = fmt::format(msg, curKeywordName, curSectionName);
+                        if (redundantUnit) {
+                            parseContext.handleError(ParseContext::PARSE_INVALID_UNIT_SECTION,
+                                                     message + "\nIn {file} line {line}",
+                                                     location, errorGuard);
+                        }
+                        else {
+                            errorGuard.addError(errorKey, Log::fileMessage(location, message));
+                        }
                         deckValid = false;
                     }
                 };
@@ -2058,7 +2087,10 @@ std::vector<std::string> Parser::getAllDeckNames () const {
                     }
                 }
                 else {
-                    checker(curKeyword.name(), curKeyword.location());
+                    const bool redundantUnit = ensureKeywordSectionAffiliation &&
+                        UnitSystem::valid_name(curKeywordName) &&
+                        UnitSystem{curKeywordName}.getType() == deck.getActiveUnitSystem().getType();
+                    checker(curKeywordName, curKeyword.location(), redundantUnit);
                 }
 
                 continue;

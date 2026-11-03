@@ -41,8 +41,8 @@ enum DeckChecks {
     AllChecks = 0xffff
 };
 
-// some semantical correctness checks of the deck. this method adds a warning to
-// the deck object if any issue is found ...
+// Check deck semantics, reporting configurable diagnostics through parseContext.
+// Returns false for invalid input even when its diagnostic is set to WARN or IGNORE.
 bool checkDeck( const Deck& deck, const Parser& parser, const ParseContext& parseContext, ErrorGuard& errorGuard, std::size_t enabledChecks  = AllChecks);
 
 }

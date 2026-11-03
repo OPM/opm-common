@@ -5,7 +5,7 @@ import sys
 import numpy as np
 
 from opm.io.parser import Builtin
-from opm.io.parser import Parser
+from opm.io.parser import Parser, eclSectionType
 from opm.io.parser import ParseContext
 from opm.io.deck import DeckKeyword
 
@@ -227,7 +227,7 @@ FIPNUM
         self.assertAlmostEqual( si_array[2], 3.3 * unit_foot )
 
         assert( not( "ZCORN" in deck ) )
-        deck.add( zcorn_kw )
+        deck.add(zcorn_kw, eclSectionType.REGIONS)
         assert( "ZCORN" in deck )
 
 

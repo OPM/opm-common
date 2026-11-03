@@ -28,10 +28,25 @@
 #include <cstddef>
 #include <set>
 #include <iterator>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
+
+namespace {
+
+    std::optional<Opm::UnitSystem::UnitType> unitKeywordType(const std::string& name)
+    {
+        using UnitType = Opm::UnitSystem::UnitType;
+        if (name == "FIELD")  { return UnitType::UNIT_TYPE_FIELD; }
+        if (name == "METRIC") { return UnitType::UNIT_TYPE_METRIC; }
+        if (name == "LAB")    { return UnitType::UNIT_TYPE_LAB; }
+        if (name == "PVT-M")  { return UnitType::UNIT_TYPE_PVT_M; }
+        return std::nullopt;
+    }
+
+} // Anonymous namespace
 
 namespace Opm {
 
@@ -114,18 +129,25 @@ const DeckView& Deck::global_view() const {
         return result;
     }
 
-    void Deck::addKeyword( DeckKeyword&& keyword ) {
-        if (keyword.name() == "FIELD")
-            this->selectActiveUnitSystem( UnitSystem::UnitType::UNIT_TYPE_FIELD );
-        else if (keyword.name() == "METRIC")
-            this->selectActiveUnitSystem( UnitSystem::UnitType::UNIT_TYPE_METRIC );
-        else if (keyword.name() == "LAB")
-            this->selectActiveUnitSystem( UnitSystem::UnitType::UNIT_TYPE_LAB );
-        else if (keyword.name() == "PVT-M")
-            this->selectActiveUnitSystem( UnitSystem::UnitType::UNIT_TYPE_PVT_M );
+    void Deck::addKeyword(DeckKeyword&& keyword,
+                          const Ecl::SectionType currentSection)
+    {
+        this->updateUnitSystem(keyword, currentSection);
 
         this->keywordList.push_back( std::move( keyword ) );
         this->m_global_view = nullptr;
+    }
+
+    void Deck::updateUnitSystem(const DeckKeyword& keyword,
+                                const Ecl::SectionType currentSection)
+    {
+        if (currentSection != Ecl::SectionType::RUNSPEC) {
+            return;
+        }
+
+        if (const auto unitType = unitKeywordType(keyword.name()); unitType.has_value()) {
+            this->selectActiveUnitSystem(*unitType);
+        }
     }
 
     void Deck::scopeLgrBlockKeywords()
@@ -199,9 +221,11 @@ const DeckView& Deck::global_view() const {
         return block;
     }
 
-    void Deck::addKeyword( const DeckKeyword& keyword ) {
+    void Deck::addKeyword(const DeckKeyword& keyword,
+                          const Ecl::SectionType currentSection)
+    {
         DeckKeyword kw = keyword;
-        this->addKeyword( std::move( kw ) );
+        this->addKeyword(std::move(kw), currentSection);
     }
 
     UnitSystem& Deck::getDefaultUnitSystem() {

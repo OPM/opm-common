@@ -3,7 +3,7 @@ import opm.io
 
 import numpy as np
 
-from opm.io.parser import Parser
+from opm.io.parser import Parser, eclSectionType
 from opm.io.deck import DeckKeyword
 from opm.io.ecl_state import EclipseState
 try:
@@ -24,7 +24,7 @@ class TestFieldProps(unittest.TestCase):
         deck = parser.parse(test_path('spe3/SPE3CASE1.DATA'))
         int_array = np.ones(324)
         actnum_kw = DeckKeyword( parser["ACTNUM"], int_array)
-        deck.add(actnum_kw)
+        deck.add(actnum_kw, eclSectionType.SCHEDULE)
         self.spe3 = EclipseState(deck)
         self.props = self.spe3.field_props()
 
