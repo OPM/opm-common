@@ -33,7 +33,7 @@ namespace caf
 /// \param b            End of line segment
 /// \param intersection Returns intersection point along the infinite line defined by a-b
 /// \param normalizedDistFromA Returns the normalized (0..1) position from a to b of the intersection point.
-///                            Will return values along the infinite line defined by the a-b direcion,
+///                            Will return values along the infinite line defined by the a-b direction,
 ///                            and HUGE_VAL if plane and line are parallel.
 /// \param epsilon      Tolerance margin for accepting the position being within (0..1)
 ///
@@ -188,33 +188,30 @@ bool HexGridIntersectionTools::planeTriangleIntersection( const cvf::Plane& plan
         CVF_ASSERT( false );
     }
 
-    [[maybe_unused]] bool ok1 = false;
-    [[maybe_unused]] bool ok2 = false;
-
     if ( topVx == 1 )
     {
-        ok1                          = planeLineIntersect( plane, p1, p2, &( ( *newVx1 ).vx ), &( ( *newVx1 ).normDistFromEdgeVx1 ), nonDimensionalTolerance );
+        planeLineIntersect( plane, p1, p2, &( ( *newVx1 ).vx ), &( ( *newVx1 ).normDistFromEdgeVx1 ), nonDimensionalTolerance );
         ( *newVx1 ).clippedEdgeVx1Id = p1Id;
         ( *newVx1 ).clippedEdgeVx2Id = p2Id;
-        ok2                          = planeLineIntersect( plane, p1, p3, &( ( *newVx2 ).vx ), &( ( *newVx2 ).normDistFromEdgeVx1 ), nonDimensionalTolerance );
+        planeLineIntersect( plane, p1, p3, &( ( *newVx2 ).vx ), &( ( *newVx2 ).normDistFromEdgeVx1 ), nonDimensionalTolerance );
         ( *newVx2 ).clippedEdgeVx1Id = p1Id;
         ( *newVx2 ).clippedEdgeVx2Id = p3Id;
     }
     else if ( topVx == 2 )
     {
-        ok1                          = planeLineIntersect( plane, p2, p3, &( ( *newVx1 ).vx ), &( ( *newVx1 ).normDistFromEdgeVx1 ), nonDimensionalTolerance );
+        planeLineIntersect( plane, p2, p3, &( ( *newVx1 ).vx ), &( ( *newVx1 ).normDistFromEdgeVx1 ), nonDimensionalTolerance );
         ( *newVx1 ).clippedEdgeVx1Id = p2Id;
         ( *newVx1 ).clippedEdgeVx2Id = p3Id;
-        ok2                          = planeLineIntersect( plane, p2, p1, &( ( *newVx2 ).vx ), &( ( *newVx2 ).normDistFromEdgeVx1 ), nonDimensionalTolerance );
+        planeLineIntersect( plane, p2, p1, &( ( *newVx2 ).vx ), &( ( *newVx2 ).normDistFromEdgeVx1 ), nonDimensionalTolerance );
         ( *newVx2 ).clippedEdgeVx1Id = p2Id;
         ( *newVx2 ).clippedEdgeVx2Id = p1Id;
     }
     else if ( topVx == 3 )
     {
-        ok1                          = planeLineIntersect( plane, p3, p1, &( ( *newVx1 ).vx ), &( ( *newVx1 ).normDistFromEdgeVx1 ), nonDimensionalTolerance );
+        planeLineIntersect( plane, p3, p1, &( ( *newVx1 ).vx ), &( ( *newVx1 ).normDistFromEdgeVx1 ), nonDimensionalTolerance );
         ( *newVx1 ).clippedEdgeVx1Id = p3Id;
         ( *newVx1 ).clippedEdgeVx2Id = p1Id;
-        ok2                          = planeLineIntersect( plane, p3, p2, &( ( *newVx2 ).vx ), &( ( *newVx2 ).normDistFromEdgeVx1 ), nonDimensionalTolerance );
+        planeLineIntersect( plane, p3, p2, &( ( *newVx2 ).vx ), &( ( *newVx2 ).normDistFromEdgeVx1 ), nonDimensionalTolerance );
         ( *newVx2 ).clippedEdgeVx1Id = p3Id;
         ( *newVx2 ).clippedEdgeVx2Id = p2Id;
     }
@@ -222,8 +219,6 @@ bool HexGridIntersectionTools::planeTriangleIntersection( const cvf::Plane& plan
     {
         CVF_ASSERT( false );
     }
-
-    // CVF_TIGHT_ASSERT(ok1 && ok2);
 
     return true;
 }
@@ -762,8 +757,8 @@ cvf::Vec3d HexGridIntersectionTools::planeLineIntersectionForMC( const cvf::Plan
 // The cellFaceForEachTriangleEdge refer to the edge after the corresponding triangle vertex.
 //--------------------------------------------------------------------------------------------------
 int HexGridIntersectionTools::planeHexIntersectionMC( const cvf::Plane&    plane,
-                                                      const cvf::Vec3d     cell[8],
-                                                      const size_t         hexCornersIds[8],
+                                                      const std::array<cvf::Vec3d, 8>& cell,
+                                                      const std::array<size_t , 8>& hexCornersIds,
                                                       std::vector<ClipVx>* triangleVxes,
                                                       std::vector<int>*    cellFaceForEachTriangleEdge )
 {
@@ -1311,11 +1306,11 @@ are stacked together to a chain, the mesh of each cube must be rotated by an ang
 
 */
 //--------------------------------------------------------------------------------------------------
-int HexGridIntersectionTools::planeHexIntersectionMCTet( const cvf::Plane&    plane,
-                                                         const cvf::Vec3d     cell[8],
-                                                         const size_t         hexCornersIds[8],
-                                                         std::vector<ClipVx>* triangleVxes,
-                                                         std::vector<int>*    cellFaceForEachTriangleEdge )
+int HexGridIntersectionTools::planeHexIntersectionMCTet( const cvf::Plane&                plane,
+                                                         const std::array<cvf::Vec3d, 8>& cell,
+                                                         const std::array<size_t, 8>&     hexCornersIds,
+                                                         std::vector<ClipVx>*             triangleVxes,
+                                                         std::vector<int>*                cellFaceForEachTriangleEdge )
 {
     std::array<double, 8> cellCornerSqDistToPlane = {
         plane.distanceSquared( cell[0] ),
@@ -1390,13 +1385,13 @@ int HexGridIntersectionTools::planeHexIntersectionMCTet( const cvf::Plane&    pl
 //--------------------------------------------------------------------------------------------------
 ///
 //--------------------------------------------------------------------------------------------------
-cvf::uint HexGridIntersectionTools::planeMcTetIntersection( const cvf::Plane&         plane,
-                                                            const cvf::Vec3d          hexCell[8],
-                                                            const size_t              hexCornersIds[8],
-                                                            const double              cornerDistToPlane[8],
-                                                            const std::array<int, 4>& tetCell,
-                                                            std::vector<ClipVx>*      triangleVxes,
-                                                            std::vector<int>*         cellFaceForEachTriangleEdge )
+cvf::uint HexGridIntersectionTools::planeMcTetIntersection( const cvf::Plane&                plane,
+                                                            const std::array<cvf::Vec3d, 8>& hexCell,
+                                                            const std::array<size_t, 8>&     hexCornersIds,
+                                                            const double                     cornerDistToPlane[8],
+                                                            const std::array<int, 4>&        tetCell,
+                                                            std::vector<ClipVx>*             triangleVxes,
+                                                            std::vector<int>* cellFaceForEachTriangleEdge )
 {
     // clang-format off
 
@@ -1445,7 +1440,8 @@ cvf::uint HexGridIntersectionTools::planeMcTetIntersection( const cvf::Plane&   
     if ( cornerDistToPlane[tetCell[2]] < 0 ) triindex |= 4;
     if ( cornerDistToPlane[tetCell[3]] < 0 ) triindex |= 8;
 
-    auto clipEdgeFunc = [&]( int hexCornerIdx0, int hexCornerIdx1 ) {
+    auto clipEdgeFunc = [&]( int hexCornerIdx0, int hexCornerIdx1 )
+    {
         ClipVx cvx;
         cvx.vx =
             planeLineIntersectionForMC( plane, hexCell[hexCornerIdx0], hexCell[hexCornerIdx1], &cvx.normDistFromEdgeVx1 );
@@ -1454,7 +1450,8 @@ cvf::uint HexGridIntersectionTools::planeMcTetIntersection( const cvf::Plane&   
         return cvx;
     };
 
-    auto addCellFaceStatusForTriangleEdges = [&]( int e11, int e12, int e21, int e22, int e31, int e32 ) {
+    auto addCellFaceStatusForTriangleEdges = [&]( int e11, int e12, int e21, int e22, int e31, int e32 )
+    {
         int cutEdge1 = cellCornerCellCornerToEdge[e11][e12];
         int cutEdge2 = cellCornerCellCornerToEdge[e21][e22];
         int cutEdge3 = cellCornerCellCornerToEdge[e31][e32];

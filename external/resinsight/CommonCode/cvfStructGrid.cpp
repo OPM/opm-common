@@ -23,19 +23,24 @@
 
 #include "../CommonCode/cvfStructGrid.h"
 #include "../LibCore/cvfBase.h"
+#include "../LibGeometry/cvfBoundingBox.h"
+
+#include <algorithm>
+#include <array>
+#include <numeric>
 
 // namespace caf
 // {
 // template <>
 // void cvf::StructGridInterface::FaceEnum::setUp()
 // {
-//     addItem( cvf::StructGridInterface::POS_I, "POS I", "" );
-//     addItem( cvf::StructGridInterface::NEG_I, "NEG I", "" );
-//     addItem( cvf::StructGridInterface::POS_J, "POS J", "" );
-//     addItem( cvf::StructGridInterface::NEG_J, "NEG J", "" );
-//     addItem( cvf::StructGridInterface::POS_K, "POS K", "" );
-//     addItem( cvf::StructGridInterface::NEG_K, "NEG K", "" );
-//     addItem( cvf::StructGridInterface::NO_FACE, "UnDef", "" );
+//     addItem( cvf::StructGridInterface::POS_I, "POS_I", "POS I" );
+//     addItem( cvf::StructGridInterface::NEG_I, "NEG_I", "NEG I" );
+//     addItem( cvf::StructGridInterface::POS_J, "POS_J", "POS J" );
+//     addItem( cvf::StructGridInterface::NEG_J, "NEG_J", "NEG J" );
+//     addItem( cvf::StructGridInterface::POS_K, "POS_K", "POS K" );
+//     addItem( cvf::StructGridInterface::NEG_K, "NEG_K", "NEG K" );
+//     addItem( cvf::StructGridInterface::NO_FACE, "UNDEF", "UnDef" );
 // }
 // } // namespace caf
 
@@ -48,39 +53,7 @@ namespace cvf
 //--------------------------------------------------------------------------------------------------
 StructGridInterface::StructGridInterface()
 {
-    m_characteristicCellSizeI = cvf::UNDEFINED_DOUBLE;
-    m_characteristicCellSizeJ = cvf::UNDEFINED_DOUBLE;
-    m_characteristicCellSizeK = cvf::UNDEFINED_DOUBLE;
-}
-
-//--------------------------------------------------------------------------------------------------
-///
-//--------------------------------------------------------------------------------------------------
-size_t StructGridInterface::cellCountI() const
-{
-    if ( gridPointCountI() == 0 ) return 0;
-
-    return gridPointCountI() - 1;
-}
-
-//--------------------------------------------------------------------------------------------------
-///
-//--------------------------------------------------------------------------------------------------
-size_t StructGridInterface::cellCountJ() const
-{
-    if ( gridPointCountJ() == 0 ) return 0;
-
-    return gridPointCountJ() - 1;
-}
-
-//--------------------------------------------------------------------------------------------------
-///
-//--------------------------------------------------------------------------------------------------
-size_t StructGridInterface::cellCountK() const
-{
-    if ( gridPointCountK() == 0 ) return 0;
-
-    return gridPointCountK() - 1;
+    m_characteristicCellSize = cvf::Vec3d::UNDEFINED;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -220,6 +193,21 @@ StructGridInterface::FaceType StructGridInterface::oppositeFace( FaceType face )
 }
 
 //--------------------------------------------------------------------------------------------------
+///
+//--------------------------------------------------------------------------------------------------
+std::vector<StructGridInterface::FaceType> StructGridInterface::validFaceTypes()
+{
+    return {
+        cvf::StructGridInterface::FaceType::NEG_I,
+        cvf::StructGridInterface::FaceType::POS_I,
+        cvf::StructGridInterface::FaceType::NEG_J,
+        cvf::StructGridInterface::FaceType::POS_J,
+        cvf::StructGridInterface::FaceType::NEG_K,
+        cvf::StructGridInterface::FaceType::POS_K,
+    };
+}
+
+//--------------------------------------------------------------------------------------------------
 /// Return values are set to cvf::UNDEFINED_SIZE_T if the neighbor is in the negative area
 //--------------------------------------------------------------------------------------------------
 void StructGridInterface::neighborIJKAtCellFace( size_t i, size_t j, size_t k, FaceType face, size_t* ni, size_t* nj, size_t* nk )
@@ -303,98 +291,130 @@ cvf::Vec3d StructGridInterface::displayModelOffset() const
 //--------------------------------------------------------------------------------------------------
 ///
 //--------------------------------------------------------------------------------------------------
-void StructGridInterface::characteristicCellSizes( double* iSize, double* jSize, double* kSize ) const
+cvf::Vec3d StructGridInterface::characteristicCellSizes() const
 {
-    CVF_ASSERT( iSize && jSize && kSize );
-
-    if ( m_characteristicCellSizeI == cvf::UNDEFINED_DOUBLE || m_characteristicCellSizeJ == cvf::UNDEFINED_DOUBLE ||
-         m_characteristicCellSizeK == cvf::UNDEFINED_DOUBLE )
+    if ( !hasValidCharacteristicCellSizes() )
     {
-        ubyte faceConnPosI[4];
-        cellFaceVertexIndices( StructGridInterface::POS_I, faceConnPosI );
+        std::vector<size_t> reservoirCellIndices;
+        reservoirCellIndices.resize( cellCountI() * cellCountJ() * cellCountK() );
+        std::iota( reservoirCellIndices.begin(), reservoirCellIndices.end(), 0 );
 
-        ubyte faceConnNegI[4];
-        cellFaceVertexIndices( StructGridInterface::NEG_I, faceConnNegI );
+        computeCharacteristicCellSize( reservoirCellIndices );
+    }
 
-        ubyte faceConnPosJ[4];
-        cellFaceVertexIndices( StructGridInterface::POS_J, faceConnPosJ );
+    return m_characteristicCellSize;
+}
 
-        ubyte faceConnNegJ[4];
-        cellFaceVertexIndices( StructGridInterface::NEG_J, faceConnNegJ );
+//--------------------------------------------------------------------------------------------------
+///
+//--------------------------------------------------------------------------------------------------
+bool StructGridInterface::hasValidCharacteristicCellSizes() const
+{
+    return !m_characteristicCellSize.isUndefined();
+}
 
-        ubyte faceConnPosK[4];
-        cellFaceVertexIndices( StructGridInterface::POS_K, faceConnPosK );
+//--------------------------------------------------------------------------------------------------
+///
+//--------------------------------------------------------------------------------------------------
+void StructGridInterface::computeCharacteristicCellSize( const std::vector<size_t>& globalCellIndices ) const
+{
+    if ( globalCellIndices.empty() ) return;
 
-        ubyte faceConnNegK[4];
-        cellFaceVertexIndices( StructGridInterface::NEG_K, faceConnNegK );
+    ubyte faceConnPosI[4];
+    cellFaceVertexIndices( StructGridInterface::POS_I, faceConnPosI );
+
+    ubyte faceConnNegI[4];
+    cellFaceVertexIndices( StructGridInterface::NEG_I, faceConnNegI );
+
+    ubyte faceConnPosJ[4];
+    cellFaceVertexIndices( StructGridInterface::POS_J, faceConnPosJ );
+
+    ubyte faceConnNegJ[4];
+    cellFaceVertexIndices( StructGridInterface::NEG_J, faceConnNegJ );
+
+    ubyte faceConnPosK[4];
+    cellFaceVertexIndices( StructGridInterface::POS_K, faceConnPosK );
+
+    ubyte faceConnNegK[4];
+    cellFaceVertexIndices( StructGridInterface::NEG_K, faceConnNegK );
+
+    double    tolerance         = 0.2;
+    int       iterationIndex    = 0;
+    const int iterationMaxCount = 3;
+    while ( iterationIndex < iterationMaxCount )
+    {
+        if ( iterationIndex > 0 )
+        {
+            // Divide tolerance by a factor for each iteration
+            tolerance = tolerance / 10.0;
+        }
 
         double iLengthAccumulated = 0.0;
         double jLengthAccumulated = 0.0;
         double kLengthAccumulated = 0.0;
 
-        cvf::Vec3d cornerVerts[8];
-        size_t     cellCount = 0;
+        size_t evaluatedCellCount = 0;
 
-        size_t k;
-        for ( k = 0; k < cellCountK(); k++ )
+        // Evaluate N-th cells, compute the stride between each index
+        size_t stride = std::max( size_t( 1 ), globalCellIndices.size() / 100 );
+
+        size_t i, j, k = 0;
+        size_t index = 0;
+        while ( index < globalCellIndices.size() )
         {
-            size_t j;
-            for ( j = 0; j < cellCountJ(); j++ )
+            size_t cellIndex = globalCellIndices[index];
+            ijkFromCellIndex( cellIndex, &i, &j, &k );
+            if ( isCellValid( i, j, k ) )
             {
-                size_t i;
-                for ( i = 0; i < cellCountI(); i += 10 ) // NB! Evaluate every n-th cell
+                std::array<cvf::Vec3d, 8> cornerVerts = cellCornerVertices( cellIndex );
+
+                cvf::BoundingBox bb;
+                for ( const auto& v : cornerVerts )
                 {
-                    if ( isCellValid( i, j, k ) )
-                    {
-                        size_t cellIndex = cellIndexFromIJK( i, j, k );
-                        cellCornerVertices( cellIndex, cornerVerts );
+                    bb.add( v );
+                }
 
-                        iLengthAccumulated +=
-                            ( cornerVerts[faceConnPosI[0]] - cornerVerts[faceConnNegI[0]] ).lengthSquared();
-                        iLengthAccumulated +=
-                            ( cornerVerts[faceConnPosI[1]] - cornerVerts[faceConnNegI[3]] ).lengthSquared();
-                        iLengthAccumulated +=
-                            ( cornerVerts[faceConnPosI[2]] - cornerVerts[faceConnNegI[2]] ).lengthSquared();
-                        iLengthAccumulated +=
-                            ( cornerVerts[faceConnPosI[3]] - cornerVerts[faceConnNegI[1]] ).lengthSquared();
+                // Exclude cells with very small volumes
+                if ( bb.extent().z() > tolerance )
+                {
+                    iLengthAccumulated += ( cornerVerts[faceConnPosI[0]] - cornerVerts[faceConnNegI[0]] ).lengthSquared();
+                    iLengthAccumulated += ( cornerVerts[faceConnPosI[1]] - cornerVerts[faceConnNegI[3]] ).lengthSquared();
+                    iLengthAccumulated += ( cornerVerts[faceConnPosI[2]] - cornerVerts[faceConnNegI[2]] ).lengthSquared();
+                    iLengthAccumulated += ( cornerVerts[faceConnPosI[3]] - cornerVerts[faceConnNegI[1]] ).lengthSquared();
 
-                        jLengthAccumulated +=
-                            ( cornerVerts[faceConnPosJ[0]] - cornerVerts[faceConnNegJ[0]] ).lengthSquared();
-                        jLengthAccumulated +=
-                            ( cornerVerts[faceConnPosJ[1]] - cornerVerts[faceConnNegJ[3]] ).lengthSquared();
-                        jLengthAccumulated +=
-                            ( cornerVerts[faceConnPosJ[2]] - cornerVerts[faceConnNegJ[2]] ).lengthSquared();
-                        jLengthAccumulated +=
-                            ( cornerVerts[faceConnPosJ[3]] - cornerVerts[faceConnNegJ[1]] ).lengthSquared();
+                    jLengthAccumulated += ( cornerVerts[faceConnPosJ[0]] - cornerVerts[faceConnNegJ[0]] ).lengthSquared();
+                    jLengthAccumulated += ( cornerVerts[faceConnPosJ[1]] - cornerVerts[faceConnNegJ[3]] ).lengthSquared();
+                    jLengthAccumulated += ( cornerVerts[faceConnPosJ[2]] - cornerVerts[faceConnNegJ[2]] ).lengthSquared();
+                    jLengthAccumulated += ( cornerVerts[faceConnPosJ[3]] - cornerVerts[faceConnNegJ[1]] ).lengthSquared();
 
-                        kLengthAccumulated +=
-                            ( cornerVerts[faceConnPosK[0]] - cornerVerts[faceConnNegK[0]] ).lengthSquared();
-                        kLengthAccumulated +=
-                            ( cornerVerts[faceConnPosK[1]] - cornerVerts[faceConnNegK[3]] ).lengthSquared();
-                        kLengthAccumulated +=
-                            ( cornerVerts[faceConnPosK[2]] - cornerVerts[faceConnNegK[2]] ).lengthSquared();
-                        kLengthAccumulated +=
-                            ( cornerVerts[faceConnPosK[3]] - cornerVerts[faceConnNegK[1]] ).lengthSquared();
+                    kLengthAccumulated += ( cornerVerts[faceConnPosK[0]] - cornerVerts[faceConnNegK[0]] ).lengthSquared();
+                    kLengthAccumulated += ( cornerVerts[faceConnPosK[1]] - cornerVerts[faceConnNegK[3]] ).lengthSquared();
+                    kLengthAccumulated += ( cornerVerts[faceConnPosK[2]] - cornerVerts[faceConnNegK[2]] ).lengthSquared();
+                    kLengthAccumulated += ( cornerVerts[faceConnPosK[3]] - cornerVerts[faceConnNegK[1]] ).lengthSquared();
 
-                        cellCount++;
-                    }
+                    evaluatedCellCount++;
                 }
             }
+
+            index += stride;
         }
 
-        double divisor = cellCount * 4.0;
+        iterationIndex++;
 
-        if ( divisor > 0.0 )
+        if ( evaluatedCellCount > 10 || iterationIndex == iterationMaxCount )
         {
-            m_characteristicCellSizeI = cvf::Math::sqrt( iLengthAccumulated / divisor );
-            m_characteristicCellSizeJ = cvf::Math::sqrt( jLengthAccumulated / divisor );
-            m_characteristicCellSizeK = cvf::Math::sqrt( kLengthAccumulated / divisor );
+            double divisor = evaluatedCellCount * 4.0;
+
+            if ( divisor > 0.0 )
+            {
+                m_characteristicCellSize = cvf::Vec3d( cvf::Math::sqrt( iLengthAccumulated / divisor ),
+                                                       cvf::Math::sqrt( jLengthAccumulated / divisor ),
+                                                       cvf::Math::sqrt( kLengthAccumulated / divisor ) );
+
+                return;
+            }
         }
     }
-
-    *iSize = m_characteristicCellSizeI;
-    *jSize = m_characteristicCellSizeJ;
-    *kSize = m_characteristicCellSizeK;
 }
 
 } // namespace cvf
