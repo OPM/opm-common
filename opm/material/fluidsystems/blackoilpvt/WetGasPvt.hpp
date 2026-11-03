@@ -132,8 +132,9 @@ public:
     //! compile for a GPU instantiation and then read or write device memory from the host
     //! (setInverseGasFormationVolumeFactor(), setGasViscosity() and saturationPressure()),
     //! and setVapPars(), which on a GPU object would not reach the views made from it.
-    //! The other host-only methods are defined in the .cpp file for CPU storage only, so
-    //! misusing them already fails at link time.
+    //! The other host-only methods already fail to build for a GPU instantiation: most are
+    //! defined in the .cpp file for CPU storage only (link error), and
+    //! setSaturatedGasOilVaporizationFactor() needs to resize its table (compile error).
     static constexpr bool isCpuStorage
         = std::is_same_v<Storage<Scalar>, VectorWithDefaultAllocator<Scalar>>
        && std::is_same_v<TableStorage<Scalar>, VectorWithDefaultAllocator<Scalar>>;
