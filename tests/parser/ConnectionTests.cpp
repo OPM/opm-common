@@ -2325,6 +2325,44 @@ WELTRAJ
     }
 }
 
+BOOST_AUTO_TEST_CASE(Comptraj_Defaulted_Reference_Depth_Does_Not_Depend_On_Record_Order)
+{
+    // The trajectories of weltraj_two_branches, with a defaulted reference
+    // depth.
+    const auto weltraj = std::string { R"(WELSPECS
+  'W1' 'G' 3 3 1* OIL /
+/
+WELTRAJ
+-- WELL BRANCH   X      Y      TVD     MD
+  'W1'    1     250    250    2000    2000 /
+  'W1'    1     250    250    2030    2030 /
+  'W1'    2     250    250    2015    2015 /
+  'W1'    2     450    250    2015    2215 /
+/
+)" };
+
+    // Perforates cells (3,3,1), (3,3,2) and (3,3,3).
+    const auto main_branch = std::string {
+        "  'W1'    1    2005   2025   2*     1*    1*    1*  0.25   1*  0 /\n"
+    };
+
+    // Perforates cells (4,3,2) and (5,3,2) only.
+    const auto lateral = std::string {
+        "  'W1'    2    2115   2205   2*     1*    1*    1*  0.25   1*  0 /\n"
+    };
+
+    for (const auto& records : { main_branch + lateral, lateral + main_branch }) {
+        const auto sched = comptrajSchedule(comptrajDeck(weltraj + "COMPTRAJ\n" + records + "/\n"));
+        const auto& well = sched.getWell("W1", 0);
+
+        BOOST_REQUIRE_EQUAL(well.getConnections().size(), std::size_t{5});
+        BOOST_REQUIRE(well.hasRefDepth());
+
+        // The depth of cell (3,3,1), the first connection.
+        BOOST_CHECK_CLOSE(well.getRefDepth(), 2005.0, 1.0e-8);
+    }
+}
+
 namespace {
 
     /// Cells of \p connections, in order, as one-based "(I,J,K)" strings.
