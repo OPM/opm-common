@@ -525,6 +525,13 @@ namespace Opm {
 
         bool has_gpmaint() const;
 
+        /// Composition the well injects as gas: its WINJGAS stream, or else
+        /// the GINJGAS stream of its nearest group.  nullptr if it has neither.
+        const std::vector<double>* gas_injection_stream(const std::string& well_name) const;
+
+        /// Composition the well injects as oil, or nullptr if it has none.
+        const std::vector<double>* oil_injection_stream(const std::string& well_name) const;
+
         bool hasAnalyticalAquifers() const
         {
             return ! this->aqufluxs.empty();
@@ -666,6 +673,10 @@ namespace Opm {
         // GINJGAS streams keyed by group name.  A group without one injects
         // the gas of a superior group.
         map_member<std::string, std::vector<double>> group_gas_inj_streams;
+        // WINJGAS and WINJOIL streams keyed by well name.  A well without a
+        // WINJGAS stream injects the gas of its group.
+        map_member<std::string, std::vector<double>> well_gas_inj_streams;
+        map_member<std::string, std::vector<double>> well_oil_inj_streams;
 
         std::unordered_map<std::string, double> target_wellpi;
         std::optional<NextStep> next_tstep;
@@ -710,6 +721,8 @@ namespace Opm {
             serializer(bcstate);
             serializer(inj_streams);
             serializer(group_gas_inj_streams);
+            serializer(well_gas_inj_streams);
+            serializer(well_oil_inj_streams);
             serializer(target_wellpi);
             serializer(this->next_tstep);
             serializer(m_start_time);

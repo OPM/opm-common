@@ -1763,8 +1763,32 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
         }
     }
 
+    // An open gas injector needs a stream, of its own or from one of its groups.
+    void Schedule::checkGasInjectionStreams(std::size_t report_step) const
+    {
+        // Only compositional runs inject a composition.
+        if (!this->runspec().compositional()) {
+            return;
+        }
+
+        const auto& state = this->snapshots[report_step];
+        for (const auto& well_name : this->wellNames(report_step)) {
+            const auto& well = state.wells.get(well_name);
+            if (well.isInjector() && (well.getStatus() == Well::Status::OPEN)
+                && (well.injectorType() == InjectorType::GAS)
+                && (state.gas_injection_stream(well_name) == nullptr))
+            {
+                throw std::invalid_argument {
+                    fmt::format("Gas injector {} has no stream to inject at report step {} ({}). "
+                                "Assign one with WINJGAS, or with GINJGAS for one of its groups.",
+                                well_name, report_step, Schedule::formatDate(state.start_time()))};
+            }
+        }
+    }
+
     void Schedule::end_report(std::size_t report_step) {
         this->checkIfAllConnectionsIsShut(report_step);
+        this->checkGasInjectionStreams(report_step);
     }
 
     const UDQConfig& Schedule::getUDQConfig(std::size_t timeStep) const {

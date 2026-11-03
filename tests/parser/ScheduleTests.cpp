@@ -5395,6 +5395,24 @@ ENDBOX
 SCHEDULE
 )" } + schedule_body;
     }
+
+    // The WINJGAS stream of a well, which must have one.
+    const std::vector<double>& gas_stream(const Schedule& sched, const std::string& well,
+                                          const std::size_t step)
+    {
+        const auto* stream = sched[step].gas_injection_stream(well);
+        BOOST_REQUIRE(stream != nullptr);
+        return *stream;
+    }
+
+    // The WINJOIL stream of a well, which must have one.
+    const std::vector<double>& oil_stream(const Schedule& sched, const std::string& well,
+                                          const std::size_t step)
+    {
+        const auto* stream = sched[step].oil_injection_stream(well);
+        BOOST_REQUIRE(stream != nullptr);
+        return *stream;
+    }
 }
 
 BOOST_AUTO_TEST_CASE(WELLSTRE_rounded_composition_is_normalized) {
@@ -5415,7 +5433,7 @@ TSTEP
  1 /
 )"));
 
-    const auto& composition = sched.getWell("INJ", 0).getInjectionProperties().gasInjComposition();
+    const auto& composition = gas_stream(sched, "INJ", 0);
     BOOST_REQUIRE_EQUAL(composition.size(), std::size_t{3});
 
     const double sum = std::accumulate(composition.begin(), composition.end(), 0.0);
@@ -5585,8 +5603,7 @@ TSTEP
 )"));
 
     for (const auto* well : { "INJ1", "INJ2" }) {
-        const auto& composition
-            = sched.getWell(well, 0).getInjectionProperties().oilInjComposition();
+        const auto& composition = oil_stream(sched, well, 0);
         BOOST_REQUIRE_EQUAL(composition.size(), std::size_t{3});
         BOOST_CHECK_CLOSE(composition[0], 0.1, 1.0e-10);
         BOOST_CHECK_CLOSE(composition[1], 0.3, 1.0e-10);
@@ -5594,10 +5611,8 @@ TSTEP
     }
 
     // The gas stream is kept apart from the oil stream.
-    BOOST_CHECK_CLOSE(sched.getWell("INJ1", 0).getInjectionProperties().gasInjComposition()[0],
-                      0.8, 1.0e-10);
-    BOOST_CHECK_THROW(sched.getWell("INJ2", 0).getInjectionProperties().gasInjComposition(),
-                      std::invalid_argument);
+    BOOST_CHECK_CLOSE(gas_stream(sched, "INJ1", 0)[0], 0.8, 1.0e-10);
+    BOOST_CHECK(sched[0].gas_injection_stream("INJ2") == nullptr);
 }
 
 BOOST_AUTO_TEST_CASE(WINJOIL_rejects_other_fluids_and_unknown_streams) {
@@ -5640,13 +5655,12 @@ WINJGAS
 /
 )"));
 
-    const auto& composition = sched.getWell("INJ", 0).getInjectionProperties().gasInjComposition();
+    const auto& composition = gas_stream(sched, "INJ", 0);
     BOOST_REQUIRE_EQUAL(composition.size(), std::size_t{3});
     BOOST_CHECK_CLOSE(composition[0], 0.8, 1.0e-10);
 }
 
 BOOST_AUTO_TEST_CASE(WINJGAS_rejects_other_fluids_and_unknown_streams) {
-    // The default fluid nature GRUP is not supported.
     BOOST_CHECK_THROW(make_schedule(gptable_deck(R"(
 WELSPECS
  'INJ' 'G1' 1 1 2000 'GAS' /
@@ -5655,7 +5669,7 @@ WELLSTRE
  'GAS1' 0.8 0.2 0.0 /
 /
 WINJGAS
- 'INJ' 1* 'GAS1' /
+ 'INJ' 'GV' 'GAS1' /
 /
 )")), Opm::OpmInputError);
 
@@ -5742,9 +5756,8 @@ TSTEP
     BOOST_CHECK(sched.getWell("P2", 0).isProducer());
     BOOST_CHECK(sched.getWell("I1", 0).isInjector());
     for (const auto* well : { "P1", "P2", "I1" }) {
-        const auto& injection = sched.getWell(well, 0).getInjectionProperties();
-        BOOST_CHECK_CLOSE(injection.gasInjComposition()[0], 0.8, 1.0e-10);
-        BOOST_CHECK_CLOSE(injection.oilInjComposition()[0], 0.1, 1.0e-10);
+        BOOST_CHECK_CLOSE(gas_stream(sched, well, 0)[0], 0.8, 1.0e-10);
+        BOOST_CHECK_CLOSE(oil_stream(sched, well, 0)[0], 0.1, 1.0e-10);
     }
 
     // Streams given before the production keywords.
@@ -5752,8 +5765,7 @@ TSTEP
         BOOST_CHECK(sched.getWell(well, 1).isProducer());
         BOOST_CHECK(!sched[1].wellgroup_events().hasEvent(
             well, ScheduleEvents::Events::WELL_SWITCHED_INJECTOR_PRODUCER));
-        const auto& injection = sched.getWell(well, 1).getInjectionProperties();
-        BOOST_CHECK_CLOSE(injection.gasInjComposition()[0], 0.7, 1.0e-10);
+        BOOST_CHECK_CLOSE(gas_stream(sched, well, 1)[0], 0.7, 1.0e-10);
     }
 }
 
@@ -5798,14 +5810,12 @@ TSTEP
     BOOST_CHECK(sched.getWell("W", 1).isInjector());
     BOOST_CHECK(sched[1].wellgroup_events().hasEvent(
         "W", ScheduleEvents::Events::WELL_SWITCHED_INJECTOR_PRODUCER));
-    BOOST_CHECK_CLOSE(sched.getWell("W", 1).getInjectionProperties().oilInjComposition()[0],
-                      0.1, 1.0e-10);
+    BOOST_CHECK_CLOSE(oil_stream(sched, "W", 1)[0], 0.1, 1.0e-10);
 
     // The gas stream given while the well produced is used once it injects gas.
     BOOST_CHECK(sched.getWell("W", 2).isProducer());
     BOOST_CHECK(sched.getWell("W", 3).injectorType() == InjectorType::GAS);
-    BOOST_CHECK_CLOSE(sched.getWell("W", 3).getInjectionProperties().gasInjComposition()[0],
-                      0.8, 1.0e-10);
+    BOOST_CHECK_CLOSE(gas_stream(sched, "W", 3)[0], 0.8, 1.0e-10);
 }
 
 BOOST_AUTO_TEST_CASE(Injection_stream_change_is_an_injection_update) {
@@ -6268,6 +6278,297 @@ GINJGAS
     BOOST_CHECK_THROW(make_schedule(ginjgas_deck(" 'GI1' 'GV' 'FIELD' /")), Opm::OpmInputError);
     BOOST_CHECK_THROW(make_schedule(ginjgas_deck(" 'GI1' 'STREAM' 'GAS2' /")), Opm::OpmInputError);
     BOOST_CHECK_THROW(make_schedule(ginjgas_deck(" 'GI1' 'STREAM' /")), Opm::OpmInputError);
+}
+
+namespace
+{
+// gptable_deck with porosity and permeability, so that COMPDAT can connect
+// wells: a well without open connections is shut.
+std::string
+connected_wells_deck(const std::string& schedule_body)
+{
+    auto deck = gptable_deck(schedule_body);
+    deck.insert(deck.find("SCHEDULE"),
+                "PORO\n 1000*0.2 /\nPERMX\n 1000*100 /\nPERMY\n 1000*100 /\n"
+                "PERMZ\n 1000*10 /\n");
+    return deck;
+}
+} // namespace
+
+BOOST_AUTO_TEST_CASE(Gas_injector_takes_the_GINJGAS_stream_of_its_nearest_group)
+{
+    const auto sched = make_schedule(connected_wells_deck(R"(
+WELLSTRE
+ 'CO2' 0.0 1.0 0.0 /
+ 'LEAN' 0.9 0.1 0.0 /
+/
+WELSPECS
+ 'INJ' 'G1' 1 1 2000 'GAS' /
+ 'OWN' 'G1' 2 2 2000 'GAS' /
+/
+COMPDAT
+ 'INJ' 1 1 1 1 'OPEN' 1* 1.0 0.2 /
+ 'OWN' 2 2 1 1 'OPEN' 1* 1.0 0.2 /
+/
+GINJGAS
+ 'FIELD' 'STREAM' 'CO2' /
+/
+WINJGAS
+ 'OWN' 'STREAM' 'LEAN' /
+/
+WCONINJE
+ 'INJ' 'GAS' 'OPEN' 'RATE' 1000 /
+ 'OWN' 'GAS' 'OPEN' 'RATE' 1000 /
+/
+TSTEP
+ 1 /
+GINJGAS
+ 'G1' 'STREAM' 'LEAN' /
+/
+TSTEP
+ 1 /
+GINJGAS
+ 'G1' 'GRUP' /
+/
+TSTEP
+ 1 /
+)"));
+
+    // INJ takes the stream of FIELD, then of G1, then of FIELD again once G1
+    // hands the choice back up. OWN keeps its WINJGAS stream throughout.
+    BOOST_CHECK_CLOSE(gas_stream(sched, "INJ", 0)[1], 1.0, 1.0e-10);
+    BOOST_CHECK_CLOSE(gas_stream(sched, "INJ", 1)[0], 0.9, 1.0e-10);
+    BOOST_CHECK_CLOSE(gas_stream(sched, "INJ", 2)[1], 1.0, 1.0e-10);
+    for (const std::size_t step : {0, 1, 2}) {
+        BOOST_CHECK_CLOSE(gas_stream(sched, "OWN", step)[0], 0.9, 1.0e-10);
+    }
+
+    // GINJGAS changes a group, not its wells.
+    for (const std::size_t step : {1, 2}) {
+        BOOST_CHECK(!sched[step].events().hasEvent(ScheduleEvents::INJECTION_UPDATE));
+    }
+}
+
+BOOST_AUTO_TEST_CASE(Gas_injector_follows_its_group_to_a_new_parent)
+{
+    const auto sched = make_schedule(connected_wells_deck(R"(
+WELLSTRE
+ 'CO2' 0.0 1.0 0.0 /
+ 'LEAN' 0.9 0.1 0.0 /
+/
+GRUPTREE
+ 'CO2GRP' 'FIELD' /
+ 'LEANGRP' 'FIELD' /
+ 'CHILD' 'CO2GRP' /
+/
+WELSPECS
+ 'INJ' 'CHILD' 1 1 2000 'GAS' /
+/
+COMPDAT
+ 'INJ' 1 1 1 1 'OPEN' 1* 1.0 0.2 /
+/
+GINJGAS
+ 'CO2GRP' 'STREAM' 'CO2' /
+ 'LEANGRP' 'STREAM' 'LEAN' /
+/
+WCONINJE
+ 'INJ' 'GAS' 'OPEN' 'RATE' 1000 /
+/
+TSTEP
+ 1 /
+GRUPTREE
+ 'CHILD' 'LEANGRP' /
+/
+TSTEP
+ 1 /
+)"));
+
+    BOOST_CHECK_CLOSE(gas_stream(sched, "INJ", 0)[1], 1.0, 1.0e-10);
+    BOOST_CHECK_CLOSE(gas_stream(sched, "INJ", 1)[0], 0.9, 1.0e-10);
+}
+
+BOOST_AUTO_TEST_CASE(WINJGAS_stream_takes_precedence_over_the_group_stream)
+{
+    const auto sched = make_schedule(connected_wells_deck(R"(
+WELLSTRE
+ 'CO2' 0.0 1.0 0.0 /
+ 'LEAN' 0.9 0.1 0.0 /
+ 'RICH' 0.5 0.4 0.1 /
+/
+WELSPECS
+ 'INJ' 'G1' 1 1 2000 'GAS' /
+/
+COMPDAT
+ 'INJ' 1 1 1 1 'OPEN' 1* 1.0 0.2 /
+/
+GINJGAS
+ 'FIELD' 'STREAM' 'LEAN' /
+/
+WCONINJE
+ 'INJ' 'GAS' 'OPEN' 'RATE' 1000 /
+/
+TSTEP
+ 1 /
+WINJGAS
+ 'INJ' 'STREAM' 'CO2' /
+/
+TSTEP
+ 1 /
+GINJGAS
+ 'FIELD' 'STREAM' 'RICH' /
+/
+TSTEP
+ 1 /
+)"));
+
+    using ScheduleEvents::INJECTION_UPDATE;
+
+    BOOST_CHECK_CLOSE(gas_stream(sched, "INJ", 0)[0], 0.9, 1.0e-10);
+
+    // A stream of its own updates the injector.
+    BOOST_CHECK_CLOSE(gas_stream(sched, "INJ", 1)[1], 1.0, 1.0e-10);
+    BOOST_CHECK(sched[1].wellgroup_events().hasEvent("INJ", INJECTION_UPDATE));
+
+    // A later group stream does not replace it.
+    BOOST_CHECK_CLOSE(gas_stream(sched, "INJ", 2)[1], 1.0, 1.0e-10);
+    BOOST_CHECK(!sched[2].wellgroup_events().hasEvent("INJ", INJECTION_UPDATE));
+}
+
+BOOST_AUTO_TEST_CASE(WINJGAS_can_return_to_the_group_stream)
+{
+    using ScheduleEvents::INJECTION_UPDATE;
+
+    // Both two-character abbreviations and a defaulted FLUID select GRUP.
+    for (const auto* fluid : {"'GRUP'", "'GR'", "1*"}) {
+        const auto sched = make_schedule(connected_wells_deck(fmt::format(R"(
+WELLSTRE
+ 'CO2' 0.0 1.0 0.0 /
+ 'LEAN' 0.9 0.1 0.0 /
+/
+WELSPECS
+ 'INJ' 'G1' 1 1 2000 'GAS' /
+/
+COMPDAT
+ 'INJ' 1 1 1 1 'OPEN' 1* 1.0 0.2 /
+/
+GINJGAS
+ 'FIELD' 'STREAM' 'CO2' /
+/
+WINJGAS
+ 'INJ' 'STREAM' 'LEAN' /
+/
+WCONINJE
+ 'INJ' 'GAS' 'OPEN' 'RATE' 1000 /
+/
+TSTEP
+ 1 /
+WINJGAS
+ 'INJ' {0} /
+/
+TSTEP
+ 1 /
+WINJGAS
+ 'INJ' {0} /
+/
+TSTEP
+ 1 /
+)", fluid)));
+
+        BOOST_CHECK_CLOSE(gas_stream(sched, "INJ", 0)[0], 0.9, 1.0e-10);
+        BOOST_CHECK_CLOSE(gas_stream(sched, "INJ", 1)[1], 1.0, 1.0e-10);
+        BOOST_CHECK(sched[1].wellgroup_events().hasEvent("INJ", INJECTION_UPDATE));
+
+        // A well already on the group stream is left alone.
+        BOOST_CHECK(!sched[2].wellgroup_events().hasEvent("INJ", INJECTION_UPDATE));
+    }
+}
+
+BOOST_AUTO_TEST_CASE(WINJGAS_GRUP_without_a_group_stream_is_valid_only_for_shut_injectors)
+{
+    const auto deck = [](const std::string& status) {
+        return connected_wells_deck(fmt::format(R"(
+WELLSTRE
+ 'LEAN' 0.9 0.1 0.0 /
+/
+WELSPECS
+ 'INJ' 'G1' 1 1 2000 'GAS' /
+/
+COMPDAT
+ 'INJ' 1 1 1 1 'OPEN' 1* 1.0 0.2 /
+/
+WINJGAS
+ 'INJ' 'STREAM' 'LEAN' /
+/
+WCONINJE
+ 'INJ' 'GAS' '{}' 'RATE' 1000 /
+/
+TSTEP
+ 1 /
+WINJGAS
+ 'INJ' 'GRUP' /
+/
+TSTEP
+ 1 /
+)", status));
+    };
+
+    BOOST_CHECK_EXCEPTION(make_schedule(deck("OPEN")), std::exception, [](const std::exception& e) {
+        return std::string_view{e.what()}.find("INJ has no stream to inject")
+            != std::string_view::npos;
+    });
+
+    const auto shut = make_schedule(deck("SHUT"));
+    BOOST_CHECK(shut[1].gas_injection_stream("INJ") == nullptr);
+}
+
+BOOST_AUTO_TEST_CASE(Gas_injector_without_a_stream_stops_the_schedule)
+{
+    const auto deck = [](const std::string& status) {
+        return connected_wells_deck(R"(
+WELLSTRE
+ 'CO2' 0.0 1.0 0.0 /
+/
+WELSPECS
+ 'INJ' 'G1' 1 1 2000 'GAS' /
+/
+COMPDAT
+ 'INJ' 1 1 1 1 'OPEN' 1* 1.0 0.2 /
+/
+WCONINJE
+ 'INJ' 'GAS' ')" + status + R"(' 'RATE' 1000 /
+/
+TSTEP
+ 1 /
+)");
+    };
+
+    BOOST_CHECK_EXCEPTION(make_schedule(deck("OPEN")), std::exception, [](const std::exception& e) {
+        return std::string_view{e.what()}.find(
+            "INJ has no stream to inject at report step 0 (2020-01-01)") != std::string_view::npos;
+    });
+
+    const auto reopened = deck("SHUT") + R"(WCONINJE
+ 'INJ' 'GAS' 'OPEN' 'RATE' 1000 /
+/
+TSTEP
+ 1 /
+)";
+    BOOST_CHECK_EXCEPTION(make_schedule(reopened), std::exception, [](const std::exception& e) {
+        return std::string_view{e.what()}.find(
+            "INJ has no stream to inject at report step 1 (2020-01-02)") != std::string_view::npos;
+    });
+
+    // A shut injector is left alone until it opens.
+    const auto shut = make_schedule(deck("SHUT"));
+    BOOST_CHECK(shut[0].gas_injection_stream("INJ") == nullptr);
+
+    // Without COMPS the run injects no composition, so the well needs no stream.
+    auto black_oil = deck("OPEN");
+    const std::string comps = "COMPS\n 3 /\n";
+    black_oil.erase(black_oil.find(comps), comps.size());
+    black_oil.erase(black_oil.find("WELLSTRE"),
+                    black_oil.find("WELSPECS") - black_oil.find("WELLSTRE"));
+    BOOST_CHECK_NO_THROW(make_schedule(black_oil));
 }
 
 

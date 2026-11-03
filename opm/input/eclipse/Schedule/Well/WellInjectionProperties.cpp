@@ -35,10 +35,8 @@
 
 #include <fmt/format.h>
 
-#include <optional>
 #include <ostream>
 #include <string>
-#include <string_view>
 #include <vector>
 
 namespace Opm {
@@ -63,8 +61,7 @@ namespace Opm {
           injectionControls(0),
           injectorType(InjectorType::WATER),
           controlMode(InjectorCMode::CMODE_UNDEFINED),
-          rsRvInj(0.0),
-          gas_inj_composition(std::nullopt)
+          rsRvInj(0.0)
     {
     }
 
@@ -86,8 +83,6 @@ namespace Opm {
         result.injectorType = InjectorType::OIL;
         result.controlMode = InjectorCMode::BHP;
         result.rsRvInj = 11;
-        result.gas_inj_composition = std::vector<double>{1.0, 2.0, 3.0};
-        result.oil_inj_composition = std::vector<double>{4.0, 5.0, 6.0};
 
         return result;
     }
@@ -300,9 +295,7 @@ namespace Opm {
             (injectionControls == other.injectionControls) &&
             (injectorType == other.injectorType) &&
             (controlMode == other.controlMode) &&
-            (rsRvInj == other.rsRvInj) &&
-            (gas_inj_composition == other.gas_inj_composition) &&
-            (oil_inj_composition == other.oil_inj_composition))
+            (rsRvInj == other.rsRvInj))
             return true;
         else
             return false;
@@ -516,37 +509,6 @@ namespace Opm {
             default:
                 std::invalid_argument(fmt::format("Invalid target {} supplied to WTMULT", WellWELTARGCMode2String(cmode)));
         }
-    }
-
-    namespace {
-
-    const std::vector<double>&
-    injComposition(const std::optional<std::vector<double>>& composition, std::string_view phase)
-    {
-        if (!composition.has_value()) {
-            throw std::invalid_argument(fmt::format("{} injection composition not set", phase));
-        }
-        return *composition;
-    }
-
-    } // anonymous namespace
-
-    void
-    Well::WellInjectionProperties::setGasInjComposition(const std::vector<double>& composition) {
-        gas_inj_composition = composition;
-    }
-
-    const std::vector<double>& Well::WellInjectionProperties::gasInjComposition() const {
-        return injComposition(gas_inj_composition, "Gas");
-    }
-
-    void
-    Well::WellInjectionProperties::setOilInjComposition(const std::vector<double>& composition) {
-        oil_inj_composition = composition;
-    }
-
-    const std::vector<double>& Well::WellInjectionProperties::oilInjComposition() const {
-        return injComposition(oil_inj_composition, "Oil");
     }
 
 }
