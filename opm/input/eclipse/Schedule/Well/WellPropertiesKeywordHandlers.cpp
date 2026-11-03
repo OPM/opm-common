@@ -364,15 +364,13 @@ void handleWINJMULT(HandlerContext& handlerContext)
         const std::string& wellNamePattern = record.getItem<Kw::WELL_NAME>().getTrimmedString(0);
         const auto well_names = handlerContext.wellNames(wellNamePattern, true);
 
+        // No check on the well type: WINJMULT may precede WCONINJE, and the
+        // multipliers only take effect while the well injects.
         for (const auto& well_name : well_names) {
             auto well = handlerContext.state().wells( well_name );
-            if (well.isProducer()) {
-                const std::string reason = fmt::format("Keyword WINJMULT can only apply to injectors,"
-                                                       " but Well {} is a producer", well_name);
-                throw OpmInputError(reason, handlerContext.keyword.location());
-            }
             if (well.handleWINJMULT(record, handlerContext.keyword.location())) {
                 handlerContext.state().wells.update(std::move(well));
+                handlerContext.affected_well(well_name);
             }
         }
     }
