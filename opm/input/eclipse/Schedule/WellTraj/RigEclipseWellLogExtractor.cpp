@@ -50,6 +50,61 @@
 
 namespace external {
 
+namespace {
+
+double signedVolume( const cvf::Vec3d& a, const cvf::Vec3d& b, const cvf::Vec3d& c, const cvf::Vec3d& d )
+{
+    return ( b - a ) * ( ( c - a ) ^ ( d - a ) );
+}
+
+// The old ray-casting point-in-cell check misses points vertically below a face
+// centre or a face diagonal. Split the cell into 24 tetrahedra, each formed by
+// the cell centre and one of the face triangles that
+// RigHexIntersectionTools::lineHexCellIntersection uses. Boundary points count
+// as inside.
+bool isPointInsideCell( const cvf::Vec3d& point, const std::array<cvf::Vec3d, 8>& hexCorners )
+{
+    cvf::Vec3d cellCenter = cvf::Vec3d::ZERO;
+    for ( int i = 0; i < 8; ++i )
+    {
+        cellCenter += hexCorners[i];
+    }
+    cellCenter /= 8.0;
+
+    for ( int face = 0; face < 6; ++face )
+    {
+        cvf::ubyte faceVertexIndices[4];
+        cvf::StructGridInterface::cellFaceVertexIndices( static_cast<cvf::StructGridInterface::FaceType>( face ),
+                                                         faceVertexIndices );
+        cvf::Vec3d faceCenter = cvf::GeometryTools::computeFaceCenter( hexCorners[faceVertexIndices[0]],
+                                                                       hexCorners[faceVertexIndices[1]],
+                                                                       hexCorners[faceVertexIndices[2]],
+                                                                       hexCorners[faceVertexIndices[3]] );
+
+        for ( int i = 0; i < 4; ++i )
+        {
+            int next = i < 3 ? i + 1 : 0;
+
+            const cvf::Vec3d& a = hexCorners[faceVertexIndices[i]];
+            const cvf::Vec3d& b = hexCorners[faceVertexIndices[next]];
+
+            // The point is in the tetrahedron if replacing any of its vertices by
+            // the point does not flip the sign of the volume.
+            const double volume = signedVolume( cellCenter, faceCenter, a, b );
+            if ( volume != 0.0 && signedVolume( point, faceCenter, a, b ) * volume >= 0.0 &&
+                 signedVolume( cellCenter, point, a, b ) * volume >= 0.0 &&
+                 signedVolume( cellCenter, faceCenter, point, b ) * volume >= 0.0 &&
+                 signedVolume( cellCenter, faceCenter, a, point ) * volume >= 0.0 )
+            {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+}
+
  RigEclipseWellLogExtractor::RigEclipseWellLogExtractor( const RigWellPath* wellpath,
                                                          const Opm::EclipseGrid& grid,
                                                          RigEclipseGridSearchData& gridSearchData )
@@ -104,6 +159,66 @@ void RigEclipseWellLogExtractor::calculateIntersection()
         double md2 = m_wellPathGeometry->measuredDepths()[wpp + 1];
 
         insertIntersectionsInMap( intersections, p1, md1, p2, md2, tolerance, &uniqueIntersections );
+    }
+
+    if ( uniqueIntersections.empty() && m_wellPathGeometry->wellPathPoints().size() > 1 )
+    {
+        // When entering this function, all well path points are either completely outside the grid
+        // or all well path points are inside one cell
+
+        cvf::Vec3d firstPoint = m_wellPathGeometry->wellPathPoints().front();
+        cvf::Vec3d lastPoint  = m_wellPathGeometry->wellPathPoints().back();
+
+        {
+            cvf::BoundingBox bb;
+            bb.add( firstPoint );
+
+            std::vector<std::size_t> closeCellIndices = findCloseCellIndices( bb );
+
+            for ( const auto& globalCellIndex : closeCellIndices )
+            {
+                if ( !m_grid.cellActive( globalCellIndex ) )
+                {
+                    continue;
+                }
+
+                std::array<cvf::Vec3d, 8> hexCorners = hexCornersOpmToResinsight( globalCellIndex );
+                if ( isPointInsideCell( firstPoint, hexCorners ) )
+                {
+                    if ( isPointInsideCell( lastPoint, hexCorners ) )
+                    {
+                        {
+                            // Mark the first well path point as entering the cell
+
+                            bool                      isEntering = true;
+                            HexIntersectionInfo       info( firstPoint, isEntering, cvf::StructGridInterface::NO_FACE, globalCellIndex );
+                            RigMDCellIdxEnterLeaveKey enterLeaveKey( m_wellPathGeometry->measuredDepths().front(),
+                                                                     globalCellIndex,
+                                                                     isEntering,
+                                                                     tolerance );
+
+                            uniqueIntersections.insert( std::make_pair( enterLeaveKey, info ) );
+                        }
+
+                        {
+                            // Mark the last well path point as leaving cell
+
+                            bool                      isEntering = false;
+                            HexIntersectionInfo       info( lastPoint, isEntering, cvf::StructGridInterface::NO_FACE, globalCellIndex );
+                            RigMDCellIdxEnterLeaveKey enterLeaveKey( m_wellPathGeometry->measuredDepths().back(),
+                                                                     globalCellIndex,
+                                                                     isEntering,
+                                                                     tolerance );
+
+                            uniqueIntersections.insert( std::make_pair( enterLeaveKey, info ) );
+                        }
+
+                        // Points on a shared face may be inside multiple cells; take the first active one.
+                        break;
+                    }
+                }
+            }
+        }
     }
 
     this->populateReturnArrays( uniqueIntersections );
