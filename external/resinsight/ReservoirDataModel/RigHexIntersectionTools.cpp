@@ -21,7 +21,6 @@
 
 #include "../LibGeometry/cvfBoundingBox.h"
 #include "../ReservoirDataModel/cvfGeometryTools.h"
-#include "../LibGeometry/cvfRay.h"
 
 #include "../cafPdmCore/cafAssert.h"
 #include "../cafHexGridIntersectionTools/cafHexGridIntersectionTools.h"
@@ -116,36 +115,6 @@ bool RigHexIntersectionTools::lineIntersectsHexCell( const cvf::Vec3d& p1, const
         }
     }
     return false;
-}
-
-//--------------------------------------------------------------------------------------------------
-///
-//--------------------------------------------------------------------------------------------------
-bool RigHexIntersectionTools::isPointInCell( const cvf::Vec3d& point, const std::array<cvf::Vec3d, 8>& hexCorners )
-{
-    cvf::Ray ray;
-    ray.setOrigin( point );
-    size_t intersections = 0;
-
-    for ( int face = 0; face < 6; ++face )
-    {
-        cvf::ubyte faceVertexIndices[4];
-        cvf::StructGridInterface::cellFaceVertexIndices( static_cast<cvf::StructGridInterface::FaceType>( face ), faceVertexIndices );
-        cvf::Vec3d faceCenter = cvf::GeometryTools::computeFaceCenter( hexCorners[faceVertexIndices[0]],
-                                                                       hexCorners[faceVertexIndices[1]],
-                                                                       hexCorners[faceVertexIndices[2]],
-                                                                       hexCorners[faceVertexIndices[3]] );
-
-        for ( int i = 0; i < 4; ++i )
-        {
-            int next = i < 3 ? i + 1 : 0;
-            if ( ray.triangleIntersect( hexCorners[faceVertexIndices[i]], hexCorners[faceVertexIndices[next]], faceCenter ) )
-            {
-                ++intersections;
-            }
-        }
-    }
-    return intersections % 2 == 1;
 }
 
 //--------------------------------------------------------------------------------------------------
