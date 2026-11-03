@@ -144,8 +144,13 @@ namespace
             for (const auto& name : wellnames) {
                 auto well = handlerContext.state().wells.get(name);
 
-                if (!well.getConnections().empty()) {
-                    const auto msg = fmt::format(R"(   {} is already connected)", name);
+                const auto& existing_connections = well.getConnections();
+                if (!existing_connections.empty() && !existing_connections[0].fromTrajectory()) {
+                    const auto msg =
+                        fmt::format("Well {} already has COMPDAT-defined connections and cannot "
+                                    "also be defined using COMPTRAJ. A well must use either "
+                                    "COMPDAT or COMPTRAJ, never both.", name);
+
                     throw OpmInputError(msg, handlerContext.keyword.location());
                 }
 
@@ -204,6 +209,16 @@ Well {} has no connections to the grid. The well will remain SHUT)", name);
 
             for (const auto& name : wellnames) {
                 auto well = handlerContext.state().wells.get(name);
+
+                const auto& existing_connections = well.getConnections();
+                if (!existing_connections.empty() && !existing_connections[0].fromTrajectory()) {
+                    const auto msg =
+                        fmt::format("Well {} already has COMPDAT-defined connections and cannot "
+                                    "also be defined using WELTRAJ/COMPTRAJ. A well must use "
+                                    "either COMPDAT or COMPTRAJ, never both.", name);
+
+                    throw OpmInputError(msg, handlerContext.keyword.location());
+                }
 
                 auto connections = std::make_shared<WellConnections>(well.getConnections());
                 connections->loadWELTRAJ(record, name, handlerContext.grid,
