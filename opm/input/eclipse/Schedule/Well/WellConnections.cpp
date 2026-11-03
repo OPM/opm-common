@@ -318,6 +318,34 @@ Connection ({},{},{}) (direction '{}') for well {} ignored because
         return connection_factor;
     }
 
+    // The (I,J,K) location of the first active cell that a trajectory
+    // enters, if it enters any.
+    std::optional<std::array<int, 3>>
+    firstActiveCell(const std::array<std::vector<double>, 3>& coords,
+                    const std::vector<double>&                mds,
+                    const Opm::ScheduleGrid&                  grid,
+                    external::RigEclipseGridSearchData&       gridSearchData)
+    {
+        external::cvf::ref<external::RigWellPath> path { new external::RigWellPath };
+        Opm::initWellPathGeometry(path, coords, mds);
+
+        const auto* ecl_grid = grid.get_grid();
+
+        external::cvf::ref<external::RigEclipseWellLogExtractor> e {
+            new external::RigEclipseWellLogExtractor { path.p(), *ecl_grid, gridSearchData }
+        };
+
+        for (const auto& intersection : e->cellIntersectionInfosAlongWellPath()) {
+            const auto ijk = ecl_grid->getIJK(intersection.globCellIndex);
+
+            if (grid.get_cell(ijk[0], ijk[1], ijk[2]).is_active()) {
+                return ijk;
+            }
+        }
+
+        return std::nullopt;
+    }
+
 } // anonymous namespace
 
 namespace Opm {
@@ -812,6 +840,19 @@ The cell ({},{},{}) in well {} is not active and the connection will be ignored)
             };
         }
 
+        // When WELSPECS defaults the well head's I/J location, it is that
+        // of the first active cell entered by the main branch's trajectory,
+        // irrespective of the perforation intervals and record order.
+        if (((this->headI < 0) || (this->headJ < 0)) && this->coord.contains(1)) {
+            const auto head = firstActiveCell(this->coord.at(1), this->md.at(1),
+                                              grid, wellTraj.gridSearchData);
+
+            if (head.has_value()) {
+                if (this->headI < 0) { this->headI = (*head)[0]; }
+                if (this->headJ < 0) { this->headJ = (*head)[1]; }
+            }
+        }
+
         const auto& perf_top = record.getItem<Kw::PERF_TOP>();
         const auto& perf_bot = record.getItem<Kw::PERF_BOT>();
 
@@ -934,17 +975,6 @@ CF and Kh items for well {} must both be specified or both defaulted/negative)",
             const auto& pieces = cell_pieces[ic];
             const auto global_index = intersections[pieces.front()].globCellIndex;
             const auto ijk = ecl_grid->getIJK(global_index);
-
-            // When using WELTRAJ & COMPTRAJ one may use default settings in
-            // WELSPECS for headI/J and let the headI/J be calculated by the
-            // trajectory data.
-            //
-            // If these defaults are used the headI/J are set to the first
-            // intersection.
-            if (ic == 0) {
-                if (this->headI < 0) { this->headI = ijk[0]; }
-                if (this->headJ < 0) { this->headJ = ijk[1]; }
-            }
 
             const auto& cell = grid.get_cell(ijk[0], ijk[1], ijk[2]);
 

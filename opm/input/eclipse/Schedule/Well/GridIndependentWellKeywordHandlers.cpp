@@ -233,6 +233,9 @@ namespace
     {
         using Kw = ParserKeywords::COMPTRAJ;
 
+        // Wells in the order in which the keyword first names them.
+        auto comptraj_wells = std::vector<std::string>{};
+
         // Perforation intervals given by the keyword, per well.
         auto keyword_intervals = std::map<std::string, std::vector<PerforationInterval>>{};
 
@@ -303,6 +306,27 @@ Well {} has no connections to the grid. The well will remain SHUT)", name);
                     .addEvent(name, ScheduleEvents::COMPLETION_CHANGE);
 
                 handlerContext.comptraj_handled(name);
+
+                if (std::ranges::find(comptraj_wells, name) == comptraj_wells.end()) {
+                    comptraj_wells.push_back(name);
+                }
+            }
+        }
+
+        for (const auto& name : comptraj_wells) {
+            const auto& well = handlerContext.state().wells.get(name);
+
+            // Reported once per keyword, rather than once per record.
+            if ((well.getHeadI() < 0) || (well.getHeadJ() < 0)) {
+                const auto reason = well.getConnections().getCoord().contains(1)
+                    ? "the trajectory of branch 1 does not enter any active cell"
+                    : "the well has no WELTRAJ trajectory for branch 1";
+
+                const auto msg = fmt::format(R"(Problem with keyword {{keyword}}:
+In {{file}} line {{line}}
+The head location of well {} is defaulted in WELSPECS and cannot be derived from its main branch, since {}. The head location remains undefined)", name, reason);
+
+                OpmLog::warning(OpmInputError::format(msg, handlerContext.keyword.location()));
             }
         }
 

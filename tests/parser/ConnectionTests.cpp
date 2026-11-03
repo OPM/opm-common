@@ -762,7 +762,11 @@ BOOST_AUTO_TEST_CASE(loadCOMPTRAJTESTSPE1) {
        also covers the small difference between the Darcy constant used by ResInsight and OPM.
      */
 
+    // The trajectory of INJ starts above the reservoir.  Its well head is
+    // defaulted in WELSPECS and is derived from the trajectory instead.
     const auto& inj = sched.getWell("INJ", 0);
+    BOOST_CHECK_EQUAL(inj.getHeadI(), 8);
+    BOOST_CHECK_EQUAL(inj.getHeadJ(), 8);
     check_connections(inj.getConnections(),
                       {10.45, 1.568, 10.45},
                       {1.0e4, 1.5e3, 1.0e4},
@@ -2220,6 +2224,108 @@ WELTRAJ
     }
 
 } // Anonymous namespace
+
+BOOST_AUTO_TEST_CASE(Comptraj_Defaulted_Head_From_First_Active_Cell_Of_Main_Branch)
+{
+    // Perforates cells (4,2,1) and (5,2,1) only.
+    const auto main_branch = std::string { R"(COMPTRAJ
+-- WELL BRANCH  TOP    BOT   REF NO STATE SAT   CF   DIAM   KH  SKIN
+  'W1'    1    2180   2280   2*     1*    1*    1*  0.25   1*  0 /
+/
+)" };
+
+    // Perforates cells (3,3,1) and (3,4,1) only.
+    const auto lateral = std::string { R"(COMPTRAJ
+  'W1'    2    2180   2280   2*     1*    1*    1*  0.25   1*  0 /
+/
+)" };
+
+    // The head is where the main branch enters the grid, not where it is
+    // first perforated.
+    {
+        const auto sched = comptrajSchedule(comptrajDeck(weltrajDeviated("1* 1*") + main_branch));
+        const auto& well = sched.getWell("W1", 0);
+
+        BOOST_REQUIRE_EQUAL(well.getConnections().size(), std::size_t{2});
+        BOOST_CHECK_EQUAL(well.getHeadI(), 1);
+        BOOST_CHECK_EQUAL(well.getHeadJ(), 1);
+        BOOST_CHECK_EQUAL(well.getConnections().getHeadI(), 1);
+        BOOST_CHECK_EQUAL(well.getConnections().getHeadJ(), 1);
+    }
+
+    // An inactive cell does not count.
+    {
+        const auto sched = comptrajSchedule(comptrajDeck(weltrajDeviated("1* 1*") + main_branch,
+                                                         R"(EQUALS
+  ACTNUM 0 2 2 2 2 1 1 /
+/
+)"));
+        const auto& well = sched.getWell("W1", 0);
+
+        BOOST_CHECK_EQUAL(well.getHeadI(), 2);
+        BOOST_CHECK_EQUAL(well.getHeadJ(), 1);
+    }
+
+    // The main branch need not be perforated.
+    {
+        const auto sched = comptrajSchedule(comptrajDeck(weltrajDeviated("1* 1*") + lateral));
+        const auto& well = sched.getWell("W1", 0);
+
+        BOOST_REQUIRE_EQUAL(well.getConnections().size(), std::size_t{2});
+        BOOST_CHECK_EQUAL(well.getHeadI(), 1);
+        BOOST_CHECK_EQUAL(well.getHeadJ(), 1);
+    }
+
+    // Only a defaulted coordinate is derived from the trajectory.
+    {
+        const auto sched = comptrajSchedule(comptrajDeck(weltrajDeviated("5 1*") + lateral));
+        const auto& well = sched.getWell("W1", 0);
+
+        BOOST_CHECK_EQUAL(well.getHeadI(), 4);
+        BOOST_CHECK_EQUAL(well.getHeadJ(), 1);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(Comptraj_Defaulted_Head_Without_Active_Main_Branch_Cell_Remains_Undefined)
+{
+    const auto lateral = std::string { R"(COMPTRAJ
+-- WELL BRANCH  TOP    BOT   REF NO STATE SAT   CF   DIAM   KH  SKIN
+  'W1'    2    2180   2280   2*     1*    1*    1*  0.25   1*  0 /
+/
+)" };
+
+    // The main branch only enters inactive cells.
+    {
+        const auto sched = comptrajSchedule(comptrajDeck(weltrajDeviated("1* 1*") + lateral,
+                                                         R"(EQUALS
+  ACTNUM 0 2 5 2 2 1 1 /
+/
+)"));
+        const auto& well = sched.getWell("W1", 0);
+
+        BOOST_REQUIRE_EQUAL(well.getConnections().size(), std::size_t{2});
+        BOOST_CHECK_EQUAL(well.getHeadI(), -1);
+        BOOST_CHECK_EQUAL(well.getHeadJ(), -1);
+    }
+
+    // The well has no main branch.
+    {
+        const auto sched = comptrajSchedule(comptrajDeck(R"(WELSPECS
+  'W1' 'G' 1* 1* 2000.0 OIL /
+/
+WELTRAJ
+-- WELL BRANCH   X      Y      TVD     MD
+  'W1'    2     250    150    2005    2105 /
+  'W1'    2     250    450    2005    2405 /
+/
+)" + lateral));
+        const auto& well = sched.getWell("W1", 0);
+
+        BOOST_REQUIRE_EQUAL(well.getConnections().size(), std::size_t{2});
+        BOOST_CHECK_EQUAL(well.getHeadI(), -1);
+        BOOST_CHECK_EQUAL(well.getHeadJ(), -1);
+    }
+}
 
 namespace {
 
