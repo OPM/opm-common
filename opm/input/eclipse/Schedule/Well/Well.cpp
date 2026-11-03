@@ -2477,6 +2477,11 @@ bool Opm::Well::aciveWellInjMult() const
    return this->well_inj_mult.has_value();
 }
 
+bool Opm::Well::hasActiveInjMult() const
+{
+    return this->isInjector() && (this->inj_mult_mode != InjMultMode::NONE);
+}
+
 void Opm::Well::setFilterConc(const UDAValue& conc)
 {
     this->m_filter_concentration = conc;

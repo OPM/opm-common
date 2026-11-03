@@ -478,6 +478,11 @@ public:
     const InjMult& getWellInjMult() const;
     bool aciveWellInjMult() const;
 
+    /// Whether WINJMULT applies to the well now: it is an injector with an
+    /// injectivity multiplier mode set.  A producer keeps its WINJMULT data,
+    /// but it does not apply.
+    bool hasActiveInjMult() const;
+
     bool hasConnections() const;
     std::vector<const Connection *> getConnections(int completion) const;
     const WellConnections& getConnections() const;

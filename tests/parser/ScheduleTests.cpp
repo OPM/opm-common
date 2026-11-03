@@ -1984,7 +1984,7 @@ TSTEP
 )");
 
     const auto& inj1 = schedule.getWell("INJ1", 1);
-    BOOST_CHECK(inj1.isInjector());
+    BOOST_CHECK(inj1.hasActiveInjMult());
     BOOST_CHECK(inj1.getInjMultMode() == Well::InjMultMode::CREV);
 
     const auto& conns = inj1.getConnections();
@@ -1998,11 +1998,68 @@ TSTEP
     BOOST_CHECK_CLOSE(conn_mult.multiplier_gradient, 0.2 / unit::barsa, 1.0e-8);
 
     const auto& inj2 = schedule.getWell("INJ2", 1);
-    BOOST_CHECK(inj2.isInjector());
+    BOOST_CHECK(inj2.hasActiveInjMult());
     BOOST_CHECK(inj2.getInjMultMode() == Well::InjMultMode::WREV);
     BOOST_REQUIRE(inj2.aciveWellInjMult());
     BOOST_CHECK_CLOSE(inj2.getWellInjMult().fracture_pressure, 250.0 * unit::barsa, 1.0e-8);
     BOOST_CHECK_CLOSE(inj2.getWellInjMult().multiplier_gradient, 0.1 / unit::barsa, 1.0e-8);
+}
+
+BOOST_AUTO_TEST_CASE(WINJMULT_applies_only_while_injecting) {
+    const auto schedule = make_schedule(R"(
+START             -- 0
+1 JAN 2025 /
+GRID
+PORO
+    1000*0.1 /
+PERMX
+    1000*1 /
+PERMY
+    1000*1 /
+PERMZ
+    1000*1 /
+SCHEDULE
+DATES             -- 1
+ 1 FEB 2025 /
+/
+WELSPECS
+ 'W1' 'G1' 5 5 1* 'WATER' /
+/
+COMPDAT
+ 'W1' 5 5 1 3 'OPEN' 1* 100 /
+/
+WCONPROD
+ 'W1' 'OPEN' 'BHP' 5* 100 /
+/
+WINJMULT
+ 'W1' 280.0 0.2 /
+/
+DATES             -- 2
+ 1 MAR 2025 /
+/
+WCONINJE
+ 'W1' 'WATER' 'OPEN' 'RATE' 1000 /
+/
+DATES             -- 3
+ 1 APR 2025 /
+/
+WCONPROD
+ 'W1' 'OPEN' 'BHP' 5* 100 /
+/
+TSTEP
+ 1 /
+)");
+
+    const auto& w1_prod = schedule.getWell("W1", 1);
+    BOOST_CHECK(w1_prod.getInjMultMode() == Well::InjMultMode::WREV);
+    BOOST_CHECK(!w1_prod.hasActiveInjMult());
+
+    BOOST_CHECK(schedule.getWell("W1", 2).hasActiveInjMult());
+
+    // Back to production: the data stays, but no longer applies
+    const auto& w1_prod_again = schedule.getWell("W1", 3);
+    BOOST_CHECK(w1_prod_again.aciveWellInjMult());
+    BOOST_CHECK(!w1_prod_again.hasActiveInjMult());
 }
 
 
