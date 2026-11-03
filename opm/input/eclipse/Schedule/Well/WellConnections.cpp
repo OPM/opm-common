@@ -35,6 +35,7 @@
 #include <opm/input/eclipse/EclipseState/Grid/GridDims.hpp>
 
 #include <opm/input/eclipse/Schedule/ScheduleGrid.hpp>
+#include <opm/input/eclipse/Schedule/MSW/Compsegs.hpp>
 #include <opm/input/eclipse/Schedule/Well/Connection.hpp>
 #include <opm/input/eclipse/Schedule/Well/TrackOrderingTSP.hpp>
 #include <opm/input/eclipse/Schedule/Well/WDFAC.hpp>
@@ -71,6 +72,7 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <tuple>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -880,7 +882,7 @@ CF and Kh items for well {} must both be specified or both defaulted/negative)",
         // This gives the intersected grid cells IJK, cell face entrance &
         // exit cell face point and connection length.
         const auto intersections = e->cellIntersectionInfosAlongWellPath();
-        wellTraj.intersections = intersections;
+        wellTraj.trajectoryConnections.clear();
 
         // The trajectory may enter the same cell more than once.  Collect
         // the pieces of the trajectory in each cell, with the cells in the
@@ -1021,6 +1023,21 @@ Branch {} of well {} yields a non-representable connection transmissibility fact
                 ctf_props.Ke = std::sqrt(K[0] * K[1]);
             }
 
+            for (const auto is : pieces) {
+                const auto& piece = intersections[is];
+                const double center_md = 0.5 * (piece.startMD + piece.endMD);
+
+                wellTraj.trajectoryConnections.push_back({
+                    .branch = branch,
+                    .startMD = piece.startMD,
+                    .endMD = piece.endMD,
+                    .centerTVD = linearInterpolation(this->md.at(branch),
+                                                    this->coord.at(branch)[2],
+                                                    center_md),
+                    .ijk = { ijk[0], ijk[1], ijk[2] },
+                });
+            }
+
             const auto contribution = Connection::IntervalContribution {
                 .interval = interval,
                 .kind = ctf_kind,
@@ -1098,6 +1115,12 @@ Cell ({},{},{}) of well {} is perforated by several COMPTRAJ intervals. The inte
                 prev->addIntervalContribution(contribution);
             }
         }
+
+        // Cell grouping above is only for transmissibility calculations.
+        // Keep one COMPSEGS row for every trajectory crossing, in MD order.
+        std::ranges::stable_sort(wellTraj.trajectoryConnections, {},
+                                 [](const Compsegs::TrajectoryConnection& connection)
+                                 { return std::tie(connection.startMD, connection.endMD); });
 
         // A cell that only the re-specified interval perforated, and that it
         // no longer perforates, is no longer connected to the well.  All

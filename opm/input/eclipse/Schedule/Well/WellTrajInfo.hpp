@@ -20,18 +20,21 @@
 #ifndef OPM_WELL_TRAJ_INFO_HPP
 #define OPM_WELL_TRAJ_INFO_HPP
 
+#include <opm/input/eclipse/Schedule/MSW/Compsegs.hpp>
 #include <opm/input/eclipse/Schedule/WellTraj/RigEclipseWellLogExtractor.hpp>
 
-#include <external/resinsight/ReservoirDataModel/RigWellLogExtractor.h>
 #include <external/resinsight/ReservoirDataModel/RigWellPath.h>
+
+#include <vector>
 
 namespace Opm {
 
 struct WellTrajInfo
 {
-    std::vector<external::WellPathCellIntersectionInfo> intersections;
     external::RigEclipseGridSearchData gridSearchData;
     external::cvf::ref<external::RigWellPath> wellPathGeometry;
+    // COMPSEGS-like rows for the current COMPTRAJ record, one per crossing.
+    std::vector<Compsegs::TrajectoryConnection> trajectoryConnections;
 };
 
 } // namespace Opm

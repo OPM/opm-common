@@ -60,6 +60,10 @@
 #include <set>
 #include <stdexcept>
 #include <string>
+#include <string_view>
+#include <vector>
+
+#include <fmt/format.h>
 
 BOOST_AUTO_TEST_CASE(AICDWellTest)
 {
@@ -139,7 +143,7 @@ WSEGAICD
     const Opm::DeckKeyword welsegs = deck["WELSEGS"].back();
     Opm::WellSegments segment_set{};
     const Opm::UnitSystem unit_system {}; // Metric by default
-    segment_set.loadWELSEGS(welsegs, unit_system);
+    segment_set.loadWELSEGS(welsegs, {}, {}, unit_system);
 
     BOOST_CHECK_EQUAL(7U, segment_set.size());
 
@@ -317,7 +321,7 @@ WSEGSICD
     const Opm::DeckKeyword welsegs = deck["WELSEGS"].back();
     Opm::WellSegments segment_set{};
     const Opm::UnitSystem unit_system {}; // Metric by default
-    segment_set.loadWELSEGS(welsegs, unit_system);
+    segment_set.loadWELSEGS(welsegs, {}, {}, unit_system);
 
     BOOST_CHECK_EQUAL(7U, segment_set.size());
 
@@ -905,7 +909,7 @@ BOOST_AUTO_TEST_CASE(WrongDistanceCOMPSEGS)
     const Opm::DeckKeyword welsegs = deck["WELSEGS"].back();
     Opm::WellSegments segment_set{};
     const Opm::UnitSystem unit_system {}; // Metric by default
-    segment_set.loadWELSEGS(welsegs, unit_system);
+    segment_set.loadWELSEGS(welsegs, {}, {}, unit_system);
 
     BOOST_CHECK_EQUAL(6U, segment_set.size());
 
@@ -989,7 +993,7 @@ BOOST_AUTO_TEST_CASE(NegativeDepthCOMPSEGS)
     const Opm::DeckKeyword welsegs = deck["WELSEGS"].back();
     Opm::WellSegments segment_set{};
     const Opm::UnitSystem unit_system {}; // Metric by default
-    segment_set.loadWELSEGS(welsegs, unit_system);
+    segment_set.loadWELSEGS(welsegs, {}, {}, unit_system);
 
     BOOST_CHECK_EQUAL(6U, segment_set.size());
 
@@ -1078,7 +1082,7 @@ BOOST_AUTO_TEST_CASE(testwsegvalv)
     const Opm::DeckKeyword welsegs = deck["WELSEGS"].back();
     Opm::WellSegments segment_set{};
     const Opm::UnitSystem unit_system {}; // Metric by default
-    segment_set.loadWELSEGS(welsegs, unit_system);
+    segment_set.loadWELSEGS(welsegs, {}, {}, unit_system);
 
     BOOST_CHECK_EQUAL(8U, segment_set.size());
 
@@ -2139,43 +2143,740 @@ WELSEGS
 BOOST_AUTO_TEST_CASE(loadCOMPTRAJTESTSPE1_MSW) {
   Opm::Parser parser;
 
-  const auto deck = parser.parseFile("SPE1CASE1_WELTRAJ_MSW.DATA");
+  const auto deck = parser.parseFile("SPE1CASE1_WELTRAJ.DATA");
   auto python = std::make_shared<Opm::Python>();
   Opm::EclipseState state(deck);
   Opm::Schedule sched(deck, state, python);
   const auto& units = deck.getActiveUnitSystem();
 
-  const auto& prod = sched.getWell("PROD", 0);
-  const auto& connections = prod.getConnections();
-  const auto& segments = prod.getSegments();
+  const auto length = [&units](const double value)
+  {
+    return units.to_si(Opm::UnitSystem::measure::length, value);
+  };
 
-  /* Comparison values (CFs and intersected cells) are from ResInsight through importing a deviation file with contents
-        WELLNAME: 'PROD'
-        # X   Y    TVDMSL   MDMSL
-        3400.00     4500.00     8325.00     8325.00
-        3858.19     4688.67     8374.60     8825.00
-        5326.76     6005.95     8403.97     10825.00
-        6500.00     7300.00     8410.00     12571.74
+  /* Reference values are from the PRT file of a reference run with the COMPDAT, WELSEGS and
+     COMPSEGS keywords exported by ResInsight after importing the deviation files
+        WELLNAME: 'INJ'
+        # X     Y      TVDMSL  MDMSL
+        10400   11600  8325.0  8325.0
+        10400   11600  8425.0  8425.0
         -999
-     and adjusting the completion data in agreement with the COMPTRAJ data in the input file
-   */
-  const std::array<double, 9> connection_factor{
-    110.5461, 17.75799, 36.04859, 60.75019, 235.1933, 94.73938, 222.7472, 74.7769, 89.2022
-  };
-  const std::array<int, 9> global_index{11, 111, 211, 212, 222, 223, 233, 234, 244};
-  BOOST_CHECK_EQUAL(connections.size(), 9);
-  for (std::size_t i = 0 ; i < connections.size();  ++i ) {
-       BOOST_CHECK_CLOSE(connections[i].CF(), units.to_si(Opm::UnitSystem::measure::transmissibility, connection_factor[i]), 2e-2);
-       BOOST_CHECK_EQUAL(connections[i].global_index(), global_index[i]);
-  }
+        WELLNAME: 'PROD'
+        # X       Y       TVDMSL  MDMSL
+        3400.00   4500.00   8325.00   8325.00
+        3858.19   4688.67   8374.60   8822.99
+        5326.76   6005.95   8403.97   10796.0
+        6500.00   7300.00   8410.00   12542.7
+        -999
+     and adjusting the completion data in agreement with the COMPTRAJ data in the input file.
 
-  const std::array<double, 10> lengths{
-    8325.0, 8425.8, 8689.4, 8935.1, 9157.9, 9838.8, 10597.0, 11321.0, 11997.0, 12369.0
+     ResInsight creates one segment per connection, with its node at the midpoint of the
+     connection's perforated interval. The input deck uses the same segment lengths in WELSEGS,
+     but defaults the segment depths and has no COMPSEGS. Segment depths, connection depths and
+     perforated intervals are therefore all derived from the trajectory and should reproduce the
+     reference values.
+
+     The PRT file truncates lengths and depths to 0.1 ft (to 1 ft for values of 10000 ft and
+     more, which are completed with one decimal from the exported keywords). The reference values
+     are checked with a tolerance of 0.2 ft: the truncation error plus a margin of 0.1 ft.
+   */
+  const auto tolerance = length(0.2);
+
+  const auto check_well = [&](const std::string& name,
+                              const std::vector<double>& segment_lengths,
+                              const std::vector<double>& segment_depths,
+                              const std::vector<double>& perforation_bounds,
+                              const std::vector<int>& global_index)
+  {
+    BOOST_TEST_MESSAGE("Checking segments of well " << name);
+
+    const auto& well = sched.getWell(name, 0);
+    BOOST_REQUIRE(well.isMultiSegment());
+
+    const auto& segments = well.getSegments();
+    BOOST_REQUIRE_EQUAL(segments.size(), segment_depths.size());
+    for (std::size_t i = 0; i < segments.size(); ++i) {
+      const auto& segment = segments[i];
+      const auto number = static_cast<int>(i) + 1;
+
+      BOOST_CHECK_EQUAL(segment.segmentNumber(), number);
+      BOOST_CHECK_EQUAL(segment.branchNumber(), 1);
+      BOOST_CHECK_EQUAL(segment.outletSegment(), number - 1);
+      BOOST_CHECK_SMALL(segment.totalLength() - length(segment_lengths[i]), tolerance);
+      BOOST_CHECK_SMALL(segment.depth() - length(segment_depths[i]), tolerance);
+
+      if (i + 1 < segments.size()) {
+        BOOST_CHECK_EQUAL(segment.inletSegments().size(), 1);
+        BOOST_CHECK_EQUAL(segment.inletSegments().front(), number + 1);
+      }
+      else {
+        BOOST_CHECK(segment.inletSegments().empty());
+      }
+
+      if (i > 0) {
+        BOOST_CHECK_SMALL(segment.internalDiameter() - length(0.5), length(0.5e-4));
+        BOOST_CHECK_SMALL(segment.roughness() - length(0.000033), length(0.5e-6));
+      }
+    }
+
+    // Connection i is the only connection of segment i + 2 and has the depth of that segment.
+    const auto& connections = well.getConnections();
+    BOOST_REQUIRE_EQUAL(connections.size(), global_index.size());
+    for (std::size_t i = 0; i < connections.size(); ++i) {
+      const auto& connection = connections[i];
+
+      BOOST_CHECK_EQUAL(connection.global_index(), global_index[i]);
+      BOOST_CHECK_EQUAL(connection.segment(), static_cast<int>(i) + 2);
+      BOOST_CHECK_SMALL(connection.depth() - length(segment_depths[i + 1]), tolerance);
+
+      const auto& perf_range = connection.perf_range();
+      BOOST_REQUIRE(perf_range.has_value());
+      BOOST_CHECK_SMALL(perf_range->first - length(perforation_bounds[i]), tolerance);
+      BOOST_CHECK_SMALL(perf_range->second - length(perforation_bounds[i + 1]), tolerance);
+    }
   };
-  BOOST_CHECK_EQUAL(segments.size(), 10);
-  for (std::size_t i = 0; i < segments.size(); ++i) {
-    BOOST_CHECK_EQUAL(segments[i].segmentNumber(), i + 1);
-    BOOST_CHECK_EQUAL(segments[i].outletSegment(), i);
-    BOOST_CHECK_CLOSE(segments[i].totalLength(), units.to_si(Opm::UnitSystem::measure::length, lengths[i]), 2e-2);
-  }
+
+  check_well("INJ",
+             {8325.0, 8335.0, 8360.0, 8400.0},
+             {8325.0, 8335.0, 8360.0, 8400.0},
+             {8325.0, 8345.0, 8375.0, 8425.0},
+             {88, 188, 288});
+
+  check_well("PROD",
+             {8325.0, 8425.4, 8687.8, 8931.6, 9151.4,
+              9823.1, 10572.0, 11292.6, 11968.0, 12340.2},
+             {8325.0, 8335.0, 8361.1, 8376.2, 8379.4,
+              8389.4, 8400.6, 8405.6, 8408.0, 8409.3},
+             {8325.0, 8525.8, 8849.8, 9013.5, 9289.2,
+              10357.0, 10787.0, 11798.3, 12137.7, 12542.7},
+             {11, 111, 211, 212, 222, 223, 233, 234, 244});
+}
+
+// ---------------------------------------------------------------------------
+// Segment attachment of cells reached by several COMPTRAJ pieces
+// ---------------------------------------------------------------------------
+
+namespace {
+
+    // A vertical main branch through column (3,3) and a lateral running in the
+    // X direction through the middle layer.  Cell (3,3,2) is perforated by
+    // both branches, cells (4,3,2) and (5,3,2) by the lateral only.
+    //
+    // The trajectories are chosen so that MD == TVD along the main branch and
+    // the lateral is horizontal, which makes the cell/segment measured depths
+    // easy to follow:
+    //
+    //   branch 1 : MD 2000 -> 2030, cells (3,3,1), (3,3,2), (3,3,3)
+    //   branch 2 : MD 2015 -> 2215, cells (3,3,2), (4,3,2), (5,3,2)
+    //
+    // Segment nodes sit at the cell centres, so segments 2, 3 and 4 cover the
+    // main branch cells and segments 5, 6 and 7 the lateral ones.  The shared
+    // cell is attached to segment 3 through the main branch's piece in it and
+    // to segment 5 through the lateral's piece.
+    const std::string msw_two_branch_prelude = R"(WELSPECS
+  'W1' 'G' 3 3 2000.0 OIL /
+/
+WELTRAJ
+-- WELL BRANCH   X      Y      TVD     MD
+  'W1'    1     250    250    2000    2000 /
+  'W1'    1     250    250    2030    2030 /
+  'W1'    2     250    250    2015    2015 /
+  'W1'    2     450    250    2015    2215 /
+/
+WELSEGS
+-- WELL  TOP_DEPTH TOP_LENGTH VOL  TYPE PRESSURE
+  'W1'    2000      2000      1*   ABS  'HF-' /
+-- SEG1 SEG2 BRANCH OUTLET LENGTH DEPTH DIAM  ROUGH
+    2    2     1      1     2005   2005  0.15 1.0e-5 /
+    3    3     1      2     2015   2015  0.15 1.0e-5 /
+    4    4     1      3     2025   2025  0.15 1.0e-5 /
+    5    5     2      2     2040   2015  0.10 1.0e-5 /
+    6    6     2      5     2115   2015  0.10 1.0e-5 /
+    7    7     2      6     2190   2015  0.10 1.0e-5 /
+/
+)";
+
+    const std::string comptraj_main_branch = R"(COMPTRAJ
+-- WELL BRANCH  TOP    BOT   REF NO STATE SAT   CF   DIAM   KH  SKIN
+  'W1'    1    2000   2030   2*     1*    1*   10.0  0.15  100  0 /
+/
+)";
+
+    const std::string comptraj_lateral = R"(COMPTRAJ
+  'W1'    2    2015   2215   2*     1*    1*   30.0  0.10  300  0 /
+/
+)";
+
+    Opm::Schedule mswTrajectorySchedule(const std::string& schedule,
+                                        const std::string& extra_grid = {})
+    {
+        const auto deck = Opm::Parser{}.parseString(R"(RUNSPEC
+START
+  18 MAR 2026 /
+OIL
+WATER
+DIMENS
+  5 5 3 /
+TABDIMS
+/
+EQLDIMS
+/
+WELLDIMS
+  2 20 1 2 /
+WSEGDIMS
+  2 20 3 /
+GRID
+DXV
+  5*100 /
+DYV
+  5*100 /
+DZV
+  3*10 /
+DEPTHZ
+  36*2000 /
+EQUALS
+  PERMX 100 /
+  PERMY 100 /
+  PERMZ  10 /
+  PORO    0.3 /
+/
+)" + extra_grid + R"(
+PROPS
+DENSITY
+  800 1000 1 /
+SOLUTION
+EQUIL
+  2010 200 2010 1.23 1995 0.0 1* 1* -5 /
+SCHEDULE
+)" + schedule + R"(
+TSTEP
+  5*10 /
+END
+)");
+
+        const auto es = Opm::EclipseState { deck };
+
+        return Opm::Schedule {
+            deck, es, Opm::ParseContext{}, *std::make_unique<Opm::ErrorGuard>(),
+            std::make_shared<Opm::Python>()
+        };
+    }
+
+    int segmentOfCell(const Opm::WellConnections& connections,
+                      const int i, const int j, const int k)
+    {
+        for (const auto& conn : connections) {
+            if (conn.sameCoordinate(i, j, k)) {
+                return conn.segment();
+            }
+        }
+
+        BOOST_FAIL(fmt::format("No connection at ({},{},{})", i, j, k));
+        return -1;
+    }
+
+} // Anonymous namespace
+
+BOOST_AUTO_TEST_CASE(Comptraj_MSW_Shared_Cell_Attached_Through_Last_Branch)
+{
+    const auto sched =
+        mswTrajectorySchedule(msw_two_branch_prelude +
+                              comptraj_main_branch + comptraj_lateral);
+
+    const auto& well = sched.getWell("W1", 0);
+    BOOST_REQUIRE(well.isMultiSegment());
+
+    const auto& connections = well.getConnections();
+    BOOST_REQUIRE_EQUAL(connections.size(), std::size_t{5});
+
+    // The lateral record is last, so it overwrites the shared cell's
+    // attachment with segment 5.
+    BOOST_CHECK_EQUAL(segmentOfCell(connections, 2, 2, 1), 5);
+
+    for (const auto& conn : connections) {
+        if (conn.sameCoordinate(2, 2, 1)) {
+            BOOST_REQUIRE(conn.perf_range().has_value());
+            BOOST_CHECK_CLOSE(conn.perf_range()->first, 2015.0, 1.0e-8);
+            BOOST_CHECK_CLOSE(conn.perf_range()->second, 2065.0, 1.0e-8);
+            BOOST_CHECK_CLOSE(conn.depth(), 2015.0, 1.0e-8);
+        }
+    }
+
+    // Main branch cells above and below the lateral.
+    BOOST_CHECK_EQUAL(segmentOfCell(connections, 2, 2, 0), 2);
+    BOOST_CHECK_EQUAL(segmentOfCell(connections, 2, 2, 2), 4);
+
+    // Cells only the lateral reaches keep their lateral segments.
+    BOOST_CHECK_EQUAL(segmentOfCell(connections, 3, 2, 1), 6);
+    BOOST_CHECK_EQUAL(segmentOfCell(connections, 4, 2, 1), 7);
+}
+
+BOOST_AUTO_TEST_CASE(Comptraj_MSW_Segment_Attachment_Follows_Record_Order)
+{
+    for (const auto& [records, expected_segment] : {
+             std::pair { comptraj_main_branch + comptraj_lateral, 5 },
+             std::pair { comptraj_lateral + comptraj_main_branch, 3 },
+         })
+    {
+        const auto sched = mswTrajectorySchedule(msw_two_branch_prelude + records);
+        const auto& connections = sched.getWell("W1", 0).getConnections();
+
+        BOOST_REQUIRE_EQUAL(connections.size(), std::size_t{5});
+        BOOST_CHECK_EQUAL(segmentOfCell(connections, 2, 2, 1), expected_segment);
+        BOOST_CHECK_EQUAL(segmentOfCell(connections, 2, 2, 0), 2);
+        BOOST_CHECK_EQUAL(segmentOfCell(connections, 2, 2, 2), 4);
+        BOOST_CHECK_EQUAL(segmentOfCell(connections, 3, 2, 1), 6);
+        BOOST_CHECK_EQUAL(segmentOfCell(connections, 4, 2, 1), 7);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(Comptraj_MSW_Attachment_Matches_COMPSEGS_Overwrites)
+{
+    const auto reference = mswTrajectorySchedule(msw_two_branch_prelude + R"(COMPDAT
+  'W1' 3 3 1 3 OPEN 1* 10.0 0.15 100 /
+  'W1' 4 3 2 2 OPEN 1* 30.0 0.10 300 /
+  'W1' 5 3 2 2 OPEN 1* 30.0 0.10 300 /
+/
+COMPSEGS
+  'W1' /
+-- I J K BRANCH START END DIR END_IJK DEPTH
+   3 3 1   1    2000 2010 Z    1*    2005 /
+   3 3 2   1    2010 2020 Z    1*    2015 /
+   3 3 3   1    2020 2030 Z    1*    2025 /
+   3 3 2   2    2015 2065 Z    1*    2015 /
+   4 3 2   2    2065 2165 Z    1*    2015 /
+   5 3 2   2    2165 2215 Z    1*    2015 /
+/
+)");
+    const auto& expected = reference.getWell("W1", 0).getConnections();
+
+    const auto sched = mswTrajectorySchedule(msw_two_branch_prelude +
+                                              comptraj_main_branch + comptraj_lateral);
+    const auto& connections = sched.getWell("W1", 0).getConnections();
+    BOOST_REQUIRE_EQUAL(connections.size(), expected.size());
+
+    for (std::size_t i = 0; i < connections.size(); ++i) {
+        const auto& actual = connections[i];
+        const auto& native = expected[i];
+
+        BOOST_CHECK_EQUAL(actual.global_index(), native.global_index());
+        BOOST_CHECK_EQUAL(actual.segment(), native.segment());
+        BOOST_CHECK_CLOSE(actual.depth(), native.depth(), 1.0e-8);
+        BOOST_CHECK_CLOSE(actual.thermalLength(), native.thermalLength(), 1.0e-8);
+        BOOST_REQUIRE(actual.perf_range().has_value());
+        BOOST_REQUIRE(native.perf_range().has_value());
+        BOOST_CHECK_CLOSE(actual.perf_range()->first, native.perf_range()->first, 1.0e-8);
+        BOOST_CHECK_CLOSE(actual.perf_range()->second, native.perf_range()->second, 1.0e-8);
+    }
+
+    for (const auto& segment : reference.getWell("W1", 0).getSegments()) {
+        const auto number = segment.segmentNumber();
+        BOOST_CHECK_SMALL(connections.segment_perf_length(number) -
+                          expected.segment_perf_length(number), 1.0e-8);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(Comptraj_MSW_Respecifying_Main_Branch_Overwrites_Lateral_Attachment)
+{
+    const auto sched =
+        mswTrajectorySchedule(msw_two_branch_prelude +
+                              comptraj_main_branch + comptraj_lateral + R"(TSTEP
+  1 /
+COMPTRAJ
+  'W1'    1    2000   2030   2*     SHUT   1*   20.0  0.15  200  0 /
+/
+)");
+    const auto& before = sched.getWell("W1", 0).getConnections().getFromIJK(2, 2, 1);
+    const auto& after = sched.getWell("W1", 1).getConnections().getFromIJK(2, 2, 1);
+
+    BOOST_CHECK(before.state() == Opm::Connection::State::OPEN);
+    BOOST_CHECK(after.state() == Opm::Connection::State::SHUT);
+    BOOST_CHECK_EQUAL(before.segment(), 5);
+    BOOST_CHECK_EQUAL(after.segment(), 3);
+    BOOST_CHECK_EQUAL(after.complnum(), before.complnum());
+    BOOST_CHECK_GT(after.sort_value(), before.sort_value());
+    BOOST_CHECK_CLOSE(after.depth(), 2015.0, 1.0e-8);
+    BOOST_CHECK_CLOSE(after.thermalLength(), before.thermalLength(), 1.0e-8);
+    BOOST_REQUIRE(after.perf_range().has_value());
+    BOOST_REQUIRE(before.perf_range().has_value());
+    BOOST_CHECK_CLOSE(after.perf_range()->first, 2010.0, 1.0e-8);
+    BOOST_CHECK_CLOSE(after.perf_range()->second, 2020.0, 1.0e-8);
+    BOOST_CHECK_CLOSE(after.CF() / before.CF(), 50.0 / 40.0, 1.0e-8);
+    BOOST_CHECK_CLOSE(after.Kh() / before.Kh(), 500.0 / 400.0, 1.0e-8);
+}
+
+BOOST_AUTO_TEST_CASE(Comptraj_MSW_Removing_Last_Contribution_Leaves_Attachment_Unchanged)
+{
+    // The lateral's calculated CTF is not representable in the shared
+    // zero-permeability cell, so no replacement COMPSEGS row is generated.
+    const auto sched =
+        mswTrajectorySchedule(msw_two_branch_prelude +
+                              comptraj_main_branch + comptraj_lateral + R"(TSTEP
+  1 /
+COMPTRAJ
+  'W1'    2    2015   2215   2*     1*    1*   1*  0.10  1*  0 /
+/
+)", R"(EQUALS
+  PERMX 0 3 3 3 3 2 2 /
+  PERMY 0 3 3 3 3 2 2 /
+/
+)");
+    const auto& before = sched.getWell("W1", 0).getConnections().getFromIJK(2, 2, 1);
+    const auto& connections = sched.getWell("W1", 1).getConnections();
+    const auto& after = connections.getFromIJK(2, 2, 1);
+
+    BOOST_REQUIRE_EQUAL(connections.size(), std::size_t{5});
+    BOOST_CHECK_EQUAL(before.segment(), 5);
+    BOOST_CHECK_EQUAL(after.segment(), 5);
+    BOOST_CHECK_EQUAL(after.complnum(), before.complnum());
+    BOOST_REQUIRE_EQUAL(after.intervalContributions().size(), std::size_t{1});
+    BOOST_CHECK_EQUAL(after.intervalContributions().front().interval.branch, 1);
+    BOOST_CHECK_CLOSE(after.CF() / before.CF(), 10.0 / 40.0, 1.0e-8);
+    BOOST_CHECK_CLOSE(after.Kh() / before.Kh(), 100.0 / 400.0, 1.0e-8);
+    BOOST_REQUIRE(after.perf_range().has_value());
+    BOOST_CHECK_CLOSE(after.perf_range()->first, 2015.0, 1.0e-8);
+    BOOST_CHECK_CLOSE(after.perf_range()->second, 2065.0, 1.0e-8);
+    BOOST_CHECK_CLOSE(after.depth(), 2015.0, 1.0e-8);
+    BOOST_CHECK_CLOSE(after.thermalLength(), 10.0, 1.0e-8);
+    BOOST_CHECK_SMALL(connections.segment_perf_length(3), 1.0e-8);
+    BOOST_CHECK_CLOSE(connections.segment_perf_length(5), 50.0, 1.0e-8);
+}
+
+BOOST_AUTO_TEST_CASE(Comptraj_MSW_Reentered_Cell_Uses_Last_Row_Within_Record)
+{
+    // A main branch going down from the top layer into the middle one and
+    // back up again.  Cell (3,3,1) is entered twice, from MD 2002 to 2010 by
+    // the first interval and from MD 2030 to 2035 by the second.  Cell
+    // (3,3,2) is entered once by each, from MD 2010 to 2012 and from MD
+    // 2028 to 2030.
+    const auto prelude = std::string { R"(WELSPECS
+  'W1' 'G' 3 3 2000.0 OIL /
+/
+WELTRAJ
+-- WELL BRANCH   X      Y      TVD     MD
+  'W1'    1     250    250    2000    2000 /
+  'W1'    1     250    250    2015    2015 /
+  'W1'    1     260    250    2015    2025 /
+  'W1'    1     260    250    2005    2035 /
+/
+WELSEGS
+-- WELL  TOP_DEPTH TOP_LENGTH VOL  TYPE PRESSURE
+  'W1'    2000      2000      1*   ABS  'HF-' /
+-- SEG1 SEG2 BRANCH OUTLET LENGTH DEPTH DIAM  ROUGH
+    2    2     1      1     2006   2006  0.15 1.0e-5 /
+    3    3     1      2     2020   2015  0.15 1.0e-5 /
+    4    4     1      3     2029   2011  0.15 1.0e-5 /
+    5    5     1      4     2033   2007  0.15 1.0e-5 /
+/
+)" };
+
+    const auto first = std::string { R"(
+  'W1'    1    2002   2012   2*     1*    1*   10.0  0.15  100  0 /
+)" };
+
+    const auto second = std::string { R"(
+  'W1'    1    2028   2035   2*     1*    1*   30.0  0.15  300  0 /
+)" };
+
+    const auto keyword = [](const std::string& records)
+    { return "COMPTRAJ" + records + "/\n"; };
+
+    // Pieces within one record are handled in measured-depth order.  Across
+    // records, the later record overwrites the earlier attachment.
+    const auto check_schedule = [&](const std::string& schedule,
+                                    const bool         second_record_wins)
+    {
+        const auto sched = mswTrajectorySchedule(prelude + schedule);
+        const auto& connections = sched.getWell("W1", 0).getConnections();
+        BOOST_REQUIRE_EQUAL(connections.size(), std::size_t{2});
+
+        const auto first_segment = second_record_wins ? 5 : 2;
+        const auto second_segment = second_record_wins ? 4 : 2;
+        BOOST_CHECK_EQUAL(segmentOfCell(connections, 2, 2, 0), first_segment);
+        BOOST_CHECK_EQUAL(segmentOfCell(connections, 2, 2, 1), second_segment);
+
+        for (const auto& conn : connections) {
+            BOOST_REQUIRE(conn.perf_range().has_value());
+
+            const auto& [start, end] = *conn.perf_range();
+            if (conn.sameCoordinate(2, 2, 0)) {
+                BOOST_CHECK_CLOSE(start, second_record_wins ? 2030.0 : 2002.0, 1.0e-8);
+                BOOST_CHECK_CLOSE(end, second_record_wins ? 2035.0 : 2010.0, 1.0e-8);
+                BOOST_CHECK_CLOSE(conn.depth(), second_record_wins ? 2007.5 : 2006.0, 1.0e-8);
+            }
+            else {
+                BOOST_CHECK_CLOSE(start, second_record_wins ? 2028.0 : 2010.0, 1.0e-8);
+                BOOST_CHECK_CLOSE(end, second_record_wins ? 2030.0 : 2012.0, 1.0e-8);
+                BOOST_CHECK_CLOSE(conn.depth(), second_record_wins ? 2011.0 : 2011.0, 1.0e-8);
+            }
+        }
+    };
+
+    check_schedule(keyword(first + second), true);
+    check_schedule(keyword(second + first), false);
+    check_schedule(keyword(first) + keyword(second), true);
+    check_schedule(keyword(second) + keyword(first), false);
+}
+
+BOOST_AUTO_TEST_CASE(Comptraj_MSW_Every_Connection_Is_Attached_To_A_Segment)
+{
+    for (const auto& schedule : {msw_two_branch_prelude + comptraj_main_branch + comptraj_lateral,
+                                 msw_two_branch_prelude + comptraj_lateral + comptraj_main_branch})
+    {
+        const auto sched = mswTrajectorySchedule(schedule);
+        const auto& connections = sched.getWell("W1", 0).getConnections();
+
+        for (const auto& conn : connections) {
+            BOOST_CHECK_GT(conn.segment(), 0);
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(Welsegs_Branch_Without_Trajectory_Is_Rejected)
+{
+    // Segment 5 is put on branch 3, for which WELTRAJ has no trajectory.
+    const auto schedule = R"(WELSPECS
+  'W1' 'G' 3 3 2000.0 OIL /
+/
+WELTRAJ
+  'W1'    1     250    250    2000    2000 /
+  'W1'    1     250    250    2030    2030 /
+  'W1'    2     250    250    2015    2015 /
+  'W1'    2     450    250    2015    2215 /
+/
+WELSEGS
+  'W1'    2000      2000      1*   ABS  'HF-' /
+    2    2     1      1     2005   2005  0.15 1.0e-5 /
+    3    3     1      2     2015   2015  0.15 1.0e-5 /
+    4    4     1      3     2025   2025  0.15 1.0e-5 /
+    5    5     3      2     2040   2015  0.10 1.0e-5 /
+/
+)";
+
+    BOOST_CHECK_THROW(mswTrajectorySchedule(schedule), Opm::OpmInputError);
+}
+
+BOOST_AUTO_TEST_CASE(Welsegs_Segment_Node_Beyond_Trajectory_Is_Rejected)
+{
+    // Segment 7 sits at MD 2300, past the end of branch 2's trajectory
+    // (MD 2215).  Extrapolating there would invent well geometry.
+    const auto schedule = R"(WELSPECS
+  'W1' 'G' 3 3 2000.0 OIL /
+/
+WELTRAJ
+  'W1'    1     250    250    2000    2000 /
+  'W1'    1     250    250    2030    2030 /
+  'W1'    2     250    250    2015    2015 /
+  'W1'    2     450    250    2015    2215 /
+/
+WELSEGS
+  'W1'    2000      2000      1*   ABS  'HF-' /
+    2    2     1      1     2005   2005  0.15 1.0e-5 /
+    3    3     1      2     2015   2015  0.15 1.0e-5 /
+    4    4     1      3     2025   2025  0.15 1.0e-5 /
+    5    5     2      2     2040   2015  0.10 1.0e-5 /
+    6    6     2      5     2115   2015  0.10 1.0e-5 /
+    7    7     2      6     2300   2015  0.10 1.0e-5 /
+/
+)";
+
+    BOOST_CHECK_THROW(mswTrajectorySchedule(schedule), Opm::OpmInputError);
+}
+
+BOOST_AUTO_TEST_CASE(Welsegs_Top_Node_Is_Taken_From_The_Trajectory)
+{
+    // TOP_X/TOP_Y are given, but the trajectory decides where the top node
+    // is; the deck values are only reported and then discarded.
+    const auto schedule = R"(WELSPECS
+  'W1' 'G' 3 3 2000.0 OIL /
+/
+WELTRAJ
+  'W1'    1     250    250    2000    2000 /
+  'W1'    1     250    250    2030    2030 /
+  'W1'    2     250    250    2015    2015 /
+  'W1'    2     450    250    2015    2215 /
+/
+WELSEGS
+-- WELL TOP_DEPTH TOP_LENGTH VOL TYPE PRESSURE TOP_X TOP_Y
+  'W1'    2000      2000     1*  ABS  'HF-'    777   888 /
+    2    2     1      1     2005   2005  0.15 1.0e-5 /
+    3    3     1      2     2015   2015  0.15 1.0e-5 /
+    4    4     1      3     2025   2025  0.15 1.0e-5 /
+    5    5     2      2     2040   2015  0.10 1.0e-5 /
+    6    6     2      5     2115   2015  0.10 1.0e-5 /
+    7    7     2      6     2190   2015  0.10 1.0e-5 /
+/
+)" + comptraj_main_branch + comptraj_lateral;
+
+    const auto sched = mswTrajectorySchedule(schedule);
+    const auto& segments = sched.getWell("W1", 0).getSegments();
+
+    BOOST_CHECK_CLOSE(segments[0].node_X(), 250.0, 1.0e-8);
+    BOOST_CHECK_CLOSE(segments[0].node_Y(), 250.0, 1.0e-8);
+
+    // The lateral runs in the X direction at constant Y, so its nodes track
+    // the trajectory rather than the main branch's position.
+    const auto& seg6 = segments[sched.getWell("W1", 0).getSegments().segmentNumberToIndex(6)];
+    BOOST_CHECK_CLOSE(seg6.node_X(), 350.0, 1.0e-8);
+    BOOST_CHECK_CLOSE(seg6.node_Y(), 250.0, 1.0e-8);
+    BOOST_CHECK_CLOSE(seg6.depth(), 2015.0, 1.0e-8);
+}
+
+BOOST_AUTO_TEST_CASE(Welsegs_Top_Node_Depth_And_Position_Are_Interpolated)
+{
+    for (const auto* info_type : {"ABS", "INC"}) {
+        const auto schedule = fmt::format(R"(WELSPECS
+  'W1' 'G' 3 3 2000.0 OIL /
+/
+WELTRAJ
+  'W1'    1     250    250    2000    2000 /
+  'W1'    1     280    290    2030    2060 /
+/
+WELSEGS
+  'W1'    1900      2010     1*  {}  'HF-'    777   888 /
+    2    2     1      1     {}   1*  0.15 1.0e-5 /
+/
+)", info_type, std::string_view{info_type} == "ABS" ? 2030 : 20);
+
+        const auto sched = mswTrajectorySchedule(schedule);
+        const auto& segments = sched.getWell("W1", 0).getSegments();
+        const auto& top = segments[0];
+
+        BOOST_CHECK_CLOSE(top.totalLength(), 2010.0, 1.0e-8);
+        BOOST_CHECK_CLOSE(top.node_X(), 255.0, 1.0e-8);
+        BOOST_CHECK_CLOSE(top.node_Y(), 250.0 + 40.0 / 6.0, 1.0e-8);
+        BOOST_CHECK_CLOSE(top.depth(), 2005.0, 1.0e-8);
+        BOOST_CHECK_CLOSE(segments[1].depth(), 2015.0, 1.0e-8);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(Welsegs_Top_Length_Before_Trajectory_Start_Is_Rejected)
+{
+    const auto schedule = R"(WELSPECS
+  'W1' 'G' 3 3 2000.0 OIL /
+/
+WELTRAJ
+  'W1'    1     250    250    2000    2000 /
+  'W1'    1     250    250    2030    2030 /
+/
+WELSEGS
+  'W1'    2000      1990      1*   ABS  'HF-' /
+    2    2     1      1     2005   2005  0.15 1.0e-5 /
+/
+)";
+
+    BOOST_CHECK_THROW(mswTrajectorySchedule(schedule), Opm::OpmInputError);
+}
+
+BOOST_AUTO_TEST_CASE(Welsegs_Top_Segment_Only_Is_Rejected_For_A_Trajectory_Well)
+{
+    // The segment structure of a grid-independent well comes from WELSEGS.
+    // A WELSEGS with only its header record leaves nothing for the
+    // connections to attach to except the top segment, which would put the
+    // whole well on segment 1 without saying so.
+    const auto schedule = R"(WELSPECS
+  'W1' 'G' 3 3 2000.0 OIL /
+/
+WELTRAJ
+  'W1'    1     250    250    2000    2000 /
+  'W1'    1     250    250    2030    2030 /
+/
+WELSEGS
+  'W1'    2000      2000      1*   ABS  'HF-' /
+/
+COMPTRAJ
+  'W1'    1    2000   2030   2*     1*    1*   10.0  0.15  100  0 /
+/
+)";
+
+    BOOST_CHECK_THROW(mswTrajectorySchedule(schedule), Opm::OpmInputError);
+}
+
+BOOST_AUTO_TEST_CASE(Comptraj_MSW_Connection_Sort_Values_Are_Unique)
+{
+    // The connections of an MSW well are sorted on their sort value, so two
+    // connections sharing one leaves their relative order up to the sorting
+    // algorithm.  Each COMPTRAJ record used to number its own connections
+    // from zero.
+    for (const auto& schedule : {msw_two_branch_prelude + comptraj_main_branch + comptraj_lateral,
+                                 msw_two_branch_prelude + comptraj_lateral + comptraj_main_branch})
+    {
+        const auto sched = mswTrajectorySchedule(schedule);
+        const auto& connections = sched.getWell("W1", 0).getConnections();
+
+        auto sort_values = std::set<std::size_t>{};
+        for (const auto& conn : connections) {
+            sort_values.insert(conn.sort_value());
+        }
+
+        BOOST_CHECK_EQUAL(sort_values.size(), connections.size());
+    }
+}
+
+BOOST_AUTO_TEST_CASE(Comptraj_MSW_Connection_Order_Follows_Record_Order)
+{
+    const auto main_then_lateral = std::vector<std::string> {
+        "(3,3,1)", "(3,3,3)", "(3,3,2)", "(4,3,2)", "(5,3,2)"
+    };
+    const auto lateral_then_main = std::vector<std::string> {
+        "(4,3,2)", "(5,3,2)", "(3,3,1)", "(3,3,2)", "(3,3,3)"
+    };
+
+    for (const auto& [schedule, expected] : {
+             std::pair { msw_two_branch_prelude + comptraj_main_branch + comptraj_lateral,
+                         main_then_lateral },
+             std::pair { msw_two_branch_prelude + comptraj_lateral + comptraj_main_branch,
+                         lateral_then_main },
+         })
+    {
+        const auto sched = mswTrajectorySchedule(schedule);
+        const auto& connections = sched.getWell("W1", 0).getConnections();
+
+        auto cells = std::vector<std::string>{};
+        for (const auto& conn : connections) {
+            cells.push_back(fmt::format("({},{},{})", conn.getI() + 1, conn.getJ() + 1, conn.getK() + 1));
+        }
+
+        BOOST_CHECK_EQUAL_COLLECTIONS(cells.begin(), cells.end(),
+                                      expected.begin(), expected.end());
+
+    }
+}
+
+BOOST_AUTO_TEST_CASE(Comptraj_MSW_Skipped_Cells_Do_Not_Break_Segment_Assignment)
+{
+    // A cell with no lateral permeability has no representable connection
+    // factor and is left out of the well, exactly as COMPDAT leaves it out.
+    // The COMPSEGS records derived from the trajectory must not keep looking
+    // for the connection that was never made.
+    const auto schedule = R"(WELSPECS
+  'W1' 'G' 3 3 2000.0 OIL /
+/
+WELTRAJ
+  'W1'    1     250    250    2000    2000 /
+  'W1'    1     250    250    2030    2030 /
+/
+WELSEGS
+  'W1'    2000      2000      1*   ABS  'HF-' /
+    2    2     1      1     2005   2005  0.15 1.0e-5 /
+    3    3     1      2     2015   2015  0.15 1.0e-5 /
+    4    4     1      3     2025   2025  0.15 1.0e-5 /
+/
+COMPTRAJ
+-- CF and Kh defaulted, so they are calculated from the cell properties.
+  'W1'    1    2000   2030   2*     1*    1*   1*    0.15  1*   0 /
+/
+)";
+
+    const auto sched = mswTrajectorySchedule(schedule, R"(EQUALS
+  PERMX 0 3 3 3 3 2 2 /
+  PERMY 0 3 3 3 3 2 2 /
+/
+)");
+
+    const auto& connections = sched.getWell("W1", 0).getConnections();
+
+    BOOST_REQUIRE_EQUAL(connections.size(), std::size_t{2});
+    BOOST_CHECK_EQUAL(segmentOfCell(connections, 2, 2, 0), 2);
+    BOOST_CHECK_EQUAL(segmentOfCell(connections, 2, 2, 2), 4);
 }
