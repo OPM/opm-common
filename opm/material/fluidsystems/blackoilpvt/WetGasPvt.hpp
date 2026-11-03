@@ -27,6 +27,7 @@
 #ifndef OPM_WET_GAS_PVT_HPP
 #define OPM_WET_GAS_PVT_HPP
 
+#include <opm/common/ErrorMacros.hpp>
 #include <opm/common/Exceptions.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/utility/gpuDecorators.hpp>
@@ -34,11 +35,13 @@
 #include <opm/common/utility/VectorWithDefaultAllocator.hpp>
 
 #include <opm/material/common/ConditionalStorage.hpp>
+#include <opm/material/common/GpuTableHelpers.hpp>
 #include <opm/material/common/MathToolbox.hpp>
 #include <opm/material/common/UniformXTabulated2DFunction.hpp>
 #include <opm/material/common/UniformXTabulated2DFunctionBuilder.hpp>
 #include <opm/material/common/Tabulated1DFunction.hpp>
 
+#include <algorithm>
 #include <cstddef>
 #include <memory>
 #include <type_traits>
@@ -574,5 +577,108 @@ private:
 };
 
 } // namespace Opm
+
+#if HAVE_CUDA
+namespace Opm::gpuistl {
+
+/*!
+ * \brief Copy a CPU WetGasPvt to the GPU.
+ *
+ * Each per-region table is uploaded to its own GpuBuffer-based table. These tables are
+ * held by a device table owner (WetGasPvt<ScalarT, VectorWithDefaultAllocator,
+ * GpuBuffer>), which the returned object owns. The views into these tables are then
+ * collected on the host and uploaded as one GpuBuffer per table member.
+ *
+ * \param cpu A fully initialized CPU object (i.e. initEnd() has been called).
+ * \return An owning GPU object. It is move-only. Use make_view() to obtain an object
+ *         that can be passed to kernels; the owning GPU object must outlive every
+ *         kernel that uses such a view.
+ */
+template <class ScalarT>
+WetGasPvt<ScalarT, GpuBuffer, GpuView>
+copy_to_gpu(const WetGasPvt<ScalarT>& cpu)
+{
+    using GpuTables = WetGasPvt<ScalarT, VectorWithDefaultAllocator, GpuBuffer>;
+    using GpuPvt = WetGasPvt<ScalarT, GpuBuffer, GpuView>;
+
+    // inverseGasBMu_ is only filled by initEnd(); after setNumRegions() alone its
+    // tables are empty.
+    const bool initialized = cpu.numRegions() > 0
+        && std::ranges::none_of(cpu.inverseGasBMu(),
+                                [](const auto& table) { return table.numX() == 0; });
+    OPM_ERROR_IF(!initialized,
+                 "copy_to_gpu: WetGasPvt is not initialized (call initFromState() or initEnd() first).");
+
+    // Upload the tables to the GPU.
+    // Not std::make_unique: the constructor is private, and std::make_unique is not a friend.
+    std::unique_ptr<GpuTables> tables(new GpuTables(typename GpuTables::GpuTablesStorage{},
+                                                    std::vector<ScalarT>(cpu.gasReferenceDensity_),
+                                                    std::vector<ScalarT>(cpu.oilReferenceDensity_),
+                                                    copy_each_to_gpu(cpu.inverseGasB_),
+                                                    copy_each_to_gpu(cpu.inverseSaturatedGasB_),
+                                                    copy_each_to_gpu(cpu.gasMu_),
+                                                    copy_each_to_gpu(cpu.inverseGasBMu_),
+                                                    copy_each_to_gpu(cpu.inverseSaturatedGasBMu_),
+                                                    copy_each_to_gpu(cpu.saturatedOilVaporizationFactorTable_),
+                                                    copy_each_to_gpu(cpu.saturationPressure_),
+                                                    cpu.vapPar1_));
+
+    // Upload vectors of GPU views to the GPU.
+    // Everything that reads through `tables` is done before `tables` is moved into the
+    // returned object: the order in which function arguments are evaluated is
+    // unspecified, so reading and moving `tables` in the same call would be a bug.
+    auto gasReferenceDensity = GpuBuffer<ScalarT>(tables->gasReferenceDensity_);
+    auto oilReferenceDensity = GpuBuffer<ScalarT>(tables->oilReferenceDensity_);
+    auto inverseGasB = make_view_buffer(tables->inverseGasB_);
+    auto inverseSaturatedGasB = make_view_buffer(tables->inverseSaturatedGasB_);
+    auto gasMu = make_view_buffer(tables->gasMu_);
+    auto inverseGasBMu = make_view_buffer(tables->inverseGasBMu_);
+    auto inverseSaturatedGasBMu = make_view_buffer(tables->inverseSaturatedGasBMu_);
+    auto saturatedOilVaporizationFactor = make_view_buffer(tables->saturatedOilVaporizationFactorTable_);
+    auto saturationPressure = make_view_buffer(tables->saturationPressure_);
+    const ScalarT vapPar1 = tables->vapPar1_;
+
+    return GpuPvt(typename GpuPvt::GpuTablesStorage(std::move(tables)),
+                  std::move(gasReferenceDensity),
+                  std::move(oilReferenceDensity),
+                  std::move(inverseGasB),
+                  std::move(inverseSaturatedGasB),
+                  std::move(gasMu),
+                  std::move(inverseGasBMu),
+                  std::move(inverseSaturatedGasBMu),
+                  std::move(saturatedOilVaporizationFactor),
+                  std::move(saturationPressure),
+                  vapPar1);
+}
+
+/*!
+ * \brief Create a GPU view of an owning GPU WetGasPvt.
+ *
+ * The view can be passed by value to kernels. It does not own any memory, so
+ * \p gpuPvt must outlive every use of the view.
+ */
+template <class ScalarT>
+WetGasPvt<ScalarT, GpuView, GpuView>
+make_view(WetGasPvt<ScalarT, GpuBuffer, GpuView>& gpuPvt)
+{
+    using GpuPvtView = WetGasPvt<ScalarT, GpuView, GpuView>;
+    static_assert(std::is_trivially_copyable_v<GpuPvtView>,
+                  "The view is passed by value to kernels.");
+
+    return GpuPvtView(typename GpuPvtView::GpuTablesStorage{},
+                      make_view(gpuPvt.gasReferenceDensity_),
+                      make_view(gpuPvt.oilReferenceDensity_),
+                      make_view(gpuPvt.inverseGasB_),
+                      make_view(gpuPvt.inverseSaturatedGasB_),
+                      make_view(gpuPvt.gasMu_),
+                      make_view(gpuPvt.inverseGasBMu_),
+                      make_view(gpuPvt.inverseSaturatedGasBMu_),
+                      make_view(gpuPvt.saturatedOilVaporizationFactorTable_),
+                      make_view(gpuPvt.saturationPressure_),
+                      gpuPvt.vapPar1_);
+}
+
+} // namespace Opm::gpuistl
+#endif // HAVE_CUDA
 
 #endif
