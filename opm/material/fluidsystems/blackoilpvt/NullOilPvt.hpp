@@ -159,6 +159,28 @@ public:
     }
 };
 
+#if HAVE_CUDA
+namespace gpuistl
+{
+
+//! NullOilPvt holds no data, so the GPU object is the same type as the CPU object.
+//! Provided so that code generic over the PVT classes needs no special case for it.
+template <class Scalar>
+NullOilPvt<Scalar> copy_to_gpu(const NullOilPvt<Scalar>&)
+{
+    return {};
+}
+
+//! \copydoc copy_to_gpu(const NullOilPvt<Scalar>&)
+template <class Scalar>
+NullOilPvt<Scalar> make_view(const NullOilPvt<Scalar>&)
+{
+    return {};
+}
+
+} // namespace gpuistl
+#endif // HAVE_CUDA
+
 } // namespace Opm
 
 #endif // OPM_NULL_OIL_PVT_HPP
