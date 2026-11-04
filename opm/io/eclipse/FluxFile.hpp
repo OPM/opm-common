@@ -302,6 +302,30 @@ public:
         bool operator==(const ParentWells& other) const;
     };
 
+    /// The producer's ACTIONX that triggered, in the order they did.
+    ///
+    /// A sector run evaluates an action condition on what it computes itself,
+    /// which for field, group and region quantities, and for wells outside the
+    /// sector, is the producer's summary at its sampling. A condition that the
+    /// producer met only between two samples, or only just, may then come out
+    /// otherwise. With these the sector can trigger such an action when the
+    /// producer did, with the wells the producer matched.
+    struct ParentActions {
+        std::vector<std::string> names;
+
+        /// Time of each trigger, in seconds since the start of the run.
+        std::vector<double> times;
+
+        /// Number of matching wells of each trigger, whose names follow each
+        /// other in \c wells.
+        std::vector<int> wellCount;
+        std::vector<std::string> wells;
+
+        bool empty() const { return this->names.empty(); }
+
+        bool operator==(const ParentActions& other) const = default;
+    };
+
     struct Data {
         Header header;
         std::vector<std::string> names;
@@ -339,6 +363,9 @@ public:
         ///
         /// Empty when the producer did not record it.
         ParentWells parentWells;
+
+        /// The producer's ACTIONX triggers. Empty when not recorded.
+        ParentActions parentActions;
 
         bool operator==(const Data& other) const;
     };

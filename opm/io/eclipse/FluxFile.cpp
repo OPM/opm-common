@@ -28,6 +28,7 @@
 #include <fmt/format.h>
 
 #include <algorithm>
+#include <numeric>
 #include <array>
 #include <bit>
 #include <limits>
@@ -306,6 +307,32 @@ readParentWellsFrom(Opm::EclIO::EclFile& file, const std::string& filename)
     return wells;
 }
 
+Opm::EclIO::FluxFile::ParentActions
+readParentActionsFrom(Opm::EclIO::EclFile& file, const std::string& filename)
+{
+    Opm::EclIO::FluxFile::ParentActions actions;
+    if (!file.hasKey("FLXACTN")) {
+        return actions;
+    }
+
+    actions.names = optionalArray<std::string>(file, "FLXACTN");
+    actions.times = optionalArray<double>(file, "FLXACTT");
+    actions.wellCount = optionalArray<int>(file, "FLXACTC");
+    actions.wells = optionalArray<std::string>(file, "FLXACTW");
+
+    const auto wellTotal = std::accumulate(actions.wellCount.begin(), actions.wellCount.end(), std::size_t{0},
+                                           [](std::size_t sum, int count) { return sum + static_cast<std::size_t>(std::max(count, 0)); });
+    if ((actions.times.size() != actions.names.size())
+        || (actions.wellCount.size() != actions.names.size())
+        || (wellTotal != actions.wells.size()))
+    {
+        OPM_THROW(std::runtime_error,
+                  fmt::format("FLUX file '{}': the ACTIONX triggers (FLXACTN, FLXACTT, FLXACTC, FLXACTW) "
+                              "do not have matching sizes", filename));
+    }
+    return actions;
+}
+
 } // namespace
 
 namespace Opm::EclIO {
@@ -419,6 +446,15 @@ void FluxFile::Writer::writeStaticSection()
         output.write("FLXWDREF", wells.wellRefDepth);
         output.write("FLXGPAR", wells.groupParent);
         output.write("FLXGEFAC", wells.groupEfficiency);
+    }
+
+    if (const auto& actions = data.parentActions; !actions.empty()) {
+        output.write("FLXACTN", actions.names, 32);
+        output.write("FLXACTT", actions.times);
+        output.write("FLXACTC", actions.wellCount);
+        if (!actions.wells.empty()) {
+            output.write("FLXACTW", actions.wells, 32);
+        }
     }
 
     if (!data.summaryKeys.empty()) {
@@ -602,6 +638,7 @@ FluxFile::Data FluxFile::read(const std::string& filename, bool preload)
 
     data.thresholdPressure = optionalArray<double>(file, "FLXTHPR");
     data.parentWells = readParentWellsFrom(file, filename);
+    data.parentActions = readParentActionsFrom(file, filename);
 
     const auto& summaryMinInterval = optionalArray<double>(file, "SMRYMINT");
     const auto& boundaryMinInterval = optionalArray<double>(file, "FLXMINT");

@@ -148,6 +148,13 @@ Opm::EclIO::FluxFile::Data sampleData()
     wells.groupParent = {0, 1, 0, 1};
     wells.groupEfficiency = {1.0, 1.0, 1.0, 0.95};
 
+    // Three triggers of two actions, one matching two wells and one none.
+    auto& actions = data.parentActions;
+    actions.names = {"PRMAIN1", "INJ_PI", "PRMAIN1"};
+    actions.times = {86400.0 * 3.5, 86400.0 * 10.0, 86400.0 * 28.0 + 0.25};
+    actions.wellCount = {0, 2, 0};
+    actions.wells = {"I1", "P1"};
+
     // Summary samples are deliberately independent of the report-step
     // sequence: three samples spanning two report steps.
     data.summarySamples = {
