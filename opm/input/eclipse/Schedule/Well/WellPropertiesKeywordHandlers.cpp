@@ -346,11 +346,20 @@ void handleWINJFCNC(HandlerContext& handlerContext)
 {
     for (const auto& record : handlerContext.keyword) {
         const std::string& wellNamePattern = record.getItem<ParserKeywords::WINJFCNC::WELL>().getTrimmedString(0);
+        const auto& basis_string = record.getItem<ParserKeywords::WINJFCNC::CONC_BASIS>().getTrimmedString(0);
+        Well::FilterConcBasis basis{};
+        try {
+            basis = Well::filterConcBasisFromString(basis_string);
+        }
+        catch (const std::invalid_argument& e) {
+            throw OpmInputError(e.what(), handlerContext.keyword.location());
+        }
         const auto well_names = handlerContext.wellNames(wellNamePattern, false);
         for (const auto& well_name: well_names) {
             auto well = handlerContext.state().wells(well_name);
             const auto filter_conc = record.getItem<ParserKeywords::WINJFCNC::VOL_CONCENTRATION>().get<UDAValue>(0);
             well.setFilterConc(filter_conc );
+            well.setFilterConcBasis(basis);
             handlerContext.state().wells.update(std::move(well));
         }
     }

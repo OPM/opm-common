@@ -87,6 +87,18 @@ public:
     using InjMultMode = InjMult::InjMultMode;
 
     /*
+     * Volume basis of the WINJFCNC filtration concentration: particle
+     * volume per volume of injected fluid at surface conditions (SURF,
+     * default) or at reservoir conditions (RES).
+     */
+    enum class FilterConcBasis {
+        SURFACE,
+        RESERVOIR,
+    };
+    static FilterConcBasis filterConcBasisFromString(const std::string& str);
+    static std::string filterConcBasisToString(FilterConcBasis basis);
+
+    /*
       The elements in this enum are used as bitmasks to keep track
       of which controls are present, i.e. the 2^n structure must
       be intact.
@@ -618,6 +630,8 @@ public:
     bool handleWINJMULT(const DeckRecord& record, const KeywordLocation& location);
     void setFilterConc(const UDAValue& conc);
     double evalFilterConc(const SummaryState& summary_sate) const;
+    void setFilterConcBasis(FilterConcBasis basis);
+    FilterConcBasis getFilterConcBasis() const;
     bool applyGlobalWPIMULT(double scale_factor);
     void addWellSegmentsFromLengthsAndDepths(const std::vector<std::pair<double, double>>& lengths_and_depths, double diameter, const KeywordLocation& location);
 
@@ -703,6 +717,7 @@ public:
         serializer(inj_mult_mode);
         serializer(well_inj_mult);
         serializer(m_filter_concentration);
+        serializer(m_filter_conc_basis);
     }
 
 private:
@@ -778,6 +793,7 @@ private:
     InjMultMode inj_mult_mode = InjMultMode::NONE;
     std::optional<InjMult> well_inj_mult{};
     UDAValue m_filter_concentration{};
+    FilterConcBasis m_filter_conc_basis{FilterConcBasis::SURFACE};
 };
 
 std::ostream& operator<<( std::ostream&, const Well::WellInjectionProperties& );
