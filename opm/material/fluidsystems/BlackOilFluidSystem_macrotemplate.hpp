@@ -29,8 +29,7 @@
 #include "blackoilpvt/OilPvtMultiplexer.hpp"
 #include "blackoilpvt/GasPvtMultiplexer.hpp"
 #include "blackoilpvt/WaterPvtMultiplexer.hpp"
-#include "opm/material/fluidsystems/blackoilpvt/BrineCo2Pvt.hpp"
-#include "opm/material/fluidsystems/blackoilpvt/NullOilPvt.hpp"
+#include <opm/material/fluidsystems/blackoilpvt/BlackOilPvtApproaches.hpp>
 
 #include <opm/common/ErrorMacros.hpp>
 #include <opm/common/TimingMacros.hpp>
@@ -55,6 +54,7 @@
 #include <string>
 #include <string_view>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 namespace Opm {
@@ -67,30 +67,30 @@ class Schedule;
  *        termodynamically meaningful quantities.
  *
  * \tparam Scalar The type used for scalar floating point values
+ * \tparam PvtApproaches The PVT classes of the phases: MultiplexerPvtApproaches (CPU only)
+ *         or a BlackOilPvtApproaches specialization, see BlackOilPvtTypes.
  */
 template <class Scalar, class IndexTraits = BlackOilDefaultFluidSystemIndices,
-          template<typename> typename Storage = VectorWithDefaultAllocator>
-class FLUIDSYSTEM_CLASSNAME : public BaseFluidSystem<Scalar, FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, Storage> >
+          template<typename> typename Storage = VectorWithDefaultAllocator,
+          class PvtApproaches = MultiplexerPvtApproaches>
+class FLUIDSYSTEM_CLASSNAME
+    : public BaseFluidSystem<Scalar, FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, Storage, PvtApproaches> >
 {
     using ThisType = FLUIDSYSTEM_CLASSNAME;
 
 public:
 
-    // The logic here is the following: We test if we are instantiating on the CPU
-    // std::is_same_v<Storage<Scalar>, VectorWithDefaultAllocator<Scalar>  == true
-    // and if so, we use the multiplexer classes, if not, we use the concrete types.
-    using GasPvt = std::conditional_t<std::is_same_v<Storage<Scalar>, VectorWithDefaultAllocator<Scalar>>,
-                                       GasPvtMultiplexer<Scalar>,
-                                       Co2GasPvt<Scalar, Storage>>;
-    using OilPvt = std::conditional_t<std::is_same_v<Storage<Scalar>, VectorWithDefaultAllocator<Scalar>>,
-                                      OilPvtMultiplexer<Scalar>,
-                                      NullOilPvt<Scalar>>; // Currently do not support on GPU
-    using WaterPvt = std::conditional_t<std::is_same_v<Storage<Scalar>, VectorWithDefaultAllocator<Scalar>>,
-                                        WaterPvtMultiplexer<Scalar>,
-                                        BrineCo2Pvt<Scalar, Storage>>;
+    using GasPvt = typename BlackOilPvtTypes<Scalar, Storage, PvtApproaches>::GasPvt;
+    using OilPvt = typename BlackOilPvtTypes<Scalar, Storage, PvtApproaches>::OilPvt;
+    using WaterPvt = typename BlackOilPvtTypes<Scalar, Storage, PvtApproaches>::WaterPvt;
     using IndexTraitsType = IndexTraits;
+    using PvtApproachesType = PvtApproaches;
 
     #ifdef COMPILING_STATIC_FLUID_SYSTEM
+    // The static members are only defined for the multiplexers (see DECLARE_INSTANCE).
+    static_assert(std::is_same_v<PvtApproaches, MultiplexerPvtApproaches>,
+                  "The static fluid system only supports MultiplexerPvtApproaches.");
+
     //! \copydoc BaseFluidSystem::ParameterCache
     template <class EvaluationT>
     struct ParameterCache : public NullParameterCache<EvaluationT>
@@ -134,12 +134,15 @@ public:
 
     #else
 
-    // We want to use the exact same ParameterCache class for both the static and nonstatic versions
+    // We want to use the exact same ParameterCache class for both the static and nonstatic
+    // versions. It depends on neither the storage nor the PVT classes, so it is taken from
+    // the CPU static class.
     template<class EvaluationT>
     using ParameterCache =
         typename FLUIDSYSTEM_CLASSNAME_STATIC<Scalar,
              IndexTraits,
-             Storage>::template ParameterCache<EvaluationT>;
+             VectorWithDefaultAllocator,
+             MultiplexerPvtApproaches>::template ParameterCache<EvaluationT>;
     #endif
 
     #ifndef COMPILING_STATIC_FLUID_SYSTEM
@@ -149,7 +152,7 @@ public:
      * This can be used to copy from one storage type (say std::vector) to another (say GPUBuffer).
      */
     template<template<typename> typename StorageT>
-    explicit FLUIDSYSTEM_CLASSNAME(const FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, StorageT>& other)
+    explicit FLUIDSYSTEM_CLASSNAME(const FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, StorageT, PvtApproaches>& other)
         : surfacePressure(other.surfacePressure)
         , surfaceTemperature(other.surfaceTemperature)
         , reservoirTemperature_(other.reservoirTemperature_)
@@ -175,9 +178,9 @@ public:
     FLUIDSYSTEM_CLASSNAME(Scalar _surfacePressure_,
                           Scalar _surfaceTemperature_,
                           Scalar _reservoirTemperature_,
-                          const GasPvt& _gasPvt_,
-                          const OilPvt& _oilPvt_,
-                          const WaterPvt& _waterPvt_,
+                          GasPvt _gasPvt_,
+                          OilPvt _oilPvt_,
+                          WaterPvt _waterPvt_,
                           bool _enableDissolvedGas_,
                           bool _enableDissolvedGasInWater_,
                           bool _enableVaporizedOil_,
@@ -194,9 +197,9 @@ public:
         : surfacePressure(_surfacePressure_)
         , surfaceTemperature(_surfaceTemperature_)
         , reservoirTemperature_(_reservoirTemperature_)
-        , gasPvt_(_gasPvt_)
-        , oilPvt_(_oilPvt_)
-        , waterPvt_(_waterPvt_)
+        , gasPvt_(std::move(_gasPvt_))
+        , oilPvt_(std::move(_oilPvt_))
+        , waterPvt_(std::move(_waterPvt_))
         , enableDissolvedGas_(_enableDissolvedGas_)
         , enableDissolvedGasInWater_(_enableDissolvedGasInWater_)
         , enableVaporizedOil_(_enableVaporizedOil_)
@@ -214,13 +217,13 @@ public:
     }
 
     #if HAVE_CUDA
-    template <class ScalarT, class IndexTraitsT>
-    friend FLUIDSYSTEM_CLASSNAME<ScalarT, IndexTraitsT, gpuistl::GpuBuffer>
+    template <class PvtApproachesT, class ScalarT, class IndexTraitsT>
+    friend FLUIDSYSTEM_CLASSNAME<ScalarT, IndexTraitsT, gpuistl::GpuBuffer, PvtApproachesT>
     gpuistl::copy_to_gpu(const FLUIDSYSTEM_CLASSNAME<ScalarT, IndexTraitsT>& oldFluidSystem);
 
-    template <class ScalarT, class IndexTraitsT>
-    friend FLUIDSYSTEM_CLASSNAME<ScalarT, IndexTraitsT, gpuistl::GpuView>
-    gpuistl::make_view(FLUIDSYSTEM_CLASSNAME<ScalarT, IndexTraitsT, gpuistl::GpuBuffer>& oldFluidSystem);
+    template <class ScalarT, class IndexTraitsT, class PvtApproachesT>
+    friend FLUIDSYSTEM_CLASSNAME<ScalarT, IndexTraitsT, gpuistl::GpuView, PvtApproachesT>
+    gpuistl::make_view(FLUIDSYSTEM_CLASSNAME<ScalarT, IndexTraitsT, gpuistl::GpuBuffer, PvtApproachesT>& oldFluidSystem);
 
     #endif // HAVE_CUDA
     #endif // COMPILING_STATIC_FLUID_SYSTEM
@@ -234,17 +237,18 @@ public:
      * \note This function works as a singleton.
      */
     template<template<typename> typename StorageT = VectorWithDefaultAllocator>
-    static FLUIDSYSTEM_CLASSNAME_NONSTATIC<Scalar, IndexTraits, StorageT>& getNonStaticInstance()
+    static FLUIDSYSTEM_CLASSNAME_NONSTATIC<Scalar, IndexTraits, StorageT, PvtApproaches>& getNonStaticInstance()
     {
-        static FLUIDSYSTEM_CLASSNAME_NONSTATIC<Scalar, IndexTraits, StorageT> instance{FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, Storage>()};
+        static FLUIDSYSTEM_CLASSNAME_NONSTATIC<Scalar, IndexTraits, StorageT, PvtApproaches> instance{
+            FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, Storage, PvtApproaches>()};
         // Refresh the singleton from the current static fluid-system state.
         // The static fluid system can be re-initialised (for example by a
         // subsequent readDeck call) and the non-static instance must mirror
         // the current static data, otherwise downstream consumers (e.g. the
         // GPU intensive-quantities path) end up using stale PVT/density
         // tables and produce results that no longer match the CPU side.
-        instance = FLUIDSYSTEM_CLASSNAME_NONSTATIC<Scalar, IndexTraits, StorageT>(
-            FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, Storage>());
+        instance = FLUIDSYSTEM_CLASSNAME_NONSTATIC<Scalar, IndexTraits, StorageT, PvtApproaches>(
+            FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, Storage, PvtApproaches>());
         return instance;
 
     }
@@ -1815,8 +1819,10 @@ private:
     STATIC_OR_NOTHING bool enthalpy_eq_energy_;
 
     #ifndef COMPILING_STATIC_FLUID_SYSTEM
+    // Copies the multiplexers directly, so this is only valid for MultiplexerPvtApproaches
+    // (and thus CPU storage). Use gpuistl::copy_to_gpu() to get a GPU fluid system.
     template<template<typename> typename StorageT>
-    explicit FLUIDSYSTEM_CLASSNAME(const FLUIDSYSTEM_CLASSNAME_STATIC<Scalar, IndexTraits, StorageT>& other)
+    explicit FLUIDSYSTEM_CLASSNAME(const FLUIDSYSTEM_CLASSNAME_STATIC<Scalar, IndexTraits, StorageT, MultiplexerPvtApproaches>& other)
         : surfacePressure(other.surfacePressure)
         , surfaceTemperature(other.surfaceTemperature)
         , reservoirTemperature_(other.reservoirTemperature_)
@@ -1837,19 +1843,22 @@ private:
         , useSaturatedTables_(other.useSaturatedTables_)
         , enthalpy_eq_energy_(other.enthalpy_eq_energy_)
     {
-            OPM_ERROR_IF(!other.isInitialized(), "The fluid system must be initialized before it can be copied.");
+        static_assert(std::is_same_v<PvtApproaches, MultiplexerPvtApproaches>,
+                      "Only the multiplexers can be copied from the static fluid system. "
+                      "Use gpuistl::copy_to_gpu() to get a GPU fluid system.");
+        OPM_ERROR_IF(!other.isInitialized(), "The fluid system must be initialized before it can be copied.");
     }
 
-    template<class ScalarT, class IndexTraitsT, template<typename> typename StorageT>
+    template<class ScalarT, class IndexTraitsT, template<typename> typename StorageT, class PvtApproachesT>
     friend class FLUIDSYSTEM_CLASSNAME_STATIC;
     #else
-    template<class ScalarT, class IndexTraitsT, template<typename> typename StorageT>
+    template<class ScalarT, class IndexTraitsT, template<typename> typename StorageT, class PvtApproachesT>
     friend class FLUIDSYSTEM_CLASSNAME_NONSTATIC;
     #endif
 };
 
-template <class Scalar, class IndexTraits, template<typename> typename Storage>
-void FLUIDSYSTEM_CLASSNAME<Scalar,IndexTraits, Storage>::
+template <class Scalar, class IndexTraits, template<typename> typename Storage, class PvtApproaches>
+void FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, Storage, PvtApproaches>::
 initBegin(std::size_t numPvtRegions)
 {
     isInitialized_ = false;
@@ -1871,8 +1880,8 @@ initBegin(std::size_t numPvtRegions)
     resizeArrays_(numPvtRegions);
 }
 
-template <class Scalar, class IndexTraits, template<typename> typename Storage>
-NOTHING_OR_DEVICE void FLUIDSYSTEM_CLASSNAME<Scalar,IndexTraits,Storage>::
+template <class Scalar, class IndexTraits, template<typename> typename Storage, class PvtApproaches>
+NOTHING_OR_DEVICE void FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, Storage, PvtApproaches>::
 setReferenceDensities(Scalar rhoOil,
                       Scalar rhoWater,
                       Scalar rhoGas,
@@ -1883,8 +1892,8 @@ setReferenceDensities(Scalar rhoOil,
     referenceDensity_[pvtRegionIdx][gasPhaseIdx] = rhoGas;
 }
 
-template <class Scalar, class IndexTraits, template<typename> typename Storage>
-NOTHING_OR_DEVICE void FLUIDSYSTEM_CLASSNAME<Scalar,IndexTraits, Storage>::initEnd()
+template <class Scalar, class IndexTraits, template<typename> typename Storage, class PvtApproaches>
+NOTHING_OR_DEVICE void FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, Storage, PvtApproaches>::initEnd()
 {
     // calculate the final 2D functions which are used for interpolation.
     const std::size_t num_regions = molarMass_.size();
@@ -1912,8 +1921,8 @@ NOTHING_OR_DEVICE void FLUIDSYSTEM_CLASSNAME<Scalar,IndexTraits, Storage>::initE
     isInitialized_ = true;
 }
 
-template <class Scalar, class IndexTraits, template<typename> typename Storage>
-std::string_view FLUIDSYSTEM_CLASSNAME<Scalar,IndexTraits, Storage>::
+template <class Scalar, class IndexTraits, template<typename> typename Storage, class PvtApproaches>
+std::string_view FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, Storage, PvtApproaches>::
 phaseName(unsigned phaseIdx) NOTHING_OR_CONST
 {
     switch (phaseIdx) {
@@ -1929,8 +1938,8 @@ phaseName(unsigned phaseIdx) NOTHING_OR_CONST
     }
 }
 
-template <class Scalar, class IndexTraits, template<typename> typename Storage>
-NOTHING_OR_DEVICE unsigned FLUIDSYSTEM_CLASSNAME<Scalar,IndexTraits,Storage>::
+template <class Scalar, class IndexTraits, template<typename> typename Storage, class PvtApproaches>
+NOTHING_OR_DEVICE unsigned FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, Storage, PvtApproaches>::
 solventComponentIndex(unsigned phaseIdx) NOTHING_OR_CONST
 {
     switch (phaseIdx) {
@@ -1946,15 +1955,15 @@ solventComponentIndex(unsigned phaseIdx) NOTHING_OR_CONST
     }
 }
 
-template <class Scalar, class IndexTraits, template<typename> typename Storage>
-NOTHING_OR_DEVICE void FLUIDSYSTEM_CLASSNAME<Scalar,IndexTraits,Storage>::
+template <class Scalar, class IndexTraits, template<typename> typename Storage, class PvtApproaches>
+NOTHING_OR_DEVICE void FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, Storage, PvtApproaches>::
 throwInvalidSolventPhaseIndex_(unsigned phaseIdx) NOTHING_OR_CONST
 {
     OPM_THROW(std::logic_error, "Phase index " + std::to_string(phaseIdx) + " is unknown");
 }
 
-template <class Scalar, class IndexTraits, template<typename> typename Storage>
-NOTHING_OR_DEVICE unsigned FLUIDSYSTEM_CLASSNAME<Scalar,IndexTraits,Storage>::
+template <class Scalar, class IndexTraits, template<typename> typename Storage, class PvtApproaches>
+NOTHING_OR_DEVICE unsigned FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, Storage, PvtApproaches>::
 soluteComponentIndex(unsigned phaseIdx) NOTHING_OR_CONST
 {
     switch (phaseIdx) {
@@ -1975,8 +1984,8 @@ soluteComponentIndex(unsigned phaseIdx) NOTHING_OR_CONST
     }
 }
 
-template <class Scalar, class IndexTraits, template<typename> typename Storage>
-std::string_view FLUIDSYSTEM_CLASSNAME<Scalar,IndexTraits,Storage>::
+template <class Scalar, class IndexTraits, template<typename> typename Storage, class PvtApproaches>
+std::string_view FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, Storage, PvtApproaches>::
 componentName(unsigned compIdx) NOTHING_OR_CONST
 {
     switch (compIdx) {
@@ -1992,50 +2001,50 @@ componentName(unsigned compIdx) NOTHING_OR_CONST
     }
 }
 
-template <class Scalar, class IndexTraits, template<typename> typename Storage>
-NOTHING_OR_DEVICE short FLUIDSYSTEM_CLASSNAME<Scalar,IndexTraits, Storage>::
+template <class Scalar, class IndexTraits, template<typename> typename Storage, class PvtApproaches>
+NOTHING_OR_DEVICE short FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, Storage, PvtApproaches>::
 activeToCanonicalPhaseIdx(unsigned activePhaseIdx) NOTHING_OR_CONST
 {
     return phaseUsageInfo_.activeToCanonicalPhaseIdx(activePhaseIdx);
 }
 
-template <class Scalar, class IndexTraits, template<typename> typename Storage>
-NOTHING_OR_DEVICE short FLUIDSYSTEM_CLASSNAME<Scalar,IndexTraits, Storage>::
+template <class Scalar, class IndexTraits, template<typename> typename Storage, class PvtApproaches>
+NOTHING_OR_DEVICE short FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, Storage, PvtApproaches>::
 canonicalToActivePhaseIdx(unsigned phaseIdx) NOTHING_OR_CONST
 {
     return phaseUsageInfo_.canonicalToActivePhaseIdx(phaseIdx);
 }
 
-template <class Scalar, class IndexTraits, template<typename> typename Storage>
-NOTHING_OR_DEVICE short FLUIDSYSTEM_CLASSNAME<Scalar,IndexTraits, Storage>::
+template <class Scalar, class IndexTraits, template<typename> typename Storage, class PvtApproaches>
+NOTHING_OR_DEVICE short FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, Storage, PvtApproaches>::
 activeToCanonicalCompIdx(unsigned activeCompIdx) NOTHING_OR_CONST
 {
     return phaseUsageInfo_.activeToCanonicalCompIdx(activeCompIdx);
 }
 
-template <class Scalar, class IndexTraits, template<typename> typename Storage>
-NOTHING_OR_DEVICE short FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, Storage>::
+template <class Scalar, class IndexTraits, template<typename> typename Storage, class PvtApproaches>
+NOTHING_OR_DEVICE short FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, Storage, PvtApproaches>::
 canonicalToActiveCompIdx(unsigned compIdx) NOTHING_OR_CONST
 {
     return phaseUsageInfo_.canonicalToActiveCompIdx(compIdx);
 }
 
-template <class Scalar, class IndexTraits, template<typename> typename Storage>
-NOTHING_OR_DEVICE short FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, Storage>::
+template <class Scalar, class IndexTraits, template<typename> typename Storage, class PvtApproaches>
+NOTHING_OR_DEVICE short FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, Storage, PvtApproaches>::
 activePhaseToActiveCompIdx(unsigned activePhaseIdx) NOTHING_OR_CONST
 {
     return phaseUsageInfo_.activePhaseToActiveCompIdx(activePhaseIdx);
 }
 
-template <class Scalar, class IndexTraits, template<typename> typename Storage>
-NOTHING_OR_DEVICE short FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, Storage>::
+template <class Scalar, class IndexTraits, template<typename> typename Storage, class PvtApproaches>
+NOTHING_OR_DEVICE short FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, Storage, PvtApproaches>::
 activeCompToActivePhaseIdx(unsigned activeCompIdx) NOTHING_OR_CONST
 {
     return phaseUsageInfo_.activeCompToActivePhaseIdx(activeCompIdx);
 }
 
-template <class Scalar, class IndexTraits, template<typename> typename Storage>
-void FLUIDSYSTEM_CLASSNAME<Scalar,IndexTraits,Storage>::
+template <class Scalar, class IndexTraits, template<typename> typename Storage, class PvtApproaches>
+void FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, Storage, PvtApproaches>::
 resizeArrays_(std::size_t numRegions)
 {
     molarMass_.resize(numRegions);
@@ -2077,41 +2086,36 @@ DECLARE_INSTANCE(double)
 namespace gpuistl
 {
 
-template <class Scalar, class IndexTraits>
-FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, GpuBuffer>
+/*!
+ * \brief Copy a CPU fluid system to the GPU.
+ *
+ * \tparam PvtApproaches The PVT classes of the GPU fluid system, a BlackOilPvtApproaches
+ *         specialization such as Co2StorePvtApproaches.
+ * \throws std::logic_error if the PVT approach of a phase in \p oldFluidSystem differs
+ *         from the one in PvtApproaches.
+ */
+template <class PvtApproaches, class Scalar, class IndexTraits>
+FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, GpuBuffer, PvtApproaches>
 copy_to_gpu(const FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits>& oldFluidSystem) {
 
     using GpuBuffer3Array = GpuBuffer<std::array<Scalar, 3>>;
     using GpuBuffer9Array = GpuBuffer<std::array<Scalar, 9>>;
 
-    OPM_ERROR_IF(oldFluidSystem.gasPvt_.approach() != GasPvtApproach::Co2Gas,
-        fmt::format(fmt::runtime("Incompatible gas PVT approach. Given {}, expected {} (GasPvtApproach::Co2Gas)."),
-                     int(oldFluidSystem.gasPvt_.approach()), int(GasPvtApproach::Co2Gas)));
-
-    OPM_ERROR_IF(oldFluidSystem.waterPvt_.approach() != WaterPvtApproach::BrineCo2,
-        fmt::format(fmt::runtime("Incompatible water PVT approach. Given {}, expected {} (WaterPvtApproach::BrineCo2)."),
-                    int(oldFluidSystem.waterPvt_.approach()), int(WaterPvtApproach::BrineCo2)));
-
-    OPM_ERROR_IF(oldFluidSystem.oilPvt_.isActive(),
-        "We currently do not support an active oil phase for the FluidSystem on GPU.");
-
-    auto newGasPvt = copy_to_gpu(oldFluidSystem.gasPvt_.template getRealPvt<GasPvtApproach::Co2Gas>());
-
-    auto newOilPvt = NullOilPvt<Scalar>();
-
-    auto newWaterPvt = copy_to_gpu(oldFluidSystem.waterPvt_.template getRealPvt<WaterPvtApproach::BrineCo2>());
+    auto newGasPvt = detail::copyPvtToGpu<PvtApproaches::gas, Scalar>(oldFluidSystem.gasPvt_, "gas");
+    auto newOilPvt = detail::copyPvtToGpu<PvtApproaches::oil, Scalar>(oldFluidSystem.oilPvt_, "oil");
+    auto newWaterPvt = detail::copyPvtToGpu<PvtApproaches::water, Scalar>(oldFluidSystem.waterPvt_, "water");
 
     auto newReferenceDensity = GpuBuffer3Array(oldFluidSystem.referenceDensity_);
     auto newMolarMass = GpuBuffer3Array(oldFluidSystem.molarMass_);
     auto newDiffusionCoefficients = GpuBuffer9Array(oldFluidSystem.diffusionCoefficients_);
 
-    return FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, GpuBuffer>(
+    return FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, GpuBuffer, PvtApproaches>(
         oldFluidSystem.surfacePressure,
         oldFluidSystem.surfaceTemperature,
         oldFluidSystem.reservoirTemperature_,
-        newGasPvt,
-        newOilPvt,
-        newWaterPvt,
+        std::move(newGasPvt),
+        std::move(newOilPvt),
+        std::move(newWaterPvt),
         oldFluidSystem.enableDissolvedGas_,
         oldFluidSystem.enableDissolvedGasInWater_,
         oldFluidSystem.enableVaporizedOil_,
@@ -2128,22 +2132,27 @@ copy_to_gpu(const FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits>& oldFluidSystem) {
     );
 }
 
-template <class Scalar, class IndexTraits>
-FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, GpuView>
-make_view(FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, GpuBuffer>& oldFluidSystem)
+/*!
+ * \brief Create a GPU view of a GPU fluid system, to be passed by value to kernels.
+ *
+ * \p oldFluidSystem must outlive every use of the view.
+ */
+template <class Scalar, class IndexTraits, class PvtApproaches>
+FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, GpuView, PvtApproaches>
+make_view(FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, GpuBuffer, PvtApproaches>& oldFluidSystem)
 {
     using Array3 = std::array<Scalar, 3>;
     using Array9 = std::array<Scalar, 9>;
 
     auto newGasPvt = make_view(oldFluidSystem.gasPvt_);
-    auto newOilPvt = NullOilPvt<Scalar>();
+    auto newOilPvt = make_view(oldFluidSystem.oilPvt_);
     auto newWaterPvt = make_view(oldFluidSystem.waterPvt_);
 
     auto newReferenceDensity = make_view<Array3>(oldFluidSystem.referenceDensity_);
     auto newMolarMass = make_view<Array3>(oldFluidSystem.molarMass_);
     auto newDiffusionCoefficients = make_view<Array9>(oldFluidSystem.diffusionCoefficients_);
 
-    return FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, GpuView>(
+    return FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, GpuView, PvtApproaches>(
         oldFluidSystem.surfacePressure,
         oldFluidSystem.surfaceTemperature,
         oldFluidSystem.reservoirTemperature_,
