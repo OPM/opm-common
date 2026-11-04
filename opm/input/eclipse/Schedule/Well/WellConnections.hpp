@@ -186,6 +186,9 @@ namespace Opm {
         ///  -# TRACK ordering (COMPORD keyword, default) orders connections
         ///     starting from the well heel using a path travelling salesman
         ///     algorithm with 2-opt ordering and directional penalties.
+        ///     Connections from a well trajectory (COMPTRAJ) instead follow
+        ///     that trajectory, branch by branch, each in increasing
+        ///     measured depth.
         ///
         ///  -# DEPTH ordering (COMPORD keyword) orders the connections
         ///     according to the block centre point depths.
