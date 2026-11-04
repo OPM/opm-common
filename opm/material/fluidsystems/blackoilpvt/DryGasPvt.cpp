@@ -34,8 +34,8 @@
 
 namespace Opm {
 
-template<class Scalar>
-void DryGasPvt<Scalar>::
+template<class Scalar, template<class> class Storage, template<class> class TableStorage>
+void DryGasPvt<Scalar, Storage, TableStorage>::
 initFromState(const EclipseState& eclState, const Schedule&)
 {
     const auto& pvdgTables = eclState.getTableManager().getPvdgTables();
@@ -85,8 +85,9 @@ initFromState(const EclipseState& eclState, const Schedule&)
     initEnd();
 }
 
-template<class Scalar>
-void DryGasPvt<Scalar>::setNumRegions(std::size_t numRegions)
+template<class Scalar, template<class> class Storage, template<class> class TableStorage>
+void DryGasPvt<Scalar, Storage, TableStorage>::
+setNumRegions(std::size_t numRegions)
 {
     gasReferenceDensity_.resize(numRegions);
     inverseGasB_.resize(numRegions);
@@ -94,8 +95,8 @@ void DryGasPvt<Scalar>::setNumRegions(std::size_t numRegions)
     gasMu_.resize(numRegions);
 }
 
-template<class Scalar>
-void DryGasPvt<Scalar>::
+template<class Scalar, template<class> class Storage, template<class> class TableStorage>
+void DryGasPvt<Scalar, Storage, TableStorage>::
 setGasFormationVolumeFactor(unsigned regionIdx,
                             const SamplingPoints& samplePoints)
 {
@@ -109,8 +110,8 @@ setGasFormationVolumeFactor(unsigned regionIdx,
     assert(inverseGasB_[regionIdx].monotonic());
 }
 
-template<class Scalar>
-void DryGasPvt<Scalar>::initEnd()
+template<class Scalar, template<class> class Storage, template<class> class TableStorage>
+void DryGasPvt<Scalar, Storage, TableStorage>::initEnd()
 {
     // calculate the final 2D functions which are used for interpolation.
     std::size_t regions = gasMu_.size();
