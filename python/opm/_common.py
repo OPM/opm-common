@@ -13,6 +13,7 @@ from .opmcommon_python import action
 
 from .opmcommon_python import Parser, ParseContext, Builtin, eclSectionType
 from .opmcommon_python import DeckKeyword
+from .opmcommon_python import KeywordLocation
 from .opmcommon_python import DeckItem
 from .opmcommon_python import UDAValue
 from .opmcommon_python import Dimension
