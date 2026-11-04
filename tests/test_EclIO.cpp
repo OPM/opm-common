@@ -28,15 +28,20 @@
 #include <opm/io/eclipse/EclOutput.hpp>
 
 #include <algorithm>
+#include <array>
+#include <bit>
+#include <cmath>
+#include <cstddef>
 #include <cstdint>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <limits>
-#include <tuple>
-#include <cmath>
-#include <cstddef>
 #include <numeric>
+#include <span>
+#include <sstream>
+#include <string_view>
+#include <tuple>
 
 #include <math.h>
 #include <stdio.h>
@@ -92,6 +97,98 @@ void write_header(std::ofstream& ofileH, const std::string& arrName,
     writeFileOrder(ofileH, bhead);
 }
 
+/// Byte sequence with explicit, host independent, contents.
+class Bytes
+{
+public:
+    Bytes& add(std::initializer_list<unsigned int> bytes)
+    {
+        for (const auto byte : bytes) {
+            this->bytes_.push_back(static_cast<char>(byte));
+        }
+
+        return *this;
+    }
+
+    Bytes& add(std::string_view chars)
+    {
+        this->bytes_.append(chars);
+        return *this;
+    }
+
+    // Binary array header for array of 'size' elements of type 'arrType'.
+    Bytes& header(std::string_view arrName, unsigned char size, std::string_view arrType)
+    {
+        return this->add({0x00, 0x00, 0x00, 0x10})
+            .add(arrName)
+            .add({0x00, 0x00, 0x00, size})
+            .add(arrType)
+            .add({0x00, 0x00, 0x00, 0x10});
+    }
+
+    // Record marker for record of 'size' bytes.
+    Bytes& marker(unsigned char size)
+    {
+        return this->add({0x00, 0x00, 0x00, size});
+    }
+
+    const std::string& str() const { return this->bytes_; }
+
+private:
+    std::string bytes_{};
+};
+
+std::string file_contents(const std::string& filename)
+{
+    std::ifstream is(filename, std::ios_base::binary);
+    return { std::istreambuf_iterator<char>{is}, std::istreambuf_iterator<char>{} };
+}
+
+template <typename T>
+std::vector<int> object_bytes(const T value)
+{
+    const auto repr = std::bit_cast<std::array<std::byte, sizeof(T)>>(value);
+
+    auto bytes = std::vector<int>(repr.size());
+    std::ranges::transform(repr, bytes.begin(),
+                           [](const std::byte b) { return std::to_integer<int>(b); });
+
+    return bytes;
+}
+
+// Expected binary representation of the arrays INTEGERS = { 1, -2 },
+// REALVALS = { 1.0f }, DOUBVALS = { -2.0 }, and LOGICALS = { true, false }.
+Bytes expected_numeric_arrays()
+{
+    auto bytes = Bytes{};
+
+    bytes.header("INTEGERS", 2, "INTE")
+        .marker(8).add({0x00, 0x00, 0x00, 0x01, 0xFF, 0xFF, 0xFF, 0xFE}).marker(8);
+
+    bytes.header("REALVALS", 1, "REAL")
+        .marker(4).add({0x3F, 0x80, 0x00, 0x00}).marker(4);
+
+    bytes.header("DOUBVALS", 1, "DOUB")
+        .marker(8).add({0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}).marker(8);
+
+    bytes.header("LOGICALS", 2, "LOGI")
+        .marker(8).add({0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00}).marker(8);
+
+    return bytes;
+}
+
+// Expected binary representation of the array LOGICALS = { true, false }
+// using the IX convention for logical values.
+Bytes expected_ix_logicals()
+{
+    auto bytes = Bytes{};
+
+    bytes.header("LOGICALS", 2, "LOGI")
+        .marker(8).add({0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00}).marker(8);
+
+    return bytes;
+}
+
 } // Anonymous namespace
 
 BOOST_AUTO_TEST_CASE(TestEclFile_X231)
@@ -126,6 +223,155 @@ BOOST_AUTO_TEST_CASE(TestEclFile_X231)
 
     for (std::size_t n = 0; n < 10; n++) {
         BOOST_CHECK_EQUAL(array[n], ivect[n]);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(ByteOrder_Byteswap)
+{
+    static_assert(byteswap(std::int32_t{0x01020304}) == std::int32_t{0x04030201});
+    static_assert(byteswap(std::uint32_t{0xFF000080}) == std::uint32_t{0x800000FF});
+    static_assert(byteswap(std::int64_t{0x0102030405060708}) == std::int64_t{0x0807060504030201});
+    static_assert(byteswap(byteswap(-2.5f)) == -2.5f);
+    static_assert(byteswap(byteswap(1.0e-300)) == 1.0e-300);
+    static_assert(fromFileOrder(toFileOrder(-42)) == -42);
+
+    BOOST_CHECK_EQUAL(std::bit_cast<std::uint32_t>(byteswap(1.0f)), std::uint32_t{0x0000803F});
+    BOOST_CHECK_EQUAL(std::bit_cast<std::uint64_t>(byteswap(1.0)), std::uint64_t{0x000000000000F03F});
+}
+
+BOOST_AUTO_TEST_CASE(ByteOrder_FileRepresentation)
+{
+    // Object representation of toFileOrder(x) must be the big-endian
+    // representation of x, irrespective of the host's byte order.
+    {
+        const auto expect = std::vector<int>{0x00, 0x00, 0x00, 0x10};
+        const auto bytes = object_bytes(toFileOrder(std::int32_t{16}));
+        BOOST_CHECK_EQUAL_COLLECTIONS(bytes.begin(), bytes.end(), expect.begin(), expect.end());
+    }
+
+    {
+        const auto expect = std::vector<int>{0xFF, 0xFF, 0xFF, 0xFE};
+        const auto bytes = object_bytes(toFileOrder(std::int32_t{-2}));
+        BOOST_CHECK_EQUAL_COLLECTIONS(bytes.begin(), bytes.end(), expect.begin(), expect.end());
+    }
+
+    {
+        const auto expect = std::vector<int>{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x02};
+        const auto bytes = object_bytes(toFileOrder(std::int64_t{0x0102}));
+        BOOST_CHECK_EQUAL_COLLECTIONS(bytes.begin(), bytes.end(), expect.begin(), expect.end());
+    }
+
+    {
+        const auto expect = std::vector<int>{0x3F, 0x80, 0x00, 0x00};
+        const auto bytes = object_bytes(toFileOrder(1.0f));
+        BOOST_CHECK_EQUAL_COLLECTIONS(bytes.begin(), bytes.end(), expect.begin(), expect.end());
+    }
+
+    {
+        const auto expect = std::vector<int>{0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+        const auto bytes = object_bytes(toFileOrder(-2.0));
+        BOOST_CHECK_EQUAL_COLLECTIONS(bytes.begin(), bytes.end(), expect.begin(), expect.end());
+    }
+}
+
+BOOST_AUTO_TEST_CASE(ByteOrder_StreamRoundTrip)
+{
+    const auto ivals = std::vector<int>{1, -2, std::numeric_limits<int>::max()};
+    const auto dvals = std::array<double, 2>{-2.0, 0.125};
+
+    std::stringstream ss;
+    writeFileOrder(ss, ivals);
+    writeFileOrder(ss, 1.0f);
+    writeFileOrder(ss, std::span{dvals});
+
+    BOOST_CHECK_EQUAL(ss.str().substr(0, 8), std::string("\x00\x00\x00\x01\xFF\xFF\xFF\xFE", 8));
+
+    auto ivals_read = std::vector<int>(ivals.size());
+    readFileOrder(ss, ivals_read);
+    BOOST_CHECK_EQUAL_COLLECTIONS(ivals_read.begin(), ivals_read.end(), ivals.begin(), ivals.end());
+
+    BOOST_CHECK_EQUAL(readFileOrder<float>(ss), 1.0f);
+
+    auto dvals_read = std::array<double, 2>{};
+    readFileOrder(ss, dvals_read);
+    BOOST_CHECK_EQUAL_COLLECTIONS(dvals_read.begin(), dvals_read.end(), dvals.begin(), dvals.end());
+
+    BOOST_CHECK_MESSAGE(static_cast<bool>(ss), "Stream must be good after reading all values");
+}
+
+BOOST_AUTO_TEST_CASE(TestEclOutput_Binary_Golden_Bytes)
+{
+    WorkArea work;
+
+    {
+        EclOutput eclTest("GOLDEN.DAT", false);
+        eclTest.write("INTEGERS", std::vector<int>{1, -2});
+        eclTest.write("REALVALS", std::vector<float>{1.0f});
+        eclTest.write("DOUBVALS", std::vector<double>{-2.0});
+        eclTest.write("LOGICALS", std::vector<bool>{true, false});
+    }
+
+    BOOST_CHECK_MESSAGE(file_contents("GOLDEN.DAT") == expected_numeric_arrays().str(),
+                        "Binary output must match expected big-endian byte sequence");
+
+    {
+        EclOutput eclTest("GOLDEN_IX.DAT", false);
+        eclTest.set_ix();
+        eclTest.write("LOGICALS", std::vector<bool>{true, false});
+    }
+
+    BOOST_CHECK_MESSAGE(file_contents("GOLDEN_IX.DAT") == expected_ix_logicals().str(),
+                        "IX binary output must match expected big-endian byte sequence");
+}
+
+BOOST_AUTO_TEST_CASE(TestEclFile_Binary_Golden_Bytes)
+{
+    WorkArea work;
+
+    {
+        std::ofstream os("GOLDEN.DAT", std::ios_base::binary);
+        os << expected_numeric_arrays().str();
+    }
+
+    {
+        std::ofstream os("GOLDEN_IX.DAT", std::ios_base::binary);
+        os << expected_ix_logicals().str();
+    }
+
+    EclFile file("GOLDEN.DAT");
+    BOOST_CHECK(!file.is_ix());
+
+    {
+        const auto expect = std::vector<int>{1, -2};
+        const auto& ivals = file.get<int>("INTEGERS");
+        BOOST_CHECK_EQUAL_COLLECTIONS(ivals.begin(), ivals.end(), expect.begin(), expect.end());
+    }
+
+    {
+        const auto& fvals = file.get<float>("REALVALS");
+        BOOST_REQUIRE_EQUAL(fvals.size(), std::size_t{1});
+        BOOST_CHECK_EQUAL(fvals.front(), 1.0f);
+    }
+
+    {
+        const auto& dvals = file.get<double>("DOUBVALS");
+        BOOST_REQUIRE_EQUAL(dvals.size(), std::size_t{1});
+        BOOST_CHECK_EQUAL(dvals.front(), -2.0);
+    }
+
+    {
+        const auto expect = std::vector<bool>{true, false};
+        const auto& lvals = file.get<bool>("LOGICALS");
+        BOOST_CHECK_EQUAL_COLLECTIONS(lvals.begin(), lvals.end(), expect.begin(), expect.end());
+    }
+
+    EclFile file_ix("GOLDEN_IX.DAT");
+    BOOST_CHECK(file_ix.is_ix());
+
+    {
+        const auto expect = std::vector<bool>{true, false};
+        const auto& lvals = file_ix.get<bool>("LOGICALS");
+        BOOST_CHECK_EQUAL_COLLECTIONS(lvals.begin(), lvals.end(), expect.begin(), expect.end());
     }
 }
 
