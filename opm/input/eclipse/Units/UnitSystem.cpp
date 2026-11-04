@@ -1553,6 +1553,7 @@ namespace {
         case UDAControl::WCONPROD_BHP:  case UDAControl::WCONPROD_THP:
         case UDAControl::WCONINJE_BHP:  case UDAControl::WCONINJE_THP:
         case UDAControl::WELTARG_BHP:   case UDAControl::WELTARG_THP:
+        case UDAControl::WINJMULT_FRACTURE_PRESSURE:
             return this->getDimension(UnitSystem::measure::pressure);
 
         case UDAControl::GCONINJE_SURFACE_MAX_RATE:

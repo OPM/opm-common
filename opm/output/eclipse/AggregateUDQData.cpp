@@ -734,6 +734,7 @@ namespace {
                 case Opm::UDAKeyword::WCONPROD:
                 case Opm::UDAKeyword::WCONINJE:
                 case Opm::UDAKeyword::WELTARG:
+                case Opm::UDAKeyword::WINJMULT:
                     wellUDA(sched, udaRecord.wgname, wgIndex);
                     break;
 
