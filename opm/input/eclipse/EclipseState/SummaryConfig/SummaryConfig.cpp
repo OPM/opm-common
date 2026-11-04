@@ -454,10 +454,14 @@ namespace {
             udq.second.requiredUDQs(keywords);
         }
 
-        for (const auto& action : schedule.back().actions.get()) {
-            // ACTIONX makes no such distinction: a condition comparing
-            // against a UDQ reports the UDQ's name here.
-            action.required_summary(keywords);
+        // Every version of every action: a redefinition under the same name
+        // replaces the earlier one in later snapshots.
+        for (const auto& actions : schedule.unique<Action::Actions>()) {
+            for (const auto& action : actions.second) {
+                // ACTIONX makes no such distinction: a condition comparing
+                // against a UDQ reports the UDQ's name here.
+                action.required_summary(keywords);
+            }
         }
 
         auto sorted = std::vector<std::string> {
@@ -491,8 +495,10 @@ namespace {
             udq.second.requisiteSummaryVectors(vectors);
         }
 
-        for (const auto& action : schedule.back().actions.get()) {
-            action.requisiteSummaryVectors(vectors);
+        for (const auto& actions : schedule.unique<Action::Actions>()) {
+            for (const auto& action : actions.second) {
+                action.requisiteSummaryVectors(vectors);
+            }
         }
 
         return vectors;
@@ -1201,7 +1207,8 @@ void keywordW(SummaryConfig::keyword_list& list,
 void keywordG(SummaryConfig::keyword_list& list,
               const std::string&           keyword,
               const KeywordLocation&       loc,
-              const Schedule&              schedule)
+              const Schedule&              schedule,
+              const bool excludeFieldFromGroupKw = true)
 {
     auto param = SummaryConfigNode {
         keyword, SummaryConfigNode::Category::Group, loc
@@ -1210,7 +1217,7 @@ void keywordG(SummaryConfig::keyword_list& list,
     .isUserDefined(is_udq(keyword));
 
     for (const auto& group : schedule.groupNames() ) {
-        if (group == "FIELD") { continue; }
+        if (excludeFieldFromGroupKw && (group == "FIELD")) { continue; }
 
         list.push_back(param.namedEntity(group));
     }
@@ -1631,7 +1638,8 @@ void keywordR(SummaryConfig::keyword_list& list,
 //! \details This is the bare-keyword form, for a request that did not come
 //!   with a record of region IDs -- a meta keyword such as FLUXALL. It covers
 //!   the whole of the region set, which is the only reading available when
-//!   nobody named a region.
+//!   nobody named a region. A summary keyword without a region set suffix
+//!   covers every region set, as a UDQ reads it that way.
 void keywordR(SummaryConfig::keyword_list& list,
               SummaryConfigContext&        context,
               const std::string&           keyword,
@@ -1640,31 +1648,37 @@ void keywordR(SummaryConfig::keyword_list& list,
               const ParseContext&          parseContext,
               ErrorGuard&                  errors)
 {
-    if (is_region_to_region(keyword)) {
-        // A region-to-region vector names a pair of regions, and the full
-        // cross product of the region set is not something anybody asked for.
-        return;
+    auto keywords = std::vector { keyword };
+
+    if ((keyword.size() <= 5) && ! is_udq(keyword)) {
+        for (const auto& regSet : field_props.fip_regions()) {
+            if ((regSet != "FIPNUM") && field_props.has_int(regSet)) {
+                keywords.push_back(fmt::format("{:_<5}{}", keyword, regSet.substr(3, 3)));
+            }
+        }
     }
 
-    const auto region_name =
-        establishRegionContext(keyword, location, field_props,
-                               parseContext, errors, context);
+    for (const auto& kw : keywords) {
+        const auto region_name =
+            establishRegionContext(kw, location, field_props,
+                                   parseContext, errors, context);
 
-    if (! region_name.has_value()) {
-        return;
+        if (! region_name.has_value()) {
+            continue;
+        }
+
+        auto param = SummaryConfigNode {
+            kw, SummaryConfigNode::Category::Region, location
+        }
+        .parameterType(parseKeywordType(EclIO::SummaryNode::normalise_region_keyword(kw)))
+        .fip_region   (region_name.value())
+        .isUserDefined(is_udq(kw));
+
+        std::ranges::transform(context.activeRegions(*region_name),
+                               std::back_inserter(list),
+                               [&param](const auto& region)
+                               { return param.number(region); });
     }
-
-    auto param = SummaryConfigNode {
-        keyword, SummaryConfigNode::Category::Region, location
-    }
-    .parameterType(parseKeywordType(EclIO::SummaryNode::normalise_region_keyword(keyword)))
-    .fip_region   (region_name.value())
-    .isUserDefined(is_udq(keyword));
-
-    std::ranges::transform(context.activeRegions(*region_name),
-                           std::back_inserter(list),
-                           [&param](const auto& region)
-                           { return param.number(region); });
 }
 
 void keywordMISC(SummaryConfig::keyword_list& list,
@@ -2343,6 +2357,7 @@ bool fluxallNamedObject(SummaryConfig::keyword_list&    list,
                         const RequisiteSummaryVector&   vector,
                         const KeywordLocation&          location,
                         const std::vector<std::string>& node_names,
+                        const std::vector<std::string>& node_names_with_wells,
                         const Schedule&                 schedule,
                         const CellIndexMapper&          gridDims)
 {
@@ -2378,9 +2393,15 @@ bool fluxallNamedObject(SummaryConfig::keyword_list&    list,
         if (! cell.has_value()) { return false; }
 
         // A connection vector for a cell the well does not perforate would
-        // never hold anything.
-        if (! schedule.back().wells(well).getConnections()
-            .hasGlobalIndex(static_cast<std::size_t>(*cell - 1)))
+        // never hold anything. One an ACTIONX may open counts, though.
+        const auto global_index = *cell - 1;
+        const auto& futureConns = schedule.getPossibleFutureConnections();
+        const auto futurePos = futureConns.find(well);
+
+        if (((futurePos == futureConns.end()) ||
+             ! futurePos->second.contains(global_index)) &&
+            ! schedule.back().wells(well).getConnections()
+            .hasGlobalIndex(static_cast<std::size_t>(global_index)))
         {
             return false;
         }
@@ -2399,9 +2420,11 @@ bool fluxallNamedObject(SummaryConfig::keyword_list&    list,
         const auto& w = schedule.getWellatEnd(well);
         if (! w.isMultiSegment()) { return false; }
 
+        // Segment numbers are identifiers, not positions.
         const auto segment = parsePositiveInt(args.back());
         if (! segment.has_value() ||
-            (*segment > w.getSegments().size()))
+            (*segment > static_cast<std::size_t>(std::numeric_limits<int>::max())) ||
+            (w.getSegments().segmentNumberToIndex(static_cast<int>(*segment)) < 0))
         {
             return false;
         }
@@ -2414,7 +2437,10 @@ bool fluxallNamedObject(SummaryConfig::keyword_list&    list,
         // GPR 'MANI-B'
         if (args.size() != 1) { return false; }
 
-        if (std::ranges::find(node_names, args.front()) == node_names.end()) {
+        const auto& names = is_node_keyword_with_wells(vector.keyword)
+            ? node_names_with_wells : node_names;
+
+        if (std::ranges::find(names, args.front()) == names.end()) {
             return false;
         }
 
@@ -2447,6 +2473,7 @@ void handleFLUXALL(SummaryConfig::keyword_list&    list,
                    const std::vector<int>&         analyticAquiferIDs,
                    const std::vector<int>&         numericAquiferIDs,
                    const std::vector<std::string>& node_names,
+                   const std::vector<std::string>& node_names_with_wells,
                    const Schedule&                 schedule,
                    const FieldPropsManager&        field_props,
                    const CellIndexMapper&          gridDims,
@@ -2460,6 +2487,8 @@ void handleFLUXALL(SummaryConfig::keyword_list&    list,
     const auto& udqConfig = schedule.getUDQConfig(schedule.size() - 1);
 
     auto unexpanded = std::vector<std::string>{};
+    auto unrecognised = std::vector<std::string>{};
+    auto regionPairs = std::vector<std::string>{};
     auto undefined = std::vector<std::string>{};
     auto unitless = std::vector<std::string>{};
 
@@ -2491,7 +2520,9 @@ void handleFLUXALL(SummaryConfig::keyword_list&    list,
             break;
 
         case Cat::Group:
-            keywordG(list, keyword, location, schedule);
+            // UDQs and ACTIONX conditions may name FIELD as a group.
+            keywordG(list, keyword, location, schedule,
+                     /* excludeFieldFromGroupKw = */ false);
             break;
 
         case Cat::Field:
@@ -2499,6 +2530,13 @@ void handleFLUXALL(SummaryConfig::keyword_list&    list,
             break;
 
         case Cat::Region:
+            if (is_region_to_region(keyword)) {
+                // Neither UDQs nor ACTIONX read a region pair, and the full
+                // cross product of the region set is not wanted either.
+                regionPairs.push_back(keyword);
+                break;
+            }
+
             keywordR(list, context, keyword, location,
                      field_props, parseContext, errors);
             break;
@@ -2516,19 +2554,21 @@ void handleFLUXALL(SummaryConfig::keyword_list&    list,
             // Block, connection, completion, segment and node vectors name an
             // object that the keyword alone does not identify. Take those the
             // deck's expressions spelled out in full, and say so if that left
-            // the keyword with nothing.
-            auto placed = false;
+            // the keyword with nothing, or a named object does not exist.
+            auto vec = named.lower_bound({keyword, {}});
 
-            for (auto vec = named.lower_bound({keyword, {}});
-                 (vec != named.end()) && (vec->keyword == keyword); ++vec)
-            {
-                placed = fluxallNamedObject(list, *vec, location,
-                                            node_names, schedule, gridDims)
-                    || placed;
+            if ((vec == named.end()) || (vec->keyword != keyword)) {
+                unexpanded.push_back(keyword);
+                break;
             }
 
-            if (! placed) {
-                unexpanded.push_back(keyword);
+            for (; (vec != named.end()) && (vec->keyword == keyword); ++vec) {
+                if (! fluxallNamedObject(list, *vec, location, node_names,
+                                         node_names_with_wells, schedule, gridDims))
+                {
+                    unrecognised.push_back(fmt::format("{} {}", keyword,
+                                                       fmt::join(vec->arguments, " ")));
+                }
             }
         }
             break;
@@ -2555,6 +2595,27 @@ void handleFLUXALL(SummaryConfig::keyword_list&    list,
                                   unitless.size(),
                                   fmt::join(unitless, ", ")),
                       fluxall_location));
+    }
+
+    if (! unrecognised.empty()) {
+        OpmLog::warning(OpmInputError::format
+                        (fmt::format("FLUXALL cannot report {} summary "
+                                     "vector(s) in {{file}} line {{line}}, "
+                                     "because the object they name does not "
+                                     "exist or is not recognised:\n  {}",
+                                     unrecognised.size(),
+                                     fmt::join(unrecognised, "\n  ")),
+                         fluxall_location));
+    }
+
+    if (! regionPairs.empty()) {
+        OpmLog::warning(OpmInputError::format
+                        (fmt::format("FLUXALL does not report the region to "
+                                     "region keyword(s) {} in {{file}} line "
+                                     "{{line}}. Request the region pairs "
+                                     "explicitly, if a reduced run needs them.",
+                                     fmt::join(regionPairs, ", ")),
+                         fluxall_location));
     }
 
     if (unexpanded.empty()) {
@@ -2910,7 +2971,8 @@ SummaryConfig::SummaryConfig(const Deck&              deck,
         if (section.hasKeyword("FLUXALL")) {
             handleFLUXALL(this->m_keywords,
                           section.getKeyword("FLUXALL").location(),
-                          analyticAquifers, numericAquifers, node_names,
+                          analyticAquifers, numericAquifers,
+                          node_names, node_names_with_wells,
                           schedule, field_props, gridDims, context,
                           parseContext, errors);
         }
