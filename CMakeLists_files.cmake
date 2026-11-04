@@ -1523,6 +1523,7 @@ list(APPEND PUBLIC_HEADER_FILES
   opm/material/fluidsystems/Spe5FluidSystem.hpp
   opm/material/fluidsystems/Spe5ParameterCache.hpp
   opm/material/fluidsystems/TwoPhaseImmiscibleFluidSystem.hpp
+  opm/material/fluidsystems/blackoilpvt/BlackOilPvtApproaches.hpp
   opm/material/fluidsystems/blackoilpvt/BrineCo2Pvt.hpp
   opm/material/fluidsystems/blackoilpvt/BrineH2Pvt.hpp
   opm/material/fluidsystems/blackoilpvt/Co2GasPvt.hpp
