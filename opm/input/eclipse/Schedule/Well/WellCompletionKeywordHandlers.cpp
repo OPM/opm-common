@@ -68,6 +68,15 @@ void handleCOMPDATX(HandlerContext&    handlerContext,
             if (newConnsInserted) {
                 connPos->second = std::make_shared<WellConnections>
                     (well.getConnections());
+
+                if (!connPos->second->empty() && (*connPos->second)[0].fromTrajectory()) {
+                    const auto msg =
+                        fmt::format("Well {} already has COMPTRAJ-defined connections and "
+                                    "cannot also be defined using COMPDAT. A well must use "
+                                    "either COMPDAT or COMPTRAJ, never both.", wname);
+
+                    throw OpmInputError(msg, handlerContext.keyword.location());
+                }
             }
 
             // Connections opened/shut by this record; used to raise/clear
