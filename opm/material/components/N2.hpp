@@ -28,6 +28,7 @@
 #define OPM_N2_HPP
 
 #include "Component.hpp"
+#include "ComponentCp.hpp"
 
 #include <opm/material/IdealGas.hpp>
 #include <opm/material/common/MathToolbox.hpp>
@@ -84,6 +85,23 @@ public:
      * \brief Acentric factor of \f$N_2\f$.
      */
     static Scalar acentricFactor() { return 0.039; }
+
+    /*!
+     * \brief Cubic ideal-gas heat-capacity polynomial of nitrogen \f$\mathrm{[J/(mol\ K)]}\f$.
+     *
+     * Least-squares fit, constrained to increase with temperature, to the
+     * ideal-gas part of the equation of state of Span et al., J. Phys. Chem.
+     * Ref. Data 29 (2000) 1361, over 250-600 K (RMS 0.006, max 0.016
+     * J/(mol K)), sampled with CoolProp 8.0.0. Not valid outside that range.
+     *
+     * This is the ideal-gas heat capacity used by the compositional mixture
+     * enthalpy (MixtureEnthalpy). It is separate from gasEnthalpy() and
+     * gasHeatCapacity() of this class, which use another ideal-gas cubic
+     * (Joback); gasEnthalpy() is integrated from 0 K, so its datum differs
+     * too, and it does not depend on pressure.
+     */
+    static constexpr ComponentCp<Scalar> idealGasHeatCapacityPolynomial()
+    { return {29.3082, -1.09624e-3, -9.26532e-7, 8.37071e-9, 250.0, 600.0}; }
 
     /*!
      * \brief Returns the temperature \f$\mathrm{[K]}\f$ at molecular nitrogen's triple point.

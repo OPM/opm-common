@@ -33,6 +33,7 @@
 #include "iapws/Region4.hpp"
 
 #include "Component.hpp"
+#include "ComponentCp.hpp"
 
 #include <opm/common/Exceptions.hpp>
 
@@ -90,6 +91,28 @@ public:
      */
     static const Scalar acentricFactor()
     { return Common::acentricFactor; }
+
+    /*!
+     * \brief Cubic ideal-gas heat-capacity polynomial of water \f$\mathrm{[J/(mol\ K)]}\f$.
+     *
+     * Least-squares fit to the ideal-gas part of the IAPWS-95 equation of
+     * state, Wagner & Pruss, J. Phys. Chem. Ref. Data 31 (2002) 387, over
+     * 250-600 K (RMS 0.002, max 0.006 J/(mol K)). Not valid outside that
+     * range. The ideal-gas part is analytic, so the fit also covers the
+     * temperatures below the triple point, 273.16 K, where the real-fluid
+     * equation does not apply.
+     *
+     * This is the ideal-gas heat capacity used by the compositional mixture
+     * enthalpy (MixtureEnthalpy). It does not replace the real-fluid IAPWS
+     * enthalpy and heat-capacity functions of this class.
+     *
+     * The caloric model gives liquid water this ideal-gas heat capacity as
+     * well: 33.6 J/(mol K) at 298 K, against about 75 for liquid water. In a
+     * water-rich liquid a given enthalpy change then gives a temperature
+     * change about twice too large; use EnthalpyModel::eos_departure there.
+     */
+    static constexpr ComponentCp<Scalar> idealGasHeatCapacityPolynomial()
+    { return {35.0836, -1.70752e-2, 4.8871e-5, -2.82995e-8, 250.0, 600.0}; }
 
     /*!
      * \brief Returns the critical temperature \f$\mathrm{[K]}\f$ of water
