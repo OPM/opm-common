@@ -1563,6 +1563,8 @@ BOOST_AUTO_TEST_CASE(Comptraj_Two_Branches_Sharing_A_Cell)
     // CF and Kh are additive.
     BOOST_CHECK_CLOSE(shared.CF(), siCF(deck, 10.0 + 30.0), 1.0e-8);
     BOOST_CHECK_CLOSE(shared.Kh(), siKh(deck, 100.0 + 300.0), 1.0e-8);
+    BOOST_CHECK(shared.dir() == Opm::Connection::Direction::X);
+    BOOST_CHECK_EQUAL(shared.Ke(), shared.intervalContributions()[1].ctf.Ke);
 
     // Wellbore radius and skin are CF-weighted averages.
     BOOST_CHECK_CLOSE(shared.rw(), (10.0*0.10 + 30.0*0.20) / 40.0, 1.0e-8);
@@ -1595,6 +1597,8 @@ COMPTRAJ
     BOOST_REQUIRE_EQUAL(shared.intervalContributions().size(), std::size_t{2});
     BOOST_CHECK_CLOSE(shared.CF(), siCF(deck, 50.0 + 30.0), 1.0e-8);
     BOOST_CHECK_CLOSE(shared.Kh(), siKh(deck, 700.0 + 300.0), 1.0e-8);
+    BOOST_CHECK(shared.dir() == Opm::Connection::Direction::Z);
+    BOOST_CHECK_EQUAL(shared.Ke(), shared.intervalContributions()[0].ctf.Ke);
 }
 
 BOOST_AUTO_TEST_CASE(Comptraj_Branch_Order_Does_Not_Matter)
@@ -1625,6 +1629,56 @@ BOOST_AUTO_TEST_CASE(Comptraj_Branch_Order_Does_Not_Matter)
     BOOST_CHECK_CLOSE(a.Kh(), b.Kh(), 1.0e-8);
     BOOST_CHECK_CLOSE(a.rw(), b.rw(), 1.0e-8);
     BOOST_CHECK_CLOSE(a.skinFactor(), b.skinFactor(), 1.0e-8);
+    BOOST_CHECK(a.dir() == Opm::Connection::Direction::X);
+    BOOST_CHECK(a.dir() == b.dir());
+    BOOST_CHECK_EQUAL(a.Ke(), b.Ke());
+}
+
+BOOST_AUTO_TEST_CASE(Comptraj_Direction_Combines_Individual_Crossings)
+{
+    using Direction = Opm::Connection::Direction;
+    using Contribution = Opm::Connection::IntervalContribution;
+    const auto weaker = Contribution{
+        .interval = {.branch = 1, .top = 0, .bottom = 10},
+        .ctf = {.CF = 16, .Ke = 2},
+        .direction = Direction::X,
+        .strongest_crossing_cf = 8,
+    };
+    const auto stronger = Contribution{
+        .interval = {.branch = 2, .top = 0, .bottom = 10},
+        .ctf = {.CF = 10, .Ke = 3},
+        .direction = Direction::Y,
+        .strongest_crossing_cf = 10,
+    };
+    for (const bool reversed : {false, true}) {
+        auto conn = Opm::Connection{};
+        conn.addIntervalContribution(reversed ? stronger : weaker);
+        conn.addIntervalContribution(reversed ? weaker : stronger);
+        BOOST_CHECK(conn.dir() == Direction::Y);
+        BOOST_CHECK_EQUAL(conn.Ke(), 3);
+        BOOST_CHECK_EQUAL(conn.CF(), 26);
+        conn.removeIntervalContribution(stronger.interval);
+        BOOST_CHECK(conn.dir() == Direction::X);
+        BOOST_CHECK_EQUAL(conn.Ke(), 2);
+
+        auto tied = stronger;
+        tied.strongest_crossing_cf = weaker.strongest_crossing_cf;
+        conn.addIntervalContribution(tied);
+        BOOST_CHECK(conn.dir() == Direction::X);
+        BOOST_CHECK_EQUAL(conn.Ke(), 2);
+        auto reverse_tie = Opm::Connection{};
+        reverse_tie.addIntervalContribution(tied);
+        reverse_tie.addIntervalContribution(weaker);
+        BOOST_CHECK(reverse_tie.dir() == Direction::X);
+        BOOST_CHECK_EQUAL(reverse_tie.Ke(), 2);
+
+        auto changed = weaker;
+        changed.direction = Direction::Z;
+        BOOST_CHECK(!(changed == weaker));
+        changed = weaker;
+        changed.strongest_crossing_cf += 1;
+        BOOST_CHECK(!(changed == weaker));
+    }
 }
 
 BOOST_AUTO_TEST_CASE(Comptraj_Compdat_Mixing_Is_Rejected)
@@ -1860,6 +1914,48 @@ BOOST_AUTO_TEST_CASE(Comptraj_Reentering_A_Cell_Sums_Calculated_CTF)
                       std::size_t{1});
     BOOST_CHECK_EQUAL(reenteredConnection(sched_separate).intervalContributions().size(),
                       std::size_t{2});
+}
+
+BOOST_AUTO_TEST_CASE(Comptraj_Reentry_Direction_Uses_Strongest_Crossing)
+{
+    const auto trajectory = std::string{R"(WELSPECS
+  'W1' 'G' 3 3 2000 OIL /
+/
+WELTRAJ
+  'W1' 1 220 250 2005 0 /
+  'W1' 1 350 250 2005 130 /
+  'W1' 1 350 350 2005 230 /
+  'W1' 1 250 350 2005 330 /
+  'W1' 1 250 205 2005 475 /
+/
+)"};
+    const auto record = [](const int top, const int bottom)
+    { return fmt::format("COMPTRAJ\n 'W1' 1 {} {} 2* 1* 1* 1* 0.25 1* 0 /\n/\n", top, bottom); };
+    const auto first = comptrajSchedule(comptrajDeck(trajectory + record(0, 130)));
+    const auto last = comptrajSchedule(comptrajDeck(trajectory + record(330, 475)));
+    const auto& x = connectionAt(first.getWell("W1", 0).getConnections(), 2, 2, 0);
+    const auto& y = connectionAt(last.getWell("W1", 0).getConnections(), 2, 2, 0);
+    BOOST_CHECK(x.dir() == Opm::Connection::Direction::X);
+    BOOST_CHECK(y.dir() == Opm::Connection::Direction::Y);
+    BOOST_REQUIRE(y.CF() > x.CF());
+    for (const auto& records : {record(0, 475),
+                               record(0, 130) + record(330, 475),
+                               record(330, 475) + record(0, 130)}) {
+        const auto sched = comptrajSchedule(comptrajDeck(trajectory + records));
+        const auto& conn = connectionAt(sched.getWell("W1", 0).getConnections(), 2, 2, 0);
+        BOOST_CHECK(conn.dir() == Opm::Connection::Direction::Y);
+        BOOST_CHECK_CLOSE(conn.CF(), x.CF() + y.CF(), 1.0e-8);
+        BOOST_CHECK_CLOSE(conn.Kh(), x.Kh() + y.Kh(), 1.0e-8);
+        BOOST_CHECK_EQUAL(conn.intervalContributions().back().strongest_crossing_cf, y.CF());
+    }
+    // An explicit CF applies once per cell. All its crossings have equal
+    // ranking, so the first crossing supplies the direction.
+    const auto explicit_cf = comptrajSchedule(comptrajDeck(trajectory + R"(COMPTRAJ
+  'W1' 1 0 475 2* 1* 1* 10 0.25 100 0 /
+/
+)"));
+    BOOST_CHECK(connectionAt(explicit_cf.getWell("W1", 0).getConnections(), 2, 2, 0).dir()
+                == Opm::Connection::Direction::X);
 }
 
 BOOST_AUTO_TEST_CASE(Comptraj_Reentering_A_Cell_Counts_Input_CTF_Once)

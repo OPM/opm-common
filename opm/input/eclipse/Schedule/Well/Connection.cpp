@@ -206,6 +206,8 @@ namespace Opm
             .interval = { .branch = 2, .top = 12.0, .bottom = 13.0 },
             .kind = CTFKind::Defaulted,
             .ctf = CTFProperties::serializationTestObject(),
+            .direction = Direction::X,
+            .strongest_crossing_cf = 0.456,
         };
 
         result.m_interval_contributions = { contribution, contribution };
@@ -486,8 +488,8 @@ namespace Opm
             // The D-factor is also divided by the number of contributions.
             combined.d_factor /= norm * num_contributions;
 
-            // Effective permeability and radii are cell properties, not of
-            // individual perforations, they are taken as is.
+            // Radii are taken as is. Effective permeability is set to that
+            // of the strongest crossing by combineIntervalContributions().
             combined.Ke = contributions.front().ctf.Ke;
             combined.r0 = contributions.front().ctf.r0;
             combined.re = contributions.front().ctf.re;
@@ -537,6 +539,13 @@ namespace Opm
         }
 
         this->ctf_properties_ = combineContributionCTFs(contributions);
+
+        // Strict comparison keeps the first crossing on ties, as in
+        // ResInsight. Contributions are stored in interval order.
+        const auto strongest = std::ranges::max_element(
+            contributions, {}, &IntervalContribution::strongest_crossing_cf);
+        this->direction = strongest->direction;
+        this->ctf_properties_.Ke = strongest->ctf.Ke;
 
         // The transmissibility factor only counts as calculated if no part
         // of it was given in the input.
