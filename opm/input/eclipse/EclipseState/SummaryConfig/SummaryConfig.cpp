@@ -511,8 +511,8 @@ namespace {
             // Filtrate injection rates
             "FCFFVIR", "FCWFVIR", "FCFVIR",
 
-            // Water injection rate in fracture
-            "WIRFRAC",
+            // Water, gas and oil injection rates in fracture
+            "WIRFRAC", "GIRFRAC", "OIRFRAC",
         };
 
         return is_in_set(ratekw, keyword.substr(1))
