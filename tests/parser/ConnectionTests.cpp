@@ -724,56 +724,53 @@ BOOST_AUTO_TEST_CASE(loadCOMPTRAJTESTSPE1) {
     Opm::Schedule sched(deck, state, python);
     const auto& units = deck.getActiveUnitSystem();
 
-    const auto& inj = sched.getWell("INJ", 0);
-    const auto& connections = inj.getConnections();
+    const auto check_connections = [&units](const Opm::WellConnections& connections,
+                                            const std::vector<double>& connection_factor,
+                                            const std::vector<double>& kh,
+                                            const std::vector<int>& global_index)
+    {
+        BOOST_REQUIRE_EQUAL(connections.size(), connection_factor.size());
+        for (std::size_t i = 0; i < connections.size(); ++i) {
+            BOOST_CHECK_CLOSE(connections[i].CF(), units.to_si(Opm::UnitSystem::measure::transmissibility, connection_factor[i]), 0.1);
+            BOOST_CHECK_CLOSE(connections[i].Kh(), units.to_si(Opm::UnitSystem::measure::effective_Kh, kh[i]), 0.1);
+            BOOST_CHECK_EQUAL(connections[i].global_index(), global_index[i]);
+        }
+    };
 
-    /* Comparison values (CFs and intersected cells) are from ResInsight through importing a deviation file with contents
-          WELLNAME: 'INJ1'
-          # X   Y    TVDMSL   MDMSL
-          500   500  -100.0   0.0
-          500   500   8325.0  8325.0
-          2500  2500  8425.0  8450.0
-       and adjusting the completion data in agreement with the COMPTRAJ data in the input file
-     */
-    const std::array<double, 4> connection_factor{311.783, 7.79428, 38.9674, 62.3465};
-    const std::array<int, 4> global_index{0, 100, 111, 211};
-    BOOST_CHECK_EQUAL(connections.size(), 4);
-    for (std::size_t i = 0 ; i < connections.size();  ++i ) {
-         BOOST_CHECK_CLOSE(connections[i].CF(), units.to_si(Opm::UnitSystem::measure::transmissibility, connection_factor[i]), 2e-2);
-         BOOST_CHECK_EQUAL(connections[i].global_index(), global_index[i]);
-    }
-}
-
-BOOST_AUTO_TEST_CASE(loadCOMPTRAJTESTSPE1_2) {
-    Opm::Parser parser;
-
-    const auto deck = parser.parseFile("SPE1CASE1_WELTRAJ_2.DATA");
-    auto python = std::make_shared<Opm::Python>();
-    Opm::EclipseState state(deck);
-    Opm::Schedule sched(deck, state, python);
-    const auto& units = deck.getActiveUnitSystem();
-
-    const auto& inj = sched.getWell("INJ", 0);
-    const auto& connections = inj.getConnections();
-
-    /* Comparison values (CFs and intersected cells) are from ResInsight through importing a deviation file with contents
-          WELLNAME: 'INJ1'
-          # X   Y    TVDMSL   MDMSL
-          2500   3500  -100.0   0.0
-          2500   3500   8325.0  8325.0
-          2750   3750   8375.0  8375.0
-          3500   4500   8400.0  8400.0
-          4500   5500   8425.0  8425.0
+    /* Comparison values (CFs, Kh and intersected cells) are from the PRT file of a reference run with the COMPDAT
+       keyword exported by ResInsight after importing the deviation files
+          WELLNAME: 'INJ'
+          # X     Y      TVDMSL  MDMSL
+          10400   11600  8325.0  8325.0
+          10400   11600  8425.0  8425.0
           -999
-       and adjusting the completion data in agreement with the COMPTRAJ data in the input file
+          WELLNAME: 'PROD'
+          # X       Y       TVDMSL  MDMSL
+          3400.00   4500.00   8325.00   8325.00
+          3858.19   4688.67   8374.60   8822.99
+          5326.76   6005.95   8403.97   10796.0
+          6500.00   7300.00   8410.00   12542.7
+          -999
+       and adjusting the completion data in agreement with the COMPTRAJ data in the input file.
+       The coordinates are given in the map coordinate system defined by MAPAXES.
+
+       CF and Kh are given with four significant digits and checked with a 0.1% tolerance.  This
+       also covers the small difference between the Darcy constant used by ResInsight and OPM.
      */
-    const std::array<double, 5> connection_factor{78.5921, 11.7884, 77.9007, 311.585, 155.784};
-    const std::array<int, 5> global_index{0, 100, 200, 211, 222};
-    BOOST_CHECK_EQUAL(connections.size(), 5);
-    for (std::size_t i = 0 ; i < connections.size();  ++i ) {
-         BOOST_CHECK_CLOSE(connections[i].CF(), units.to_si(Opm::UnitSystem::measure::transmissibility, connection_factor[i]), 2e-2);
-         BOOST_CHECK_EQUAL(connections[i].global_index(), global_index[i]);
-    }
+
+    const auto& inj = sched.getWell("INJ", 0);
+    check_connections(inj.getConnections(),
+                      {10.45, 1.568, 10.45},
+                      {1.0e4, 1.5e3, 1.0e4},
+                      {88, 188, 288});
+
+    const auto& prod = sched.getWell("PROD", 0);
+    BOOST_CHECK_EQUAL(prod.getHeadI(), 1);
+    BOOST_CHECK_EQUAL(prod.getHeadJ(), 1);
+    check_connections(prod.getConnections(),
+                      {110.5, 17.76, 36.05, 60.75, 235.2, 94.74, 222.7, 74.78, 89.20},
+                      {1.004e5, 1.613e4, 3.273e4, 5.516e4, 2.135e5, 8.602e4, 2.022e5, 6.789e4, 8.099e4},
+                      {11, 111, 211, 212, 222, 223, 233, 234, 244});
 }
 
 BOOST_AUTO_TEST_CASE(Compdat_Zero_Perm_Dflt_Action)
