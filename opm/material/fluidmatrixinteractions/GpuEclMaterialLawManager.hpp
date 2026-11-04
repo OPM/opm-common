@@ -327,8 +327,13 @@ public:
         data.materialLawParamsByRegion.resize(static_cast<std::size_t>(*maxRegion) + 1u);
         std::vector<bool> initialized(data.materialLawParamsByRegion.size(), false);
         std::vector<std::size_t> firstElement(data.materialLawParamsByRegion.size(), 0u);
-        // reserve 6 or 12 sample buffers depending 2 or three-phase
-        data.sampleBuffers.reserve(data.materialLawParamsByRegion.size() * (6u + 6u * static_cast<std::size_t>(isTwoPhase)));
+        // Each piecewise-linear two-phase law holds six sample tables; the two-phase
+        // (gas-water) path builds one such law per region, the three-phase path two
+        // (gas-oil and oil-water). Reserving only avoids reallocation: moving a
+        // GpuBuffer keeps its device pointer, so GpuViews stay valid either way.
+        constexpr std::size_t samplesPerLaw = 6u;
+        data.sampleBuffers.reserve(data.materialLawParamsByRegion.size()
+                                   * samplesPerLaw * (isTwoPhase ? 1u : 2u));
 
         auto pushSampleBuffer = [&](const auto& sampleVector) {
             std::vector<Scalar> hostCopy(sampleVector.begin(), sampleVector.end());
