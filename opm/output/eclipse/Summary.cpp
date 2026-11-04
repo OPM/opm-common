@@ -774,6 +774,12 @@ template<> constexpr
 measure rate_unit< rt::wat_frac >() { return measure::geometric_volume_rate; }
 
 template<> constexpr
+measure rate_unit< rt::gas_frac >() { return measure::gas_surface_rate; }
+
+template<> constexpr
+measure rate_unit< rt::oil_frac >() { return measure::liquid_surface_rate; }
+
+template<> constexpr
 measure rate_unit< rt::microbial >() { return measure::mass_rate; }
 
 template<> constexpr
@@ -3091,6 +3097,8 @@ using UnitTable = std::unordered_map<std::string, Opm::UnitSystem::measure>;
 static const auto funs = std::unordered_map<std::string, ofun> {
     { "WWIR", rate< rt::wat, injector > },
     { "WWIRFRAC", rate< rt::wat_frac, injector > },
+    { "WGIRFRAC", rate< rt::gas_frac, injector > },
+    { "WOIRFRAC", rate< rt::oil_frac, injector > },
     { "WOIR", rate< rt::oil, injector > },
     { "WGIR", rate< rt::gas, injector > },
     { "WEIR", rate< rt::energy, injector > },
@@ -3124,6 +3132,8 @@ static const auto funs = std::unordered_map<std::string, ofun> {
 
     { "WWIT", mul( rate< rt::wat, injector >, duration ) },
     { "WWITFRAC", mul(rate<rt::wat_frac, injector>, duration) },
+    { "WGITFRAC", mul(rate<rt::gas_frac, injector>, duration) },
+    { "WOITFRAC", mul(rate<rt::oil_frac, injector>, duration) },
     { "WOIT", mul( rate< rt::oil, injector >, duration ) },
     { "WGIT", mul( rate< rt::gas, injector >, duration ) },
     { "WEIT", mul( rate< rt::energy, injector >, duration ) },
@@ -3577,6 +3587,8 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "CWGRL", div( cratel< rt::wat, producer >, cratel< rt::gas, producer > ) },
     { "CWIR", crate< rt::wat, injector > },
     { "CWIRFRAC", crate<rt::wat_frac, injector> },
+    { "CGIRFRAC", crate<rt::gas_frac, injector> },
+    { "COIRFRAC", crate<rt::oil_frac, injector> },
     { "CGIR", crate< rt::gas, injector > },
     { "COIR", crate< rt::oil, injector > },
     { "CVIR", crate_resv<injector> },
@@ -3682,6 +3694,8 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     { "COIT", mul( crate< rt::oil, injector >, duration ) },
     { "CWIT", mul( crate< rt::wat, injector >, duration ) },
     { "CWITFRAC", mul(crate<rt::wat_frac, injector>, duration) },
+    { "CGITFRAC", mul(crate<rt::gas_frac, injector>, duration) },
+    { "COITFRAC", mul(crate<rt::oil_frac, injector>, duration) },
     { "CGIT", mul( crate< rt::gas, injector >, duration ) },
     { "CVIT", mul( crate_resv<injector>, duration ) },
     { "CNIT", mul( crate< rt::solvent, injector >, duration ) },
