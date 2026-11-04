@@ -132,7 +132,35 @@ BOOST_AUTO_TEST_CASE(CGMITL)
                       Opm::SummaryConfigNode::Type::Total);
 }
 
+BOOST_AUTO_TEST_CASE(Fracture_injection_totals)
+{
+    for (const auto* kw : { "WWITFRAC", "CWITFRAC", "WGITFRAC",
+                            "CGITFRAC", "WOITFRAC", "COITFRAC" })
+    {
+        BOOST_TEST_CONTEXT("Keyword " << kw) {
+            BOOST_CHECK_EQUAL(Opm::parseKeywordType(kw),
+                              Opm::SummaryConfigNode::Type::Total);
+        }
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()     // Total
+
+BOOST_AUTO_TEST_SUITE(Rate)
+
+BOOST_AUTO_TEST_CASE(Fracture_injection_rates)
+{
+    for (const auto* kw : { "WWIRFRAC", "CWIRFRAC", "WGIRFRAC",
+                            "CGIRFRAC", "WOIRFRAC", "COIRFRAC" })
+    {
+        BOOST_TEST_CONTEXT("Keyword " << kw) {
+            BOOST_CHECK_EQUAL(Opm::parseKeywordType(kw),
+                              Opm::SummaryConfigNode::Type::Rate);
+        }
+    }
+}
+
+BOOST_AUTO_TEST_SUITE_END()     // Rate
 
 BOOST_AUTO_TEST_SUITE_END()     // Type
 
