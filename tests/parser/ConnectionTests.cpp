@@ -1379,6 +1379,20 @@ END
 )");
     }
 
+    /// Convert a connection transmissibility factor from the deck's units.
+    double siCF(const Opm::Deck& deck, const double cf)
+    {
+        return deck.getActiveUnitSystem()
+            .to_si(Opm::UnitSystem::measure::transmissibility, cf);
+    }
+
+    /// Convert a Kh product from the deck's units.
+    double siKh(const Opm::Deck& deck, const double kh)
+    {
+        return deck.getActiveUnitSystem()
+            .to_si(Opm::UnitSystem::measure::effective_Kh, kh);
+    }
+
     Opm::Schedule comptrajSchedule(const Opm::Deck& deck)
     {
         const auto es = Opm::EclipseState { deck };
@@ -1387,6 +1401,19 @@ END
             deck, es, Opm::ParseContext{}, *std::make_unique<Opm::ErrorGuard>(),
             std::make_shared<Opm::Python>()
         };
+    }
+
+    const Opm::Connection&
+    connectionAt(const Opm::WellConnections& connections, const int i, const int j, const int k)
+    {
+        for (const auto& conn : connections) {
+            if (conn.sameCoordinate(i, j, k)) {
+                return conn;
+            }
+        }
+
+        BOOST_FAIL(fmt::format("No connection at ({},{},{})", i, j, k));
+        return connections[0];
     }
 
     // A vertical main branch through column (3,3) and a lateral running in
@@ -1404,6 +1431,28 @@ WELTRAJ
   'W1'    2     450    250    2015    2215 /
 /
 )";
+
+    // A main branch going down from the top layer into the middle one and
+    // back up again, entering cell (3,3,1) twice: from MD 2002 to 2010 and
+    // from MD 2030 to 2035.  An interval from MD 2002 to 2012 only covers
+    // the first visit, one from MD 2028 to 2035 only the second.
+    const std::string weltraj_u_shape = R"(WELSPECS
+  'W1' 'G' 3 3 2000.0 OIL /
+/
+WELTRAJ
+-- WELL BRANCH   X      Y      TVD     MD
+  'W1'    1     250    250    2000    2000 /
+  'W1'    1     250    250    2015    2015 /
+  'W1'    1     260    250    2015    2025 /
+  'W1'    1     260    250    2005    2035 /
+/
+)";
+
+    /// Connection in cell (3,3,1), which weltraj_u_shape enters twice.
+    const Opm::Connection& reenteredConnection(const Opm::Schedule& sched)
+    {
+        return connectionAt(sched.getWell("W1", 0).getConnections(), 2, 2, 0);
+    }
 
 } // Anonymous namespace
 
@@ -1650,3 +1699,64 @@ BOOST_AUTO_TEST_CASE(Predicate_Same_Except_For_Ordering)
     BOOST_CHECK_MESSAGE(permuted.isSameExceptForOrdering(conns),
                         "Permuted connections should be the same as the original except for ordering");
 }
+
+BOOST_AUTO_TEST_CASE(Comptraj_Reentering_A_Cell_Sums_Calculated_CTF)
+{
+    // CF and Kh calculated from the cell properties.
+    const auto first_visit = std::string { R"(COMPTRAJ
+-- WELL BRANCH  TOP    BOT   REF NO STATE SAT   CF   DIAM   KH  SKIN
+  'W1'    1    2002   2012   2*     1*    1*    1*  0.25   1*    0 /
+/
+)" };
+
+    const auto second_visit = std::string { R"(COMPTRAJ
+  'W1'    1    2028   2035   2*     1*    1*    1*  0.25   1*    0 /
+/
+)" };
+
+    const auto both_visits = std::string { R"(COMPTRAJ
+  'W1'    1    2002   2035   2*     1*    1*    1*  0.25   1*    0 /
+/
+)" };
+
+    const auto sched_first = comptrajSchedule(comptrajDeck(weltraj_u_shape + first_visit));
+    const auto sched_second = comptrajSchedule(comptrajDeck(weltraj_u_shape + second_visit));
+
+    const auto& first = reenteredConnection(sched_first);
+    const auto& second = reenteredConnection(sched_second);
+
+    BOOST_CHECK_CLOSE(first.connectionLength(), 8.0, 1.0e-8);
+    BOOST_CHECK_CLOSE(second.connectionLength(), 5.0, 1.0e-8);
+    BOOST_CHECK_CLOSE(first.CF() / second.CF(), 8.0 / 5.0, 1.0e-8);
+
+    // Both crossings of one interval contribute.
+    const auto sched_single = comptrajSchedule(comptrajDeck(weltraj_u_shape + both_visits));
+    {
+        const auto& conn = reenteredConnection(sched_single);
+
+        BOOST_CHECK_CLOSE(conn.CF(), first.CF() + second.CF(), 1.0e-8);
+        BOOST_CHECK_CLOSE(conn.Kh(), first.Kh() + second.Kh(), 1.0e-8);
+        BOOST_CHECK_CLOSE(conn.connectionLength(), 8.0 + 5.0, 1.0e-8);
+        BOOST_CHECK(conn.kind() == Opm::Connection::CTFKind::Defaulted);
+    }
+
+
+}
+
+BOOST_AUTO_TEST_CASE(Comptraj_Reentering_A_Cell_Counts_Input_CTF_Once)
+{
+    // A single interval entering cell (3,3,1) twice.
+    const auto deck = comptrajDeck(weltraj_u_shape + R"(COMPTRAJ
+-- WELL BRANCH  TOP    BOT   REF NO STATE SAT   CF   DIAM   KH  SKIN
+  'W1'    1    2002   2035   2*     1*    1*   10.0  0.25  100    0 /
+/
+)");
+
+    const auto sched = comptrajSchedule(deck);
+    const auto& conn = reenteredConnection(sched);
+
+    BOOST_CHECK_CLOSE(conn.CF(), siCF(deck, 10.0), 1.0e-8);
+    BOOST_CHECK_CLOSE(conn.Kh(), siKh(deck, 100.0), 1.0e-8);
+    BOOST_CHECK(conn.kind() == Opm::Connection::CTFKind::DeckValue);
+}
+
