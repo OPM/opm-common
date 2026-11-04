@@ -451,3 +451,30 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(GenericFluidSystemCapacity, Scalar, ScalarTypes)
     registerComponent<FluidSystem, Opm::C1<Scalar>>();
     BOOST_CHECK_EQUAL(FluidSystem::componentName(0), Opm::N2<Scalar>::name());
 }
+
+BOOST_AUTO_TEST_CASE_TEMPLATE(GenericFluidSystemInteractionCoefficients, Scalar, ScalarTypes)
+{
+    // Without a deck, the coefficients are set as a packed lower triangle, in
+    // the order in which interactionCoefficient() reads them: (1,0), (2,0), (2,1).
+    using FluidSystem = Opm::GenericOilGasWaterFluidSystem<Scalar, 3, false>;
+    FluidSystem::init();
+    registerComponent<FluidSystem, Opm::SimpleCO2<Scalar>>();
+    registerComponent<FluidSystem, Opm::C1<Scalar>>();
+    registerComponent<FluidSystem, Opm::C10<Scalar>>();
+
+    FluidSystem::setInteractionCoefficients({0.1, 0.2, 0.3});
+    BOOST_CHECK_EQUAL(FluidSystem::interactionCoefficient(1, 0), Scalar(0.1));
+    BOOST_CHECK_EQUAL(FluidSystem::interactionCoefficient(0, 1), Scalar(0.1));
+    BOOST_CHECK_EQUAL(FluidSystem::interactionCoefficient(2, 0), Scalar(0.2));
+    BOOST_CHECK_EQUAL(FluidSystem::interactionCoefficient(2, 1), Scalar(0.3));
+    BOOST_CHECK_EQUAL(FluidSystem::interactionCoefficient(1, 2), Scalar(0.3));
+    BOOST_CHECK_EQUAL(FluidSystem::interactionCoefficient(1, 1), Scalar(0.0));
+
+    // An empty vector sets all coefficients to zero; one of the wrong size is
+    // rejected and leaves the coefficients unchanged.
+    FluidSystem::setInteractionCoefficients({});
+    BOOST_CHECK_EQUAL(FluidSystem::interactionCoefficient(2, 1), Scalar(0.0));
+    FluidSystem::setInteractionCoefficients({0.1, 0.2, 0.3});
+    BOOST_CHECK_THROW(FluidSystem::setInteractionCoefficients({0.4, 0.5}), std::invalid_argument);
+    BOOST_CHECK_EQUAL(FluidSystem::interactionCoefficient(2, 1), Scalar(0.3));
+}
