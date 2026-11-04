@@ -1258,3 +1258,47 @@ BOOST_AUTO_TEST_CASE(EclipseIOLGR_INIT_InactiveCellBeforeHost)
     checkVectorsClose(init.getInitData<float>("PERMX", "LGR1"), std::vector<float>(9, 110.0f), 1e-4, "PERMX LGR1");
     checkVectorsClose(init.getInitData<float>("PERMX", "LGR2"), std::vector<float>(9, 220.0f), 1e-4, "PERMX LGR2");
 }
+
+// A host cell turned off after input, as the simulator does for MINPV: the LGR
+// sections hold the active LGR cells only, and PORV holds one value per LGR
+// cell with 0 for the inactive ones.
+BOOST_AUTO_TEST_CASE(EclipseIOLGR_INIT_InactiveHostCell)
+{
+    const auto deck = Parser().parseString(deckStringLGRWithGridKeywords(R"(CARFIN
+    'LGR1'  1  2  1  1  1  1  6  3  1 /
+    ENDFIN
+    CARFIN
+    'LGR2'  3  3  3  3  1  1  3  3  1 /
+    ENDFIN
+    )"));
+
+    WorkArea work_area("test_ecl_writer_lgr_inactive_host");
+    auto es = EclipseState( deck );
+    const Schedule schedule(deck, es, std::make_shared<Python>());
+    const SummaryConfig summary_config( deck, schedule, es.fieldProps(), es.aquifer());
+    es.getIOConfig().setBaseName( "FOO" );
+
+    std::vector<int> actnum(9, 1);
+    actnum[1] = 0;                      // host cell (2,1) of LGR1
+    es.reset_actnum(actnum);
+    EclipseGrid grid = es.getInputGrid();
+    grid.resetACTNUM(actnum);
+
+    EclipseIO eclWriter( es, grid, schedule, summary_config);
+    eclWriter.writeInitial( );
+
+    EclIO::EInit init { "FOO.INIT" };
+    checkVectorsClose(init.getInitData<float>("PERMX", "LGR1"), std::vector<float>(9, 110.0f), 1e-4, "PERMX LGR1");
+    checkVectorsClose(init.getInitData<float>("PERMX", "LGR2"), std::vector<float>(9, 330.0f), 1e-4, "PERMX LGR2");
+    checkVectorsClose(init.getInitData<float>("DEPTH", "LGR1"), std::vector<float>(9, 8350.0f), 1e-4, "DEPTH LGR1");
+
+    // 1000 ft x 1000 ft x 50 ft x 0.3 / 9 LGR cells per host, in rb.
+    const float porv = 296846.0f;
+    std::vector<float> porv_expected(18, porv);
+    for (int j = 0; j < 3; ++j) {
+        for (int i = 3; i < 6; ++i) {
+            porv_expected[i + 6*j] = 0.0f;  // the LGR cells of host (2,1)
+        }
+    }
+    checkVectorsClose(init.getInitData<float>("PORV", "LGR1"), porv_expected, 1e-3, "PORV LGR1");
+}
