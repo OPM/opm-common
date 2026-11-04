@@ -21,12 +21,14 @@
 #define BOOST_TEST_MODULE Test EclIO
 #include <boost/test/unit_test.hpp>
 
+#include <opm/io/eclipse/ByteOrder.hpp>
 #include <opm/io/eclipse/EclFile.hpp>
 #include <opm/io/eclipse/EclUtil.hpp>
 
 #include <opm/io/eclipse/EclOutput.hpp>
 
 #include <algorithm>
+#include <cstdint>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -81,14 +83,13 @@ bool operator==(const std::vector<T> & t1, const std::vector<T> & t2)
 void write_header(std::ofstream& ofileH, const std::string& arrName,
                   int size, const std::string& arrtype)
 {
-    int bhead = flipEndianInt(16);
-    int fsize = flipEndianInt(size);
+    const std::int32_t bhead = 16;
 
-    ofileH.write(reinterpret_cast<char*>(&bhead), sizeof(bhead));
+    writeFileOrder(ofileH, bhead);
     ofileH.write(arrName.c_str(), 8);
-    ofileH.write(reinterpret_cast<char*>(&fsize), sizeof(fsize));
+    writeFileOrder(ofileH, static_cast<std::int32_t>(size));
     ofileH.write(arrtype.c_str(), 4);
-    ofileH.write(reinterpret_cast<char*>(&bhead), sizeof(bhead));
+    writeFileOrder(ofileH, bhead);
 }
 
 } // Anonymous namespace
@@ -112,17 +113,11 @@ BOOST_AUTO_TEST_CASE(TestEclFile_X231)
         write_header(ofileH, arrName, -1, std::string("X231"));
         write_header(ofileH, arrName, size, std::string("INTE"));
 
-        int sizeData = ivect.size() * sizeof(int);
-        sizeData = flipEndianInt(sizeData);
+        const auto sizeData = static_cast<std::int32_t>(ivect.size() * sizeof(int));
 
-        ofileH.write(reinterpret_cast<char*>(&sizeData), sizeof(sizeData));
-
-        for (auto v : ivect) {
-            int fval = flipEndianInt(v);
-            ofileH.write(reinterpret_cast<char*>(&fval), sizeof(fval));
-        }
-
-        ofileH.write(reinterpret_cast<char*>(&sizeData), sizeof(sizeData));
+        writeFileOrder(ofileH, sizeData);
+        writeFileOrder(ofileH, ivect);
+        writeFileOrder(ofileH, sizeData);
         ofileH.close();
     }
 

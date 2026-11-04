@@ -24,6 +24,7 @@
 #include <opm/common/utility/shmatch.hpp>
 #include <opm/common/utility/TimeService.hpp>
 
+#include <opm/io/eclipse/ByteOrder.hpp>
 #include <opm/io/eclipse/EclFile.hpp>
 #include <opm/io/eclipse/EclUtil.hpp>
 #include <opm/io/eclipse/EclOutput.hpp>
@@ -675,9 +676,7 @@ void ESmry::read_ministeps_from_disk()
         if (formattedFiles[specInd]) {
             ministep_value = read_ministep_formatted(fileH);
         } else {
-            std::function<int(int)> f = Opm::EclIO::flipEndianInt;
-            auto ministep_vect = readBinaryArray<int,int>(fileH, 1, Opm::EclIO::INTE, f, sizeOfInte);
-            ministep_value = ministep_vect[0];
+            ministep_value = readBinaryInteArray(fileH, 1).front();
         }
 
         mini_steps.push_back(ministep_value);
@@ -808,10 +807,7 @@ void ESmry::loadData(const std::vector<std::string>& vectList) const
 
                     fileH.seekg (elementPos, fileH.beg);
 
-                    float value;
-                    fileH.read(reinterpret_cast<char*>(&value), sizeOfReal);
-
-                    vectorData[ind].push_back(Opm::EclIO::flipEndianFloat(value));
+                    vectorData[ind].push_back(Opm::EclIO::readFileOrder<float>(fileH));
                 }
             }
         }
@@ -922,9 +918,7 @@ void ESmry::loadData() const
             std::size_t p = 0;
 
             while (rest > 0) {
-                int dhead;
-                fileH.read(reinterpret_cast<char*>(&dhead), sizeof(dhead));
-                dhead = Opm::EclIO::flipEndianInt(dhead);
+                const auto dhead = Opm::EclIO::readFileOrder<std::int32_t>(fileH);
 
                 const int num = dhead / sizeOfInte;
                 if ((num > maxNumberOfElements) || (num < 0))
@@ -932,11 +926,10 @@ void ESmry::loadData() const
                                                   "data or incorrect number of elements");
 
                 for (int i = 0; i < num; ++i, ++p) {
-                    float value;
-                    fileH.read(reinterpret_cast<char*>(&value), sizeOfReal);
+                    const auto value = Opm::EclIO::readFileOrder<float>(fileH);
 
                     if ((keywpos[p] > -1) && !vectorLoaded[keywpos[p]])
-                        vectorData[keywpos[p]].push_back(Opm::EclIO::flipEndianFloat(value));
+                        vectorData[keywpos[p]].push_back(value);
                 }
 
                 rest -= num;
@@ -947,9 +940,7 @@ void ESmry::loadData() const
                     OPM_THROW(std::runtime_error, "Error reading binary data, incorrect number of elements");
                 }
 
-                int dtail;
-                fileH.read(reinterpret_cast<char*>(&dtail), sizeof(dtail));
-                dtail = Opm::EclIO::flipEndianInt(dtail);
+                const auto dtail = Opm::EclIO::readFileOrder<std::int32_t>(fileH);
 
                 if (dhead != dtail)
                     OPM_THROW(std::runtime_error, "Error reading binary data, tail not matching header.");
@@ -1019,7 +1010,7 @@ ESmry::getListOfArrays(const std::string& filename, bool formatted)
             }
 
         } else {
-            int num_int;
+            std::int32_t num_int;
 
             fseek(ptr, 4, SEEK_CUR);
 
@@ -1031,7 +1022,7 @@ ESmry::getListOfArrays(const std::string& filename, bool formatted)
             if (fread(&num_int, 4, 1, ptr) != 1)
                 throw std::runtime_error("fread error when loading summary data");
 
-            num = static_cast<std::int64_t>(Opm::EclIO::flipEndianInt(num_int));
+            num = static_cast<std::int64_t>(Opm::EclIO::fromFileOrder(num_int));
 
             fseek(ptr, 8, SEEK_CUR);
 

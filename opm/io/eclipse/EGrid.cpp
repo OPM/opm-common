@@ -17,10 +17,12 @@
    */
 
 #include <opm/io/eclipse/EGrid.hpp>
-#include <opm/io/eclipse/EInit.hpp>
-#include <opm/io/eclipse/EclUtil.hpp>
 
 #include <opm/common/ErrorMacros.hpp>
+
+#include <opm/io/eclipse/ByteOrder.hpp>
+#include <opm/io/eclipse/EInit.hpp>
+#include <opm/io/eclipse/EclUtil.hpp>
 
 #include <algorithm>
 #include <cmath>
@@ -585,18 +587,16 @@ std::vector<float> EGrid::  get_zcorn_from_disk(int layer, bool bottom)
     while (p1 < zcorn_to){
 
         std::vector<float> buf(next_block);
-        fileH.read(reinterpret_cast<char*>(buf.data()), buf.size()*sizeof(float));
+        Opm::EclIO::readFileOrder(fileH, buf);
 
-        for (std::size_t n = 0; n < next_block; n++)
-            zcorn_layer.push_back(Opm::EclIO::flipEndianFloat(buf[n]));
+        zcorn_layer.insert(zcorn_layer.end(), buf.begin(), buf.end());
 
         p1 = p1 + next_block;
 
         if (p1 < zcorn_to) {
-            int dtail;
-            fileH.read(reinterpret_cast<char*>(&dtail), sizeof(dtail));
-            fileH.read(reinterpret_cast<char*>(&dtail), sizeof(dtail));
-            dtail = Opm::EclIO::flipEndianInt(dtail);
+            // Skip tail of current block, read head of next block.
+            fileH.seekg(Opm::EclIO::sizeOfInte, std::ios_base::cur);
+            const auto dtail = Opm::EclIO::readFileOrder<std::int32_t>(fileH);
 
             next_block = static_cast<std::uint64_t>(dtail) / static_cast<std::uint64_t>(Opm::EclIO::sizeOfReal);
 

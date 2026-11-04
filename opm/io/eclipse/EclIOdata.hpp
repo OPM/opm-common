@@ -29,9 +29,11 @@ namespace Opm { namespace EclIO {
         INTE, REAL, DOUB, CHAR, LOGI, MESS, C0NN
     };
 
-    // named constants related to binary file format
+    // named constants related to binary file format.  LOGI values are
+    // stored as big-endian four byte integers, like INTE values, and these
+    // are the values in the host's native byte order.
     const unsigned int true_value_ecl = 0xffffffff;
-    const unsigned int true_value_ix = 0x1000000;
+    const unsigned int true_value_ix = 0x00000001;
     const unsigned int false_value = 0x00000000;
 
 
