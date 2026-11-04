@@ -13,6 +13,11 @@
       "value_type": "UDA",
       "dimension": "PPM",
       "default" : 0
+    },
+    {
+      "name": "CONC_BASIS",
+      "value_type": "STRING",
+      "default": "SURF"
     }
   ]
 }

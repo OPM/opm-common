@@ -634,6 +634,7 @@ Well Well::serializationTestObject()
     result.default_well_inj_temperature = 0.0;
     result.well_inj_mult = InjMult::serializationTestObject();
     result.m_filter_concentration = UDAValue::serializationTestObject();
+    result.m_filter_conc_basis = FilterConcBasis::RESERVOIR;
     result.lgr_tag = "LGR-test";
     result.ref_type = WellRefinementType::LGR;
     return result;
@@ -2379,6 +2380,7 @@ bool Well::operator==(const Well& data) const
         && (this->default_well_inj_temperature == data.default_well_inj_temperature)
         && (this->well_inj_mult == data.well_inj_mult)
         && (this->m_filter_concentration == data.m_filter_concentration)
+        && (this->m_filter_conc_basis == data.m_filter_conc_basis)
         && (this->lgr_tag == data.lgr_tag)
         && (this->ref_type == data.ref_type)
 
@@ -2490,4 +2492,36 @@ double Opm::Well::evalFilterConc(const SummaryState& summary_sate) const
 {
     return UDA::eval_well_uda(this->m_filter_concentration,
                               this->name(), summary_sate);
+}
+
+void Opm::Well::setFilterConcBasis(const FilterConcBasis basis)
+{
+    this->m_filter_conc_basis = basis;
+}
+
+Opm::Well::FilterConcBasis Opm::Well::getFilterConcBasis() const
+{
+    return this->m_filter_conc_basis;
+}
+
+Opm::Well::FilterConcBasis
+Opm::Well::filterConcBasisFromString(const std::string& str)
+{
+    if (str == "SURF") {
+        return FilterConcBasis::SURFACE;
+    }
+    if (str == "RES") {
+        return FilterConcBasis::RESERVOIR;
+    }
+    throw std::invalid_argument("Unknown filtration concentration basis '" + str
+                                + "', expected SURF or RES");
+}
+
+std::string Opm::Well::filterConcBasisToString(const FilterConcBasis basis)
+{
+    switch (basis) {
+    case FilterConcBasis::SURFACE:   return "SURF";
+    case FilterConcBasis::RESERVOIR: return "RES";
+    }
+    throw std::invalid_argument("Unhandled filtration concentration basis");
 }
