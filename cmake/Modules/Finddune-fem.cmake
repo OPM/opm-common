@@ -22,6 +22,7 @@ endif()
 if(dune-fem_FOUND)
   find_package(GMP)
   find_package(SuperLU)
+
   # make version number available in config.h
   include (UseDuneVer)
   find_dune_version ("dune" "fem")
@@ -31,5 +32,14 @@ if(dune-fem_FOUND)
       DUNE_FEM_VERSION_MAJOR=${DUNE_FEM_VERSION_MAJOR}
       DUNE_FEM_VERSION_MINOR=${DUNE_FEM_VERSION_MINOR}
       DUNE_FEM_VERSION_REVISION=${DUNE_FEM_VERSION_REVISION}
+  )
+
+  # Remove QuadMath dependency
+  get_target_property(DUNE_FEM_LIBRARIES Dune::Fem INTERFACE_LINK_LIBRARIES)
+  list(FILTER DUNE_FEM_LIBRARIES EXCLUDE REGEX "QuadMath::QuadMath")
+  set_target_properties(Dune::Fem
+    PROPERTIES
+    INTERFACE_LINK_LIBRARIES
+      ${DUNE_FEM_LIBRARIES}
   )
 endif()
