@@ -46,7 +46,10 @@ public:
         std::optional<std::vector<double>> solution_concentration;
         std::optional<TracerVdTable> free_tvdp;
         std::optional<TracerVdTable> solution_tvdp;
-        double diffusion_coefficient = 0.0; //!< Molecular diffusion coefficient [m2/s] (TRCDIFF)
+        //! Molecular diffusion coefficients [m2/s] of the free tracer and of the tracer in
+        //! solution (TRDIFxxx)
+        double free_diffusion_coefficient = 0.0;
+        double solution_diffusion_coefficient = 0.0;
         std::string fname() const {
             return this->name + "F";
         }
@@ -109,7 +112,8 @@ public:
                    this->solution_concentration == data.solution_concentration &&
                    this->free_tvdp == data.free_tvdp &&
                    this->solution_tvdp == data.solution_tvdp &&
-                   this->diffusion_coefficient == data.diffusion_coefficient;
+                   this->free_diffusion_coefficient == data.free_diffusion_coefficient &&
+                   this->solution_diffusion_coefficient == data.solution_diffusion_coefficient;
         }
 
         template<class Serializer>
@@ -122,7 +126,8 @@ public:
             serializer(solution_concentration);
             serializer(this->free_tvdp);
             serializer(this->solution_tvdp);
-            serializer(this->diffusion_coefficient);
+            serializer(this->free_diffusion_coefficient);
+            serializer(this->solution_diffusion_coefficient);
         }
     };
 
@@ -156,8 +161,8 @@ public:
     std::string get_unit_string(const UnitSystem& unit_system, const std::string & tracer_kw) const;
 
 private:
-    //! Set the molecular diffusion coefficients from a TRCDIFF keyword.
-    void applyDiffusion(const DeckKeyword& keyword);
+    //! Set the molecular diffusion coefficients of the tracers from the TRDIFxxx keywords.
+    void applyDiffusion(const Deck& deck);
 
     std::vector<TracerEntry> tracers;
 

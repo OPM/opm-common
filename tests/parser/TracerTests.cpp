@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(TracerConfigTest)
 
 namespace {
 
-Deck createDiffusionDeck(const std::string& trcdiff, const std::string& unit = "METRIC")
+Deck createDiffusionDeck(const std::string& trdif, const std::string& unit = "METRIC")
 {
     return Parser{}.parseString(R"xxx(RUNSPEC
 DIMENS
@@ -134,44 +134,65 @@ TRACER
 SEA  WAT  /
 OCE  GAS /
 /
-)xxx" + trcdiff);
+)xxx" + trdif);
 }
 
 } // Anonymous namespace
 
 BOOST_AUTO_TEST_CASE(TracerDiffusionTest)
 {
-    const auto deck = createDiffusionDeck("TRCDIFF\n SEA 1.0E-9 /\n/\n");
+    // Different coefficients for the free tracer and the tracer in solution
+    const auto deck = createDiffusionDeck("TRDIFSEA\n 1.0E-9 2.0E-9 /\n");
     const auto state = EclipseState{deck};
     const auto& tc = state.tracer();
 
     // METRIC input is m2/day, stored in SI (m2/s)
-    BOOST_CHECK_CLOSE(tc["SEA"].diffusion_coefficient, 1.0e-9 / 86400.0, 1e-6);
-    // Tracers without a TRCDIFF record have no diffusion
-    BOOST_CHECK_EQUAL(tc["OCE"].diffusion_coefficient, 0.0);
+    BOOST_CHECK_CLOSE(tc["SEA"].free_diffusion_coefficient, 1.0e-9 / 86400.0, 1e-6);
+    BOOST_CHECK_CLOSE(tc["SEA"].solution_diffusion_coefficient, 2.0e-9 / 86400.0, 1e-6);
+    // Tracers without a TRDIFxxx keyword have no diffusion
+    BOOST_CHECK_EQUAL(tc["OCE"].free_diffusion_coefficient, 0.0);
+    BOOST_CHECK_EQUAL(tc["OCE"].solution_diffusion_coefficient, 0.0);
+}
+
+BOOST_AUTO_TEST_CASE(TracerDiffusionSolutionDefaultTest)
+{
+    // The coefficient of the tracer in solution defaults to the one of the free tracer
+    for (const auto* record : {"TRDIFOCE\n 3.0E-9 /\n", "TRDIFOCE\n 3.0E-9 1* /\n"}) {
+        const auto state = EclipseState{createDiffusionDeck(record)};
+        const auto& tracer = state.tracer()["OCE"];
+        BOOST_CHECK_CLOSE(tracer.free_diffusion_coefficient, 3.0e-9 / 86400.0, 1e-6);
+        BOOST_CHECK_EQUAL(tracer.solution_diffusion_coefficient, tracer.free_diffusion_coefficient);
+    }
+
+    // Both coefficients can be given for several tracers, and 0 for the free tracer only
+    const auto state = EclipseState{createDiffusionDeck("TRDIFSEA\n 1.0E-9 /\nTRDIFOCE\n 0.0 4.0E-9 /\n")};
+    BOOST_CHECK_CLOSE(state.tracer()["SEA"].free_diffusion_coefficient, 1.0e-9 / 86400.0, 1e-6);
+    BOOST_CHECK_EQUAL(state.tracer()["OCE"].free_diffusion_coefficient, 0.0);
+    BOOST_CHECK_CLOSE(state.tracer()["OCE"].solution_diffusion_coefficient, 4.0e-9 / 86400.0, 1e-6);
 }
 
 BOOST_AUTO_TEST_CASE(TracerDiffusionUnitTest)
 {
     // LAB: cm2/hr -> m2/s
-    const auto deck = createDiffusionDeck("TRCDIFF\n SEA 36.0 /\n/\n", "LAB");
+    const auto deck = createDiffusionDeck("TRDIFSEA\n 36.0 72.0 /\n", "LAB");
     const auto state = EclipseState{deck};
-    BOOST_CHECK_CLOSE(state.tracer()["SEA"].diffusion_coefficient, 36.0e-4 / 3600.0, 1e-6);
+    BOOST_CHECK_CLOSE(state.tracer()["SEA"].free_diffusion_coefficient, 36.0e-4 / 3600.0, 1e-6);
+    BOOST_CHECK_CLOSE(state.tracer()["SEA"].solution_diffusion_coefficient, 72.0e-4 / 3600.0, 1e-6);
 }
 
 BOOST_AUTO_TEST_CASE(TracerDiffusionErrorTest)
 {
-    // Unknown tracer
-    BOOST_CHECK_THROW(EclipseState{createDiffusionDeck("TRCDIFF\n XXX 1.0E-9 /\n/\n")},
-                      OpmInputError);
-    // Negative diffusion coefficient
-    BOOST_CHECK_THROW(EclipseState{createDiffusionDeck("TRCDIFF\n SEA -1.0E-9 /\n/\n")},
-                      OpmInputError);
+    // Negative diffusion coefficients
+    BOOST_CHECK_THROW(EclipseState{createDiffusionDeck("TRDIFSEA\n -1.0E-9 /\n")}, OpmInputError);
+    BOOST_CHECK_THROW(EclipseState{createDiffusionDeck("TRDIFSEA\n 1.0E-9 -2.0E-9 /\n")}, OpmInputError);
+
+    // A tracer that is not declared in TRACER only gives a warning (as for TBLKFxxx)
+    BOOST_CHECK_NO_THROW(EclipseState{createDiffusionDeck("TRDIFXXX\n 1.0E-9 /\n")});
 }
 
 BOOST_AUTO_TEST_CASE(TracerDiffusionWithoutTracerTest)
 {
-    // TRCDIFF requires tracers declared with TRACER (requires clause of the keyword)
+    // TRDIFxxx requires tracers declared with TRACER (requires clause of the keyword)
     BOOST_CHECK_THROW(Parser{}.parseString(R"xxx(RUNSPEC
 DIMENS
  10 10 10 /
@@ -194,9 +215,8 @@ EQLDIMS
 
 PROPS
 
-TRCDIFF
- SEA 1.0E-9 /
-/
+TRDIFSEA
+ 1.0E-9 /
 )xxx"), OpmInputError);
 }
 

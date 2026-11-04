@@ -3,17 +3,24 @@
   "sections": [
     "PROPS"
   ],
-  "deck_name_regex": "TRDIF.+",
+  "requires": ["TRACER"],
+  "deck_name_regex": "TRDIF.{1,3}",
   "size": {
     "keyword": "TABDIMS",
     "item": "NTPVT"
   },
+  "description": "Molecular diffusion coefficients of the tracer XXX declared with TRACER, as TRDIFXXX. The first coefficient is for the free tracer and the second for the tracer in solution (dissolved gas or vaporized oil), which defaults to the first. Tracers without TRDIFXXX have no diffusion. Only the first PVT region is used.",
   "items": [
     {
-      "name": "HALF_TIME",
+      "name": "DIFFCOEF1",
       "value_type": "DOUBLE",
-      "dimension": "Time",
-      "default": 1e+20
+      "default": 0,
+      "dimension": "Length*Length/Time"
+    },
+    {
+      "name": "DIFFCOEF2",
+      "value_type": "DOUBLE",
+      "dimension": "Length*Length/Time"
     }
   ]
 }

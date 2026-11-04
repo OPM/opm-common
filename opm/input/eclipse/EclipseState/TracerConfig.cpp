@@ -76,7 +76,6 @@ TracerConfig::TracerConfig([[maybe_unused]] const UnitSystem& unit_system,
                            const Deck&                        deck)
 {
     using TR = ParserKeywords::TRACER;
-    using TRCDIFF = ParserKeywords::TRCDIFF;
 
     this->supportsSolutionGasTracer_ = deck.hasKeyword<ParserKeywords::DISGAS>();
     this->supportsVaporisedOilTracer_ = deck.hasKeyword<ParserKeywords::VAPOIL>();
@@ -196,33 +195,57 @@ TracerConfig::TracerConfig([[maybe_unused]] const UnitSystem& unit_system,
         this->tracers.emplace_back(name, unit_string, phase);
     }
 
-    if (deck.hasKeyword<TRCDIFF>()) {
-        this->applyDiffusion(deck.get<TRCDIFF>().back());
-    }
+    this->applyDiffusion(deck);
 }
 
-void TracerConfig::applyDiffusion(const DeckKeyword& keyword)
+void TracerConfig::applyDiffusion(const Deck& deck)
 {
-    using TRCDIFF = ParserKeywords::TRCDIFF;
+    using TRDIF = ParserKeywords::TRDIF;
 
-    for (const auto& record : keyword) {
-        const auto& name = record.getItem<TRCDIFF::TRACER>().getTrimmedString(0);
-        const auto iter = std::ranges::find_if(this->tracers,
-                                               [&name](const TracerEntry& tracer)
-                                               { return tracer.name == name; });
-        if (iter == this->tracers.end()) {
-            throw OpmInputError(fmt::format("Tracer {} is not declared in TRACER", name),
+    for (auto& tracer : this->tracers) {
+        const auto keywordName = "TRDIF" + tracer.name;
+        if (!deck.hasKeyword(keywordName)) {
+            continue;
+        }
+
+        const auto& keyword = deck[keywordName].back();
+        if (keyword.size() > 1) {
+            OpmLog::warning(keyword.location().format("Only the first PVT region of {keyword} "
+                                                      "in {file} line {line} is used"));
+        }
+
+        // The coefficient of the tracer in solution defaults to the one of the free tracer.
+        const auto& record = keyword.getRecord(0);
+        const auto& freeItem = record.getItem<TRDIF::DIFFCOEF1>();
+        const auto& solutionItem = record.getItem<TRDIF::DIFFCOEF2>();
+        const double free = freeItem.getSIDouble(0);
+        const double solution = solutionItem.hasValue(0) ? solutionItem.getSIDouble(0) : free;
+        if (free < 0.0 || solution < 0.0) {
+            throw OpmInputError(fmt::format("The diffusion coefficients of tracer {} "
+                                            "must not be negative", tracer.name),
                                 keyword.location());
         }
 
-        const double diffusion = record.getItem<TRCDIFF::D_MOL>().getSIDouble(0);
-        if (diffusion < 0.0) {
-            throw OpmInputError(fmt::format("The diffusion coefficient of tracer {} "
-                                            "must not be negative", name),
-                                keyword.location());
+        tracer.free_diffusion_coefficient = free;
+        tracer.solution_diffusion_coefficient = solution;
+    }
+
+    // Diffusion keywords of tracers that are not declared are most likely a mistake
+    for (const auto& keyword : deck) {
+        const auto& name = keyword.name();
+        if (name.size() <= 5 || !name.starts_with("TRDIF")) {
+            continue;
         }
 
-        iter->diffusion_coefficient = diffusion;
+        const auto tracerName = name.substr(5);
+        if (std::ranges::none_of(this->tracers,
+                                 [&tracerName](const TracerEntry& tracer)
+                                 { return tracer.name == tracerName; }))
+        {
+            OpmLog::warning(keyword.location().format("Tracer " + tracerName +
+                                                      " of {keyword} in {file} line {line} "
+                                                      "is not declared in TRACER"));
+        }
     }
 }
 
@@ -231,7 +254,8 @@ TracerConfig TracerConfig::serializationTestObject()
     TracerConfig result;
 
     result.tracers = {{"test", "", Phase::OIL, {1.0}}};
-    result.tracers.front().diffusion_coefficient = 2.5e-9;
+    result.tracers.front().free_diffusion_coefficient = 2.5e-9;
+    result.tracers.front().solution_diffusion_coefficient = 3.5e-9;
     result.supportsSolutionGasTracer_ = true;
     result.supportsVaporisedOilTracer_ = true;
 
