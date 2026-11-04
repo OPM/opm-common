@@ -71,7 +71,8 @@ namespace Opm
 {
 template <class Scalar,
           class IndexTraits,
-          template <typename> typename Storage>
+          template <typename> typename Storage,
+          class PvtApproaches>
 class FLUIDSYSTEM_CLASSNAME_STATIC;
 }
 
