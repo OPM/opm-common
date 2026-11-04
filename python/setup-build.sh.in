@@ -4,12 +4,19 @@
 # script setup-build.sh from this templated file - that script can be used to
 # run the python setup.py process without going through cmake.
 #
+# With a multi-config generator there is one script per configuration,
+# e.g. setup-build-Release.sh.
+#
 # The script in question is purely a convenience for Python development, it is
 # fully optional to use it, and it is not used by the main cmake based build
 # system.
 
-cp -r @PROJECT_SOURCE_DIR@/python @PROJECT_BINARY_DIR@
-cd @PROJECT_BINARY_DIR@/python
+# Python tree of the configuration this script was generated for.
+OPM_PYTHON_DIR="@OPM_COMMON_PYTHON_BUILD_DIR@"
+
+mkdir -p "$OPM_PYTHON_DIR"
+cp -r @PROJECT_SOURCE_DIR@/python/. "$OPM_PYTHON_DIR"
+cd "$OPM_PYTHON_DIR"
 rm -f opm/libopmcommon_python*
 
 export CC=@CMAKE_CXX_COMPILER@

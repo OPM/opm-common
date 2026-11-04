@@ -50,10 +50,18 @@ macro(opm-common_prereqs_hook)
       message(SEND_ERROR "OPM requires python >= 3.3 but only version ${Python3_VERSION} was found")
     endif()
 
+    # Set the build directory for the python modules.
+    get_property(_opm_multi_config GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
+    # The build directory for the python modules is set to a configuration specific.
+    set(OPM_COMMON_PYTHON_BUILD_DIR ${PROJECT_BINARY_DIR}/python/$<$<BOOL:${_opm_multi_config}>:$<CONFIG>>)
+    # Name suffix of per-configuration files kept in the build root, such as
+    # the setup-*.sh helper scripts: empty, or -<config> if multi-config.
+    set(OPM_PYTHON_SCRIPT_SUFFIX $<$<BOOL:${_opm_multi_config}>:-$<CONFIG>>)
+
     # Directory to install common (for opm modules) python scripts
     set(OPM_PYTHON_COMMON_DIR "${CMAKE_INSTALL_DATAROOTDIR}/opm/python")
     string(APPEND OPM_PROJECT_EXTRA_CODE_INTREE
-      "\n  set(opm-common_PYTHON_COMMON_DIR ${PROJECT_SOURCE_DIR}/python)")
+      "\n  set(opm-common_PYTHON_COMMON_DIR ${OPM_COMMON_PYTHON_BUILD_DIR})")
     string(APPEND OPM_PROJECT_EXTRA_CODE_INSTALLED
         "\n  set(opm-common_PYTHON_COMMON_DIR ${CMAKE_INSTALL_PREFIX}/${OPM_PYTHON_COMMON_DIR})")
 
@@ -84,15 +92,15 @@ macro(opm-common_sources_hook)
   include(GenerateKeywords.cmake)
 
   # Append generated sources
-  list(INSERT opm-common_SOURCES 0 ${PROJECT_BINARY_DIR}/ParserInit.cpp)
+  list(INSERT opm-common_SOURCES 0 ${PROJECT_BINARY_DIR}/generated/ParserInit.cpp)
   foreach (name A B C D E F G H I J K L M N O P Q R S T U V W X Y Z)
-    list(INSERT opm-common_SOURCES 0 ${PROJECT_BINARY_DIR}/ParserKeywords/${name}.cpp)
-    list(INSERT opm-common_SOURCES 0 ${PROJECT_BINARY_DIR}/ParserKeywords/ParserInit${name}.cpp)
-    list(INSERT opm-common_SOURCES 0 ${PROJECT_BINARY_DIR}/ParserKeywords/Builtin${name}.cpp)
+    list(INSERT opm-common_SOURCES 0 ${PROJECT_BINARY_DIR}/generated/ParserKeywords/${name}.cpp)
+    list(INSERT opm-common_SOURCES 0 ${PROJECT_BINARY_DIR}/generated/ParserKeywords/ParserInit${name}.cpp)
+    list(INSERT opm-common_SOURCES 0 ${PROJECT_BINARY_DIR}/generated/ParserKeywords/Builtin${name}.cpp)
   endforeach()
 
   if (OPM_ENABLE_EMBEDDED_PYTHON)
-    list(INSERT opm-common_SOURCES 0 ${PROJECT_BINARY_DIR}/python/cxx/builtin_pybind11.cpp)
+    list(INSERT opm-common_SOURCES 0 ${PROJECT_BINARY_DIR}/generated/python/cxx/builtin_pybind11.cpp)
     set_source_files_properties(${PYTHON_CXX_SOURCE_FILES} PROPERTIES COMPILE_FLAGS -Wno-shadow)
     set_source_files_properties(opm/input/eclipse/Python/PythonInterp.cpp PROPERTIES COMPILE_FLAGS -Wno-shadow)
     set_source_files_properties(opm/input/eclipse/Schedule/Action/PyAction.cpp PROPERTIES COMPILE_FLAGS -Wno-shadow)
@@ -107,7 +115,8 @@ macro(opm-common_sources_hook)
   if (OPM_ENABLE_PYTHON)
     # Set the path to the input docstrings.json file and the output .hpp file
     set(PYTHON_DOCSTRINGS_FILE "${PROJECT_SOURCE_DIR}/python/docstrings_common.json")
-    set(PYTHON_DOCSTRINGS_GENERATED_HPP "${PROJECT_BINARY_DIR}/python/cxx/OpmCommonPythonDoc.hpp")
+    set(PYTHON_DOCSTRINGS_GENERATED_HPP "${PROJECT_BINARY_DIR}/generated/include/python/cxx/OpmCommonPythonDoc.hpp")
+    file(MAKE_DIRECTORY "${PROJECT_BINARY_DIR}/generated/include/python/cxx")
     # Command to run the Python script
     add_custom_command(
         OUTPUT
@@ -144,63 +153,50 @@ endmacro()
 
 macro(opm-common_files_hook)
   if (OPM_ENABLE_PYTHON)
-    make_directory(${PROJECT_BINARY_DIR}/python)
-    set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES ${PROJECT_BINARY_DIR}/python)
+    make_directory(${OPM_COMMON_PYTHON_BUILD_DIR})
+    set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES ${OPM_COMMON_PYTHON_BUILD_DIR})
     set(opm-common_PYTHON_PACKAGE_VERSION ${OPM_PYTHON_PACKAGE_VERSION_TAG})
 
-    file(
-      COPY
-        ${PROJECT_SOURCE_DIR}/python/README.md
-        ${PROJECT_SOURCE_DIR}/python/MANIFEST.in
-      DESTINATION
-        ${PROJECT_BINARY_DIR}/python
-    )
-
-    # Generate versioned setup.py
+    # Generate a versioned setup.py per configuration, next to the package it
+    # describes. The other packaging files are copied by copy_python.
     configure_file(${PROJECT_SOURCE_DIR}/python/setup.py.in
-                   ${PROJECT_BINARY_DIR}/python/setup.py.tmp)
+                   ${PROJECT_BINARY_DIR}/tmp_gen/setup.py)
     file(
       GENERATE
         OUTPUT
-          ${PROJECT_BINARY_DIR}/python/setup.py
+          ${OPM_COMMON_PYTHON_BUILD_DIR}/setup.py
         INPUT
-          ${PROJECT_BINARY_DIR}/python/setup.py.tmp
+          ${PROJECT_BINARY_DIR}/tmp_gen/setup.py
+    )
+
+    # Environment script, one per configuration (library dir differs).
+    configure_file(python/enable-python.sh.in tmp_gen/enable-python.sh @ONLY)
+    file(
+      GENERATE
+        OUTPUT
+          ${OPM_COMMON_PYTHON_BUILD_DIR}/enable-python.sh
+        INPUT
+          ${PROJECT_BINARY_DIR}/tmp_gen/enable-python.sh
     )
 
     # -------------------------------------------------------------------------
     # Let cmake configure some small shell scripts which can be used to simplify
-    # building, testing and installation of the Python extensions.
-    configure_file(python/setup-build.sh.in tmp/setup-build.sh)
-    file(
-      COPY
-        ${PROJECT_BINARY_DIR}/tmp/setup-build.sh
-      DESTINATION
-        ${PROJECT_BINARY_DIR}
-       FILE_PERMISSIONS
-        OWNER_READ OWNER_WRITE OWNER_EXECUTE
-    )
-
-    configure_file(python/setup-test.sh.in tmp/setup-test.sh)
-    file(
-      COPY
-        ${PROJECT_BINARY_DIR}/tmp/setup-test.sh
-      DESTINATION
-        ${PROJECT_BINARY_DIR}
-      FILE_PERMISSIONS
-        OWNER_READ OWNER_WRITE OWNER_EXECUTE
-    )
-
-    configure_file(python/setup-install.sh.in tmp/setup-install.sh)
-    file(
-      COPY
-        ${PROJECT_BINARY_DIR}/tmp/setup-install.sh
-      DESTINATION
-        ${PROJECT_BINARY_DIR}
-      FILE_PERMISSIONS
-        OWNER_READ OWNER_WRITE OWNER_EXECUTE
-    )
-
-    configure_file(python/enable-python.sh.in enable-python.sh)
+    # building, testing and installation of the Python extensions. One set per
+    # configuration: setup-<step>.sh, or setup-<step>-<config>.sh with a
+    # multi-config generator. configure_file fills the @VAR@ placeholders,
+    # file(GENERATE) then evaluates $<CONFIG> per configuration.
+    foreach(_script setup-build setup-test setup-install)
+      configure_file(python/${_script}.sh.in tmp_gen/${_script}.sh @ONLY)
+      file(
+        GENERATE
+          OUTPUT
+            ${PROJECT_BINARY_DIR}/${_script}${OPM_PYTHON_SCRIPT_SUFFIX}.sh
+          INPUT
+            ${PROJECT_BINARY_DIR}/tmp_gen/${_script}.sh
+          FILE_PERMISSIONS
+            OWNER_READ OWNER_WRITE OWNER_EXECUTE
+      )
+    endforeach()
   endif()
 endmacro()
 
@@ -255,10 +251,29 @@ macro(opm-common_tests_hook)
       NAME
         python_tests
       WORKING_DIRECTORY
-        ${PROJECT_BINARY_DIR}/python
+        ${OPM_COMMON_PYTHON_BUILD_DIR}
       COMMAND
         ${Python3_EXECUTABLE} -m unittest discover
     )
+    set_tests_properties(python_tests
+      PROPERTIES
+      ENVIRONMENT_MODIFICATION
+        PYTHONPATH=path_list_prepend:${OPM_COMMON_PYTHON_BUILD_DIR}
+    )
+
+    # The helper scripts generated for the configuration ctest runs with must
+    # exist and parse. bash -n only checks syntax, so nothing is executed.
+    find_program(_opm_bash bash)
+    if(_opm_bash)
+      foreach(_script setup-build setup-test setup-install)
+        add_test(
+          NAME
+            python_${_script}_script
+          COMMAND
+            ${_opm_bash} -n ${PROJECT_BINARY_DIR}/${_script}${OPM_PYTHON_SCRIPT_SUFFIX}.sh
+        )
+      endforeach()
+    endif()
  endif()
 endmacro()
 
@@ -267,6 +282,7 @@ macro(opm-common_targets_hook)
     target_sources(opmcommon PRIVATE $<TARGET_OBJECTS:cjson>)
     target_include_directories(opmcommon PRIVATE ${CMAKE_BINARY_DIR}/_deps)
   endif()
+  target_include_directories(opmcommon PRIVATE ${PROJECT_BINARY_DIR}/generated/include)
 
   target_sources(compareECL
     PRIVATE
@@ -304,32 +320,49 @@ macro(opm-common_targets_hook)
         set_tests_properties(${test}
           PROPERTIES
           ENVIRONMENT_MODIFICATION
-            PYTHONPATH=path_list_prepend:${PROJECT_BINARY_DIR}/python
+            PYTHONPATH=path_list_prepend:${OPM_COMMON_PYTHON_BUILD_DIR}
         )
       endif()
     endforeach()
   endif()
 
   if(OPM_ENABLE_PYTHON)
-    add_custom_target(copy_python ALL
+    # Copy the python source files to the build directory, so that they can be installed from there
+    # together with the generated files.
+    set(_copy_python_commands)
+    foreach(_dir opm opm_embedded tests examples)
+      list(APPEND _copy_python_commands
+        COMMAND
+          $<TARGET_FILE:Python3::Interpreter>
+          ${PROJECT_SOURCE_DIR}/python/install.py
+          ${PROJECT_SOURCE_DIR}/python/${_dir}
+          ${OPM_COMMON_PYTHON_BUILD_DIR}
+          0
+      )
+    endforeach()
+    # Packaging files read by the generated setup.py (setup-*.sh, wheel builds).
+    list(APPEND _copy_python_commands
       COMMAND
-        $<TARGET_FILE:Python3::Interpreter>
-        ${PROJECT_SOURCE_DIR}/python/install.py
-        ${PROJECT_SOURCE_DIR}/python
-        ${PROJECT_BINARY_DIR}
-        0
+        ${CMAKE_COMMAND} -E copy_if_different
+        ${PROJECT_SOURCE_DIR}/python/README.md
+        ${PROJECT_SOURCE_DIR}/python/MANIFEST.in
+        ${PROJECT_SOURCE_DIR}/python/requirements.txt
+        ${PROJECT_SOURCE_DIR}/python/pyproject.toml
+        ${OPM_COMMON_PYTHON_BUILD_DIR}
     )
+    add_custom_target(copy_python ALL ${_copy_python_commands})
 
     pybind11_add_module(opmcommon_python
                         ${PYTHON_CXX_SOURCE_FILES}
-                        ${PROJECT_BINARY_DIR}/python/cxx/builtin_pybind11.cpp)
+                        ${PROJECT_BINARY_DIR}/generated/python/cxx/builtin_pybind11.cpp)
 
+    target_include_directories(opmcommon_python PRIVATE ${PROJECT_BINARY_DIR}/generated/include)
     target_link_libraries(opmcommon_python PRIVATE opmcommon pybind11::module)
     opm_add_target_options(TARGET opmcommon_python)
     set_target_properties(opmcommon_python
       PROPERTIES
       LIBRARY_OUTPUT_DIRECTORY
-        python/opm
+        ${OPM_COMMON_PYTHON_BUILD_DIR}/opm
     )
     add_dependencies(opmcommon_python copy_python)
 
@@ -409,7 +442,7 @@ macro(opm-common_install_hook)
              COMMAND
                $<TARGET_FILE:Python3::Interpreter>
                python/install.py
-               ${PROJECT_BINARY_DIR}/python/opm
+               ${OPM_COMMON_PYTHON_BUILD_DIR}/opm
                ${CMAKE_INSTALL_PREFIX}/${PYTHON_INSTALL_PREFIX}
                1
            )"
@@ -422,7 +455,7 @@ macro(opm-common_install_hook)
              COMMAND
                $<TARGET_FILE:Python3::Interpreter>
                python/install.py
-               ${PROJECT_BINARY_DIR}/python/opm_embedded
+               ${OPM_COMMON_PYTHON_BUILD_DIR}/opm_embedded
                ${CMAKE_INSTALL_PREFIX}/${PYTHON_INSTALL_PREFIX}
                1
            )"
