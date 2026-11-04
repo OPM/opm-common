@@ -56,6 +56,8 @@
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 
 #include <cstddef>
+#include <fstream>
+#include <iterator>
 #include <memory>
 #include <set>
 #include <stdexcept>
@@ -2139,7 +2141,28 @@ WELSEGS
 BOOST_AUTO_TEST_CASE(loadCOMPTRAJTESTSPE1_MSW) {
   Opm::Parser parser;
 
-  const auto deck = parser.parseFile("SPE1CASE1_WELTRAJ_MSW.DATA");
+  std::ifstream input;
+  input.exceptions(std::ios::failbit | std::ios::badbit);
+  input.open("SPE1CASE1_WELTRAJ.DATA");
+  std::string deck_text{std::istreambuf_iterator<char>{input},
+                        std::istreambuf_iterator<char>{}};
+  const auto oil_pos = deck_text.find("\nOIL\n");
+  BOOST_REQUIRE(oil_pos != std::string::npos);
+  deck_text.insert(oil_pos, R"(
+WSEGDIMS
+  2 10 1 1 /
+)");
+  const auto trajectory_pos = deck_text.find("\nWELTRAJ\n");
+  BOOST_REQUIRE(trajectory_pos != std::string::npos);
+  deck_text.insert(trajectory_pos, R"(
+WELSEGS
+  INJ 8325.0 8325.0 1* ABS 'HF-' /
+/
+WELSEGS
+  PROD 8325.0 8325.0 1* ABS 'HF-' /
+/
+)");
+  const auto deck = parser.parseString(deck_text);
   auto python = std::make_shared<Opm::Python>();
   Opm::EclipseState state(deck);
   Opm::Schedule sched(deck, state, python);
@@ -2153,9 +2176,9 @@ BOOST_AUTO_TEST_CASE(loadCOMPTRAJTESTSPE1_MSW) {
         WELLNAME: 'PROD'
         # X   Y    TVDMSL   MDMSL
         3400.00     4500.00     8325.00     8325.00
-        3858.19     4688.67     8374.60     8825.00
-        5326.76     6005.95     8403.97     10825.00
-        6500.00     7300.00     8410.00     12571.74
+        3858.19     4688.67     8374.60     8822.99
+        5326.76     6005.95     8403.97     10796.0
+        6500.00     7300.00     8410.00     12542.7
         -999
      and adjusting the completion data in agreement with the COMPTRAJ data in the input file
    */
@@ -2170,7 +2193,7 @@ BOOST_AUTO_TEST_CASE(loadCOMPTRAJTESTSPE1_MSW) {
   }
 
   const std::array<double, 10> lengths{
-    8325.0, 8425.8, 8689.4, 8935.1, 9157.9, 9838.8, 10597.0, 11321.0, 11997.0, 12369.0
+    8325.0, 8425.4, 8687.8, 8931.7, 9151.4, 9823.1, 10572.0, 11292.7, 11968.0, 12340.2
   };
   BOOST_CHECK_EQUAL(segments.size(), 10);
   for (std::size_t i = 0; i < segments.size(); ++i) {
