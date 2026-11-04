@@ -236,6 +236,24 @@ Connection ({},{},{}) (direction '{}') for well {} ignored because
             * ctf_props.Ke / (ctf_props.connection_length * ctf_props.rw);
     }
 
+    // ResInsight's calculateCellMainDirection: compare fractions of the cell
+    // crossed along each local axis. All ties fall back to Z.
+    Opm::Connection::Direction
+    trajectoryDirection(const external::cvf::Vec3d& lengths,
+                        const std::array<double, 3>& dimensions)
+    {
+        const auto x = std::abs(lengths[0] / dimensions[0]);
+        const auto y = std::abs(lengths[1] / dimensions[1]);
+        const auto z = std::abs(lengths[2] / dimensions[2]);
+        if ((x > y) && (x > z)) {
+            return Opm::Connection::Direction::X;
+        }
+        if ((y > x) && (y > z)) {
+            return Opm::Connection::Direction::Y;
+        }
+        return Opm::Connection::Direction::Z;
+    }
+
     // Calculate permeability thickness Kh for line segment in a cell for x,y,z directions
     std::array<double, 3>
     permThickness(const external::cvf::Vec3d& effective_connection,
@@ -961,11 +979,27 @@ The cell ({},{},{}) in well {} is not active and the connection will be ignored)
                 props->permx, props->permy, props->permz
             };
 
+            if (!std::ranges::all_of(cell.dimensions, [](const double d)
+                                    { return std::isfinite(d) && (d != 0.0); }))
+            {
+                OpmLog::warning(fmt::format(
+                    "COMPTRAJ in {} line {}: cell ({},{},{}) of well {} has "
+                    "non-finite or zero dimensions. The connection will be ignored",
+                    location.filename, location.lineno,
+                    ijk[0] + 1, ijk[1] + 1, ijk[2] + 1, wname));
+                continue;
+            }
+
+            auto direction = trajectoryDirection(
+                intersections[pieces.front()].intersectionLengthsInCellCS, cell.dimensions);
+            auto strongest_crossing_cf = -1.0;
+
             if (ctf_kind == Connection::CTFKind::DeckValue) {
                 // The values given in the record apply once to each cell,
                 // however often the trajectory enters it.
                 ctf_props.CF = deck_CF;
                 ctf_props.Kh = deck_Kh;
+                strongest_crossing_cf = deck_CF;
             }
             else {
                 // We must calculate CF and Kh from the items in the
@@ -984,9 +1018,14 @@ The cell ({},{},{}) in well {} is not active and the connection will be ignored)
 
                     ctf_props.connection_length += connection_vector.length();
 
-                    ctf_props.CF += std::hypot(connection_factor[0],
-                                               connection_factor[1],
-                                               connection_factor[2]);
+                    const auto crossing_cf = std::hypot(connection_factor[0],
+                                                        connection_factor[1],
+                                                        connection_factor[2]);
+                    ctf_props.CF += crossing_cf;
+                    if (crossing_cf > strongest_crossing_cf) {
+                        strongest_crossing_cf = crossing_cf;
+                        direction = trajectoryDirection(connection_vector, cell.dimensions);
+                    }
 
                     ctf_props.Kh += std::hypot(perm_thickness[0],
                                                perm_thickness[1],
@@ -1014,8 +1053,6 @@ Branch {} of well {} yields a non-representable connection transmissibility fact
             // Todo: check what needs to be done for polymerMW module, see
             // loadCOMPDAT used by the PolymerMW module
 
-            const auto direction = ::Opm::Connection::Direction::Z;
-
             {
                 const auto K = permComponents(direction, cell_perm);
                 ctf_props.Ke = std::sqrt(K[0] * K[1]);
@@ -1025,6 +1062,8 @@ Branch {} of well {} yields a non-representable connection transmissibility fact
                 .interval = interval,
                 .kind = ctf_kind,
                 .ctf = ctf_props,
+                .direction = direction,
+                .strongest_crossing_cf = strongest_crossing_cf,
             };
 
             const auto prev =

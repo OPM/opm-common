@@ -221,6 +221,14 @@ namespace Opm {
             /// Properties of the interval's perforation of the cell.
             CTFProperties ctf{};
 
+            /// Direction of the crossing with the largest CF, using cell-local
+            /// lengths divided by cell dimensions (as in ResInsight).
+            Direction direction{Direction::Z};
+
+            /// Individual crossing CF, not the sum over this interval.
+            /// For explicit CFs, use the value supplied for the cell.
+            double strongest_crossing_cf{};
+
             bool operator==(const IntervalContribution&) const = default;
 
             /// Serialisation operator
@@ -236,6 +244,8 @@ namespace Opm {
                 serializer(this->interval);
                 serializer(this->kind);
                 serializer(this->ctf);
+                serializer(this->direction);
+                serializer(this->strongest_crossing_cf);
             }
         };
 
