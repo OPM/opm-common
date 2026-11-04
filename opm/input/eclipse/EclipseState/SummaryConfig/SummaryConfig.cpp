@@ -559,8 +559,8 @@ namespace {
             // Filtrate injection volumes
             "FCFFVIT", "FCWFVIT", "FCFVIT",
 
-            // Water injection volumes in fracture
-            "WITFRAC",
+            // Water, gas and oil injection volumes in fracture
+            "WITFRAC", "GITFRAC", "OITFRAC",
         };
 
         return is_in_set(totalkw, keyword.substr(1))

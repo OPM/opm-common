@@ -86,7 +86,11 @@
     "CMUPRL",
     "CMUPTL",
     "CWIRFRAC",
-    "CWITFRAC"
+    "CWITFRAC",
+    "CGIRFRAC",
+    "CGITFRAC",
+    "COIRFRAC",
+    "COITFRAC"
   ],
   "items": [
     {

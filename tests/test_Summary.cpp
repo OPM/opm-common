@@ -236,6 +236,7 @@ data::Wells result_wells(const bool w3_injector = true)
     rates3.set( rt::brine, 30.17 / day );
     rates3.set( rt::tracer, 30.18 / day, "SEA" );
     rates3.set( rt::wat_frac, 0.1729 / day );
+    rates3.set( rt::gas_frac, 271.8 / day );
 
     data::Rates rates6;
     rates6.set( rt::wat, 60.0 / day );
@@ -293,6 +294,7 @@ data::Wells result_wells(const bool w3_injector = true)
     crates3.set( rt::polymer, 300.16 / day );
     crates3.set( rt::brine, 300.17 / day );
     crates3.set( rt::wat_frac, 0.618 / day );
+    crates3.set( rt::gas_frac, 314.1 / day );
 
     data::Rates crates6;
     crates6.set( rt::wat, 600.0 / day );
@@ -1599,6 +1601,12 @@ BOOST_AUTO_TEST_CASE(well_keywords_dynamic_close)
     BOOST_CHECK_CLOSE(0.1729, ecl_sum_get_well_var(resp, 1, "W_3", "WWITFRAC"), 1.0e-5);
     BOOST_CHECK_CLOSE(0.3458, ecl_sum_get_well_var(resp, 2, "W_3", "WWITFRAC"), 1.0e-5);
 
+    // Gas routed into fractures (gas injectors)
+    BOOST_CHECK_CLOSE(271.8, ecl_sum_get_well_var(resp, 1, "W_3", "WGIRFRAC"), 1.0e-5);
+    BOOST_CHECK_CLOSE(271.8, ecl_sum_get_well_var(resp, 2, "W_3", "WGIRFRAC"), 1.0e-5);
+    BOOST_CHECK_CLOSE(271.8, ecl_sum_get_well_var(resp, 1, "W_3", "WGITFRAC"), 1.0e-5);
+    BOOST_CHECK_CLOSE(543.6, ecl_sum_get_well_var(resp, 2, "W_3", "WGITFRAC"), 1.0e-5);
+
     // WFCFVIR == WFCFFVIR + WFCWFVIR
     BOOST_CHECK_CLOSE( ecl_sum_get_well_var( resp, 1, "W_3", "WFCFFVIR")
                      + ecl_sum_get_well_var( resp, 1, "W_3", "WFCWFVIR"),
@@ -2488,6 +2496,11 @@ BOOST_AUTO_TEST_CASE(connection_kewords)
 
     BOOST_CHECK_CLOSE(0.618, ecl_sum_get_well_connection_var(resp, 1, "W_3", "CWITFRAC", 3, 1, 1), 1.0e-5);
     BOOST_CHECK_CLOSE(1.236, ecl_sum_get_well_connection_var(resp, 2, "W_3", "CWITFRAC", 3, 1, 1), 1.0e-5);
+
+    BOOST_CHECK_CLOSE(314.1, ecl_sum_get_well_connection_var(resp, 1, "W_3", "CGIRFRAC", 3, 1, 1), 1.0e-5);
+    BOOST_CHECK_CLOSE(314.1, ecl_sum_get_well_connection_var(resp, 2, "W_3", "CGIRFRAC", 3, 1, 1), 1.0e-5);
+    BOOST_CHECK_CLOSE(314.1, ecl_sum_get_well_connection_var(resp, 1, "W_3", "CGITFRAC", 3, 1, 1), 1.0e-5);
+    BOOST_CHECK_CLOSE(628.2, ecl_sum_get_well_connection_var(resp, 2, "W_3", "CGITFRAC", 3, 1, 1), 1.0e-5);
 
     BOOST_CHECK_CLOSE(12.34, ecl_sum_get_well_connection_var(resp, 1, "W_3", "CFRAREA", 3, 1, 1), 1.0e-5);
     BOOST_CHECK_CLOSE(12.34, ecl_sum_get_well_connection_var(resp, 2, "W_3", "CFRAREA", 3, 1, 1), 1.0e-5);
