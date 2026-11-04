@@ -1348,6 +1348,7 @@ list(APPEND PUBLIC_HEADER_FILES
   opm/material/common/ConditionalStorage.hpp
   opm/material/common/EnsureFinalized.hpp
   opm/material/common/FastSmallVector.hpp
+  opm/material/common/GpuTableHelpers.hpp
   opm/material/common/HasMemberGeneratorMacros.hpp
   opm/material/common/IntervalTabulated2DFunction.hpp
   opm/material/common/MathToolbox.hpp
