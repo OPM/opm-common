@@ -2121,6 +2121,7 @@ TITLE
   Test PVTG Output
 
 GAS
+VAPOIL
 
 METRIC
 
@@ -2307,6 +2308,7 @@ TITLE
   Test PVTG Output
 
 GAS
+VAPOIL
 
 METRIC
 
@@ -2449,6 +2451,7 @@ TITLE
   Test PVTG Output
 
 GAS
+VAPOIL
 
 METRIC
 
@@ -2905,6 +2908,7 @@ TITLE
   Test PVTO Output
 
 OIL
+DISGAS
 WATER
 
 FIELD
@@ -3025,6 +3029,7 @@ TITLE
   Test PVTO Output
 
 OIL
+DISGAS
 WATER
 
 METRIC
@@ -3202,6 +3207,7 @@ TITLE
   Test PVTO Output
 
 OIL
+DISGAS
 WATER
 
 METRIC
