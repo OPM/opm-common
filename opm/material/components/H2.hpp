@@ -33,6 +33,7 @@
 
 #include <opm/material/IdealGas.hpp>
 #include <opm/material/components/Component.hpp>
+#include <opm/material/components/ComponentCp.hpp>
 #include <opm/material/common/UniformTabulated2DFunction.hpp>
 #include <opm/material/densead/Math.hpp>
 
@@ -154,6 +155,23 @@ public:
      * \brief Acentric factor of \f$H_2\f$.
      */
     static Scalar acentricFactor() { return -0.22; }
+
+    /*!
+     * \brief Cubic ideal-gas heat-capacity polynomial of hydrogen \f$\mathrm{[J/(mol\ K)]}\f$.
+     *
+     * Least-squares fit to the ideal-gas part of the equation of state of
+     * Leachman et al., J. Phys. Chem. Ref. Data 38 (2009) 721, over
+     * 250-600 K (RMS 0.017, max 0.053 J/(mol K)), sampled with CoolProp
+     * 8.0.0. Not valid outside that range; below it the cubic does not
+     * follow the drop of the rotational heat capacity of hydrogen.
+     *
+     * This is the ideal-gas heat capacity used by the compositional mixture
+     * enthalpy (MixtureEnthalpy). It does not implement the Component<>
+     * gasEnthalpy/gasHeatCapacity functions, which are real-fluid
+     * correlations where they exist.
+     */
+    static constexpr ComponentCp<Scalar> idealGasHeatCapacityPolynomial()
+    { return {21.4802, 4.83152e-2, -1.00309e-4, 6.94747e-8, 250.0, 600.0}; }
 
     /*!
     * \brief The vapor pressure in \f$\mathrm{[Pa]}\f$ of pure molecular hydrogen

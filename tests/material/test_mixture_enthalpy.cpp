@@ -40,6 +40,9 @@
 #include <opm/material/components/C1.hpp>
 #include <opm/material/components/C10.hpp>
 #include <opm/material/components/ComponentCp.hpp>
+#include <opm/material/components/H2.hpp>
+#include <opm/material/components/H2O.hpp>
+#include <opm/material/components/N2.hpp>
 #include <opm/material/components/SimpleCO2.hpp>
 #include <opm/material/constraintsolvers/MixtureEnthalpy.hpp>
 
@@ -219,8 +222,9 @@ BOOST_AUTO_TEST_CASE(EnthalpyIntegralMatchesHeatCapacity)
 // expectation from the same coefficients it verifies, so a corrupt row
 // passes it. The pinned values are the ideal-gas heat capacities of the
 // reference equations of state (Setzmann & Wagner 1991 methane; Lemmon &
-// Span 2006 n-decane; Span & Wagner 1996 CO2) at four temperatures spanning
-// the fit range.
+// Span 2006 n-decane; Span & Wagner 1996 CO2; Span et al. 2000 nitrogen;
+// Wagner & Pruss 2002 water; Leachman et al. 2009 hydrogen) at four
+// temperatures spanning the fit range.
 BOOST_AUTO_TEST_CASE(CardsMatchReferenceIdealGasCp)
 {
     constexpr std::array<double, 4> temps{298.15, 350., 450., 600.};
@@ -235,6 +239,12 @@ BOOST_AUTO_TEST_CASE(CardsMatchReferenceIdealGasCp)
          {233.0250, 266.2081, 328.2699, 405.7329}},
         {"carbonDioxide", Opm::SimpleCO2<double>::idealGasHeatCapacityPolynomial(),
          {37.1408, 39.3941, 43.0700, 47.3303}},
+        {"nitrogen", Opm::N2<double>::idealGasHeatCapacityPolynomial(),
+         {29.1253, 29.1665, 29.3869, 30.1091}},
+        {"water", Opm::H2O<double>::idealGasHeatCapacityPolynomial(),
+         {33.5873, 33.8786, 34.7197, 36.3249}},
+        {"hydrogen", Opm::H2<double>::idealGasHeatCapacityPolynomial(),
+         {28.8341, 29.0864, 29.2280, 29.3287}},
     };
 
     for (const auto& pin : pins) {
@@ -251,20 +261,25 @@ BOOST_AUTO_TEST_CASE(CardsMatchReferenceIdealGasCp)
 
 // Each polynomial carries the temperature range of its fit. Inside it the
 // heat capacity is positive and increasing; outside it the cubics turn over.
+// The water fit starts at 275 K, above the triple point of IAPWS-95.
 BOOST_AUTO_TEST_CASE(CardsCarryTheirFitRange)
 {
     const struct {
         const char* name;
         Opm::ComponentCp<double> card;
+        double minTemperature; // [K]
     } cards[] = {
-        {"methane", Opm::C1<double>::idealGasHeatCapacityPolynomial()},
-        {"decane", Opm::C10<double>::idealGasHeatCapacityPolynomial()},
-        {"carbonDioxide", Opm::SimpleCO2<double>::idealGasHeatCapacityPolynomial()},
+        {"methane", Opm::C1<double>::idealGasHeatCapacityPolynomial(), 250.},
+        {"decane", Opm::C10<double>::idealGasHeatCapacityPolynomial(), 250.},
+        {"carbonDioxide", Opm::SimpleCO2<double>::idealGasHeatCapacityPolynomial(), 250.},
+        {"nitrogen", Opm::N2<double>::idealGasHeatCapacityPolynomial(), 250.},
+        {"water", Opm::H2O<double>::idealGasHeatCapacityPolynomial(), 275.},
+        {"hydrogen", Opm::H2<double>::idealGasHeatCapacityPolynomial(), 250.},
     };
 
     for (const auto& c : cards) {
         BOOST_TEST_CONTEXT(c.name) {
-            BOOST_CHECK_EQUAL(c.card.minTemperature, 250.);
+            BOOST_CHECK_EQUAL(c.card.minTemperature, c.minTemperature);
             BOOST_CHECK_EQUAL(c.card.maxTemperature, 600.);
 
             double previous = c.card.heatCapacity(c.card.minTemperature);
