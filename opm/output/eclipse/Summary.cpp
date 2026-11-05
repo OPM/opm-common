@@ -771,7 +771,7 @@ template<> constexpr
 measure rate_unit< rt::mass_wat >() { return measure::mass_rate; }
 
 template<> constexpr
-measure rate_unit< rt::wat_frac >() { return measure::geometric_volume_rate; }
+measure rate_unit< rt::wat_frac >() { return measure::liquid_surface_rate; }
 
 template<> constexpr
 measure rate_unit< rt::gas_frac >() { return measure::gas_surface_rate; }
