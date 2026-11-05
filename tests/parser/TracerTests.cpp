@@ -186,7 +186,7 @@ BOOST_AUTO_TEST_CASE(TracerDiffusionErrorTest)
     BOOST_CHECK_THROW(EclipseState{createDiffusionDeck("TRDIFSEA\n -1.0E-9 /\n")}, OpmInputError);
     BOOST_CHECK_THROW(EclipseState{createDiffusionDeck("TRDIFSEA\n 1.0E-9 -2.0E-9 /\n")}, OpmInputError);
 
-    // A tracer that is not declared in TRACER only gives a warning (as for TBLKFxxx)
+    // TRDIFxxx for a tracer that is not declared in TRACER is ignored, with a warning
     BOOST_CHECK_NO_THROW(EclipseState{createDiffusionDeck("TRDIFXXX\n 1.0E-9 /\n")});
 }
 

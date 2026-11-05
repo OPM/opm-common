@@ -32,7 +32,6 @@
 namespace Opm {
 
 class Deck;
-class DeckKeyword;
 class UnitSystem;
 
 class TracerConfig
