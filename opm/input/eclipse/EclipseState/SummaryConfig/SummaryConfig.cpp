@@ -496,7 +496,7 @@ namespace {
             "OVPR", "GVPR", "WVPR",
             "OPRS", "GPRS", "OPRF", "GPRF",
 
-            "OIR", "GIR", "WIR", "LIR", "NIR", "CIR", "VIR", "TIR", "TIC"
+            "OIR", "GIR", "WIR", "LIR", "NIR", "CIR", "VIR", "TIR", "TIC",
             "OIGR", "GIGR", "WIGR",
             "OIRH", "GIRH", "WIRH",
             "OVIR", "GVIR", "WVIR",
@@ -511,8 +511,8 @@ namespace {
             // Filtrate injection rates
             "FCFFVIR", "FCWFVIR", "FCFVIR",
 
-            // Water injection rate in fracture
-            "WIRFRAC",
+            // Water, gas and oil injection rates in fracture
+            "WIRFRAC", "GIRFRAC", "OIRFRAC",
         };
 
         return is_in_set(ratekw, keyword.substr(1))
@@ -559,8 +559,8 @@ namespace {
             // Filtrate injection volumes
             "FCFFVIT", "FCWFVIT", "FCFVIT",
 
-            // Water injection volumes in fracture
-            "WITFRAC",
+            // Water, gas and oil injection volumes in fracture
+            "WITFRAC", "GITFRAC", "OITFRAC",
         };
 
         return is_in_set(totalkw, keyword.substr(1))

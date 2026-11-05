@@ -125,8 +125,8 @@ namespace {
             // Filtrate injection volumes.
             "FCFFVIT", "FCFVIT", "FCWFVIT",
 
-            // Water injection volumes in fracture.
-            "WITFRAC",
+            // Water, gas and oil injection volumes in fracture.
+            "WITFRAC", "GITFRAC", "OITFRAC",
         };
 
         auto sep_pos = key.find(':');

@@ -5799,6 +5799,59 @@ WINJGAS
 )")), Opm::OpmInputError);
 }
 
+BOOST_AUTO_TEST_CASE(WINJFCNC_concentration_basis) {
+    const auto sched = make_schedule(gptable_deck(R"(
+WELSPECS
+ 'WINJ' 'G1' 1 1 2000 'WATER' /
+ 'GINJ' 'G1' 2 2 2000 'GAS' /
+/
+WCONINJE
+ 'WINJ' 'WATER' 'OPEN' 'RATE' 100 /
+ 'GINJ' 'GAS' 'OPEN' 'RATE' 100000 /
+/
+WINJFCNC
+ 'WINJ' 5.0 /
+ 'GINJ' 2.0 RES /
+/
+TSTEP
+ 1 /
+WINJFCNC
+ 'GINJ' 3.0 SURF /
+/
+TSTEP
+ 1 /
+)"));
+
+    const SummaryState st(TimeService::now(), 0.0);
+
+    // Item 3 defaults to a surface volume basis, the historical meaning.
+    const auto& winj = sched.getWell("WINJ", 0);
+    BOOST_CHECK(winj.getFilterConcBasis() == Well::FilterConcBasis::SURFACE);
+    BOOST_CHECK_CLOSE(winj.evalFilterConc(st), 5.0e-6, 1.0e-8);
+
+    const auto& ginj0 = sched.getWell("GINJ", 0);
+    BOOST_CHECK(ginj0.getFilterConcBasis() == Well::FilterConcBasis::RESERVOIR);
+    BOOST_CHECK_CLOSE(ginj0.evalFilterConc(st), 2.0e-6, 1.0e-8);
+
+    const auto& ginj1 = sched.getWell("GINJ", 1);
+    BOOST_CHECK(ginj1.getFilterConcBasis() == Well::FilterConcBasis::SURFACE);
+    BOOST_CHECK_CLOSE(ginj1.evalFilterConc(st), 3.0e-6, 1.0e-8);
+
+    BOOST_CHECK_EQUAL(Well::filterConcBasisToString(Well::FilterConcBasis::RESERVOIR), "RES");
+    BOOST_CHECK(Well::filterConcBasisFromString("SURF") == Well::FilterConcBasis::SURFACE);
+}
+
+BOOST_AUTO_TEST_CASE(WINJFCNC_rejects_unknown_concentration_basis) {
+    BOOST_CHECK_THROW(make_schedule(gptable_deck(R"(
+WELSPECS
+ 'GINJ' 'G1' 2 2 2000 'GAS' /
+/
+WINJFCNC
+ 'GINJ' 2.0 MASS /
+/
+)")), Opm::OpmInputError);
+}
+
 BOOST_AUTO_TEST_CASE(Injection_stream_keywords_need_a_stream_name) {
     // Item 3 has no default. Leaving it out, or defaulting it, is reported as
     // a missing stream name for the well, rather than as an unknown stream.

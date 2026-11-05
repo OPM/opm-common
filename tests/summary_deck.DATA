@@ -682,6 +682,10 @@ WWIRFRAC
 /
 WWITFRAC
 /
+WGIRFRAC
+/
+WGITFRAC
+/
 
 WGVPR
  W_1 W_2 /
@@ -1206,6 +1210,14 @@ CWIRFRAC
 
 CWITFRAC
  W_1 /
+ W_3 /
+/
+
+CGIRFRAC
+ W_3 /
+/
+
+CGITFRAC
  W_3 /
 /
 
