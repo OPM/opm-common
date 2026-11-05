@@ -147,9 +147,11 @@ public:
 
     #ifndef COMPILING_STATIC_FLUID_SYSTEM
     /**
-     * \brief Default copy constructor.
+     * \brief Copy constructor.
      *
-     * This can be used to copy from one storage type (say std::vector) to another (say GPUBuffer).
+     * The PVT objects are copy-constructed from those of \p other, so in practice the storage
+     * must be the same. Use gpuistl::copy_to_gpu() and gpuistl::make_view() to get a GPU
+     * fluid system from a CPU one.
      */
     template<template<typename> typename StorageT>
     explicit FLUIDSYSTEM_CLASSNAME(const FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, StorageT, PvtApproaches>& other)
