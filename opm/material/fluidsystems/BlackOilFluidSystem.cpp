@@ -167,6 +167,7 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
     setUseSaturatedTables(!(eclState.runspec().h2Storage() || eclState.runspec().co2Storage()));
 
     setEnableDiffusion(eclState.getSimulationConfig().isDiffusive());
+    setEnableDispersion(eclState.getSimulationConfig().rock_config().dispersion());
     if (enableDiffusion()) {
         const auto& diffCoeffTables = eclState.getTableManager().getDiffusionCoefficientTable();
         if (!diffCoeffTables.empty()) {
@@ -238,6 +239,7 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
     template<> bool BlackOilFluidSystem<T, BlackOilDefaultFluidSystemIndices, VectorWithDefaultAllocator>::enableVaporizedOil_ = false; \
     template<> bool BlackOilFluidSystem<T, BlackOilDefaultFluidSystemIndices, VectorWithDefaultAllocator>::enableVaporizedWater_ = false; \
     template<> bool BlackOilFluidSystem<T, BlackOilDefaultFluidSystemIndices, VectorWithDefaultAllocator>::enableDiffusion_ = false; \
+    template<> bool BlackOilFluidSystem<T, BlackOilDefaultFluidSystemIndices, VectorWithDefaultAllocator>::enableDispersion_ = false; \
     template<> OilPvtMultiplexer<T> \
         BlackOilFluidSystem<T, BlackOilDefaultFluidSystemIndices, VectorWithDefaultAllocator>::oilPvt_ = {}; \
     template<> GasPvtMultiplexer<T> \

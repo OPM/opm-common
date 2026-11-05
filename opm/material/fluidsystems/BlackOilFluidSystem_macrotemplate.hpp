@@ -161,6 +161,7 @@ public:
         , enableVaporizedOil_(other.enableVaporizedOil_)
         , enableVaporizedWater_(other.enableVaporizedWater_)
         , enableDiffusion_(other.enableDiffusion_)
+        , enableDispersion_(other.enableDispersion_)
         , referenceDensity_(StorageT<typename decltype(referenceDensity_)::value_type>(other.referenceDensity_))
         , molarMass_(StorageT<typename decltype(molarMass_)::value_type>(other.molarMass_))
         , diffusionCoefficients_(StorageT<typename decltype(diffusionCoefficients_)::value_type>(other.diffusionCoefficients_))
@@ -184,6 +185,7 @@ public:
                           bool _enableVaporizedWater_,
                           bool _enableConstantRs_,
                           bool _enableDiffusion_,
+                          bool _enableDispersion_,
                           const Storage<std::array<Scalar, 3>>& _referenceDensity_,
                           const Storage<std::array<Scalar, 3>>& _molarMass_,
                           const Storage<std::array<Scalar, 3 * 3>>& _diffusionCoefficients_,
@@ -203,6 +205,7 @@ public:
         , enableVaporizedWater_(_enableVaporizedWater_)
         , enableConstantRs_(_enableConstantRs_)
         , enableDiffusion_(_enableDiffusion_)
+        , enableDispersion_(_enableDispersion_)
         , referenceDensity_(Storage<std::array<Scalar, 3>>(_referenceDensity_))
         , molarMass_(Storage<std::array<Scalar, 3>>(_molarMass_))
         , diffusionCoefficients_(Storage<std::array<Scalar, 3 * 3>>(_diffusionCoefficients_))
@@ -320,6 +323,14 @@ public:
      */
     STATIC_OR_DEVICE void setEnableDiffusion(bool yesno)
     { enableDiffusion_ = yesno; }
+
+    /*!
+     * \brief Specify whether the fluid system should consider dispersion
+     *
+     * By default, dispersion is not considered.
+     */
+    STATIC_OR_DEVICE void setEnableDispersion(bool yesno)
+    { enableDispersion_ = yesno; }
 
     /*!
      * \brief Specify whether the saturated tables should be used
@@ -532,6 +543,14 @@ public:
      */
     STATIC_OR_DEVICE bool enableDiffusion() NOTHING_OR_CONST
     { return enableDiffusion_; }
+
+    /*!
+     * \brief Returns whether the fluid system should consider dispersion
+     *
+     * By default, dispersion is not considered.
+     */
+    STATIC_OR_DEVICE bool enableDispersion() NOTHING_OR_CONST
+    { return enableDispersion_; }
 
     /*!
      * \brief Returns whether the saturated tables should be used
@@ -1800,6 +1819,7 @@ private:
     STATIC_OR_NOTHING bool enableVaporizedWater_;
     STATIC_OR_NOTHING bool enableConstantRs_;
     STATIC_OR_NOTHING bool enableDiffusion_;
+    STATIC_OR_NOTHING bool enableDispersion_;
 
     // HACK for GCC 4.4: the array size has to be specified using the literal value '3'
     // here, because GCC 4.4 seems to be unable to determine the number of phases from
@@ -1829,6 +1849,7 @@ private:
         , enableVaporizedWater_(other.enableVaporizedWater_)
         , enableConstantRs_(other.enableConstantRs_)
         , enableDiffusion_(other.enableDiffusion_)
+        , enableDispersion_(other.enableDispersion_)
         , referenceDensity_(StorageT<typename decltype(referenceDensity_)::value_type>(other.referenceDensity_))
         , molarMass_(StorageT<typename decltype(molarMass_)::value_type>(other.molarMass_))
         , diffusionCoefficients_(StorageT<typename decltype(diffusionCoefficients_)::value_type>(other.diffusionCoefficients_))
@@ -1861,6 +1882,7 @@ initBegin(std::size_t numPvtRegions)
     enableVaporizedWater_ = false;
     enableConstantRs_ = false;
     enableDiffusion_ = false;
+    enableDispersion_ = false;
 
     surfaceTemperature = 273.15 + 15.56; // [K]
     surfacePressure = 1.01325e5; // [Pa]
@@ -2056,6 +2078,7 @@ template<> bool BOFS<T>::enableVaporizedOil_;                                   
 template<> bool BOFS<T>::enableVaporizedWater_;                                  \
 template<> bool BOFS<T>::enableConstantRs_;                                     \
 template<> bool BOFS<T>::enableDiffusion_;                                            \
+template<> bool BOFS<T>::enableDispersion_;                                           \
 template<> BOFS<T>::OilPvt BOFS<T>::oilPvt_;                                          \
 template<> BOFS<T>::GasPvt BOFS<T>::gasPvt_;                                          \
 template<> BOFS<T>::WaterPvt BOFS<T>::waterPvt_;                                      \
@@ -2118,6 +2141,7 @@ copy_to_gpu(const FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits>& oldFluidSystem) {
         oldFluidSystem.enableVaporizedWater_,
         oldFluidSystem.enableConstantRs_,
         oldFluidSystem.enableDiffusion_,
+        oldFluidSystem.enableDispersion_,
         std::move(newReferenceDensity),
         std::move(newMolarMass),
         std::move(newDiffusionCoefficients),
@@ -2156,6 +2180,7 @@ make_view(FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, GpuBuffer>& oldFluidSystem)
         oldFluidSystem.enableVaporizedWater_,
         oldFluidSystem.enableConstantRs_,
         oldFluidSystem.enableDiffusion_,
+        oldFluidSystem.enableDispersion_,
         std::move(newReferenceDensity),
         std::move(newMolarMass),
         std::move(newDiffusionCoefficients),

@@ -54,6 +54,7 @@ BOOST_AUTO_TEST_CASE(TestNonStaticGetters)
     BOOST_CHECK_EQUAL(fluidSystem.enableVaporizedOil(), Opm::BlackOilFluidSystem<double>::enableVaporizedOil());
     BOOST_CHECK_EQUAL(fluidSystem.enableVaporizedWater(), Opm::BlackOilFluidSystem<double>::enableVaporizedWater());
     BOOST_CHECK_EQUAL(fluidSystem.enableDiffusion(), Opm::BlackOilFluidSystem<double>::enableDiffusion());
+    BOOST_CHECK_EQUAL(fluidSystem.enableDispersion(), Opm::BlackOilFluidSystem<double>::enableDispersion());
     BOOST_CHECK_EQUAL(fluidSystem.isInitialized(), Opm::BlackOilFluidSystem<double>::isInitialized());
     BOOST_CHECK_EQUAL(fluidSystem.useSaturatedTables(), Opm::BlackOilFluidSystem<double>::useSaturatedTables());
 }
@@ -71,6 +72,7 @@ BOOST_AUTO_TEST_CASE(TestCopyAndSet)
     BOOST_CHECK_EQUAL(fluidSystem.enableVaporizedOil(), fluidSystemCopy.enableVaporizedOil());
     BOOST_CHECK_EQUAL(fluidSystem.enableVaporizedWater(), fluidSystemCopy.enableVaporizedWater());
     BOOST_CHECK_EQUAL(fluidSystem.enableDiffusion(), fluidSystemCopy.enableDiffusion());
+    BOOST_CHECK_EQUAL(fluidSystem.enableDispersion(), fluidSystemCopy.enableDispersion());
     BOOST_CHECK_EQUAL(fluidSystem.isInitialized(), fluidSystemCopy.isInitialized());
     BOOST_CHECK_EQUAL(fluidSystem.useSaturatedTables(), fluidSystemCopy.useSaturatedTables());
 
