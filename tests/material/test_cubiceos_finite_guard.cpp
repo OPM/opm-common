@@ -387,27 +387,27 @@ BOOST_AUTO_TEST_CASE(CubicRootsLimitingBranchDerivatives)
     BOOST_CHECK_CLOSE(x[2].value(), 1.0, 1e-12);
 }
 
-// With a positive discriminant, rounding can put the acosh argument at one.
-// The cubic still has a single real root; the double root of the limiting
-// formulas is the real part of a complex pair and must not be returned.
+// The coefficients are integers, which makes p, q and the sign of the discriminant
+// independent of floating-point contraction. The acosh argument still rounds to one;
+// the double root of the limiting formulas is then the real part of a complex pair.
 BOOST_AUTO_TEST_CASE(CubicRootsOneRootForPositiveDiscriminant)
 {
-    constexpr Scalar A = 0.0035;
-    constexpr Scalar B = 0.000512935543192252;
-    const auto c = pengRobinsonCubic(A, B);
-    Scalar Z[3] = {};
-    BOOST_REQUIRE_EQUAL(Opm::cubicRoots(Z, c[0], c[1], c[2], c[3]), 1u);
-    BOOST_CHECK_CLOSE(Z[0], 0.99700784326786174, 1e-10);
+    constexpr Scalar c = -3926495.0;
+    constexpr Scalar d = 2994716302.0;
+    Scalar x[3] = {};
+    BOOST_REQUIRE_EQUAL(Opm::cubicRoots(x, 1.0, 0.0, c, d), 1u);
+    BOOST_CHECK_CLOSE(x[0], 3 * d / c, 1e-10);
 
-    using Eval = Opm::DenseAd::Evaluation<Scalar, 1>;
-    const auto cAd = pengRobinsonCubic(Eval(A), Eval::createVariable(B, 0));
-    Eval ZAd[3];
-    BOOST_REQUIRE_EQUAL(Opm::cubicRoots(ZAd, cAd[0], cAd[1], cAd[2], cAd[3]), 1u);
-    // dZ/dB = -(df/dB) / f'(Z) at the simple root.
-    const Scalar z = ZAd[0].value();
-    const Scalar dfdB = z * z - (6 * B + 2) * z - A + 2 * B + 3 * B * B;
-    const Scalar dfdZ = 3 * z * z + 2 * (B - 1) * z + A - 3 * B * B - 2 * B;
-    BOOST_CHECK_CLOSE(ZAd[0].derivative(0), -dfdB / dfdZ, 1e-8);
+    using Eval = Opm::DenseAd::Evaluation<Scalar, 2>;
+    Eval xAd[3];
+    BOOST_REQUIRE_EQUAL(
+        Opm::cubicRoots(
+            xAd, Eval(1.0), Eval(0.0), Eval::createVariable(c, 0), Eval::createVariable(d, 1)),
+        1u);
+    const Scalar z = xAd[0].value();
+    const Scalar dfdx = 3 * z * z + c;
+    BOOST_CHECK_CLOSE(xAd[0].derivative(0), -z / dfdx, 1e-8);
+    BOOST_CHECK_CLOSE(xAd[0].derivative(1), -1.0 / dfdx, 1e-8);
 }
 
 // an ordinary state keeps flashing under both methods — the guard costs
