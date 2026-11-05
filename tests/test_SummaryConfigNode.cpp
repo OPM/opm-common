@@ -160,6 +160,16 @@ BOOST_AUTO_TEST_CASE(Fracture_injection_rates)
     }
 }
 
+BOOST_AUTO_TEST_CASE(Injection_guide_rates)
+{
+    for (const auto* kw : { "WOIGR", "GOIGR", "WGIGR", "WWIGR" }) {
+        BOOST_TEST_CONTEXT("Keyword " << kw) {
+            BOOST_CHECK_EQUAL(Opm::parseKeywordType(kw),
+                              Opm::SummaryConfigNode::Type::Rate);
+        }
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()     // Rate
 
 BOOST_AUTO_TEST_SUITE_END()     // Type
