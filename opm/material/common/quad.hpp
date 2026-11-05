@@ -267,6 +267,11 @@ inline typename std::istream& operator>>(std::istream& is, quad& val)
 }
 #endif
 
+#if !QUADMATH_HAS_MATH_ABS
+inline quad abs(quad val)
+{ return (val < 0) ? -val : val; }
+#endif
+
 #if !QUADMATH_HAS_MATH_OPERATORS
 inline quad real(quad val)
 { return val; }
@@ -279,9 +284,6 @@ inline quad imag(quad)
 
 inline quad imag(const std::complex<quad>& val)
 { return val.imag(); }
-
-inline quad abs(quad val)
-{ return (val < 0) ? -val : val; }
 
 inline quad floor(quad val)
 { return floorq(val); }
