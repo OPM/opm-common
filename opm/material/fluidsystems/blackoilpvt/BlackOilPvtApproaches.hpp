@@ -18,8 +18,10 @@
 */
 /*!
  * \file
- * \brief Compile-time choice of the PVT classes held by the black-oil fluid system with
- *        GPU storage.
+ * \brief Compile-time choice of the PVT classes held by the black-oil fluid system.
+ *
+ * Introduced for the GPU fluid system, which cannot hold the PVT multiplexers, but an
+ * explicit choice works for any storage, also on the CPU.
  */
 #ifndef OPM_BLACK_OIL_PVT_APPROACHES_HPP
 #define OPM_BLACK_OIL_PVT_APPROACHES_HPP
@@ -84,7 +86,7 @@ template <class Scalar, GasPvtApproach approach>
 struct CpuGasPvt
 {
     static_assert(approach != GasPvtApproach::NoGas,
-                  "NoGas is not supported for the GPU fluid system (there is no null gas PVT class).");
+                  "NoGas is not supported by BlackOilPvtApproaches (there is no null gas PVT class).");
     using type = std::remove_cvref_t<decltype(std::declval<const GasPvtMultiplexer<Scalar>&>()
                                                   .template getRealPvt<approach>())>;
 };
@@ -109,7 +111,7 @@ template <class Scalar, WaterPvtApproach approach>
 struct CpuWaterPvt
 {
     static_assert(approach != WaterPvtApproach::NoWater,
-                  "NoWater is not supported for the GPU fluid system (there is no null water PVT class).");
+                  "NoWater is not supported by BlackOilPvtApproaches (there is no null water PVT class).");
     using type = std::remove_cvref_t<decltype(std::declval<const WaterPvtMultiplexer<Scalar>&>()
                                                   .template getRealPvt<approach>())>;
 };
@@ -194,7 +196,8 @@ constexpr bool isNoOil(WaterPvtApproach) { return false; }
  * \brief Copy the PVT class of one phase from a multiplexer to the GPU.
  *
  * Throws if the multiplexer does not hold the requested approach. For OilPvtApproach::NoOil
- * the oil phase must be inactive, and a NullOilPvt is returned.
+ * the oil multiplexer must hold NoOil, which is the case when the oil phase is inactive, and
+ * a NullOilPvt is returned.
  *
  * \tparam approach The approach the GPU fluid system is compiled for.
  * \param pvt The multiplexer of the CPU fluid system.
