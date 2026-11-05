@@ -414,6 +414,29 @@ BOOST_AUTO_TEST_CASE(CubicRootsOneRootForPositiveDiscriminant)
     BOOST_CHECK_CLOSE(xAd[0].derivative(1), -1.0 / dfdx, 1e-8);
 }
 
+// The mirror case: a negative discriminant with the acos argument rounded to -1.
+// The simple root takes its derivatives from the cubic, the double root those of the pair's mean.
+BOOST_AUTO_TEST_CASE(CubicRootsThreeRootsAtAcosDomainBoundary)
+{
+    constexpr Scalar c = -4037089.0;
+    constexpr Scalar d = 3122127246.0;
+    using Eval = Opm::DenseAd::Evaluation<Scalar, 2>;
+    Eval x[3];
+    BOOST_REQUIRE_EQUAL(
+        Opm::cubicRoots(
+            x, Eval(1.0), Eval(0.0), Eval::createVariable(c, 0), Eval::createVariable(d, 1)),
+        3u);
+    const Scalar z = x[0].value();
+    const Scalar dfdx = 3 * z * z + c;
+    BOOST_CHECK_CLOSE(z, 3 * d / c, 1e-10);
+    BOOST_CHECK_CLOSE(x[0].derivative(0), -z / dfdx, 1e-8);
+    BOOST_CHECK_CLOSE(x[0].derivative(1), -1.0 / dfdx, 1e-8);
+    BOOST_CHECK_CLOSE(x[1].value(), -1.5 * d / c, 1e-10);
+    BOOST_CHECK_EQUAL(x[1].value(), x[2].value());
+    BOOST_CHECK_CLOSE(x[1].derivative(0), -0.5 * x[0].derivative(0), 1e-8);
+    BOOST_CHECK_CLOSE(x[1].derivative(1), -0.5 * x[0].derivative(1), 1e-8);
+}
+
 // an ordinary state keeps flashing under both methods — the guard costs
 // nothing where nothing goes wrong
 BOOST_AUTO_TEST_CASE(BenignStateUnaffected)
