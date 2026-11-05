@@ -496,7 +496,7 @@ namespace {
             "OVPR", "GVPR", "WVPR",
             "OPRS", "GPRS", "OPRF", "GPRF",
 
-            "OIR", "GIR", "WIR", "LIR", "NIR", "CIR", "VIR", "TIR", "TIC"
+            "OIR", "GIR", "WIR", "LIR", "NIR", "CIR", "VIR", "TIR", "TIC",
             "OIGR", "GIGR", "WIGR",
             "OIRH", "GIRH", "WIRH",
             "OVIR", "GVIR", "WVIR",
