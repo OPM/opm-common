@@ -2514,8 +2514,8 @@ Opm::Well::filterConcBasisFromString(const std::string& str)
     if (str == "RES") {
         return FilterConcBasis::RESERVOIR;
     }
-    throw std::invalid_argument("Unknown filtration concentration basis '" + str
-                                + "', expected SURF or RES");
+    throw std::invalid_argument(fmt::format("Unknown filtration concentration basis '{}', "
+                                            "expected SURF or RES", str));
 }
 
 std::string Opm::Well::filterConcBasisToString(const FilterConcBasis basis)
