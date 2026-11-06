@@ -460,6 +460,7 @@ struct FlashCase {
                                                // fugacity-ratio residual (equal-fugacity mismatch)
     int verbosity = 0;
     ExpectedPhase expected = ExpectedPhase::any;
+    double li_factor = 1.0;                    // FACTLI multiplier on the Li critical temperature
 };
 
 /*!
@@ -502,7 +503,7 @@ runFlash(const FlashCase<FluidSystem::numComponents>& testCase)
 
     outcome.summary.single_phase = Flash::solve(outcome.state, testCase.method,
                                                 testCase.tolerance, testCase.eos_type,
-                                                testCase.verbosity);
+                                                testCase.verbosity, testCase.li_factor);
 
     outcome.summary.L = Opm::getValue(outcome.state.L());
     for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
