@@ -39,6 +39,10 @@ namespace Opm {
         NumericalAquifers(const Deck& deck, const EclipseGrid& grid, const FieldPropsManager& field_props);
 
         int numRecords() const { return static_cast<int>(this->m_num_records); }
+
+        /// Number of AQUCON records of each aquifer.
+        const std::map<std::size_t, std::size_t>& numConnectionRecords() const
+        { return this->m_num_connection_records; }
         std::size_t size() const;
         bool hasAquifer(std::size_t aquifer_id) const;
         const SingleNumericalAquifer& getAquifer(std::size_t aquifer_id) const;
@@ -66,11 +70,13 @@ namespace Opm {
         {
             serializer(this->m_aquifers);
             serializer(this->m_num_records);
+            serializer(this->m_num_connection_records);
         }
 
     private:
         std::map<std::size_t, SingleNumericalAquifer> m_aquifers{};
         std::size_t m_num_records{0};
+        std::map<std::size_t, std::size_t> m_num_connection_records{};
 
         void addAquiferCell(const NumericalAquiferCell& aqu_cell);
     };

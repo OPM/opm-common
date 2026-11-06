@@ -26,6 +26,7 @@ along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 #include <opm/input/eclipse/EclipseState/Aquifer/AquiferConfig.hpp>
 #include <opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquiferRegionSplit.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/Aqudims.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
 
 #include <opm/input/eclipse/Units/Units.hpp>
@@ -47,6 +48,8 @@ along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 #include <utility>
 #include <memory>
 #include <stdexcept>
+
+#include <fmt/format.h>
 
 using namespace Opm;
 
@@ -1309,6 +1312,16 @@ std::string suggestedRecords(const std::string& changes, const std::string& keyw
     return block.substr(first, block.size() - 2 - first);
 }
 
+// Records of the EQUALS keyword suggested at the end of a section.
+std::string suggestedEquals(const std::string& changes, const std::string& section)
+{
+    const auto header = changes.find("\n* " + section + " section, at the end of the section");
+    if (header == std::string::npos) {
+        return "";
+    }
+    return suggestedRecords(changes.substr(header), "EQUALS");
+}
+
 // Deck from the input, with the suggested deck changes applied if given:
 // the AQUNUM/AQUCON records of the replaced aquifers are removed and the
 // suggested records and EQUALS appended.
@@ -1328,14 +1341,18 @@ std::string regionSplitDeck(const RegionSplitInput& input,
         return out + suggested + "/\n";
     };
 
+    auto equals = [&changes](const std::string& section) {
+        const auto records = suggestedEquals(changes, section);
+        return records.empty() ? std::string{} : "EQUALS\n" + records + "/\n";
+    };
+
     const std::vector<std::size_t> none{};
-    const auto equals = suggestedRecords(changes, "EQUALS");
     return regionSplitDeck(
         keyword("AQUNUM", input.aqunum, split ? split->replacedAqunumIds() : none,
                 suggestedRecords(changes, "AQUNUM")),
         keyword("AQUCON", input.aqucon, split ? split->replacedAquconIds() : none,
-                suggestedRecords(changes, "AQUCON")),
-        input.regionEdits + (equals.empty() ? "" : "EQUALS\n" + equals + "/\n"),
+                suggestedRecords(changes, "AQUCON")) + equals("GRID"),
+        input.regionEdits + equals("REGIONS"),
         input.gridEdits);
 }
 
@@ -1487,6 +1504,59 @@ BOOST_AUTO_TEST_CASE(NumericalAquiferRegionSplitAppliedToDeck)
     BOOST_CHECK_CLOSE(copy->permeability, orig->permeability, 1.0e-8);
     BOOST_CHECK_CLOSE(copy->depth, orig->depth, 1.0e-8);
     BOOST_CHECK(!fixed.aquifers.getAquifer(3).getCellPrt(0)->init_pressure.has_value());
+}
+
+BOOST_AUTO_TEST_CASE(NumericalAquiferRegionSplitCopiesCellProperties)
+{
+    // The new aquifer is placed in the inactive cell (1,1,3), whose NTG and
+    // FIPNUM differ from those of the aquifer cell (1,1,5).
+    const auto input = RegionSplitInput {
+        { {1, " 1 1 1 5 1.0e6 1000 0.25 500 1* 1* 2 1 /"} },
+        { {1, " 1 1 5 2 2 1 5 'J-' /"} },
+        "FIPNUM\n 100*3 /\nEQUALS\n 'FIPNUM' 7 1 1 1 1 5 5 /\n/\n",
+        "NTG\n 100*0.5 /\nEQUALS\n 'NTG' 0.9 1 1 1 1 5 5 /\n/\n",
+    };
+    const auto applied = applyRegionSplit(input, {1});
+    const auto& split = *applied.split;
+    const std::array<std::size_t, 3> host{0, 0, 2};
+
+    auto recordsOf = [&host](const auto& records) {
+        std::map<std::string, double> values;
+        for (const auto& rec : records) {
+            BOOST_CHECK_EQUAL(rec.aquiferId, std::size_t{2});
+            BOOST_CHECK(rec.ijk == host);
+            values[rec.keyword] = rec.value;
+        }
+        return values;
+    };
+    const auto gridValues = recordsOf(split.gridRecords());
+    BOOST_REQUIRE(gridValues.contains("NTG"));
+    BOOST_CHECK_CLOSE(gridValues.at("NTG"), 0.9, 1.0e-10);
+    BOOST_CHECK(!gridValues.contains("PORO"));
+    BOOST_CHECK(!gridValues.contains("PERMX"));
+    BOOST_CHECK(split.propsRecords().empty());
+    const auto regionValues = recordsOf(split.regionsRecords());
+    BOOST_REQUIRE(regionValues.contains("FIPNUM"));
+    BOOST_CHECK_EQUAL(regionValues.at("FIPNUM"), 7.0);
+    BOOST_CHECK(!regionValues.contains("EQLNUM"));
+    BOOST_CHECK(!regionValues.contains("PVTNUM"));
+
+    const auto& fixed = applied.fixed->state;
+    const auto hostIndex = fixed.getInputGrid().activeIndex(host[0], host[1], host[2]);
+    BOOST_CHECK_CLOSE(fixed.fieldProps().get_double("NTG")[hostIndex], 0.9, 1.0e-10);
+    BOOST_CHECK_EQUAL(fixed.fieldProps().get_int("FIPNUM")[hostIndex], 7);
+
+    // AQUDIMS defaults to one line of AQUNUM and AQUCON data.
+    const auto& original = *applied.original;
+    BOOST_CHECK((original.aquifers.numConnectionRecords() == std::map<std::size_t, std::size_t>{{1, 1}}));
+    BOOST_CHECK_EQUAL(split.numAqunumRecords(), std::size_t{2});
+    BOOST_CHECK_EQUAL(split.numAquconRecords(), split.aquconRecords().size());
+    const auto changes = split.deckChanges(original.state.getDeckUnitSystem(),
+                                           original.state.getTableManager().getAqudims());
+    const auto expectAqudims = fmt::format("\nAQUDIMS\n 2 {} 1 36 10 50 0 0 /\n",
+                                           split.aquconRecords().size());
+    BOOST_CHECK_MESSAGE(changes.find(expectAqudims) != std::string::npos, changes);
+    BOOST_CHECK(changes.find("if needed") == std::string::npos);
 }
 
 BOOST_AUTO_TEST_CASE(NumericalAquiferRegionSplitTransferredConnectionNextToSourceAquifer)
