@@ -35,6 +35,7 @@
 #include <opm/common/utility/VectorWithDefaultAllocator.hpp>
 
 #include <opm/material/common/ConditionalStorage.hpp>
+#include <opm/material/common/GpuTableHelpers.hpp>
 #include <opm/material/common/MathToolbox.hpp>
 #include <opm/material/common/UniformXTabulated2DFunction.hpp>
 #include <opm/material/common/UniformXTabulated2DFunctionBuilder.hpp>
@@ -603,57 +604,33 @@ copy_to_gpu(const LiveOilPvt<ScalarT>& cpu)
     OPM_ERROR_IF(!initialized,
                  "copy_to_gpu: LiveOilPvt is not initialized (call initFromState() or initEnd() first).");
 
-    // Uploads each per-region table to its own owning table on the GPU.
-    auto upload = [](const auto& cpuTables) {
-        std::vector<decltype(copy_to_gpu(cpuTables.front()))> ownedTables;
-        ownedTables.reserve(cpuTables.size());
-        for (const auto& cpuTable : cpuTables) {
-            ownedTables.push_back(copy_to_gpu(cpuTable));
-        }
-        return ownedTables;
-    };
-
     // Not std::make_unique: the constructor is private, and std::make_unique is not a friend.
     std::unique_ptr<GpuTables> tables(new GpuTables(typename GpuTables::GpuTablesStorage{},
                                                     std::vector<ScalarT>(cpu.gasReferenceDensity_),
                                                     std::vector<ScalarT>(cpu.oilReferenceDensity_),
-                                                    upload(cpu.inverseOilBTable_),
-                                                    upload(cpu.oilMuTable_),
-                                                    upload(cpu.inverseOilBMuTable_),
-                                                    upload(cpu.saturatedOilMuTable_),
-                                                    upload(cpu.inverseSaturatedOilBTable_),
-                                                    upload(cpu.inverseSaturatedOilBMuTable_),
-                                                    upload(cpu.saturatedGasDissolutionFactorTable_),
-                                                    upload(cpu.saturationPressure_),
+                                                    copy_each_to_gpu(cpu.inverseOilBTable_),
+                                                    copy_each_to_gpu(cpu.oilMuTable_),
+                                                    copy_each_to_gpu(cpu.inverseOilBMuTable_),
+                                                    copy_each_to_gpu(cpu.saturatedOilMuTable_),
+                                                    copy_each_to_gpu(cpu.inverseSaturatedOilBTable_),
+                                                    copy_each_to_gpu(cpu.inverseSaturatedOilBMuTable_),
+                                                    copy_each_to_gpu(cpu.saturatedGasDissolutionFactorTable_),
+                                                    copy_each_to_gpu(cpu.saturationPressure_),
                                                     cpu.vapPar2_));
-
-    // Returns a GpuBuffer of views into the owning tables.
-    auto viewsOf = [](auto& ownedTables) {
-        using ViewTable = decltype(make_view(ownedTables.front()));
-        static_assert(std::is_trivially_copyable_v<ViewTable>,
-                      "The table views are copied to the GPU with memcpy.");
-
-        std::vector<ViewTable> views;
-        views.reserve(ownedTables.size());
-        for (auto& ownedTable : ownedTables) {
-            views.push_back(make_view(ownedTable));
-        }
-        return GpuBuffer<ViewTable>(views);
-    };
 
     // Everything that reads through `tables` is done before `tables` is moved into the
     // returned object: the order in which function arguments are evaluated is
     // unspecified, so reading and moving `tables` in the same call would be a bug.
     auto gasReferenceDensity = GpuBuffer<ScalarT>(tables->gasReferenceDensity_);
     auto oilReferenceDensity = GpuBuffer<ScalarT>(tables->oilReferenceDensity_);
-    auto inverseOilB = viewsOf(tables->inverseOilBTable_);
-    auto oilMu = viewsOf(tables->oilMuTable_);
-    auto inverseOilBMu = viewsOf(tables->inverseOilBMuTable_);
-    auto saturatedOilMu = viewsOf(tables->saturatedOilMuTable_);
-    auto inverseSaturatedOilB = viewsOf(tables->inverseSaturatedOilBTable_);
-    auto inverseSaturatedOilBMu = viewsOf(tables->inverseSaturatedOilBMuTable_);
-    auto saturatedGasDissolutionFactor = viewsOf(tables->saturatedGasDissolutionFactorTable_);
-    auto saturationPressure = viewsOf(tables->saturationPressure_);
+    auto inverseOilB = make_view_buffer(tables->inverseOilBTable_);
+    auto oilMu = make_view_buffer(tables->oilMuTable_);
+    auto inverseOilBMu = make_view_buffer(tables->inverseOilBMuTable_);
+    auto saturatedOilMu = make_view_buffer(tables->saturatedOilMuTable_);
+    auto inverseSaturatedOilB = make_view_buffer(tables->inverseSaturatedOilBTable_);
+    auto inverseSaturatedOilBMu = make_view_buffer(tables->inverseSaturatedOilBMuTable_);
+    auto saturatedGasDissolutionFactor = make_view_buffer(tables->saturatedGasDissolutionFactorTable_);
+    auto saturationPressure = make_view_buffer(tables->saturationPressure_);
     const ScalarT vapPar2 = tables->vapPar2_;
 
     return GpuPvt(typename GpuPvt::GpuTablesStorage(std::move(tables)),
