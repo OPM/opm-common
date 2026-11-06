@@ -1160,7 +1160,8 @@ bool Well::updateSolventFraction(const double solvent_fraction_arg)
 bool Well::handleCOMPSEGS(const DeckKeyword&  keyword,
                           const ScheduleGrid& grid,
                           const ParseContext& parseContext,
-                          ErrorGuard&         errors)
+                          ErrorGuard&         errors,
+                          std::vector<std::pair<std::size_t, int>>* links)
 {
     if (this->segments == nullptr) {
         throw OpmInputError{
@@ -1174,7 +1175,7 @@ bool Well::handleCOMPSEGS(const DeckKeyword&  keyword,
 
     auto new_connections = Compsegs::processCOMPSEGS
         (keyword, *this->connections, *this->segments,
-         grid, parseContext, errors);
+         grid, parseContext, errors, links);
 
     this->updateConnections(std::make_shared<WellConnections>(std::move(new_connections)), false);
 

@@ -84,6 +84,7 @@ namespace Opm {
     enum class WellStatus : std::uint8_t;
     class WelSegsSet;
     class WellControlTracker;
+    class MswTracker;
     class WellTestConfig;
 } // namespace Opm
 
@@ -610,6 +611,7 @@ namespace Opm {
         /// \param welsegs_wells All wells with a WELSEGS entry for checks.
         /// \param compegs_wells All wells with a COMPSEGS entry for checks.
         /// \param well_controls Tracker for wells lacking an assigned control.
+        /// \param msw_tracker Tracker for multi-segmented well consistency.
         void handleKeyword(std::size_t currentStep,
                            const ScheduleBlock& block,
                            const DeckKeyword& keyword,
@@ -625,7 +627,8 @@ namespace Opm {
                            std::set<std::string>* compsegs_wells = nullptr,
                            std::set<std::string>* comptraj_wells = nullptr,
                            std::set<std::string>* connection_order_wells = nullptr,
-                           WellControlTracker* well_controls = nullptr);
+                           WellControlTracker* well_controls = nullptr,
+                           MswTracker* msw_tracker = nullptr);
 
         /// Order the connections of a set of wells in the current
         /// (back) schedule state.
@@ -641,6 +644,14 @@ namespace Opm {
         void reportWellsWithoutControl(const WellControlTracker& well_controls,
                                        const ParseContext&       parseContext,
                                        ErrorGuard&               errors) const;
+
+        /// Issue diagnostics for inconsistent multi-segmented well data,
+        /// e.g., connections that are not attached to any segment, in
+        /// those wells whose data changed in the current report step.
+        void reportMswInconsistencies(MswTracker&         msw_tracker,
+                                      std::size_t         report_step,
+                                      const ParseContext& parseContext,
+                                      ErrorGuard&         errors) const;
         std::vector<std::string> wellNames(const std::string& pattern,
                                            const HandlerContext& context,
                                            bool allowEmpty = false);

@@ -75,6 +75,7 @@
 #include <opm/input/eclipse/Schedule/Well/WellBrineProperties.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellControlTracker.hpp>
+#include <opm/input/eclipse/Schedule/MSW/MswTracker.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellEnums.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellFoamProperties.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellMatcher.hpp>
@@ -131,6 +132,7 @@
 
 #include <fmt/chrono.h>
 #include <fmt/format.h>
+#include <fmt/ranges.h>
 
 namespace {
 
@@ -439,13 +441,14 @@ namespace Opm {
                                  std::set<std::string>* compsegs_wells,
                                  std::set<std::string>* comptraj_wells,
                                  std::set<std::string>* connection_order_wells,
-                                 WellControlTracker* well_controls)
+                                 WellControlTracker* well_controls,
+                                 MswTracker* msw_tracker)
     {
         HandlerContext handlerContext { *this, block, keyword, grid, currentStep,
                                         matches, action_mode,
                                         parseContext, errors, sim_update, target_wellpi,
                                         wpimult_global_factor, welsegs_wells, compsegs_wells, comptraj_wells,
-                                        connection_order_wells, well_controls};
+                                        connection_order_wells, well_controls, msw_tracker};
 
         if (!KeywordHandlers::getInstance().handleKeyword(handlerContext)) {
             OpmLog::warning(fmt::format("No handler registered for keyword {} "
@@ -696,6 +699,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
         std::set<std::string> comptraj_wells;
         WelSegsSet welsegs_wells;
         WellControlTracker well_controls;
+        MswTracker msw_tracker;
 
         const auto matches = Action::Result { false }.matches();
 
@@ -816,7 +820,8 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                                     &compsegs_wells,
                                     &comptraj_wells,
                                     &connection_order_wells,
-                                    &well_controls);
+                                    &well_controls,
+                                    &msw_tracker);
                 keyword_index++;
             }
 
@@ -845,6 +850,7 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
             }
 
             this->orderConnections(connection_order_wells);
+            this->reportMswInconsistencies(msw_tracker, report_step, parseContext, errors);
             this->applyGlobalWPIMULT(wpimult_global_factor);
             this->end_report(report_step);
 
@@ -892,6 +898,96 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
 
         parseContext.handleError(ParseContext::SCHEDULE_WELL_WITHOUT_CONTROL,
                                  msg, wells.front().second, errors);
+    }
+
+    void Schedule::reportMswInconsistencies(MswTracker&         msw_tracker,
+                                            const std::size_t   report_step,
+                                            const ParseContext& parseContext,
+                                            ErrorGuard&         errors) const
+    {
+        const auto problems = msw_tracker.checkAndClearDirty();
+        if (problems.empty()) {
+            return;
+        }
+
+        const auto& wells = this->snapshots[report_step].wells;
+
+        auto cellString = [&wells](const std::string& well, const std::size_t cell)
+        {
+            if (wells.has(well)) {
+                const auto& conns = wells(well).getConnections();
+                if (conns.hasGlobalIndex(cell)) {
+                    const auto& conn = conns.getFromGlobalIndex(cell);
+                    return fmt::format("({},{},{})", conn.getI() + 1,
+                                       conn.getJ() + 1, conn.getK() + 1);
+                }
+            }
+
+            return fmt::format("cell with linear index {}", cell);
+        };
+
+        auto locationString = [](const KeywordLocation& location)
+        {
+            return location.filename.empty()
+                ? std::string { "restart file" }
+                : fmt::format("{} in {} line {}", location.keyword,
+                              location.filename, location.lineno);
+        };
+
+        using Kind = MswTracker::ProblemKind;
+
+        auto msg = std::string { "Inconsistent multi-segment well data" };
+        auto prev = std::pair<std::string, Kind> {};
+
+        for (auto i = 0*problems.size(); i < problems.size(); ++i) {
+            const auto& p = problems[i];
+            const auto newGroup = (i == 0) || (prev != std::pair { p.well, p.kind });
+
+            if (newGroup) {
+                switch (p.kind) {
+                case Kind::UnlinkedConnection:
+                    msg += fmt::format("\nWell {} has connections that are not "
+                                       "attached to any well segment.\n"
+                                       "Add COMPSEGS entries for "
+                                       "these connections:", p.well);
+                    break;
+
+                case Kind::UnknownSegment:
+                    msg += fmt::format("\nWell {} has connections attached to "
+                                       "segments that are not defined in WELSEGS:",
+                                       p.well);
+                    break;
+
+                case Kind::MultiplyLinked:
+                    msg += fmt::format("\nWell {} has connections attached to "
+                                       "multiple segments in a single keyword:",
+                                       p.well);
+                    break;
+                }
+
+                prev = { p.well, p.kind };
+            }
+
+            switch (p.kind) {
+            case Kind::UnlinkedConnection:
+                msg += fmt::format("\n  * {} entered in {}",
+                                   cellString(p.well, p.cell),
+                                   locationString(p.location));
+                break;
+
+            case Kind::UnknownSegment:
+            case Kind::MultiplyLinked:
+                msg += fmt::format("\n  * {} attached to segment{} {} in {}",
+                                   cellString(p.well, p.cell),
+                                   (p.segments.size() == 1) ? "" : "s",
+                                   fmt::join(p.segments, ", "),
+                                   locationString(p.location));
+                break;
+            }
+        }
+
+        parseContext.handleError(ParseContext::SCHEDULE_COMPSEGS_INVALID,
+                                 msg, problems.front().location, errors);
     }
 
     void Schedule::orderConnections(const std::set<std::string>& well_names)

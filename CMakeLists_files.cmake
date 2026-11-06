@@ -256,6 +256,7 @@ list(APPEND MAIN_SOURCE_FILES
   opm/input/eclipse/Schedule/MSW/Compsegs.cpp
   opm/input/eclipse/Schedule/MSW/icd.cpp
   opm/input/eclipse/Schedule/MSW/MSWKeywordHandlers.cpp
+  opm/input/eclipse/Schedule/MSW/MswTracker.cpp
   opm/input/eclipse/Schedule/MSW/Segment.cpp
   opm/input/eclipse/Schedule/MSW/SegmentHeatTransfer.cpp
   opm/input/eclipse/Schedule/MSW/SegmentMatcher.cpp
@@ -560,6 +561,7 @@ list(APPEND TEST_SOURCE_FILES
   tests/test_LinearisedOutputTable.cpp
   tests/test_LogiHEAD.cpp
   tests/test_messagelimiter.cpp
+  tests/test_MswTracker.cpp
   tests/test_nonuniformtablelinear.cpp
   tests/test_OpmInputError_format.cpp
   tests/test_OpmLog.cpp
@@ -1210,6 +1212,7 @@ list(APPEND PUBLIC_HEADER_FILES
   opm/input/eclipse/Schedule/MSW/Segment.hpp
   opm/input/eclipse/Schedule/MSW/SegmentHeatTransfer.hpp
   opm/input/eclipse/Schedule/MSW/SegmentMatcher.hpp
+  opm/input/eclipse/Schedule/MSW/MswTracker.hpp
   opm/input/eclipse/Schedule/MSW/makeMSWellFromStandardWell.hpp
   opm/input/eclipse/Schedule/MSW/Valve.hpp
   opm/input/eclipse/Schedule/MSW/WellSegments.hpp
