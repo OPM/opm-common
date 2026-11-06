@@ -74,6 +74,7 @@
 #include <opm/input/eclipse/Schedule/Well/WListManager.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellBrineProperties.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellControlTracker.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellEnums.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellFoamProperties.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellMatcher.hpp>
@@ -140,6 +141,31 @@ namespace {
                                    [&name](const auto& pattern)
                                    { return Opm::shmatch(pattern, name); });
     }
+
+    // Collect well name patterns of those keywords that assign a control.
+    void collectWellControlPatterns(const Opm::DeckKeyword& keyword,
+                                    std::unordered_set<std::string>& patterns)
+    {
+        namespace PK = Opm::ParserKeywords;
+
+        if (keyword.is<PK::WCONHIST>() || keyword.is<PK::WCONPROD>() ||
+            keyword.is<PK::WCONINJH>() || keyword.is<PK::WCONINJE>())
+        {
+            for (const auto& record : keyword) {
+                patterns.insert(record.getItem("WELL").getTrimmedString(0));
+            }
+        }
+    }
+
+    void registerRuntimeControl(const Opm::DeckKeyword& keyword,
+                                Opm::WellControlTracker& well_controls)
+    {
+        auto patterns = std::unordered_set<std::string>{};
+        collectWellControlPatterns(keyword, patterns);
+        for (const auto& pattern : patterns) {
+            well_controls.runtimeControlPattern(pattern);
+        }
+    }
 }
 
 namespace Opm {
@@ -189,6 +215,8 @@ namespace Opm {
                            section.has_keyword("PYACTION");
         }
 
+        auto well_controls = WellControlTracker{};
+
         if (rst) {
             if (!tracer_config) {
                 throw std::logic_error("Bug: when loading from restart a valid TracerConfig object must be supplied");
@@ -204,8 +232,11 @@ namespace Opm {
             this->load_rst(*rst, *tracer_config, grid, fp);
             if (! this->restart_output.writeRestartFile(restart_step))
                 this->restart_output.addRestartOutput(restart_step);
+            // Only wells created after the restart step are tracked.
             this->iterateScheduleSection(restart_step, this->m_sched_deck.size(),
-                                         parseContext, errors, grid, nullptr, "", keepKeywords);
+                                         parseContext, errors, grid, nullptr, "", keepKeywords,
+                                         /* log_to_debug = */ false, &well_controls);
+            this->reportWellsWithoutControl(well_controls, parseContext, errors);
             // Events added during restart reading well be added to previous step, but need to be active at the
             // restart step to ensure well potentials and guide rates are available at the first step.
             const auto prev_step = std::max(static_cast<int>(restart_step-1), 0);
@@ -214,7 +245,9 @@ namespace Opm {
             this->snapshots[restart_step].events().merge(this->snapshots[prev_step].events());
         } else {
             this->iterateScheduleSection(0, this->m_sched_deck.size(),
-                                         parseContext, errors, grid, nullptr, "", keepKeywords);
+                                         parseContext, errors, grid, nullptr, "", keepKeywords,
+                                         /* log_to_debug = */ false, &well_controls);
+            this->reportWellsWithoutControl(well_controls, parseContext, errors);
         }
     }
     catch (const OpmInputError& opm_error) {
@@ -437,13 +470,14 @@ namespace Opm {
                                  WelSegsSet* welsegs_wells,
                                  std::set<std::string>* compsegs_wells,
                                  std::set<std::string>* comptraj_wells,
-                                 std::set<std::string>* connection_order_wells)
+                                 std::set<std::string>* connection_order_wells,
+                                 WellControlTracker* well_controls)
     {
         HandlerContext handlerContext { *this, block, keyword, grid, currentStep,
                                         matches, action_mode,
                                         parseContext, errors, sim_update, target_wellpi,
                                         wpimult_global_factor, welsegs_wells, compsegs_wells, comptraj_wells,
-                                        connection_order_wells};
+                                        connection_order_wells, well_controls};
 
         if (!KeywordHandlers::getInstance().handleKeyword(handlerContext)) {
             OpmLog::warning(fmt::format("No handler registered for keyword {} "
@@ -640,7 +674,8 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                                       const std::unordered_map<std::string, double> * target_wellpi,
                                       const std::string& prefix,
                                       const bool keepKeywords,
-                                      const bool log_to_debug)
+                                      const bool log_to_debug,
+                                      WellControlTracker* well_controls)
 {
         std::vector<std::pair< const DeckKeyword* , std::size_t> > rftProperties;
         std::string time_unit = this->m_static.m_unit_system.name(UnitSystem::measure::time);
@@ -773,6 +808,9 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                             action.addKeyword(action_keyword);
                             this->prefetchPossibleFutureConnections(grid, action_keyword, parseContext, errors);
                             this->store_wgnames(action_keyword);
+                            if (well_controls != nullptr) {
+                                registerRuntimeControl(action_keyword, *well_controls);
+                            }
                         }
                         else {
                             std::string msg_fmt = fmt::format("The keyword {} is not supported in the ACTIONX block", action_keyword.name());
@@ -812,7 +850,8 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                                     &welsegs_wells,
                                     &compsegs_wells,
                                     &comptraj_wells,
-                                    &connection_order_wells);
+                                    &connection_order_wells,
+                                    well_controls);
                 keyword_index++;
             }
 
@@ -852,6 +891,56 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                 this->m_sched_deck.clearKeywords(report_step);
             }
         } // for (auto report_step = load_start
+    }
+
+    void Schedule::reportWellsWithoutControl(const WellControlTracker& well_controls,
+                                             const ParseContext&       parseContext,
+                                             ErrorGuard&               errors) const
+    {
+        // A PYACTION script may assign controls to any well by name, and
+        // we cannot know which ones at this point.  Skip the diagnostic
+        // altogether in that case.
+        if (this->snapshots.back().actions().py_size() > 0) {
+            return;
+        }
+
+        // Exclude wells that ACTIONX may control at run time.  Patterns
+        // from ACTIONX blocks encountered in this pass are already in the
+        // tracker.  Actions in the final state also include those loaded
+        // from a restart file.  Patterns from other sources, e.g.,
+        // WELOPEN, are deliberately not considered.
+        auto patterns = well_controls.runtimeControlPatterns();
+        const auto& actions = this->snapshots.back().actions();
+        for (auto i = 0*actions.ecl_size(); i < actions.ecl_size(); ++i) {
+            for (const auto& keyword : actions[i]) {
+                collectWellControlPatterns(keyword, patterns);
+            }
+        }
+
+        auto wells = well_controls.uncontrolled();
+        std::erase_if(wells, [&patterns](const auto& wellAndLocation)
+        {
+            return name_match_any(patterns, wellAndLocation.first);
+        });
+
+        if (wells.empty()) {
+            return;
+        }
+
+        auto msg = fmt::format("{} declared in WELSPECS/WELSPECL and "
+                               "connected in COMPDAT/COMPDATL,\n"
+                               "but never assigned a control in WCONHIST, "
+                               "WCONPROD, WCONINJE, or WCONINJH will be "
+                               "treated as SHUT:",
+                               (wells.size() == 1) ? "Well" : "Wells");
+
+        for (const auto& [name, location] : wells) {
+            msg += fmt::format("\n * '{}' (declared in {}, {} line {})", name,
+                               location.keyword, location.filename, location.lineno);
+        }
+
+        parseContext.handleError(ParseContext::SCHEDULE_WELL_WITHOUT_CONTROL,
+                                 msg, wells.front().second, errors);
     }
 
     void Schedule::orderConnections(const std::set<std::string>& well_names)
