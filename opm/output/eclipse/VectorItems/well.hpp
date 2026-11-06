@@ -39,6 +39,8 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
             Group    =  5, // Index (one-based) of well's current group
             WType    =  6, // Well type (producer vs. injector)
             ActWCtrl =  7, // Well's active target control mode (constraint).
+                           // Rate which the group target controls if the
+                           // well is under group control.
 
             item9    =  8, // Unknown
             Status   = 10, // Well status
@@ -62,7 +64,8 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
                          //   1 => Cross flow IS supported.
 
             WGrupConControllable = 24, // Well controllable by group (WGRUPCON(2))
-                                       // -1 => YES, 0 => NO (E100: 1 ==> YES and is active)
+                                       // -1 => YES, 0 => NO.  One-based index of
+                                       // controlling group while under group control.
 
             EconLimitEndRun = 29,      // Whether or not to end simulation run at next report time
                                        // if well is shut or stopped for any reason (WECON(8)).

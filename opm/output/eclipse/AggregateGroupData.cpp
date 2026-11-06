@@ -193,14 +193,22 @@ int currentGroupLevel(const Opm::Schedule& sched,
     return level;
 }
 
+// Whether a well's control mode (WMCTL) shows group control.  A well under
+// group control reports the rate which its group target controls as a
+// negative value, or -1 if that rate is unknown.
+bool underGroupControl(const int wmctl)
+{
+    using wellCtrlMode = ::Opm::RestartIO::Helpers::VectorItems::IWell::Value::WellCtrlMode;
+
+    return (wmctl < 0) && (wmctl != wellCtrlMode::WMCtlUnk);
+}
+
 void groupCurrentlyProductionControllable(const Opm::Schedule& sched,
                                           const Opm::SummaryState& sumState,
                                           const Opm::Group& group,
                                           const std::size_t simStep,
                                           bool& controllable)
 {
-    using wellCtrlMode = ::Opm::RestartIO::Helpers::VectorItems::IWell::Value::WellCtrlMode;
-
     if (controllable) {
         return;
     }
@@ -228,7 +236,7 @@ void groupCurrentlyProductionControllable(const Opm::Schedule& sched,
             if (sumState.has_well_var(well_name, sum_key)) {
                 cur_prod_ctrl = static_cast<int>(sumState.get_well_var(well_name, sum_key));
             }
-            if (cur_prod_ctrl == wellCtrlMode::Group) {
+            if (underGroupControl(cur_prod_ctrl)) {
                 controllable = true;
                 return;
             }
@@ -253,7 +261,6 @@ void groupCurrentlyInjectionControllable(const Opm::Schedule& sched,
                                          const std::size_t simStep,
                                          bool& controllable)
 {
-    using wellCtrlMode   = ::Opm::RestartIO::Helpers::VectorItems::IWell::Value::WellCtrlMode;
     if (controllable)
         return;
 
@@ -283,7 +290,7 @@ void groupCurrentlyInjectionControllable(const Opm::Schedule& sched,
                 cur_inj_ctrl = static_cast<int>(sumState.get_well_var(well_name, sum_key));
             }
 
-            if (cur_inj_ctrl == wellCtrlMode::Group) {
+            if (underGroupControl(cur_inj_ctrl)) {
                 controllable = true;
                 return;
             }
