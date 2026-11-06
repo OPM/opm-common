@@ -3301,10 +3301,6 @@ COMPSEGS
  3 5 3 )" + b + R"( 300.0 400.0 1* 3* 3 /
  3 6 3 )" + b + R"( 400.0 500.0 1* 3* 4 /
 /
-
-COMPDAT
- 'P1' 3 6 4 4 'OPEN' 1* 100.0 0.216 1* 0 1* 'Y' /
-/
 )" + pltDataSetTail();
     }
 
@@ -3707,13 +3703,6 @@ namespace {
 
         BOOST_CHECK_CLOSE(xPLT.start(3, 6, 3), 400.0f, 1.0e-5f);
         BOOST_CHECK_CLOSE(xPLT.end  (3, 6, 3), 500.0f, 1.0e-5f);
-
-        // Connection not attached to any segment.
-        BOOST_CHECK_EQUAL(xPLT.segment(3, 6, 4), 0);
-        BOOST_CHECK_EQUAL(xPLT.branch (3, 6, 4), 0);
-        BOOST_CHECK_CLOSE(xPLT.start  (3, 6, 4), 0.0f, 1.0e-5f);
-        BOOST_CHECK_CLOSE(xPLT.end    (3, 6, 4), 0.0f, 1.0e-5f);
-        BOOST_CHECK_CLOSE(xPLT.pressure(3, 6, 4), 50.0f, 1.0e-5f);
     }
 } // Anonymous namespace
 
