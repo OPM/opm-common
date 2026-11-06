@@ -192,6 +192,25 @@ namespace Opm {
         bool operator==( const WellConnections& ) const;
         bool operator!=( const WellConnections& ) const;
 
+        /// Check if two sets of well connections are the same except for their ordering.
+        ///
+        /// This is a weaker predicate than operator==, as it ignores the
+        /// ordering of connections, i.e., it only checks if the sets of
+        /// connections are identical up to permutation.  Calls std::is_permutation()
+        /// internally, so is potentially quadratic in the number of connections.
+        /// Therefore, this function should be used only when needed, typically when
+        /// updating the connections with a deferred order() call.
+        ///
+        /// Two sets of well connections differing only by their ordering will be
+        /// equal--i.e., satisfy operator==--after applying the order() method to
+        /// both sets.
+        ///
+        /// \param[in] other The other set of well connections to compare against.
+        ///
+        /// \return True if the connections are the same except for their
+        /// ordering, false otherwise.
+        bool isSameExceptForOrdering(const WellConnections& other) const;
+
         Connection::Order ordering() const { return this->m_ordering; }
 
         std::vector<std::size_t>
@@ -264,6 +283,8 @@ namespace Opm {
                           ErrorGuard&                       errors,
                           std::vector<int>&                 requested_open_complnums,
                           std::vector<int>&                 requested_shut_complnums);
+
+        bool sameMetaData(const WellConnections& rhs) const;
     };
 
     std::optional<int>

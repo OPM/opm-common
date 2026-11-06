@@ -106,16 +106,20 @@ void handleCOMPDATX(HandlerContext&    handlerContext,
         const auto is_connected = !well.getConnections().empty()
             || !connections->empty();
 
-        if (well.updateConnections(std::move(connections), handlerContext.grid)) {
+        // Connection ordering is deferred until all keywords in the
+        // current report step have been processed.
+        if (well.updateConnectionsUnordered(std::move(connections), handlerContext.grid)) {
             auto wdfac = std::make_shared<WDFAC>(well.getWDFAC());
             wdfac->updateWDFACType(well.getConnections());
 
             well.updateWDFAC(std::move(wdfac));
 
-            // If the well's reference depth has been defaulted in WELSPECS,
-            // we need to calculate that reference depth when completing
-            // COMPDAT processing for this well.
-            well.updateRefDepth();
+            // Note: If the well's reference depth has been defaulted in
+            // WELSPECS, it will be calculated from the first connection
+            // when the connections are ordered at the end of the report
+            // step.
+
+            handlerContext.connection_structure_changed(wname);
 
             handlerContext.state().wellgroup_events()
                 .addEvent(wname, ScheduleEvents::COMPLETION_CHANGE);

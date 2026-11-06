@@ -76,6 +76,13 @@ void HandlerContext::record_well_structure_change()
     }
 }
 
+void HandlerContext::connection_structure_changed(const std::string& well_name)
+{
+    if (this->connection_order_wells != nullptr) {
+        this->connection_order_wells->insert(well_name);
+    }
+}
+
 void HandlerContext::welsegs_handled(const std::string& well_name)
 {
     if (welsegs_wells) {
