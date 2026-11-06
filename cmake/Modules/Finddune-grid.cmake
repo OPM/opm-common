@@ -20,7 +20,7 @@ else()
 endif()
 
 if(dune-grid_FOUND)
-  target_compile_definitions(dunegrid INTERFACE HAVE_DUNE_GRID=1)
+  target_compile_definitions(Dune::Grid INTERFACE HAVE_DUNE_GRID=1)
   # make version number available in config.h
   include (UseDuneVer)
   find_dune_version ("dune" "grid")

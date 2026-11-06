@@ -20,7 +20,7 @@ else()
 endif()
 
 if(dune-localfunctions_FOUND)
-  target_compile_definitions(dunelocalfunctions INTERFACE HAVE_DUNE_LOCALFUNCTIONS=1)
+  target_compile_definitions(Dune::LocalFunctions INTERFACE HAVE_DUNE_LOCALFUNCTIONS=1)
   # make version number available in config.h
   include (UseDuneVer)
   find_dune_version ("dune" "localfunctions")
