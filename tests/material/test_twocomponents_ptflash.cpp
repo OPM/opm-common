@@ -214,6 +214,80 @@ BOOST_AUTO_TEST_CASE(SinglePhaseVaporF1)
     checkExpectedPhase(testCase, outcome.summary);
 }
 
+// A lean feed (10 % C1) at 1 bar and 500 K has two cubic roots, and the vapour
+// root has the lower Gibbs energy: the mixture is a vapour, and the liquid
+// root is not the stable one.
+BOOST_AUTO_TEST_CASE(LeanFeedStableRootIsVapourF1)
+{
+    constexpr std::array<double, 2> leanZ = {0.1, 0.9};
+    auto fs = Opm::FlashTest::makeInitialState<FluidSystemF1, EvaluationF1>(1e5, 500., leanZ);
+    for (int compIdx = 0; compIdx < numComponentsF1; ++compIdx) {
+        fs.setMoleFraction(FluidSystemF1::oilPhaseIdx, compIdx, leanZ[compIdx]);
+        fs.setMoleFraction(FluidSystemF1::gasPhaseIdx, compIdx, leanZ[compIdx]);
+    }
+
+    using ParamCache = typename FluidSystemF1::template ParameterCache<EvaluationF1>;
+    ParamCache paramCache(EOSType::PR);
+    std::array<double, 2> molarVolume{};
+    std::array<double, 2> sumZLnPhi{};
+    for (const auto phaseIdx : {FluidSystemF1::oilPhaseIdx, FluidSystemF1::gasPhaseIdx}) {
+        paramCache.updatePhase(fs, phaseIdx);
+        const unsigned rootIdx = phaseIdx == FluidSystemF1::oilPhaseIdx ? 0 : 1;
+        molarVolume[rootIdx] = Opm::getValue(paramCache.molarVolume(phaseIdx));
+        for (int compIdx = 0; compIdx < numComponentsF1; ++compIdx) {
+            sumZLnPhi[rootIdx] += leanZ[compIdx] * std::log(Opm::getValue(
+                FluidSystemF1::fugacityCoefficient(fs, paramCache, phaseIdx, compIdx)));
+        }
+    }
+
+    BOOST_TEST_MESSAGE("lean feed, 1 bar, 500 K: sum z ln(phi) = " << sumZLnPhi[0]
+                       << " on the liquid root, " << sumZLnPhi[1] << " on the vapour root");
+    BOOST_CHECK_LT(molarVolume[0], 0.5 * molarVolume[1]); // two distinct roots
+    BOOST_CHECK_LT(sumZLnPhi[1], sumZLnPhi[0] - 1.);
+}
+
+// The lean feed at 1 bar is a vapour from about 447 K, while its cubic keeps a
+// liquid root up to about 549 K. The flash has to classify it as a single-phase
+// vapour there, with every method.
+BOOST_AUTO_TEST_CASE(LeanVapourIsSinglePhaseF1)
+{
+    constexpr std::array<double, 2> leanZ = {0.1, 0.9};
+    for (const auto method : {Opm::PTFlashMethod::Ssi, Opm::PTFlashMethod::Newton,
+                              Opm::PTFlashMethod::SsiNewton}) {
+        for (const double T : {450., 500., 540.}) {
+            FlashCase<numComponentsF1> testCase{"lean vapour F1", 1e5, T, leanZ};
+            testCase.method = method;
+            testCase.expected = ExpectedPhase::single_vapor;
+            BOOST_TEST_CONTEXT("T = " << T << " K, method " << Opm::ptFlashMethodToString(method)) {
+                FlashResult<numComponentsF1> result{};
+                BOOST_CHECK_NO_THROW(
+                    (result = runFlash<FluidSystemF1, EvaluationF1>(testCase).summary));
+                checkExpectedPhase(testCase, result);
+            }
+        }
+    }
+}
+
+// Nearly pure n-decane at 1 bar and 300 K is a liquid. Its cubic also has a
+// vapour root, but the liquid root is the stable one, and the label stays
+// liquid with every method.
+BOOST_AUTO_TEST_CASE(StableLiquidKeepsLiquidLabelF1)
+{
+    constexpr std::array<double, 2> decaneZ = {0.001, 0.999};
+    for (const auto method : {Opm::PTFlashMethod::Ssi, Opm::PTFlashMethod::Newton,
+                              Opm::PTFlashMethod::SsiNewton}) {
+        FlashCase<numComponentsF1> testCase{"nearly pure n-decane F1", 1e5, 300., decaneZ};
+        testCase.method = method;
+        testCase.expected = ExpectedPhase::single_liquid;
+        BOOST_TEST_CONTEXT("method " << Opm::ptFlashMethodToString(method)) {
+            FlashResult<numComponentsF1> result{};
+            BOOST_CHECK_NO_THROW(
+                (result = runFlash<FluidSystemF1, EvaluationF1>(testCase).summary));
+            checkExpectedPhase(testCase, result);
+        }
+    }
+}
+
 // Two-phase split invariants: normalization, mass balance, equal fugacity
 BOOST_AUTO_TEST_CASE(TwoPhaseInvariantsF1)
 {
