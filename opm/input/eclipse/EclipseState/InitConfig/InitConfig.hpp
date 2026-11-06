@@ -144,6 +144,14 @@ namespace Opm {
             return this->m_filleps;
         }
 
+        /// Whether or not the run's RPTSOL keyword requests the report of
+        /// pressures, densities and compositions versus depth in each
+        /// equilibration region (mnemonic SOLVD).
+        bool solvd() const
+        {
+            return this->m_solvd;
+        }
+
         /// Equality predicate.
         ///
         /// \param[in] config Object against which \code *this \endcode will
@@ -183,6 +191,7 @@ namespace Opm {
             serializer(stress_equil);
             serializer(foamconfig);
             serializer(m_filleps);
+            serializer(m_solvd);
             serializer(m_gravity);
             serializer(m_restartRequested);
             serializer(m_restartStep);
@@ -205,6 +214,9 @@ namespace Opm {
 
         /// Whether or not run specifies FILLEPS keyword.
         bool m_filleps{false};
+
+        /// Whether or not RPTSOL requests the SOLVD report.
+        bool m_solvd{false};
 
         /// Whether or not run includes gravity effects.
         ///

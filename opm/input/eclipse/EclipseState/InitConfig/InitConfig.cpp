@@ -37,6 +37,8 @@
 #include <opm/input/eclipse/Parser/ParserKeywords/R.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/S.hpp>
 
+#include <opm/input/eclipse/Schedule/RPTConfig.hpp>
+
 #include <filesystem>
 #include <iostream>
 #include <stdexcept>
@@ -75,6 +77,20 @@ namespace {
         return deck.get<Opm::ParserKeywords::STREQUIL>().back();
     }
 
+    bool rptsolRequestsSolvd(const Opm::Deck& deck)
+    {
+        const Opm::SOLUTIONSection solution { deck };
+        if (! solution.hasKeyword<Opm::ParserKeywords::RPTSOL>()) {
+            return false;
+        }
+
+        const Opm::RPTConfig rptsol {
+            solution.get<Opm::ParserKeywords::RPTSOL>().back()
+        };
+
+        return rptsol.contains("SOLVD") && (rptsol.at("SOLVD") > 0);
+    }
+
 } // Anonymous namespace
 
 namespace Opm {
@@ -85,6 +101,7 @@ namespace Opm {
         , stress_equil { stressequils(deck), phases, compositional }
         , foamconfig   { deck }
         , m_filleps    { PROPSSection{deck}.hasKeyword(ParserKeywords::FILLEPS::keywordName) }
+        , m_solvd      { rptsolRequestsSolvd(deck) }
         , m_gravity    { ! deck.hasKeyword<ParserKeywords::NOGRAV>() }
     {
         this->parseRestartKeyword(deck);
@@ -98,6 +115,7 @@ namespace Opm {
         result.stress_equil = StressEquil::serializationTestObject();
         result.foamconfig = FoamConfig::serializationTestObject();
         result.m_filleps = true;
+        result.m_solvd = true;
         result.m_gravity = false;
         result.m_restartRequested = true;
         result.m_restartStep = 20;
@@ -206,6 +224,7 @@ namespace Opm {
             && (this->stress_equil == data.stress_equil)
             && (this->foamconfig == data.foamconfig)
             && (this->m_filleps == data.m_filleps)
+            && (this->m_solvd == data.m_solvd)
             && (this->m_gravity == data.m_gravity)
             && (this->m_restartRequested == data.m_restartRequested)
             && (this->m_restartStep == data.m_restartStep)

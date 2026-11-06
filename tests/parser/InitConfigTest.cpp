@@ -344,6 +344,29 @@ SCHEDULE
 )" };
     }
 
+    std::string deckWithRptsol(const std::string& rptsol)
+    {
+        return R"(RUNSPEC
+METRIC
+DIMENS
+ 10 10 10 /
+EQLDIMS
+/
+OIL
+GAS
+COMPS
+3 /
+SOLUTION
+EQUIL
+  2050     150   2300     0     2050     0 /
+)" + rptsol + R"(
+GRID
+START             -- 0
+19 JUN 2007 /
+SCHEDULE
+)";
+    }
+
     Deck createDeck(const std::string& input)
     {
         auto deck = Parser{}.parseString(input);
@@ -941,6 +964,37 @@ END
     };
 
     BOOST_CHECK(! es.cfg().init().filleps());
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE (SOLVD)
+
+BOOST_AUTO_TEST_CASE(Requested)
+{
+    const auto deck = createDeck(deckWithRptsol("RPTSOL\n  PRESSURE SOLVD ZMF /\n"));
+    const Runspec runspec(deck);
+    const InitConfig config(deck, runspec.phases(), runspec.compositionalMode());
+
+    BOOST_CHECK(config.solvd());
+}
+
+BOOST_AUTO_TEST_CASE(NotRequested)
+{
+    const auto deck = createDeck(deckWithRptsol("RPTSOL\n  PRESSURE ZMF FIP=2 /\n"));
+    const Runspec runspec(deck);
+    const InitConfig config(deck, runspec.phases(), runspec.compositionalMode());
+
+    BOOST_CHECK(! config.solvd());
+}
+
+BOOST_AUTO_TEST_CASE(NoRptsol)
+{
+    const auto deck = createDeck(deckWithRptsol(""));
+    const Runspec runspec(deck);
+    const InitConfig config(deck, runspec.phases(), runspec.compositionalMode());
+
+    BOOST_CHECK(! config.solvd());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
