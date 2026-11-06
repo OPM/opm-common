@@ -83,6 +83,11 @@ public:
         return this->sACT_.data();
     }
 
+    const std::vector<double>& getXACT() const
+    {
+        return this->xACT_.data();
+    }
+
     const std::vector<EclIO::PaddedOutputString<8>>& getZACT() const
     {
         return this->zACT_.data();
@@ -119,6 +124,11 @@ private:
     ///
     /// Five (5) floats per ACTIONX keyword.
     WindowedArray<float> sACT_;
+
+    /// SACT's layout in double precision, with times in seconds.
+    ///
+    /// Written by OPM only, to restore action times exactly.
+    WindowedArray<double> xACT_;
 
     /// Character descriptors for ACTIONX.
     ///
