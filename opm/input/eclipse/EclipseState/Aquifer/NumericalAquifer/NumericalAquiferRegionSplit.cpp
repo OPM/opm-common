@@ -681,8 +681,13 @@ std::string NumericalAquiferRegionSplit::deckChangesImpl(const UnitSystem& units
     const std::string copiedProperties = "to give the cells of the new aquifer(s) the "
                                          "properties of the aquifer cells they are copied from";
 
+    // The copied values are final values.  The GRID section properties can
+    // only be assigned in the GRID section, but Flow rejects operations on
+    // them in the EDIT section, other than COPY and OPERATE.
     if (!this->grid_.empty()) {
-        out += fmt::format("\n* GRID section, at the end of the section, {}:\n\nEQUALS\n{}/\n",
+        out += fmt::format("\n* GRID section, at the end of the section, {}:\n\nEQUALS\n{}/\n"
+                           "-- These are final values: if COPY or OPERATE in the EDIT section modify\n"
+                           "-- these properties, exclude the new aquifer cells from those operations.\n",
                            copiedProperties, propertyRecords(this->grid_));
     }
 

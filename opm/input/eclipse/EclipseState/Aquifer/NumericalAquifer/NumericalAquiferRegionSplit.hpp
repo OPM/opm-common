@@ -62,7 +62,11 @@ class UnitSystem;
 ///     The properties a free, inactive cell gets from the deck are often
 ///     meaningless, e.g. NTG=0 or SWU=0, and may make the initialisation
 ///     or the simulation fail.  Properties defined by AQUNUM, and
-///     transmissibility and pore volume multipliers, are not copied.
+///     transmissibility and pore volume multipliers, are not copied.  The
+///     copied values are final values.  The GRID section properties are
+///     assigned at the end of the GRID section, since they are not valid in
+///     the EDIT section.  Flow therefore rejects EDIT section operations on
+///     them, except COPY and OPERATE, which the user must then restrict.
 ///
 /// AQUCON records are only generated for aquifers which are split, and
 /// AQUNUM records only for new aquifers and for aquifers whose PVT table or
@@ -147,7 +151,8 @@ public:
     const std::vector<EqlnumRecord>& eqlnumRecords() const
     { return this->eqlnum_; }
 
-    /// GRID section properties of new aquifer cells.
+    /// GRID section properties of new aquifer cells, with their final
+    /// values, i.e., including any EDIT section operations.
     const std::vector<PropertyRecord>& gridRecords() const
     { return this->grid_; }
 
