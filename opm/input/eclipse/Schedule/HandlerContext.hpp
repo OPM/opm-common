@@ -29,6 +29,7 @@
 #include <set>
 #include <string>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 namespace Opm::Action {
@@ -49,6 +50,9 @@ struct SimulatorUpdate;
 enum class WellStatus : std::uint8_t;
 class WelSegsSet;
 class WellControlTracker;
+class MswTracker;
+class Well;
+class WellConnections;
 }
 
 namespace Opm {
@@ -74,6 +78,7 @@ public:
     ///    (re-)ordered once all keywords in the current report step have
     ///    been processed.
     /// \param well_controls_ Tracker for wells lacking an assigned control.
+    /// \param msw_tracker_ Tracker for multi-segmented well consistency.
     HandlerContext(Schedule& schedule,
                    const ScheduleBlock& block_,
                    const DeckKeyword& keyword_,
@@ -90,7 +95,8 @@ public:
                    std::set<std::string>* compsegs_wells_,
                    std::set<std::string>* comptraj_wells_,
                    std::set<std::string>* connection_order_wells_,
-                   WellControlTracker* well_controls_ = nullptr)
+                   WellControlTracker* well_controls_ = nullptr,
+                   MswTracker* msw_tracker_ = nullptr)
         : block(block_)
         , keyword(keyword_)
         , currentStep(currentStep_)
@@ -106,6 +112,7 @@ public:
         , comptraj_wells(comptraj_wells_)
         , connection_order_wells(connection_order_wells_)
         , well_controls(well_controls_)
+        , msw_tracker(msw_tracker_)
         , sim_update(sim_update_)
         , schedule_(schedule)
     {}
@@ -157,6 +164,44 @@ public:
 
     /// \brief Mark that the well received a control from a WCON* keyword.
     void well_controlled(const std::string& well_name);
+
+    /// \brief Register a well's connections for MSW consistency checks.
+    ///
+    /// Typically called from the COMPDAT/COMPDATL/COMPDATM and COMPTRAJ
+    /// keyword handlers.
+    ///
+    /// \param[in] well_name Well name.
+    /// \param[in] connections All of the well's connections.
+    void msw_connections(const std::string&     well_name,
+                         const WellConnections& connections);
+
+    /// \brief Register a well's segments for MSW consistency checks.
+    ///
+    /// Typically called from the WELSEGS and COMPTRAJ keyword handlers.
+    ///
+    /// \param[in] well Well object whose segments have been (re)defined.
+    void msw_segments(const Well& well);
+
+    /// \brief Register connection-to-segment links from the current
+    /// keyword for MSW consistency checks.
+    ///
+    /// Typically called from the COMPSEGS keyword handler.
+    ///
+    /// \param[in] well_name Well name.
+    /// \param[in] links Pairs of connection cells (linearised Cartesian
+    ///    index) and segment numbers, one for each applied link.
+    void msw_links(const std::string&                                  well_name,
+                   const std::vector<std::pair<std::size_t, int>>& links);
+
+    /// \brief Register the connection-to-segment links of all of a well's
+    /// connections for MSW consistency checks.
+    ///
+    /// Typically called from the COMPTRAJ keyword handler.
+    ///
+    /// \param[in] well_name Well name.
+    /// \param[in] connections All of the well's connections.
+    void msw_links(const std::string&     well_name,
+                   const WellConnections& connections);
 
     //! \brief Set exit code.
     void setExitCode(int code);
@@ -241,12 +286,17 @@ public:
     const ScheduleGrid& grid;
 
 private:
+    /// \brief Ensure the MSW tracker knows about a well, seeding it from
+    /// the well's current definition if needed.  Requires a tracker.
+    void msw_track_well(const std::string& well_name);
+
     const std::unordered_map<std::string, double>* target_wellpi{nullptr};
     WelSegsSet* welsegs_wells{nullptr};
     std::set<std::string>* compsegs_wells{nullptr};
     std::set<std::string>* comptraj_wells{nullptr};
     std::set<std::string>* connection_order_wells{nullptr};
     WellControlTracker* well_controls{nullptr};
+    MswTracker* msw_tracker{nullptr};
     SimulatorUpdate* sim_update{nullptr};
     Schedule& schedule_;
 };

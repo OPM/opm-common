@@ -110,6 +110,9 @@ void handleCOMPDATX(HandlerContext&    handlerContext,
             handlerContext.well_connected(wname);
         }
 
+        // Register before 'connections' is moved into the well.
+        handlerContext.msw_connections(wname, *connections);
+
         // Connection ordering is deferred until all keywords in the
         // current report step have been processed.
         if (well.updateConnectionsUnordered(std::move(connections), handlerContext.grid)) {
