@@ -4153,6 +4153,7 @@ static const auto single_values_units = UnitTable {
     {"FGIPL"    , Opm::UnitSystem::measure::gas_surface_volume },
     {"FGIPG"    , Opm::UnitSystem::measure::gas_surface_volume },
     {"FPR"      , Opm::UnitSystem::measure::pressure },
+    {"FPRFLUX"  , Opm::UnitSystem::measure::pressure },
     {"FPRP"     , Opm::UnitSystem::measure::pressure },
     {"FPRH"     , Opm::UnitSystem::measure::pressure },
     {"FHPV"     , Opm::UnitSystem::measure::volume },
