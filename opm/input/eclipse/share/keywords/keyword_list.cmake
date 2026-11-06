@@ -227,7 +227,6 @@ set( keywords
      000_Eclipse100/F/FIPOWG
      000_Eclipse100/F/FIPSEP
      000_Eclipse100/F/FIP_PROBE
-     000_Eclipse100/F/FLUXALL
      000_Eclipse100/F/FLUXNUM
      000_Eclipse100/F/FLUXREG
      000_Eclipse100/F/FLUXTYPE
@@ -1175,6 +1174,7 @@ set( keywords
      900_OPM/D/DRSDTCON
      900_OPM/E/EXIT
      900_OPM/F/FIELD_PROBE_OPM
+     900_OPM/F/FLUXALL
      900_OPM/F/FRAC
      900_OPM/G/GCOMPIDX
      900_OPM/G/GASDENT
