@@ -128,6 +128,8 @@ public:
     // of a mixture, indexed by equilibration region.
     const std::vector<double>& liCorrelationFactors() const;
     double liCorrelationFactor(std::size_t equil_region) const;
+    // Whether the multipliers come from FACTLI rather than the default.
+    bool liCorrelationFactorsSpecified() const;
 
     // Accessors for surface EOS regions.
     EOSType eosTypeSurf(std::size_t eos_region) const;
@@ -156,6 +158,7 @@ public:
         serializer(surface_props);
         serializer(lbc_coefficients);
         serializer(li_correlation_factors);
+        serializer(li_correlation_factors_specified);
     }
 
 private:
@@ -174,6 +177,7 @@ private:
     // mixture (FACTLI), one value per equilibration region.  A value below one
     // makes single phase cells more likely to be labelled gas, above one oil.
     std::vector<double> li_correlation_factors;
+    bool li_correlation_factors_specified = false;
 
     // One set of properties for each reservoir condition EOS region
     std::vector<EOSProps> reservoir_props;
