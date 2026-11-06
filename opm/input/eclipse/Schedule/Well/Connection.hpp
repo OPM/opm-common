@@ -27,6 +27,7 @@
 #include <opm/input/eclipse/Schedule/Well/WINJMULT.hpp>
 
 #include <array>
+#include <compare>
 #include <cstddef>
 #include <optional>
 #include <string>
@@ -170,6 +171,85 @@ namespace Opm {
         };
 
 
+        /// Perforation interval of a COMPTRAJ record, with measured depths
+        /// in SI units.
+        struct PerforationInterval
+        {
+            /// Branch of the well trajectory.
+            int branch{};
+
+            /// Measured depth at the top of the interval.
+            double top{};
+
+            /// Measured depth at the bottom of the interval.
+            double bottom{};
+
+            /// Ordered by branch, then by measured depth.
+            auto operator<=>(const PerforationInterval&) const = default;
+
+            /// Serialisation operator
+            ///
+            /// \tparam Serializer Protocol for serialising and
+            ///   deserialising objects between memory and character
+            ///   buffers.
+            ///
+            /// \param[in,out] serializer Serialisation object.
+            template <class Serializer>
+            void serializeOp(Serializer& serializer)
+            {
+                serializer(this->branch);
+                serializer(this->top);
+                serializer(this->bottom);
+            }
+        };
+
+        /// Contribution of a single COMPTRAJ perforation interval to the
+        /// connection of one cell.
+        ///
+        /// A cell may be perforated by several intervals, of one or more
+        /// branches.  Each interval contributes once per cell, combining
+        /// the properties of all its crossings through that cell.
+        struct IntervalContribution
+        {
+            /// The contributing perforation interval.
+            PerforationInterval interval{};
+
+            /// Whether the interval's transmissibility factor was given in
+            /// the input or calculated from the cell properties.
+            CTFKind kind{CTFKind::DeckValue};
+
+            /// Properties of the interval's perforation of the cell.
+            CTFProperties ctf{};
+
+            /// Direction of the crossing with the largest CF, using cell-local
+            /// lengths divided by cell dimensions (as in ResInsight).
+            Direction direction{Direction::Z};
+
+            /// Individual crossing CF, not the sum over this interval.
+            /// For explicit CFs, use the value supplied for the cell.
+            double strongest_crossing_cf{};
+
+            bool operator==(const IntervalContribution&) const = default;
+
+            /// Serialisation operator
+            ///
+            /// \tparam Serializer Protocol for serialising and
+            ///   deserialising objects between memory and character
+            ///   buffers.
+            ///
+            /// \param[in,out] serializer Serialisation object.
+            template <class Serializer>
+            void serializeOp(Serializer& serializer)
+            {
+                serializer(this->interval);
+                serializer(this->kind);
+                serializer(this->ctf);
+                serializer(this->direction);
+                serializer(this->strongest_crossing_cf);
+            }
+        };
+
+
         Connection() = default;
         Connection(int i, int j, int k,
                    std::size_t          global_index,
@@ -258,6 +338,45 @@ namespace Opm {
         void setDefaultSatTabId(bool id);
         void setStaticDFacCorrCoeff(const double c);
 
+        /// COMPTRAJ perforation intervals contributing to this connection,
+        /// ordered by interval.  Empty for connections that do not originate
+        /// from COMPTRAJ.
+        const std::vector<IntervalContribution>& intervalContributions() const
+        {
+            return this->m_interval_contributions;
+        }
+
+        /// Combine a COMPTRAJ perforation interval into this connection.
+        ///
+        /// A cell may be perforated by several intervals, of the same or of
+        /// different branches of a multi-lateral well, each contributing its
+        /// own transmissibility.
+        ///
+        /// Updates ctfProperties() and kind() to the combination of all
+        /// contributions.
+        ///
+        /// \param[in] contribution The interval's perforation of this
+        /// connection's cell.  The interval must not already contribute to
+        /// this connection.
+        void addIntervalContribution(const IntervalContribution& contribution);
+
+        /// Remove the contribution of a COMPTRAJ perforation interval from
+        /// this connection, if it has one.
+        ///
+        /// Updates ctfProperties() and kind() to the combination of the
+        /// remaining contributions.  A connection left without any no
+        /// longer originates from COMPTRAJ and has no transmissibility of
+        /// its own, so the caller must either add a contribution or remove
+        /// the connection.
+        ///
+        /// \param[in] interval Perforation interval whose contribution to
+        /// remove.
+        void removeIntervalContribution(const PerforationInterval& interval);
+
+        /// Whether this connection originates from COMPTRAJ rather than from
+        /// COMPDAT.
+        bool fromTrajectory() const;
+
         void scaleWellPi(double wellPi);
         bool prepareWellPIScaling();
         bool applyWellPIScaling(const double scaleFactor);
@@ -293,6 +412,7 @@ namespace Opm {
             serializer(this->m_subject_to_welpi);
             serializer(this->m_filter_cake);
             serializer(this->m_econ_limits);
+            serializer(this->m_interval_contributions);
         }
 
     private:
@@ -387,6 +507,15 @@ namespace Opm {
         std::optional<FilterCake> m_filter_cake{};
 
         Utility::CopyablePtr<ConnectionEconLimits> m_econ_limits{};
+
+        /// COMPTRAJ perforation intervals contributing to this connection,
+        /// ordered by interval.  Empty for connections that do not originate
+        /// from COMPTRAJ.
+        std::vector<IntervalContribution> m_interval_contributions{};
+
+        /// Set ctf_properties_ and m_ctfkind to the combination of all
+        /// COMPTRAJ contributions.
+        void combineIntervalContributions();
 
         static std::string CTFKindToString(const CTFKind);
     };

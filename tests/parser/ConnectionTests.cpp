@@ -56,10 +56,14 @@
 #include <cstddef>
 #include <memory>
 #include <ostream>
+#include <set>
 #include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
+#include <vector>
+
+#include <fmt/format.h>
 
 namespace {
     double cp_rm3_per_db()
@@ -722,56 +726,57 @@ BOOST_AUTO_TEST_CASE(loadCOMPTRAJTESTSPE1) {
     Opm::Schedule sched(deck, state, python);
     const auto& units = deck.getActiveUnitSystem();
 
-    const auto& inj = sched.getWell("INJ", 0);
-    const auto& connections = inj.getConnections();
+    const auto check_connections = [&units](const Opm::WellConnections& connections,
+                                            const std::vector<double>& connection_factor,
+                                            const std::vector<double>& kh,
+                                            const std::vector<int>& global_index)
+    {
+        BOOST_REQUIRE_EQUAL(connections.size(), connection_factor.size());
+        for (std::size_t i = 0; i < connections.size(); ++i) {
+            BOOST_CHECK_CLOSE(connections[i].CF(), units.to_si(Opm::UnitSystem::measure::transmissibility, connection_factor[i]), 0.1);
+            BOOST_CHECK_CLOSE(connections[i].Kh(), units.to_si(Opm::UnitSystem::measure::effective_Kh, kh[i]), 0.1);
+            BOOST_CHECK_EQUAL(connections[i].global_index(), global_index[i]);
+        }
+    };
 
-    /* Comparison values (CFs and intersected cells) are from ResInsight through importing a deviation file with contents
-          WELLNAME: 'INJ1'
-          # X   Y    TVDMSL   MDMSL
-          500   500  -100.0   0.0
-          500   500   8325.0  8325.0
-          2500  2500  8425.0  8450.0
-       and adjusting the completion data in agreement with the COMPTRAJ data in the input file
-     */
-    const std::array<double, 4> connection_factor{311.783, 7.79428, 38.9674, 62.3465};
-    const std::array<int, 4> global_index{0, 100, 111, 211};
-    BOOST_CHECK_EQUAL(connections.size(), 4);
-    for (std::size_t i = 0 ; i < connections.size();  ++i ) {
-         BOOST_CHECK_CLOSE(connections[i].CF(), units.to_si(Opm::UnitSystem::measure::transmissibility, connection_factor[i]), 2e-2);
-         BOOST_CHECK_EQUAL(connections[i].global_index(), global_index[i]);
-    }
-}
-
-BOOST_AUTO_TEST_CASE(loadCOMPTRAJTESTSPE1_2) {
-    Opm::Parser parser;
-
-    const auto deck = parser.parseFile("SPE1CASE1_WELTRAJ_2.DATA");
-    auto python = std::make_shared<Opm::Python>();
-    Opm::EclipseState state(deck);
-    Opm::Schedule sched(deck, state, python);
-    const auto& units = deck.getActiveUnitSystem();
-
-    const auto& inj = sched.getWell("INJ", 0);
-    const auto& connections = inj.getConnections();
-
-    /* Comparison values (CFs and intersected cells) are from ResInsight through importing a deviation file with contents
-          WELLNAME: 'INJ1'
-          # X   Y    TVDMSL   MDMSL
-          2500   3500  -100.0   0.0
-          2500   3500   8325.0  8325.0
-          2750   3750   8375.0  8375.0
-          3500   4500   8400.0  8400.0
-          4500   5500   8425.0  8425.0
+    /* Comparison values (CFs, Kh and intersected cells) are from the PRT file of a reference run with the COMPDAT
+       keyword exported by ResInsight after importing the deviation files
+          WELLNAME: 'INJ'
+          # X     Y      TVDMSL  MDMSL
+          10400   11600  8325.0  8325.0
+          10400   11600  8425.0  8425.0
           -999
-       and adjusting the completion data in agreement with the COMPTRAJ data in the input file
+          WELLNAME: 'PROD'
+          # X       Y       TVDMSL  MDMSL
+          3400.00   4500.00   8325.00   8325.00
+          3858.19   4688.67   8374.60   8822.99
+          5326.76   6005.95   8403.97   10796.0
+          6500.00   7300.00   8410.00   12542.7
+          -999
+       and adjusting the completion data in agreement with the COMPTRAJ data in the input file.
+       The coordinates are given in the map coordinate system defined by MAPAXES.
+
+       CF and Kh are given with four significant digits and checked with a 0.1% tolerance.  This
+       also covers the small difference between the Darcy constant used by ResInsight and OPM.
      */
-    const std::array<double, 5> connection_factor{78.5921, 11.7884, 77.9007, 311.585, 155.784};
-    const std::array<int, 5> global_index{0, 100, 200, 211, 222};
-    BOOST_CHECK_EQUAL(connections.size(), 5);
-    for (std::size_t i = 0 ; i < connections.size();  ++i ) {
-         BOOST_CHECK_CLOSE(connections[i].CF(), units.to_si(Opm::UnitSystem::measure::transmissibility, connection_factor[i]), 2e-2);
-         BOOST_CHECK_EQUAL(connections[i].global_index(), global_index[i]);
-    }
+
+    // The trajectory of INJ starts above the reservoir.  Its well head is
+    // defaulted in WELSPECS and is derived from the trajectory instead.
+    const auto& inj = sched.getWell("INJ", 0);
+    BOOST_CHECK_EQUAL(inj.getHeadI(), 8);
+    BOOST_CHECK_EQUAL(inj.getHeadJ(), 8);
+    check_connections(inj.getConnections(),
+                      {10.45, 1.568, 10.45},
+                      {1.0e4, 1.5e3, 1.0e4},
+                      {88, 188, 288});
+
+    const auto& prod = sched.getWell("PROD", 0);
+    BOOST_CHECK_EQUAL(prod.getHeadI(), 1);
+    BOOST_CHECK_EQUAL(prod.getHeadJ(), 1);
+    check_connections(prod.getConnections(),
+                      {110.5, 17.76, 36.05, 60.75, 235.2, 94.74, 222.7, 74.78, 89.20},
+                      {1.004e5, 1.613e4, 3.273e4, 5.516e4, 2.135e5, 8.602e4, 2.022e5, 6.789e4, 8.099e4},
+                      {11, 111, 211, 212, 222, 223, 233, 234, 244});
 }
 
 BOOST_AUTO_TEST_CASE(Compdat_Zero_Perm_Dflt_Action)
@@ -1325,6 +1330,1253 @@ Problem with keyword COMPDAT
 In <memory string> line 44
 Connection (2,1,2) (direction 'Y') for well P ignored because
    PERMZ=0.000e+00 mD and PERMX=0.000e+00 mD.)");
+}
+
+// ---------------------------------------------------------------------------
+// Multiple COMPTRAJ records and branches per well
+// ---------------------------------------------------------------------------
+
+namespace {
+
+    /// Build a deck around \p schedule with a 5x5x3 grid of 100x100x10 m
+    /// cells whose top layer starts at 2000 m.  Keywords in \p extra_grid
+    /// are added to the end of the GRID section.
+    Opm::Deck comptrajDeck(const std::string& schedule,
+                           const std::string& extra_grid = {})
+    {
+        return Opm::Parser{}.parseString(R"(RUNSPEC
+START
+  18 MAR 2026 /
+OIL
+WATER
+DIMENS
+  5 5 3 /
+TABDIMS
+/
+EQLDIMS
+/
+WELLDIMS
+  2 20 1 2 /
+WSEGDIMS
+  2 20 3 /
+GRID
+DXV
+  5*100 /
+DYV
+  5*100 /
+DZV
+  3*10 /
+DEPTHZ
+  36*2000 /
+EQUALS
+  PERMX 100 /
+  PERMY 100 /
+  PERMZ  10 /
+  PORO    0.3 /
+/
+)" + extra_grid + R"(
+PROPS
+DENSITY
+  800 1000 1 /
+SOLUTION
+EQUIL
+  2010 200 2010 1.23 1995 0.0 1* 1* -5 /
+SCHEDULE
+)" + schedule + R"(
+TSTEP
+  5*10 /
+END
+)");
+    }
+
+    /// Convert a connection transmissibility factor from the deck's units.
+    double siCF(const Opm::Deck& deck, const double cf)
+    {
+        return deck.getActiveUnitSystem()
+            .to_si(Opm::UnitSystem::measure::transmissibility, cf);
+    }
+
+    /// Convert a Kh product from the deck's units.
+    double siKh(const Opm::Deck& deck, const double kh)
+    {
+        return deck.getActiveUnitSystem()
+            .to_si(Opm::UnitSystem::measure::effective_Kh, kh);
+    }
+
+    Opm::Schedule comptrajSchedule(const Opm::Deck& deck)
+    {
+        const auto es = Opm::EclipseState { deck };
+
+        return Opm::Schedule {
+            deck, es, Opm::ParseContext{}, *std::make_unique<Opm::ErrorGuard>(),
+            std::make_shared<Opm::Python>()
+        };
+    }
+
+    const Opm::Connection&
+    connectionAt(const Opm::WellConnections& connections, const int i, const int j, const int k)
+    {
+        for (const auto& conn : connections) {
+            if (conn.sameCoordinate(i, j, k)) {
+                return conn;
+            }
+        }
+
+        BOOST_FAIL(fmt::format("No connection at ({},{},{})", i, j, k));
+        return connections[0];
+    }
+
+    // A vertical main branch through column (3,3) and a lateral running in
+    // the X direction through the middle layer, so that cell (3,3,2) is
+    // perforated by both.  Measured depths are chosen so that MD == TVD along
+    // the vertical part.
+    const std::string weltraj_two_branches = R"(WELSPECS
+  'W1' 'G' 3 3 2000.0 OIL /
+/
+WELTRAJ
+-- WELL BRANCH   X      Y      TVD     MD
+  'W1'    1     250    250    2000    2000 /
+  'W1'    1     250    250    2030    2030 /
+  'W1'    2     250    250    2015    2015 /
+  'W1'    2     450    250    2015    2215 /
+/
+)";
+
+    // A main branch going down from the top layer into the middle one and
+    // back up again, entering cell (3,3,1) twice: from MD 2002 to 2010 and
+    // from MD 2030 to 2035.  An interval from MD 2002 to 2012 only covers
+    // the first visit, one from MD 2028 to 2035 only the second.
+    const std::string weltraj_u_shape = R"(WELSPECS
+  'W1' 'G' 3 3 2000.0 OIL /
+/
+WELTRAJ
+-- WELL BRANCH   X      Y      TVD     MD
+  'W1'    1     250    250    2000    2000 /
+  'W1'    1     250    250    2015    2015 /
+  'W1'    1     260    250    2015    2025 /
+  'W1'    1     260    250    2005    2035 /
+/
+)";
+
+    /// Connection in cell (3,3,1), which weltraj_u_shape enters twice.
+    const Opm::Connection& reenteredConnection(const Opm::Schedule& sched)
+    {
+        return connectionAt(sched.getWell("W1", 0).getConnections(), 2, 2, 0);
+    }
+
+} // Anonymous namespace
+
+BOOST_AUTO_TEST_CASE(Comptraj_Same_Branch_Disjoint_Intervals)
+{
+    // Two COMPTRAJ records for the same branch, covering the top and the
+    // bottom layer but not the middle one.
+    const auto deck = comptrajDeck(weltraj_two_branches + R"(COMPTRAJ
+-- WELL BRANCH  TOP    BOT   REF NO STATE SAT   CF   DIAM   KH  SKIN
+  'W1'    1    2000   2010   2*     1*    1*   10.0  0.25  100  0 /
+/
+COMPTRAJ
+  'W1'    1    2020   2030   2*     1*    1*   30.0  0.25  300  0 /
+/
+)");
+
+    const auto sched = comptrajSchedule(deck);
+    const auto& connections = sched.getWell("W1", 0).getConnections();
+
+    BOOST_REQUIRE_EQUAL(connections.size(), std::size_t{2});
+
+    const auto& top = connectionAt(connections, 2, 2, 0);
+    const auto& bottom = connectionAt(connections, 2, 2, 2);
+
+    BOOST_CHECK(top.fromTrajectory());
+    BOOST_CHECK(bottom.fromTrajectory());
+
+    // Each cell has a single contributor, so its CTF is that record's.
+    BOOST_CHECK_EQUAL(top.intervalContributions().size(), std::size_t{1});
+    BOOST_CHECK_EQUAL(bottom.intervalContributions().size(), std::size_t{1});
+}
+
+BOOST_AUTO_TEST_CASE(Comptraj_Same_Branch_Respecified_Interval_Last_Wins)
+{
+    const auto deck = comptrajDeck(weltraj_two_branches + R"(COMPTRAJ
+  'W1'    1    2000   2010   2*     1*    1*   10.0  0.25  100  0 /
+/
+COMPTRAJ
+  'W1'    1    2000   2010   2*     1*    1*   30.0  0.25  300  0 /
+/
+)");
+
+    const auto sched = comptrajSchedule(deck);
+    const auto& connections = sched.getWell("W1", 0).getConnections();
+
+    BOOST_REQUIRE_EQUAL(connections.size(), std::size_t{1});
+
+    const auto& conn = connectionAt(connections, 2, 2, 0);
+
+    // Re-specifying the same interval replaces its contribution outright
+    // rather than adding to it.
+    BOOST_CHECK_EQUAL(conn.intervalContributions().size(), std::size_t{1});
+    BOOST_CHECK_CLOSE(conn.CF(), siCF(deck, 30.0), 1.0e-8);
+    BOOST_CHECK_CLOSE(conn.Kh(), siKh(deck, 300.0), 1.0e-8);
+}
+
+BOOST_AUTO_TEST_CASE(Comptraj_Two_Branches_Without_Shared_Cell)
+{
+    // Branch 1 perforates the top layer only, branch 2 the two cells the
+    // lateral reaches beyond the shared column.
+    const auto deck = comptrajDeck(weltraj_two_branches + R"(COMPTRAJ
+  'W1'    1    2000   2010   2*     1*    1*   10.0  0.25  100  0 /
+  'W1'    2    2115   2215   2*     1*    1*   30.0  0.25  300  0 /
+/
+)");
+
+    const auto sched = comptrajSchedule(deck);
+    const auto& connections = sched.getWell("W1", 0).getConnections();
+
+    BOOST_REQUIRE_EQUAL(connections.size(), std::size_t{3});
+
+    for (const auto& conn : connections) {
+        BOOST_REQUIRE_EQUAL(conn.intervalContributions().size(), std::size_t{1});
+    }
+
+    const auto branchAt = [&connections](const int i, const int j, const int k)
+    { return connectionAt(connections, i, j, k).intervalContributions().front().interval.branch; };
+
+    BOOST_CHECK_EQUAL(branchAt(2, 2, 0), 1);
+    BOOST_CHECK_EQUAL(branchAt(3, 2, 1), 2);
+    BOOST_CHECK_EQUAL(branchAt(4, 2, 1), 2);
+}
+
+BOOST_AUTO_TEST_CASE(Comptraj_Two_Branches_Sharing_A_Cell)
+{
+    // Both branches perforate cell (3,3,2); their transmissibilities combine.
+    const auto deck = comptrajDeck(weltraj_two_branches + R"(COMPTRAJ
+  'W1'    1    2010   2020   2*     1*    1*   10.0  0.20  100  1.0 /
+  'W1'    2    2015   2115   2*     1*    1*   30.0  0.40  300  5.0 /
+/
+)");
+
+    const auto sched = comptrajSchedule(deck);
+    const auto& connections = sched.getWell("W1", 0).getConnections();
+
+    const auto& shared = connectionAt(connections, 2, 2, 1);
+
+    BOOST_REQUIRE_EQUAL(shared.intervalContributions().size(), std::size_t{2});
+    BOOST_CHECK_EQUAL(shared.intervalContributions()[0].interval.branch, 1);
+    BOOST_CHECK_EQUAL(shared.intervalContributions()[1].interval.branch, 2);
+
+    // CF and Kh are additive.
+    BOOST_CHECK_CLOSE(shared.CF(), siCF(deck, 10.0 + 30.0), 1.0e-8);
+    BOOST_CHECK_CLOSE(shared.Kh(), siKh(deck, 100.0 + 300.0), 1.0e-8);
+    BOOST_CHECK(shared.dir() == Opm::Connection::Direction::X);
+    BOOST_CHECK_EQUAL(shared.Ke(), shared.intervalContributions()[1].ctf.Ke);
+
+    // Wellbore radius and skin are CF-weighted averages.
+    BOOST_CHECK_CLOSE(shared.rw(), (10.0*0.10 + 30.0*0.20) / 40.0, 1.0e-8);
+    BOOST_CHECK_CLOSE(shared.skinFactor(), (10.0*1.0 + 30.0*5.0) / 40.0, 1.0e-8);
+
+    // The cell that only branch 2 reaches keeps that branch's own values.
+    const auto& lateral_only = connectionAt(connections, 3, 2, 1);
+    BOOST_REQUIRE_EQUAL(lateral_only.intervalContributions().size(), std::size_t{1});
+    BOOST_CHECK_CLOSE(lateral_only.CF(), siCF(deck, 30.0), 1.0e-8);
+}
+
+BOOST_AUTO_TEST_CASE(Comptraj_Respecifying_One_Branch_Of_A_Shared_Cell)
+{
+    // The third record re-specifies branch 1 on the shared cell; branch 2's
+    // contribution must survive unchanged.
+    const auto deck = comptrajDeck(weltraj_two_branches + R"(COMPTRAJ
+  'W1'    1    2010   2020   2*     1*    1*   10.0  0.20  100  1.0 /
+  'W1'    2    2015   2115   2*     1*    1*   30.0  0.40  300  5.0 /
+/
+COMPTRAJ
+  'W1'    1    2010   2020   2*     1*    1*   50.0  0.20  700  1.0 /
+/
+)");
+
+    const auto sched = comptrajSchedule(deck);
+    const auto& connections = sched.getWell("W1", 0).getConnections();
+
+    const auto& shared = connectionAt(connections, 2, 2, 1);
+
+    BOOST_REQUIRE_EQUAL(shared.intervalContributions().size(), std::size_t{2});
+    BOOST_CHECK_CLOSE(shared.CF(), siCF(deck, 50.0 + 30.0), 1.0e-8);
+    BOOST_CHECK_CLOSE(shared.Kh(), siKh(deck, 700.0 + 300.0), 1.0e-8);
+    BOOST_CHECK(shared.dir() == Opm::Connection::Direction::Z);
+    BOOST_CHECK_EQUAL(shared.Ke(), shared.intervalContributions()[0].ctf.Ke);
+}
+
+BOOST_AUTO_TEST_CASE(Comptraj_Branch_Order_Does_Not_Matter)
+{
+    const auto branch_first = R"(COMPTRAJ
+  'W1'    1    2010   2020   2*     1*    1*   10.0  0.20  100  1.0 /
+  'W1'    2    2015   2115   2*     1*    1*   30.0  0.40  300  5.0 /
+/
+)";
+
+    const auto lateral_first = R"(COMPTRAJ
+  'W1'    2    2015   2115   2*     1*    1*   30.0  0.40  300  5.0 /
+  'W1'    1    2010   2020   2*     1*    1*   10.0  0.20  100  1.0 /
+/
+)";
+
+    const auto deck_a = comptrajDeck(weltraj_two_branches + branch_first);
+    const auto deck_b = comptrajDeck(weltraj_two_branches + lateral_first);
+
+    const auto sched_a = comptrajSchedule(deck_a);
+    const auto sched_b = comptrajSchedule(deck_b);
+
+    const auto& a = connectionAt(sched_a.getWell("W1", 0).getConnections(), 2, 2, 1);
+    const auto& b = connectionAt(sched_b.getWell("W1", 0).getConnections(), 2, 2, 1);
+
+    BOOST_CHECK(a.intervalContributions() == b.intervalContributions());
+    BOOST_CHECK_CLOSE(a.CF(), b.CF(), 1.0e-8);
+    BOOST_CHECK_CLOSE(a.Kh(), b.Kh(), 1.0e-8);
+    BOOST_CHECK_CLOSE(a.rw(), b.rw(), 1.0e-8);
+    BOOST_CHECK_CLOSE(a.skinFactor(), b.skinFactor(), 1.0e-8);
+    BOOST_CHECK(a.dir() == Opm::Connection::Direction::X);
+    BOOST_CHECK(a.dir() == b.dir());
+    BOOST_CHECK_EQUAL(a.Ke(), b.Ke());
+}
+
+BOOST_AUTO_TEST_CASE(Comptraj_Direction_Uses_Cell_Fractions)
+{
+    using Direction = Opm::Connection::Direction;
+    struct Example {
+        std::array<double, 3> displacement;
+        Direction expected;
+    };
+    const auto examples = std::array {
+        Example{{60, 0, 0}, Direction::X},
+        Example{{0, 60, 0}, Direction::Y},
+        Example{{0, 0, 6}, Direction::Z},
+        Example{{20, 0, 5}, Direction::Z},
+        Example{{40, 0, 2}, Direction::X},
+        Example{{40, 40, 0}, Direction::Z},
+        Example{{40, 0, 4}, Direction::Z},
+        Example{{0, 40, 4}, Direction::Z},
+    };
+    for (const auto& example : examples) {
+        for (const bool explicit_cf : {false, true}) {
+            // MAPAXES rotates local X to map Y and local Y to map -X.
+            for (const bool rotated : {false, true}) {
+                const auto point = [rotated](const double x, const double y)
+                { return rotated ? std::array{-y, x} : std::array{x, y}; };
+                const auto start = point(210, 210);
+                const auto end = point(210 + example.displacement[0],
+                                       210 + example.displacement[1]);
+                const auto schedule = fmt::format(R"(WELSPECS
+  'W1' 'G' 3 3 2000 OIL /
+/
+WELTRAJ
+  'W1' 1 {} {} 2002 0 /
+  'W1' 1 {} {} {} 100 /
+/
+COMPTRAJ
+  'W1' 1 0 100 2* 1* 1* {} 0.25 {} 0 /
+/
+)", start[0], start[1], end[0], end[1], 2002 + example.displacement[2],
+                    explicit_cf ? "10" : "1*", explicit_cf ? "100" : "1*");
+                const auto deck = comptrajDeck(schedule,
+                    std::string{rotated ? "MAPAXES\n -1 0 0 0 0 1 /\n" : ""}
+                    + "EQUALS\n PERMY 25 /\n/\n");
+                const auto sched = comptrajSchedule(deck);
+                const auto& connections = sched.getWell("W1", 0).getConnections();
+                BOOST_REQUIRE_EQUAL(connections.size(), std::size_t{1});
+                const auto& conn = connections[0];
+                BOOST_CHECK(conn.dir() == example.expected);
+                const auto& contribution = conn.intervalContributions().front();
+                BOOST_CHECK(contribution.direction == example.expected);
+                BOOST_CHECK_EQUAL(contribution.strongest_crossing_cf, conn.CF());
+                const auto& units = deck.getActiveUnitSystem();
+                const auto permx = units.to_si(Opm::UnitSystem::measure::permeability, 100);
+                const auto permy = units.to_si(Opm::UnitSystem::measure::permeability, 25);
+                const auto permz = units.to_si(Opm::UnitSystem::measure::permeability, 10);
+                const auto expected_ke = example.expected == Direction::X
+                    ? std::sqrt(permy * permz)
+                    : example.expected == Direction::Y
+                    ? std::sqrt(permx * permz)
+                    : std::sqrt(permx * permy);
+                BOOST_CHECK_CLOSE(conn.Ke(), expected_ke, 1.0e-8);
+                if (explicit_cf) {
+                    BOOST_CHECK_CLOSE(conn.CF(), siCF(deck, 10), 1.0e-8);
+                    BOOST_CHECK_CLOSE(conn.Kh(), siKh(deck, 100), 1.0e-8);
+                }
+            }
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(Comptraj_Direction_Combines_Individual_Crossings)
+{
+    using Direction = Opm::Connection::Direction;
+    using Contribution = Opm::Connection::IntervalContribution;
+    const auto weaker = Contribution{
+        .interval = {.branch = 1, .top = 0, .bottom = 10},
+        .ctf = {.CF = 16, .Ke = 2},
+        .direction = Direction::X,
+        .strongest_crossing_cf = 8,
+    };
+    const auto stronger = Contribution{
+        .interval = {.branch = 2, .top = 0, .bottom = 10},
+        .ctf = {.CF = 10, .Ke = 3},
+        .direction = Direction::Y,
+        .strongest_crossing_cf = 10,
+    };
+    for (const bool reversed : {false, true}) {
+        auto conn = Opm::Connection{};
+        conn.addIntervalContribution(reversed ? stronger : weaker);
+        conn.addIntervalContribution(reversed ? weaker : stronger);
+        BOOST_CHECK(conn.dir() == Direction::Y);
+        BOOST_CHECK_EQUAL(conn.Ke(), 3);
+        BOOST_CHECK_EQUAL(conn.CF(), 26);
+        conn.removeIntervalContribution(stronger.interval);
+        BOOST_CHECK(conn.dir() == Direction::X);
+        BOOST_CHECK_EQUAL(conn.Ke(), 2);
+
+        auto tied = stronger;
+        tied.strongest_crossing_cf = weaker.strongest_crossing_cf;
+        conn.addIntervalContribution(tied);
+        BOOST_CHECK(conn.dir() == Direction::X);
+        BOOST_CHECK_EQUAL(conn.Ke(), 2);
+        auto reverse_tie = Opm::Connection{};
+        reverse_tie.addIntervalContribution(tied);
+        reverse_tie.addIntervalContribution(weaker);
+        BOOST_CHECK(reverse_tie.dir() == Direction::X);
+        BOOST_CHECK_EQUAL(reverse_tie.Ke(), 2);
+
+        auto changed = weaker;
+        changed.direction = Direction::Z;
+        BOOST_CHECK(!(changed == weaker));
+        changed = weaker;
+        changed.strongest_crossing_cf += 1;
+        BOOST_CHECK(!(changed == weaker));
+    }
+}
+
+BOOST_AUTO_TEST_CASE(Comptraj_Compdat_Mixing_Is_Rejected)
+{
+    // COMPDAT after COMPTRAJ.
+    {
+        const auto deck = comptrajDeck(weltraj_two_branches + R"(COMPTRAJ
+  'W1'    1    2000   2010   2*     1*    1*   10.0  0.25  100  0 /
+/
+COMPDAT
+  'W1'  3  3  1  1  OPEN  1  1*  0.25 /
+/
+)");
+
+        BOOST_CHECK_THROW(comptrajSchedule(deck), Opm::OpmInputError);
+    }
+
+    // COMPTRAJ after COMPDAT.
+    {
+        const auto deck = comptrajDeck(R"(WELSPECS
+  'W1' 'G' 3 3 2000.0 OIL /
+/
+COMPDAT
+  'W1'  3  3  1  1  OPEN  1  1*  0.25 /
+/
+WELTRAJ
+  'W1'    1     250    250    2000    2000 /
+  'W1'    1     250    250    2030    2030 /
+/
+)");
+
+        BOOST_CHECK_THROW(comptrajSchedule(deck), Opm::OpmInputError);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(Comptraj_Repeated_Records_Are_Accepted)
+{
+    const auto deck = comptrajDeck(weltraj_two_branches + R"(COMPTRAJ
+  'W1'    1    2000   2010   2*     1*    1*   10.0  0.25  100  0 /
+/
+COMPTRAJ
+  'W1'    1    2020   2030   2*     1*    1*   30.0  0.25  300  0 /
+/
+COMPTRAJ
+  'W1'    2    2115   2215   2*     1*    1*   30.0  0.25  300  0 /
+/
+)");
+
+    BOOST_CHECK_NO_THROW(comptrajSchedule(deck));
+}
+
+BOOST_AUTO_TEST_CASE(Comptraj_Branch_Number_Must_Be_Positive)
+{
+    // WELTRAJ.
+    {
+        const auto deck = comptrajDeck(R"(WELSPECS
+  'W1' 'G' 3 3 2000.0 OIL /
+/
+WELTRAJ
+  'W1'    0     250    250    2000    2000 /
+  'W1'    0     250    250    2030    2030 /
+/
+)");
+
+        BOOST_CHECK_THROW(comptrajSchedule(deck), Opm::OpmInputError);
+    }
+
+    // COMPTRAJ.
+    {
+        const auto deck = comptrajDeck(weltraj_two_branches + R"(COMPTRAJ
+  'W1'   -1    2000   2010   2*     1*    1*   10.0  0.25  100  0 /
+/
+)");
+
+        BOOST_CHECK_THROW(comptrajSchedule(deck), Opm::OpmInputError);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(Comptraj_Unknown_Branch_Is_An_Input_Error)
+{
+    // Branch 3 is never given a trajectory.  This used to escape as a raw
+    // std::out_of_range from the trajectory lookup.
+    const auto deck = comptrajDeck(weltraj_two_branches + R"(COMPTRAJ
+  'W1'    3    2000   2010   2*     1*    1*   10.0  0.25  100  0 /
+/
+)");
+
+    BOOST_CHECK_THROW(comptrajSchedule(deck), Opm::OpmInputError);
+}
+
+BOOST_AUTO_TEST_CASE(Comptraj_Shutting_A_Shared_Cell_Shuts_It_For_All_Branches)
+{
+    const auto deck = comptrajDeck(weltraj_two_branches + R"(COMPTRAJ
+  'W1'    1    2000   2020   2*     OPEN  1*   10.0  0.20  100  1.0 /
+  'W1'    2    2015   2115   2*     SHUT  1*   30.0  0.40  300  5.0 /
+/
+)");
+
+    const auto sched = comptrajSchedule(deck);
+    const auto& connections = sched.getWell("W1", 0).getConnections();
+
+    const auto& shared = connectionAt(connections, 2, 2, 1);
+
+    // The state of the last record to touch the cell wins, for every branch.
+    BOOST_CHECK_EQUAL(shared.intervalContributions().size(), std::size_t{2});
+    BOOST_CHECK(shared.state() == Opm::Connection::State::SHUT);
+
+    // Cells that only branch 1 reaches stay open.
+    BOOST_CHECK(connectionAt(connections, 2, 2, 0).state() == Opm::Connection::State::OPEN);
+}
+
+BOOST_AUTO_TEST_CASE(Comptraj_Perforation_Interval_Must_Lie_On_The_Branch)
+{
+    // Past the end of the branch's trajectory.
+    {
+        const auto deck = comptrajDeck(weltraj_two_branches + R"(COMPTRAJ
+  'W1'    1    2000   2100   2*     1*    1*   10.0  0.25  100  0 /
+/
+)");
+
+        BOOST_CHECK_THROW(comptrajSchedule(deck), Opm::OpmInputError);
+    }
+
+    // Before its start.
+    {
+        const auto deck = comptrajDeck(weltraj_two_branches + R"(COMPTRAJ
+  'W1'    2    2000   2100   2*     1*    1*   10.0  0.25  100  0 /
+/
+)");
+
+        BOOST_CHECK_THROW(comptrajSchedule(deck), Opm::OpmInputError);
+    }
+
+    // Reversed.
+    {
+        const auto deck = comptrajDeck(weltraj_two_branches + R"(COMPTRAJ
+  'W1'    1    2020   2010   2*     1*    1*   10.0  0.25  100  0 /
+/
+)");
+
+        BOOST_CHECK_THROW(comptrajSchedule(deck), Opm::OpmInputError);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(Comptraj_Three_Branches_Sharing_A_Cell)
+{
+    // A main branch with two laterals kicking off inside the same cell, so
+    // that cell (3,3,2) has three contributors.
+    const auto deck = comptrajDeck(R"(WELSPECS
+  'W1' 'G' 3 3 2000.0 OIL /
+/
+WELTRAJ
+  'W1'    1     250    250    2000    2000 /
+  'W1'    1     250    250    2030    2030 /
+  'W1'    2     250    250    2015    2015 /
+  'W1'    2     450    250    2015    2215 /
+  'W1'    3     250    250    2015    2015 /
+  'W1'    3     250    450    2015    2215 /
+/
+COMPTRAJ
+-- WELL BRANCH  TOP    BOT   REF NO STATE SAT   CF   DIAM   KH  SKIN
+  'W1'    1    2010   2020   2*     1*    1*   10.0  0.20  100  1.0 /
+  'W1'    2    2015   2115   2*     1*    1*   30.0  0.40  300  5.0 /
+  'W1'    3    2015   2115   2*     1*    1*   60.0  0.60  600  9.0 /
+/
+)");
+
+    const auto sched = comptrajSchedule(deck);
+    const auto& connections = sched.getWell("W1", 0).getConnections();
+
+    const auto& shared = connectionAt(connections, 2, 2, 1);
+
+    BOOST_REQUIRE_EQUAL(shared.intervalContributions().size(), std::size_t{3});
+    BOOST_CHECK_EQUAL(shared.intervalContributions()[0].interval.branch, 1);
+    BOOST_CHECK_EQUAL(shared.intervalContributions()[1].interval.branch, 2);
+    BOOST_CHECK_EQUAL(shared.intervalContributions()[2].interval.branch, 3);
+
+    BOOST_CHECK_CLOSE(shared.CF(), siCF(deck, 10.0 + 30.0 + 60.0), 1.0e-8);
+    BOOST_CHECK_CLOSE(shared.Kh(), siKh(deck, 100.0 + 300.0 + 600.0), 1.0e-8);
+
+    BOOST_CHECK_CLOSE(shared.rw(),
+                      (10.0*0.10 + 30.0*0.20 + 60.0*0.30) / 100.0, 1.0e-8);
+    BOOST_CHECK_CLOSE(shared.skinFactor(),
+                      (10.0*1.0 + 30.0*5.0 + 60.0*9.0) / 100.0, 1.0e-8);
+
+}
+
+BOOST_AUTO_TEST_CASE(Comptraj_Reentering_A_Cell_Sums_Calculated_CTF)
+{
+    // CF and Kh calculated from the cell properties.
+    const auto first_visit = std::string { R"(COMPTRAJ
+-- WELL BRANCH  TOP    BOT   REF NO STATE SAT   CF   DIAM   KH  SKIN
+  'W1'    1    2002   2012   2*     1*    1*    1*  0.25   1*    0 /
+/
+)" };
+
+    const auto second_visit = std::string { R"(COMPTRAJ
+  'W1'    1    2028   2035   2*     1*    1*    1*  0.25   1*    0 /
+/
+)" };
+
+    const auto both_visits = std::string { R"(COMPTRAJ
+  'W1'    1    2002   2035   2*     1*    1*    1*  0.25   1*    0 /
+/
+)" };
+
+    const auto sched_first = comptrajSchedule(comptrajDeck(weltraj_u_shape + first_visit));
+    const auto sched_second = comptrajSchedule(comptrajDeck(weltraj_u_shape + second_visit));
+
+    const auto& first = reenteredConnection(sched_first);
+    const auto& second = reenteredConnection(sched_second);
+
+    BOOST_CHECK_CLOSE(first.connectionLength(), 8.0, 1.0e-8);
+    BOOST_CHECK_CLOSE(second.connectionLength(), 5.0, 1.0e-8);
+    BOOST_CHECK_CLOSE(first.CF() / second.CF(), 8.0 / 5.0, 1.0e-8);
+
+    // Both visits contribute, whether they are covered by a single interval
+    // or by separate ones.
+    const auto sched_single = comptrajSchedule(comptrajDeck(weltraj_u_shape + both_visits));
+    const auto sched_separate =
+        comptrajSchedule(comptrajDeck(weltraj_u_shape + first_visit + second_visit));
+
+    for (const auto* sched : { &sched_single, &sched_separate }) {
+        const auto& conn = reenteredConnection(*sched);
+
+        BOOST_CHECK_CLOSE(conn.CF(), first.CF() + second.CF(), 1.0e-8);
+        BOOST_CHECK_CLOSE(conn.Kh(), first.Kh() + second.Kh(), 1.0e-8);
+        BOOST_CHECK_CLOSE(conn.connectionLength(), 8.0 + 5.0, 1.0e-8);
+        BOOST_CHECK(conn.kind() == Opm::Connection::CTFKind::Defaulted);
+    }
+
+    BOOST_CHECK_EQUAL(reenteredConnection(sched_single).intervalContributions().size(),
+                      std::size_t{1});
+    BOOST_CHECK_EQUAL(reenteredConnection(sched_separate).intervalContributions().size(),
+                      std::size_t{2});
+}
+
+BOOST_AUTO_TEST_CASE(Comptraj_Reentry_Direction_Uses_Strongest_Crossing)
+{
+    const auto trajectory = std::string{R"(WELSPECS
+  'W1' 'G' 3 3 2000 OIL /
+/
+WELTRAJ
+  'W1' 1 220 250 2005 0 /
+  'W1' 1 350 250 2005 130 /
+  'W1' 1 350 350 2005 230 /
+  'W1' 1 250 350 2005 330 /
+  'W1' 1 250 205 2005 475 /
+/
+)"};
+    const auto record = [](const int top, const int bottom)
+    { return fmt::format("COMPTRAJ\n 'W1' 1 {} {} 2* 1* 1* 1* 0.25 1* 0 /\n/\n", top, bottom); };
+    const auto first = comptrajSchedule(comptrajDeck(trajectory + record(0, 130)));
+    const auto last = comptrajSchedule(comptrajDeck(trajectory + record(330, 475)));
+    const auto& x = connectionAt(first.getWell("W1", 0).getConnections(), 2, 2, 0);
+    const auto& y = connectionAt(last.getWell("W1", 0).getConnections(), 2, 2, 0);
+    BOOST_CHECK(x.dir() == Opm::Connection::Direction::X);
+    BOOST_CHECK(y.dir() == Opm::Connection::Direction::Y);
+    BOOST_REQUIRE(y.CF() > x.CF());
+    for (const auto& records : {record(0, 475),
+                               record(0, 130) + record(330, 475),
+                               record(330, 475) + record(0, 130)}) {
+        const auto sched = comptrajSchedule(comptrajDeck(trajectory + records));
+        const auto& conn = connectionAt(sched.getWell("W1", 0).getConnections(), 2, 2, 0);
+        BOOST_CHECK(conn.dir() == Opm::Connection::Direction::Y);
+        BOOST_CHECK_CLOSE(conn.CF(), x.CF() + y.CF(), 1.0e-8);
+        BOOST_CHECK_CLOSE(conn.Kh(), x.Kh() + y.Kh(), 1.0e-8);
+        BOOST_CHECK_EQUAL(conn.intervalContributions().back().strongest_crossing_cf, y.CF());
+    }
+    // An explicit CF applies once per cell. All its crossings have equal
+    // ranking, so the first crossing supplies the direction.
+    const auto explicit_cf = comptrajSchedule(comptrajDeck(trajectory + R"(COMPTRAJ
+  'W1' 1 0 475 2* 1* 1* 10 0.25 100 0 /
+/
+)"));
+    BOOST_CHECK(connectionAt(explicit_cf.getWell("W1", 0).getConnections(), 2, 2, 0).dir()
+                == Opm::Connection::Direction::X);
+}
+
+BOOST_AUTO_TEST_CASE(Comptraj_Reentering_A_Cell_Counts_Input_CTF_Once)
+{
+    // A single interval entering cell (3,3,1) twice.
+    const auto deck = comptrajDeck(weltraj_u_shape + R"(COMPTRAJ
+-- WELL BRANCH  TOP    BOT   REF NO STATE SAT   CF   DIAM   KH  SKIN
+  'W1'    1    2002   2035   2*     1*    1*   10.0  0.25  100    0 /
+/
+)");
+
+    const auto sched = comptrajSchedule(deck);
+    const auto& conn = reenteredConnection(sched);
+
+    BOOST_CHECK_EQUAL(conn.intervalContributions().size(), std::size_t{1});
+    BOOST_CHECK_CLOSE(conn.CF(), siCF(deck, 10.0), 1.0e-8);
+    BOOST_CHECK_CLOSE(conn.Kh(), siKh(deck, 100.0), 1.0e-8);
+    BOOST_CHECK(conn.kind() == Opm::Connection::CTFKind::DeckValue);
+}
+
+BOOST_AUTO_TEST_CASE(Comptraj_Same_Branch_Intervals_Sharing_A_Cell)
+{
+    // Two intervals of the same branch, each entering cell (3,3,1) once,
+    // combine like intervals of different branches do, in either order.
+    const auto first_visit = std::string { R"(COMPTRAJ
+-- WELL BRANCH  TOP    BOT   REF NO STATE SAT   CF   DIAM   KH  SKIN
+  'W1'    1    2002   2012   2*     1*    1*   10.0  0.20  100  1.0 /
+/
+)" };
+
+    const auto second_visit = std::string { R"(COMPTRAJ
+  'W1'    1    2028   2035   2*     1*    1*   30.0  0.40  300  5.0 /
+/
+)" };
+
+    const auto deck = comptrajDeck(weltraj_u_shape + first_visit + second_visit);
+    const auto sched = comptrajSchedule(deck);
+    const auto& conn = reenteredConnection(sched);
+
+    BOOST_REQUIRE_EQUAL(conn.intervalContributions().size(), std::size_t{2});
+    BOOST_CHECK_EQUAL(conn.intervalContributions()[0].interval.branch, 1);
+    BOOST_CHECK_EQUAL(conn.intervalContributions()[1].interval.branch, 1);
+
+    BOOST_CHECK_CLOSE(conn.CF(), siCF(deck, 10.0 + 30.0), 1.0e-8);
+    BOOST_CHECK_CLOSE(conn.Kh(), siKh(deck, 100.0 + 300.0), 1.0e-8);
+    BOOST_CHECK_CLOSE(conn.rw(), (10.0*0.10 + 30.0*0.20) / 40.0, 1.0e-8);
+    BOOST_CHECK_CLOSE(conn.skinFactor(), (10.0*1.0 + 30.0*5.0) / 40.0, 1.0e-8);
+
+    const auto sched_reversed =
+        comptrajSchedule(comptrajDeck(weltraj_u_shape + second_visit + first_visit));
+    const auto& reversed = reenteredConnection(sched_reversed);
+
+    BOOST_CHECK(reversed.intervalContributions() == conn.intervalContributions());
+    BOOST_CHECK(reversed.ctfProperties() == conn.ctfProperties());
+}
+
+BOOST_AUTO_TEST_CASE(Comptraj_Interval_Wholly_Within_One_Cell_Creates_Connection)
+{
+    const auto schedule = R"(WELSPECS
+  'W1' 'G' 3 3 2000.0 OIL /
+/
+WELTRAJ
+  'W1'    1     250    250    2002    2002 /
+  'W1'    1     260    250    2004    2004 /
+  'W1'    1     260    260    2008    2008 /
+/
+COMPTRAJ
+-- CF and Kh defaulted, so they are calculated from the cell properties.
+  'W1'    1    2002   2008   2*     1*    1*   1*  0.25  1*  0 /
+/
+)";
+    const auto deck = comptrajDeck(schedule);
+    const auto sched = comptrajSchedule(deck);
+    const auto& connections = sched.getWell("W1", 0).getConnections();
+
+    BOOST_REQUIRE_EQUAL(connections.size(), std::size_t{1});
+    const auto& conn = connectionAt(connections, 2, 2, 0);
+    BOOST_REQUIRE_EQUAL(conn.intervalContributions().size(), std::size_t{1});
+    BOOST_CHECK(conn.CF() > 0.0);
+    BOOST_CHECK(conn.Kh() > 0.0);
+    // A single straight piece from the first to the last point of the interval.
+    BOOST_CHECK_CLOSE(conn.ctfProperties().connection_length,
+                      std::hypot(10.0, 10.0, 6.0),
+                      1.0e-8);
+
+}
+
+BOOST_AUTO_TEST_CASE(Comptraj_Interval_On_Shared_Cell_Face_Creates_One_Connection)
+{
+    // Vertical intervals in the face between two cells, and on the edge between four cells.
+    for (const auto* weltraj : {
+            R"(  'W1'    1     300    250.25    2002    2002 /
+  'W1'    1     300    250.25    2008    2008 /
+)",
+            R"(  'W1'    1     250.5    300    2002    2002 /
+  'W1'    1     250.5    300    2008    2008 /
+)",
+            R"(  'W1'    1     300    300    2002    2002 /
+  'W1'    1     300    300    2008    2008 /
+)" })
+    {
+        const auto schedule = std::string { R"(WELSPECS
+  'W1' 'G' 3 3 2000.0 OIL /
+/
+WELTRAJ
+)" } + weltraj + R"(/
+COMPTRAJ
+  'W1'    1    2002   2008   2*     1*    1*   1*  0.25  1*  0 /
+/
+)";
+        const auto sched = comptrajSchedule(comptrajDeck(schedule));
+        const auto& connections = sched.getWell("W1", 0).getConnections();
+
+        BOOST_REQUIRE_EQUAL(connections.size(), std::size_t{1});
+        BOOST_CHECK_CLOSE(connections[0].ctfProperties().connection_length, 6.0, 1.0e-8);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(Comptraj_Interval_On_Shared_Face_Skips_Inactive_Cell)
+{
+    const auto schedule = R"(WELSPECS
+  'W1' 'G' 3 3 2000.0 OIL /
+/
+WELTRAJ
+  'W1'    1     300    250.25    2002    2002 /
+  'W1'    1     300    250.25    2008    2008 /
+/
+COMPTRAJ
+  'W1'    1    2002   2008   2*     1*    1*   1*  0.25  1*  0 /
+/
+)";
+    const auto sched = comptrajSchedule(comptrajDeck(
+        schedule,
+        R"(EQUALS
+  ACTNUM 0 3 3 3 3 1 1 /
+/
+)"));
+    const auto& connections = sched.getWell("W1", 0).getConnections();
+
+    BOOST_REQUIRE_EQUAL(connections.size(), std::size_t{1});
+    BOOST_CHECK(connectionAt(connections, 3, 2, 0).state() == Opm::Connection::State::OPEN);
+}
+
+BOOST_AUTO_TEST_CASE(Comptraj_Overlapping_Single_Cell_Intervals_Across_Keywords_Are_Rejected)
+{
+    const auto first = std::string { R"(COMPTRAJ
+  'W1'    1    2002   2008   2*     1*    1*   1*  0.25  1*  0 /
+/
+)" };
+    const auto overlapping = std::string { R"(COMPTRAJ
+  'W1'    1    2004   2010   2*     1*    1*   1*  0.25  1*  0 /
+/
+)" };
+
+    BOOST_CHECK_THROW(comptrajSchedule(comptrajDeck(weltraj_two_branches + first + overlapping)),
+                      Opm::OpmInputError);
+}
+
+BOOST_AUTO_TEST_CASE(Comptraj_Input_And_Calculated_CTF_Sharing_A_Cell)
+{
+    const auto input = std::string { R"(COMPTRAJ
+-- WELL BRANCH  TOP    BOT   REF NO STATE SAT   CF   DIAM   KH  SKIN
+  'W1'    1    2002   2012   2*     1*    1*   10.0  0.25  100    0 /
+/
+)" };
+
+    const auto calculated = std::string { R"(COMPTRAJ
+  'W1'    1    2028   2035   2*     1*    1*    1*  0.25   1*    0 /
+/
+)" };
+
+    const auto sched_calculated = comptrajSchedule(comptrajDeck(weltraj_u_shape + calculated));
+    const auto& calculated_only = reenteredConnection(sched_calculated);
+
+    for (const auto& schedule : { input + calculated, calculated + input }) {
+        const auto deck = comptrajDeck(weltraj_u_shape + schedule);
+        const auto sched = comptrajSchedule(deck);
+        const auto& conn = reenteredConnection(sched);
+
+        // The values add up, and the result counts as given in the input.
+        BOOST_CHECK_CLOSE(conn.CF(), siCF(deck, 10.0) + calculated_only.CF(), 1.0e-8);
+        BOOST_CHECK_CLOSE(conn.Kh(), siKh(deck, 100.0) + calculated_only.Kh(), 1.0e-8);
+        BOOST_CHECK(conn.kind() == Opm::Connection::CTFKind::DeckValue);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(Comptraj_Overlapping_Intervals_Of_One_Keyword_Are_Rejected)
+{
+    // Partially overlapping, nested, and repeated intervals of a branch.
+    for (const auto* records : {
+            R"(  'W1'    1    2000   2020   2*     1*    1*   10.0  0.25  100  0 /
+  'W1'    1    2010   2030   2*     1*    1*   30.0  0.25  300  0 /
+)",
+            R"(  'W1'    1    2000   2030   2*     1*    1*   10.0  0.25  100  0 /
+  'W1'    1    2010   2020   2*     1*    1*   30.0  0.25  300  0 /
+)",
+            R"(  'W1'    1    2000   2010   2*     1*    1*   10.0  0.25  100  0 /
+  'W1'    1    2000   2010   2*     1*    1*   30.0  0.25  300  0 /
+)" })
+    {
+        const auto deck = comptrajDeck(weltraj_two_branches + "COMPTRAJ\n" + records + "/\n");
+
+        BOOST_CHECK_THROW(comptrajSchedule(deck), Opm::OpmInputError);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(Comptraj_Touching_Intervals_Of_One_Keyword_Are_Accepted)
+{
+    // The intervals meet at MD 2015, inside cell (3,3,2).
+    const auto deck = comptrajDeck(weltraj_two_branches + R"(COMPTRAJ
+-- WELL BRANCH  TOP    BOT   REF NO STATE SAT   CF   DIAM   KH  SKIN
+  'W1'    1    2000   2015   2*     1*    1*   10.0  0.25  100  0 /
+  'W1'    1    2015   2030   2*     1*    1*   30.0  0.25  300  0 /
+/
+)");
+
+    const auto sched = comptrajSchedule(deck);
+    const auto& connections = sched.getWell("W1", 0).getConnections();
+
+    BOOST_REQUIRE_EQUAL(connections.size(), std::size_t{3});
+
+    const auto& shared = connectionAt(connections, 2, 2, 1);
+    BOOST_CHECK_EQUAL(shared.intervalContributions().size(), std::size_t{2});
+    BOOST_CHECK_CLOSE(shared.CF(), siCF(deck, 10.0 + 30.0), 1.0e-8);
+    BOOST_CHECK_CLOSE(shared.Kh(), siKh(deck, 100.0 + 300.0), 1.0e-8);
+}
+
+BOOST_AUTO_TEST_CASE(Comptraj_Earlier_Intervals_Can_Only_Be_Respecified_As_A_Whole)
+{
+    const auto comptraj = [](const int branch, const int top, const int bottom)
+    {
+        return fmt::format(R"(COMPTRAJ
+  'W1'    {}    {}   {}   2*     1*    1*   10.0  0.25  100  0 /
+/
+)", branch, top, bottom);
+    };
+
+    const auto schedule = [](const std::string& earlier, const std::string& later)
+    {
+        return comptrajSchedule(comptrajDeck(weltraj_two_branches + earlier + later));
+    };
+
+    // Overlapping the top or the bottom of an earlier interval, nested in
+    // it, or containing it.
+    BOOST_CHECK_THROW(schedule(comptraj(1, 2005, 2015), comptraj(1, 2000, 2010)),
+                      Opm::OpmInputError);
+    BOOST_CHECK_THROW(schedule(comptraj(1, 2005, 2015), comptraj(1, 2010, 2030)),
+                      Opm::OpmInputError);
+    BOOST_CHECK_THROW(schedule(comptraj(1, 2005, 2025), comptraj(1, 2008, 2022)),
+                      Opm::OpmInputError);
+    BOOST_CHECK_THROW(schedule(comptraj(1, 2008, 2022), comptraj(1, 2005, 2025)),
+                      Opm::OpmInputError);
+
+    // Re-specifying it, touching it, or covering the same measured depths
+    // on another branch.
+    BOOST_CHECK_NO_THROW(schedule(comptraj(1, 2005, 2015), comptraj(1, 2005, 2015)));
+    BOOST_CHECK_NO_THROW(schedule(comptraj(1, 2005, 2015), comptraj(1, 2015, 2030)));
+    BOOST_CHECK_NO_THROW(schedule(comptraj(2, 2015, 2115), comptraj(1, 2010, 2030)));
+}
+
+BOOST_AUTO_TEST_CASE(Comptraj_Respecified_Interval_Releases_Cells_It_No_Longer_Perforates)
+{
+    // Cell (3,3,2) has no lateral permeability, so a connection factor
+    // calculated from the cell properties is not representable.  An
+    // interval only perforates the cell with a factor given in the input.
+    const auto zero_perm = std::string { R"(EQUALS
+  PERMX 0 3 3 3 3 2 2 /
+  PERMY 0 3 3 3 3 2 2 /
+/
+)" };
+
+    const auto input_ctf = std::string { R"(COMPTRAJ
+-- WELL BRANCH  TOP    BOT   REF NO STATE SAT   CF   DIAM   KH  SKIN
+  'W1'    1    2000   2030   2*     1*    1*   10.0  0.25  100  0 /
+/
+)" };
+
+    const auto calculated_ctf = std::string { R"(COMPTRAJ
+  'W1'    1    2000   2030   2*     1*    1*    1*  0.25   1*  0 /
+/
+)" };
+
+    // A cell perforated by the re-specified interval only is no longer
+    // connected.  Connections made afterwards are still numbered uniquely.
+    {
+        const auto lateral = std::string { R"(COMPTRAJ
+  'W1'    2    2115   2215   2*     1*    1*   30.0  0.25  300  0 /
+/
+)" };
+
+        const auto deck = comptrajDeck(weltraj_two_branches + input_ctf
+                                       + calculated_ctf + lateral, zero_perm);
+        const auto sched = comptrajSchedule(deck);
+        const auto& connections = sched.getWell("W1", 0).getConnections();
+
+        BOOST_REQUIRE_EQUAL(connections.size(), std::size_t{4});
+
+        auto complnums = std::set<int>{};
+        auto sort_values = std::set<std::size_t>{};
+        for (const auto& conn : connections) {
+            BOOST_CHECK_MESSAGE(! conn.sameCoordinate(2, 2, 1),
+                                "Cell (3,3,2) must no longer be connected");
+
+            complnums.insert(conn.complnum());
+            sort_values.insert(conn.sort_value());
+        }
+
+        BOOST_CHECK_EQUAL(complnums.size(), connections.size());
+        BOOST_CHECK_EQUAL(sort_values.size(), connections.size());
+
+        BOOST_CHECK(connectionAt(connections, 2, 2, 0).kind() ==
+                    Opm::Connection::CTFKind::Defaulted);
+        BOOST_CHECK(connectionAt(connections, 2, 2, 2).kind() ==
+                    Opm::Connection::CTFKind::Defaulted);
+    }
+
+    // A cell also perforated by another interval keeps that one's
+    // contribution only.
+    {
+        const auto lateral = std::string { R"(COMPTRAJ
+  'W1'    2    2015   2115   2*     1*    1*   30.0  0.25  300  0 /
+/
+)" };
+
+        const auto deck = comptrajDeck(weltraj_two_branches + input_ctf
+                                       + lateral + calculated_ctf, zero_perm);
+        const auto sched = comptrajSchedule(deck);
+        const auto& connections = sched.getWell("W1", 0).getConnections();
+
+        BOOST_REQUIRE_EQUAL(connections.size(), std::size_t{4});
+
+        const auto& shared = connectionAt(connections, 2, 2, 1);
+        BOOST_REQUIRE_EQUAL(shared.intervalContributions().size(), std::size_t{1});
+        BOOST_CHECK_EQUAL(shared.intervalContributions().front().interval.branch, 2);
+        BOOST_CHECK_CLOSE(shared.CF(), siCF(deck, 30.0), 1.0e-8);
+        BOOST_CHECK_CLOSE(shared.Kh(), siKh(deck, 300.0), 1.0e-8);
+    }
+}
+
+namespace {
+
+    /// WELSPECS of well W1 with head location \p head_ij, followed by a main
+    /// branch that enters the top layer in cell (2,2,1) from above, before
+    /// running in the X direction through cells (3,2,1), (4,2,1) and
+    /// (5,2,1).  A lateral leaves it in cell (3,2,1) and runs in the Y
+    /// direction through cells (3,3,1), (3,4,1) and (3,5,1).  Both branches
+    /// lie in the middle of the top layer.
+    std::string weltrajDeviated(const std::string& head_ij)
+    {
+        return R"(WELSPECS
+  'W1' 'G' )" + head_ij + R"( 2000.0 OIL /
+/
+WELTRAJ
+-- WELL BRANCH   X      Y      TVD     MD
+  'W1'    1     150    150    1990    1990 /
+  'W1'    1     150    150    2005    2005 /
+  'W1'    1     450    150    2005    2305 /
+  'W1'    2     250    150    2005    2105 /
+  'W1'    2     250    450    2005    2405 /
+/
+)";
+    }
+
+} // Anonymous namespace
+
+BOOST_AUTO_TEST_CASE(Comptraj_Defaulted_Head_From_First_Active_Cell_Of_Main_Branch)
+{
+    // Perforates cells (4,2,1) and (5,2,1) only.
+    const auto main_branch = std::string { R"(COMPTRAJ
+-- WELL BRANCH  TOP    BOT   REF NO STATE SAT   CF   DIAM   KH  SKIN
+  'W1'    1    2180   2280   2*     1*    1*    1*  0.25   1*  0 /
+/
+)" };
+
+    // Perforates cells (3,3,1) and (3,4,1) only.
+    const auto lateral = std::string { R"(COMPTRAJ
+  'W1'    2    2180   2280   2*     1*    1*    1*  0.25   1*  0 /
+/
+)" };
+
+    // The head is where the main branch enters the grid, not where it is
+    // first perforated.
+    {
+        const auto sched = comptrajSchedule(comptrajDeck(weltrajDeviated("1* 1*") + main_branch));
+        const auto& well = sched.getWell("W1", 0);
+
+        BOOST_REQUIRE_EQUAL(well.getConnections().size(), std::size_t{2});
+        BOOST_CHECK_EQUAL(well.getHeadI(), 1);
+        BOOST_CHECK_EQUAL(well.getHeadJ(), 1);
+        BOOST_CHECK_EQUAL(well.getConnections().getHeadI(), 1);
+        BOOST_CHECK_EQUAL(well.getConnections().getHeadJ(), 1);
+    }
+
+    // An inactive cell does not count.
+    {
+        const auto sched = comptrajSchedule(comptrajDeck(weltrajDeviated("1* 1*") + main_branch,
+                                                         R"(EQUALS
+  ACTNUM 0 2 2 2 2 1 1 /
+/
+)"));
+        const auto& well = sched.getWell("W1", 0);
+
+        BOOST_CHECK_EQUAL(well.getHeadI(), 2);
+        BOOST_CHECK_EQUAL(well.getHeadJ(), 1);
+    }
+
+    // The main branch need not be perforated.
+    {
+        const auto sched = comptrajSchedule(comptrajDeck(weltrajDeviated("1* 1*") + lateral));
+        const auto& well = sched.getWell("W1", 0);
+
+        BOOST_REQUIRE_EQUAL(well.getConnections().size(), std::size_t{2});
+        BOOST_CHECK_EQUAL(well.getHeadI(), 1);
+        BOOST_CHECK_EQUAL(well.getHeadJ(), 1);
+    }
+
+    // Only a defaulted coordinate is derived from the trajectory.
+    {
+        const auto sched = comptrajSchedule(comptrajDeck(weltrajDeviated("5 1*") + lateral));
+        const auto& well = sched.getWell("W1", 0);
+
+        BOOST_CHECK_EQUAL(well.getHeadI(), 4);
+        BOOST_CHECK_EQUAL(well.getHeadJ(), 1);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(Comptraj_Defaulted_Head_Without_Active_Main_Branch_Cell_Remains_Undefined)
+{
+    const auto lateral = std::string { R"(COMPTRAJ
+-- WELL BRANCH  TOP    BOT   REF NO STATE SAT   CF   DIAM   KH  SKIN
+  'W1'    2    2180   2280   2*     1*    1*    1*  0.25   1*  0 /
+/
+)" };
+
+    // The main branch only enters inactive cells.
+    {
+        const auto sched = comptrajSchedule(comptrajDeck(weltrajDeviated("1* 1*") + lateral,
+                                                         R"(EQUALS
+  ACTNUM 0 2 5 2 2 1 1 /
+/
+)"));
+        const auto& well = sched.getWell("W1", 0);
+
+        BOOST_REQUIRE_EQUAL(well.getConnections().size(), std::size_t{2});
+        BOOST_CHECK_EQUAL(well.getHeadI(), -1);
+        BOOST_CHECK_EQUAL(well.getHeadJ(), -1);
+    }
+
+    // The well has no main branch.
+    {
+        const auto sched = comptrajSchedule(comptrajDeck(R"(WELSPECS
+  'W1' 'G' 1* 1* 2000.0 OIL /
+/
+WELTRAJ
+-- WELL BRANCH   X      Y      TVD     MD
+  'W1'    2     250    150    2005    2105 /
+  'W1'    2     250    450    2005    2405 /
+/
+)" + lateral));
+        const auto& well = sched.getWell("W1", 0);
+
+        BOOST_REQUIRE_EQUAL(well.getConnections().size(), std::size_t{2});
+        BOOST_CHECK_EQUAL(well.getHeadI(), -1);
+        BOOST_CHECK_EQUAL(well.getHeadJ(), -1);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(Comptraj_Defaulted_Reference_Depth_Does_Not_Depend_On_Record_Order)
+{
+    // The trajectories of weltraj_two_branches, with a defaulted reference
+    // depth.
+    const auto weltraj = std::string { R"(WELSPECS
+  'W1' 'G' 3 3 1* OIL /
+/
+WELTRAJ
+-- WELL BRANCH   X      Y      TVD     MD
+  'W1'    1     250    250    2000    2000 /
+  'W1'    1     250    250    2030    2030 /
+  'W1'    2     250    250    2015    2015 /
+  'W1'    2     450    250    2015    2215 /
+/
+)" };
+
+    // Perforates cells (3,3,1), (3,3,2) and (3,3,3).
+    const auto main_branch = std::string {
+        "  'W1'    1    2005   2025   2*     1*    1*    1*  0.25   1*  0 /\n"
+    };
+
+    // Perforates cells (4,3,2) and (5,3,2) only.
+    const auto lateral = std::string {
+        "  'W1'    2    2115   2205   2*     1*    1*    1*  0.25   1*  0 /\n"
+    };
+
+    for (const auto& records : { main_branch + lateral, lateral + main_branch }) {
+        const auto sched = comptrajSchedule(comptrajDeck(weltraj + "COMPTRAJ\n" + records + "/\n"));
+        const auto& well = sched.getWell("W1", 0);
+
+        BOOST_REQUIRE_EQUAL(well.getConnections().size(), std::size_t{5});
+        BOOST_REQUIRE(well.hasRefDepth());
+
+        // The depth of cell (3,3,1), the first connection.
+        BOOST_CHECK_CLOSE(well.getRefDepth(), 2005.0, 1.0e-8);
+    }
+}
+
+namespace {
+
+    /// Cells of \p connections, in order, as one-based "(I,J,K)" strings.
+    std::vector<std::string> connectedCells(const Opm::WellConnections& connections)
+    {
+        auto cells = std::vector<std::string>{};
+        for (const auto& conn : connections) {
+            cells.push_back(fmt::format("({},{},{})", conn.getI() + 1, conn.getJ() + 1, conn.getK() + 1));
+        }
+
+        return cells;
+    }
+
+} // Anonymous namespace
+
+BOOST_AUTO_TEST_CASE(Comptraj_Track_Order_Follows_The_Branches)
+{
+    // Perforates cells (4,2,1) and (5,2,1).
+    const auto main_branch = std::string {
+        "  'W1'    1    2180   2280   2*     1*    1*    1*  0.25   1*  0 /\n"
+    };
+
+    // Perforates cells (3,3,1) and (3,4,1), which lie closer to the head.
+    const auto lateral = std::string {
+        "  'W1'    2    2180   2280   2*     1*    1*    1*  0.25   1*  0 /\n"
+    };
+
+    for (const auto& records : { main_branch + lateral, lateral + main_branch }) {
+        const auto sched = comptrajSchedule(comptrajDeck(weltrajDeviated("2 2") +
+                                                         "COMPTRAJ\n" + records + "/\n"));
+        const auto& connections = sched.getWell("W1", 0).getConnections();
+
+        BOOST_REQUIRE(connections.ordering() == Opm::Connection::Order::TRACK);
+
+        // COMPTRAJ uses the regular TRACK-ordering heuristic, regardless of
+        // the order in which the records created the connections.
+        const auto expected = std::vector<std::string> {
+            "(3,3,1)", "(3,4,1)", "(4,2,1)", "(5,2,1)"
+        };
+
+        const auto cells = connectedCells(connections);
+        BOOST_CHECK_EQUAL_COLLECTIONS(cells.begin(), cells.end(),
+                                      expected.begin(), expected.end());
+    }
 }
 
 namespace {
