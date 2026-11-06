@@ -25,12 +25,16 @@
 #include <opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/SingleNumericalAquifer.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/Carfin.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/FieldProps.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/LgrCollection.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/Aqudims.hpp>
+#include <opm/input/eclipse/Units/Dimension.hpp>
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
 #include <algorithm>
 #include <cstddef>
+#include <iterator>
 #include <map>
 #include <optional>
 #include <set>
@@ -215,6 +219,88 @@ NumericalAquiferRegionSplit(const NumericalAquifers& aquifers,
 
     auto regionOf = [&](std::size_t globalIndex) { return eqlnum[grid.activeIndex(globalIndex)]; };
     auto pvtOf = [&](std::size_t globalIndex) { return pvtnum[grid.activeIndex(globalIndex)]; };
+
+    // Properties to copy from the original aquifer cells to the cells of
+    // new aquifers.  These cells are inactive in the current deck, so the
+    // values they would get from the deck are unknown.  Properties defined
+    // by AQUNUM, transmissibility and pore volume multipliers, which have
+    // no effect for aquifer cells, and initial conditions are not copied.
+    namespace kw = Fieldprops::keywords;
+    struct CopiedKeyword
+    {
+        std::string name;
+        std::string dimension; // Empty if dimensionless
+        bool isInteger;
+    };
+    auto doubleKeywords = [&fieldProps](const auto& candidates, const auto& info)
+    {
+        std::vector<CopiedKeyword> result;
+        for (const auto& name : candidates) {
+            if (fieldProps.has_double(name)) {
+                const auto it = info.find(name);
+                result.push_back({name, (it != info.end()) ? it->second.unit.value_or("") : "", false});
+            }
+        }
+        return result;
+    };
+    auto intKeywords = [&fieldProps](const auto& candidates)
+    {
+        std::vector<CopiedKeyword> result;
+        for (const auto& name : candidates) {
+            if (fieldProps.has_int(name)) {
+                result.push_back({name, "", true});
+            }
+        }
+        return result;
+    };
+
+    std::vector<CopiedKeyword> gridKeywords;
+    {
+        const std::set<std::string> excluded {
+            "PORO", "PERMX", "PERMY", "PERMZ", "PERMR", "PERMTHT", "MINPVV", "MULTPV",
+            "MULTX", "MULTX-", "MULTY", "MULTY-", "MULTZ", "MULTZ-", "TEMPI"
+        };
+        std::set<std::string> doubles;
+        for (const auto& [name, info] : kw::GRID::double_keywords) {
+            if (!excluded.contains(name)) {
+                doubles.insert(name);
+            }
+        }
+        // Integer keywords which may also be given in the REGIONS section
+        // are set there.
+        std::set<std::string> ints;
+        for (const auto& [name, info] : kw::GRID::int_keywords) {
+            if (name != "ACTNUM" && !kw::REGIONS::int_keywords.contains(name)) {
+                ints.insert(name);
+            }
+        }
+        gridKeywords = doubleKeywords(doubles, kw::GRID::double_keywords);
+        std::ranges::copy(intKeywords(ints), std::back_inserter(gridKeywords));
+    }
+
+    std::vector<CopiedKeyword> propsKeywords;
+    {
+        std::set<std::string> doubles(kw::PROPS::satfunc.begin(), kw::PROPS::satfunc.end());
+        for (const auto& [name, info] : kw::PROPS::double_keywords) {
+            doubles.insert(name);
+        }
+        propsKeywords = doubleKeywords(doubles, kw::PROPS::double_keywords);
+    }
+
+    std::vector<CopiedKeyword> regionsKeywords;
+    {
+        std::set<std::string> ints;
+        for (const auto& [name, info] : kw::REGIONS::int_keywords) {
+            ints.insert(name);
+        }
+        for (const auto& name : fieldProps.fip_regions()) {
+            ints.insert(name);
+        }
+        for (const auto* handled : {"EQLNUM", "PVTNUM", "SATNUM"}) {
+            ints.erase(handled);
+        }
+        regionsKeywords = intKeywords(ints);
+    }
 
     // Cells which may be included in AQUCON boxes without creating
     // connections are the inactive ones.  New aquifer cells are placed in
@@ -405,6 +491,21 @@ NumericalAquiferRegionSplit(const NumericalAquifers& aquifers,
                 this->eqlnum_.push_back({region, newId, ijk});
                 usedCells.insert(hosts[c]);
                 inactive.erase(hosts[c]);
+
+                const auto source = grid.activeIndex(cell->global_index);
+                auto copy = [&](const std::vector<CopiedKeyword>& keywords,
+                                std::vector<PropertyRecord>& records)
+                {
+                    for (const auto& [name, dimension, isInteger] : keywords) {
+                        const double value = isInteger
+                            ? static_cast<double>(fieldProps.get_int(name)[source])
+                            : fieldProps.get_double(name)[source];
+                        records.push_back({name, newId, ijk, value, dimension, isInteger});
+                    }
+                };
+                copy(gridKeywords, this->grid_);
+                copy(propsKeywords, this->props_);
+                copy(regionsKeywords, this->regions_);
             }
         }
 
@@ -445,6 +546,17 @@ NumericalAquiferRegionSplit(const NumericalAquifers& aquifers,
 
     this->replacedAqunum_.assign(replacedAqunum.begin(), replacedAqunum.end());
     this->replacedAqucon_.assign(replacedAqucon.begin(), replacedAqucon.end());
+
+    // Lines of AQUNUM and AQUCON data after the deck changes.
+    this->numAqunumRecords_ = static_cast<std::size_t>(aquifers.numRecords())
+        + static_cast<std::size_t>(std::ranges::count_if(this->aqunum_, [](const auto& rec)
+                                                         { return rec.id != rec.sourceId; }));
+    this->numAquconRecords_ = this->aqucon_.size();
+    for (const auto& [id, count] : aquifers.numConnectionRecords()) {
+        if (!replacedAqucon.contains(id)) {
+            this->numAquconRecords_ += count;
+        }
+    }
 }
 
 bool NumericalAquiferRegionSplit::empty() const
@@ -453,6 +565,18 @@ bool NumericalAquiferRegionSplit::empty() const
 }
 
 std::string NumericalAquiferRegionSplit::deckChanges(const UnitSystem& units) const
+{
+    return this->deckChangesImpl(units, nullptr);
+}
+
+std::string NumericalAquiferRegionSplit::deckChanges(const UnitSystem& units,
+                                                     const Aqudims& aqudims) const
+{
+    return this->deckChangesImpl(units, &aqudims);
+}
+
+std::string NumericalAquiferRegionSplit::deckChangesImpl(const UnitSystem& units,
+                                                         const Aqudims* aqudims) const
 {
     using M = UnitSystem::measure;
 
@@ -532,21 +656,79 @@ std::string NumericalAquiferRegionSplit::deckChanges(const UnitSystem& units) co
         out += "/\n";
     }
 
-    if (!this->eqlnum_.empty()) {
-        out += "\n* REGIONS section, after EQLNUM has been defined:\n\nEQUALS\n";
-        for (const auto& rec : this->eqlnum_) {
-            out += fmt::format(" 'EQLNUM' {} {} {} {} {} {} {} / -- cell of aquifer {}\n",
-                               rec.region,
-                               rec.ijk[0] + 1, rec.ijk[0] + 1,
-                               rec.ijk[1] + 1, rec.ijk[1] + 1,
-                               rec.ijk[2] + 1, rec.ijk[2] + 1,
-                               rec.aquiferId);
+    auto equalsRecord = [](const std::string& keyword, const std::string& value,
+                           const std::array<std::size_t, 3>& ijk, const std::size_t aquiferId)
+    {
+        return fmt::format(" '{}' {} {} {} {} {} {} {} / -- cell of aquifer {}\n",
+                           keyword, value,
+                           ijk[0] + 1, ijk[0] + 1,
+                           ijk[1] + 1, ijk[1] + 1,
+                           ijk[2] + 1, ijk[2] + 1,
+                           aquiferId);
+    };
+    auto propertyRecords = [&units, &equalsRecord](const std::vector<PropertyRecord>& records)
+    {
+        std::string result;
+        for (const auto& rec : records) {
+            const auto value = rec.isInteger
+                ? fmt::format("{}", static_cast<int>(rec.value))
+                : fmt::format("{:.10g}", rec.dimension.empty()
+                              ? rec.value : units.parse(rec.dimension).convertSiToRaw(rec.value));
+            result += equalsRecord(rec.keyword, value, rec.ijk, rec.aquiferId);
         }
+        return result;
+    };
+    const std::string copiedProperties = "to give the cells of the new aquifer(s) the "
+                                         "properties of the aquifer cells they are copied from";
+
+    // The copied values are final values.  The GRID section properties can
+    // only be assigned in the GRID section, but Flow rejects operations on
+    // them in the EDIT section, other than COPY and OPERATE.
+    if (!this->grid_.empty()) {
+        out += fmt::format("\n* GRID section, at the end of the section, {}:\n\nEQUALS\n{}/\n"
+                           "-- These are final values: if COPY or OPERATE in the EDIT section modify\n"
+                           "-- these properties, exclude the new aquifer cells from those operations.\n",
+                           copiedProperties, propertyRecords(this->grid_));
+    }
+
+    if (!this->props_.empty()) {
+        out += fmt::format("\n* PROPS section, at the end of the section, {}:\n\nEQUALS\n{}/\n",
+                           copiedProperties, propertyRecords(this->props_));
+    }
+
+    if (!this->eqlnum_.empty() || !this->regions_.empty()) {
+        out += "\n* REGIONS section, at the end of the section:\n\nEQUALS\n";
+        for (const auto& rec : this->eqlnum_) {
+            out += equalsRecord("EQLNUM", std::to_string(rec.region), rec.ijk, rec.aquiferId);
+        }
+        out += propertyRecords(this->regions_);
         out += "/\n";
     }
 
     if (!this->aqucon_.empty()) {
-        out += "\nIncrease the numerical aquifer dimensions in AQUDIMS if needed.\n";
+        if (aqudims == nullptr) {
+            out += "\nIncrease the numerical aquifer dimensions in AQUDIMS if needed.\n";
+        }
+        else {
+            const auto mxnaqn = std::max(aqudims->getNumAqunum(), this->numAqunumRecords_);
+            const auto mxnaqc = std::max(aqudims->getNumConnectionNumericalAquifer(),
+                                         this->numAquconRecords_);
+            if ((mxnaqn > aqudims->getNumAqunum()) ||
+                (mxnaqc > aqudims->getNumConnectionNumericalAquifer()))
+            {
+                out += fmt::format("\n* RUNSPEC section: replace AQUDIMS by the following, which allows "
+                                   "for {} lines of AQUNUM data and {} lines of AQUCON data:\n\n"
+                                   "AQUDIMS\n {} {} {} {} {} {} {} {} /\n",
+                                   this->numAqunumRecords_, this->numAquconRecords_,
+                                   mxnaqn, mxnaqc,
+                                   aqudims->getNumInfluenceTablesCT(),
+                                   aqudims->getNumRowsInfluenceTable(),
+                                   aqudims->getNumAnalyticAquifers(),
+                                   aqudims->getNumRowsAquancon(),
+                                   aqudims->getNumAquiferLists(),
+                                   aqudims->getNumAnalyticAquifersSingleList());
+            }
+        }
     }
 
     if (!this->unresolved_.empty()) {
