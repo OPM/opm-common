@@ -615,7 +615,15 @@ public:
     bool updateWELDRAW(std::shared_ptr<WELDRAW> weldraw);
 
     bool handleWELSEGS(const DeckKeyword& keyword);
-    bool handleCOMPSEGS(const DeckKeyword& keyword, const ScheduleGrid& grid, const ParseContext& parseContext, ErrorGuard& errors);
+    /// Attach connections to segments from COMPSEGS.
+    ///
+    /// \param[out] links Optional.  If non-null, receives pairs of
+    ///    connection cell (linearised Cartesian index) and segment number
+    ///    for each COMPSEGS record applied to an existing connection, in
+    ///    input order.
+    bool handleCOMPSEGS(const DeckKeyword& keyword, const ScheduleGrid& grid,
+                        const ParseContext& parseContext, ErrorGuard& errors,
+                        std::vector<std::pair<std::size_t, int>>* links = nullptr);
     // Apply a WELOPEN connection-level record, assigning 'status' to every
     // connection matching the record's I/J/K/C1-C2 filter.  Existing
     // connections assigned OPEN have their complnum appended to

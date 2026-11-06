@@ -29,10 +29,16 @@
 
 #include <opm/input/eclipse/Schedule/Action/SimulatorUpdate.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/Schedule/MSW/MswTracker.hpp>
+#include <opm/input/eclipse/Schedule/MSW/Segment.hpp>
+#include <opm/input/eclipse/Schedule/MSW/WellSegments.hpp>
+#include <opm/input/eclipse/Schedule/Well/Connection.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellMatcher.hpp>
 
 #include "MSW/WelSegsSet.hpp"
+#include <opm/input/eclipse/Schedule/Well/WellControlTracker.hpp>
 
 #include <fmt/format.h>
 
@@ -102,6 +108,111 @@ void HandlerContext::comptraj_handled(const std::string& well_name)
     if (comptraj_wells) {
         comptraj_wells->insert(well_name);
     }
+}
+
+void HandlerContext::well_declared(const std::string& well_name)
+{
+    if (well_controls) {
+        well_controls->defined(well_name, keyword.location());
+    }
+
+    if (msw_tracker) {
+        msw_tracker->defined(well_name);
+    }
+}
+
+void HandlerContext::well_connected(const std::string& well_name)
+{
+    if (well_controls) {
+        well_controls->connected(well_name);
+    }
+}
+
+void HandlerContext::well_controlled(const std::string& well_name)
+{
+    if (well_controls) {
+        well_controls->controlled(well_name);
+    }
+}
+
+void HandlerContext::msw_track_well(const std::string& well_name)
+{
+    // Wells not declared through WELSPECS in this run--e.g., wells loaded
+    // from a restart file--are seeded from their current definition.
+    if (! msw_tracker->isKnown(well_name) && this->state().wells.has(well_name)) {
+        msw_tracker->seed(this->state().wells(well_name));
+    }
+}
+
+void HandlerContext::msw_connections(const std::string&     well_name,
+                                     const WellConnections& connections)
+{
+    if (msw_tracker == nullptr) {
+        return;
+    }
+
+    this->msw_track_well(well_name);
+
+    auto cells = std::vector<std::size_t>{};
+    cells.reserve(connections.size());
+    for (const auto& conn : connections) {
+        cells.push_back(conn.global_index());
+    }
+
+    msw_tracker->connections(well_name, cells, keyword.location());
+}
+
+void HandlerContext::msw_segments(const Well& well)
+{
+    if ((msw_tracker == nullptr) || ! well.isMultiSegment()) {
+        return;
+    }
+
+    this->msw_track_well(well.name());
+
+    auto segments = std::vector<int>{};
+    segments.reserve(well.getSegments().size());
+    for (const auto& segment : well.getSegments()) {
+        segments.push_back(segment.segmentNumber());
+    }
+
+    msw_tracker->segments(well.name(), segments);
+}
+
+void HandlerContext::msw_links(const std::string&                              well_name,
+                               const std::vector<std::pair<std::size_t, int>>& links)
+{
+    if (msw_tracker == nullptr) {
+        return;
+    }
+
+    this->msw_track_well(well_name);
+
+    auto mswLinks = std::vector<MswTracker::Link>{};
+    mswLinks.reserve(links.size());
+    for (const auto& [cell, segment] : links) {
+        mswLinks.push_back({ cell, segment });
+    }
+
+    msw_tracker->linkConnections(well_name, mswLinks, keyword.location());
+}
+
+void HandlerContext::msw_links(const std::string&     well_name,
+                               const WellConnections& connections)
+{
+    if (msw_tracker == nullptr) {
+        return;
+    }
+
+    auto links = std::vector<std::pair<std::size_t, int>>{};
+    links.reserve(connections.size());
+    for (const auto& conn : connections) {
+        if (conn.attachedToSegment()) {
+            links.emplace_back(conn.global_index(), conn.segment());
+        }
+    }
+
+    this->msw_links(well_name, links);
 }
 
 ScheduleState& HandlerContext::state()
@@ -241,6 +352,7 @@ void HandlerContext::welspecsCreateNewWell(const DeckRecord&  record,
     }
 
     schedule_.addWell(wellName, record, currentStep, wellConnectionOrder);
+    this->well_declared(wellName);
     schedule_.addWellToGroup(groupName, wellName, currentStep);
 
     this->affected_well(wellName);

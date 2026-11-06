@@ -75,6 +75,11 @@ namespace Opm::Compsegs {
     /// also contains any failure conditions encountered while processing \p
     /// compsegs.
     ///
+    /// \param[out] links Optional.  If non-null, receives pairs of
+    /// connection cell (linearised Cartesian index) and segment number for
+    /// each COMPSEGS record applied to an existing connection, in input
+    /// order.  Repeated cells are retained.
+    ///
     /// \return Input connections \p input_connections amended to include
     /// well segment allocation.
     WellConnections
@@ -83,7 +88,8 @@ namespace Opm::Compsegs {
                     const WellSegments&    input_segments,
                     const ScheduleGrid&    grid,
                     const ParseContext&    parseContext,
-                    ErrorGuard&            errors);
+                    ErrorGuard&            errors,
+                    std::vector<std::pair<std::size_t, int>>* links = nullptr);
 
     /// Single well segment of a grid-independent well (WELTRAJ/COMPTRAJ
     /// keywords).

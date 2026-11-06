@@ -80,12 +80,16 @@ File {} line {}.)", wname, location.keyword, location.filename, location.lineno)
         return;
     }
 
+    auto links = std::vector<std::pair<std::size_t, int>>{};
     if (well.handleCOMPSEGS(handlerContext.keyword, handlerContext.grid,
-                            handlerContext.parseContext, handlerContext.errors))
+                            handlerContext.parseContext, handlerContext.errors,
+                            &links))
     {
         handlerContext.state().wells.update(std::move(well));
         handlerContext.record_well_structure_change();
     }
+
+    handlerContext.msw_links(wname, links);
 
     handlerContext.compsegs_handled(wname);
 }
@@ -97,6 +101,7 @@ void handleWELSEGS(HandlerContext& handlerContext)
     if (handlerContext.state().wells.has(wname)) {
         auto well = handlerContext.state().wells.get(wname);
         if (well.handleWELSEGS(handlerContext.keyword)) {
+            handlerContext.msw_segments(well);
             handlerContext.state().wells.update( std::move(well) );
             handlerContext.record_well_structure_change();
         }
