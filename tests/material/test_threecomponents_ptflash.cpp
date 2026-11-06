@@ -161,7 +161,7 @@ for (const auto& sample : test_methods) {
         // TODO: should we set these?
         // Set initial K and L
         for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
-            const Evaluation Ktmp = fluid_state.wilsonK_(compIdx);
+            const Evaluation Ktmp = fluid_state.wilsonK_(compIdx, /*eosRegionIdx=*/0);
             fluid_state.setKvalue(compIdx, Ktmp);
         }
         const Evaluation Ltmp = 1.;
@@ -169,7 +169,8 @@ for (const auto& sample : test_methods) {
 
         // thermal PTFlash
         using Flash = Opm::PTFlash<double, FluidSystem, true>;
-        Flash::solve(fluid_state, sample, flash_tolerance, eos_type, flash_verbosity);
+        FluidSystem::setEosType(eos_type);
+        Flash::solve(fluid_state, sample, flash_tolerance, /*eosRegionIdx=*/0, flash_verbosity);
 
         ComponentVector x, y;
         const Evaluation L = fluid_state.L();
@@ -297,6 +298,7 @@ BOOST_AUTO_TEST_CASE(ScalarFlashStoresFugacityCoefficients)
         FlashCase{150e5, 300.0, 0.5, true},
     };
     constexpr std::array<Scalar, numComponents> z{0.5, 0.3, 0.2};
+    FluidSystem::setEosType(EOSType::PR);
 
     for (const auto method : test_methods) {
         for (const auto& [pressure, temperature, initialL, singlePhase] : cases) {
@@ -312,13 +314,13 @@ BOOST_AUTO_TEST_CASE(ScalarFlashStoresFugacityCoefficients)
                     fs.setMoleFraction(compIdx, z[compIdx]);
                 }
                 for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
-                    fs.setKvalue(compIdx, fs.wilsonK_(compIdx));
+                    fs.setKvalue(compIdx, fs.wilsonK_(compIdx, /*eosRegionIdx=*/0));
                 }
                 fs.setLvalue(initialL);
 
-                BOOST_REQUIRE_EQUAL(Flash::flash_solve_scalar(fs, method, 1e-8, EOSType::PR),
+                BOOST_REQUIRE_EQUAL(Flash::flash_solve_scalar(fs, method, 1e-8, /*eosRegionIdx=*/0),
                                     singlePhase);
-                ParamCache paramCache(EOSType::PR);
+                ParamCache paramCache(/*eosRegionIdx=*/0);
                 for (const auto phaseIdx : {FluidSystem::oilPhaseIdx, FluidSystem::gasPhaseIdx}) {
                     paramCache.updatePhase(fs, phaseIdx);
                     for (int compIdx = 0; compIdx < numComponents; ++compIdx) {

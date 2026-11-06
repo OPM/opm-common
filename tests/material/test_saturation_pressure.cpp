@@ -70,8 +70,6 @@ using CompVec = SatP::CompVec;
 using FloatFluidSystem = Opm::GenericOilGasWaterFluidSystem<float, numComponents, false>;
 using FloatSatP = Opm::SaturationPressure<float, FloatFluidSystem>;
 
-constexpr auto eosType = Opm::CompositionalConfig::EOSType::PR;
-
 // The constant reservoir temperature (RTEMP) of the test case, 100 degC.
 constexpr Scalar temperature = 373.15;
 
@@ -126,7 +124,7 @@ EquilibriumResidual equilibriumResidualFor(
         fs.setMoleFraction(incipientPhaseIdx, c, incipient[c]);
     }
 
-    typename FS::template ParameterCache<Value> paramCache(eosType);
+    typename FS::template ParameterCache<Value> paramCache(/*eosRegionIdx=*/0);
     paramCache.updatePhase(fs, FS::oilPhaseIdx);
     paramCache.updatePhase(fs, FS::gasPhaseIdx);
 
@@ -188,7 +186,7 @@ BOOST_AUTO_TEST_CASE(BubblePressureOilZone)
         CompVec vapor{};
 
         const bool converged =
-            SatP::bubblePressure(liquid, temperature, eosType, press, vapor);
+            SatP::bubblePressure(liquid, temperature, /*eosRegionIdx=*/0, press, vapor);
 
         BOOST_REQUIRE_MESSAGE(converged,
                               "bubble-point iteration must converge for z_C1 = " << zMethane);
@@ -214,7 +212,7 @@ BOOST_AUTO_TEST_CASE(CompositionNeedNotSumToOne)
 
         Scalar press = 0.0;
         CompVec vapor{};
-        BOOST_REQUIRE_MESSAGE(SatP::bubblePressure(liquid, temperature, eosType, press, vapor),
+        BOOST_REQUIRE_MESSAGE(SatP::bubblePressure(liquid, temperature, /*eosRegionIdx=*/0, press, vapor),
                               "bubble point must converge for a composition summing to "
                                   << 1.0 + excess);
 
@@ -235,19 +233,19 @@ BOOST_AUTO_TEST_CASE(CompositionNeedNotSumToOne)
     const CompVec rounded{0.0, static_cast<Scalar>(0.47f), static_cast<Scalar>(0.53f)};
     Scalar pRounded = 0.0;
     CompVec roundedVapor{};
-    BOOST_REQUIRE(SatP::bubblePressure(rounded, temperature, eosType, pRounded, roundedVapor));
+    BOOST_REQUIRE(SatP::bubblePressure(rounded, temperature, /*eosRegionIdx=*/0, pRounded, roundedVapor));
     BOOST_CHECK_CLOSE(pRounded / 1.0e5, referenceBar, 1.0e-3);
 
     // The dew search rescales the same way.
     Scalar pBubble = 0.0;
     CompVec vapour{};
-    BOOST_REQUIRE(SatP::bubblePressure({0.0, 0.40, 0.60}, temperature, eosType,
+    BOOST_REQUIRE(SatP::bubblePressure({0.0, 0.40, 0.60}, temperature, /*eosRegionIdx=*/0,
                                        pBubble, vapour));
     vapour.back() += 3.0e-8;
 
     Scalar pDew = -1.0;
     CompVec incipient{};
-    BOOST_REQUIRE_MESSAGE(SatP::dewPressure(vapour, temperature, eosType, pDew, incipient),
+    BOOST_REQUIRE_MESSAGE(SatP::dewPressure(vapour, temperature, /*eosRegionIdx=*/0, pDew, incipient),
                           "dew point must converge for a vapour that does not sum to one");
     BOOST_CHECK_CLOSE(pDew, pBubble, 1.0e-3);
 }
@@ -264,7 +262,7 @@ BOOST_AUTO_TEST_CASE(SaturationPressureAtGasOilContact)
     CompVec vapor{};
 
     const bool converged =
-        SatP::bubblePressure(liquid, temperature, eosType, press, vapor);
+        SatP::bubblePressure(liquid, temperature, /*eosRegionIdx=*/0, press, vapor);
 
     BOOST_REQUIRE(converged);
     BOOST_CHECK_CLOSE(press / 1.0e5, 160.56010, 1.0e-3);
@@ -287,7 +285,7 @@ BOOST_AUTO_TEST_CASE(DewPressureGasCap)
     CompVec liquid{};
 
     const bool converged =
-        SatP::dewPressure(vapor, temperature, eosType, press, liquid);
+        SatP::dewPressure(vapor, temperature, /*eosRegionIdx=*/0, press, liquid);
 
     BOOST_REQUIRE(converged);
     BOOST_CHECK_CLOSE(press / 1.0e5, 160.56010, 1.0e-2);
@@ -317,12 +315,12 @@ BOOST_AUTO_TEST_CASE(BubbleDewRoundTrip)
 
         Scalar pBubble = 0.0;
         CompVec vapor{};
-        BOOST_REQUIRE_MESSAGE(SatP::bubblePressure(liquid, temperature, eosType, pBubble, vapor),
+        BOOST_REQUIRE_MESSAGE(SatP::bubblePressure(liquid, temperature, /*eosRegionIdx=*/0, pBubble, vapor),
                               "bubble point must converge for z_C1 = " << zMethane);
 
         Scalar pDew = -1.0;
         CompVec incipient{};
-        BOOST_REQUIRE_MESSAGE(SatP::dewPressure(vapor, temperature, eosType, pDew, incipient),
+        BOOST_REQUIRE_MESSAGE(SatP::dewPressure(vapor, temperature, /*eosRegionIdx=*/0, pDew, incipient),
                               "dew point must converge for the vapour of z_C1 = " << zMethane);
 
         BOOST_CHECK_CLOSE(pDew, pBubble, 1.0e-6);
@@ -337,17 +335,17 @@ BOOST_AUTO_TEST_CASE(SinglePrecisionBubbleDewRoundTrip)
     constexpr FloatSatP::CompVec liquid{0.0f, 0.4f, 0.6f};
     float pBubble = -1.0f;
     FloatSatP::CompVec vapor{};
-    BOOST_REQUIRE(FloatSatP::bubblePressure(liquid, 373.15f, eosType, pBubble, vapor));
+    BOOST_REQUIRE(FloatSatP::bubblePressure(liquid, 373.15f, /*eosRegionIdx=*/0, pBubble, vapor));
 
     Scalar pBubbleDouble = -1.0;
     CompVec vaporDouble{};
-    BOOST_REQUIRE(SatP::bubblePressure({0.0, 0.4, 0.6}, temperature, eosType,
+    BOOST_REQUIRE(SatP::bubblePressure({0.0, 0.4, 0.6}, temperature, /*eosRegionIdx=*/0,
                                        pBubbleDouble, vaporDouble));
     BOOST_CHECK_CLOSE(static_cast<Scalar>(pBubble), pBubbleDouble, 1.0e-3);
 
     float pDew = -1.0f;
     FloatSatP::CompVec recovered{};
-    BOOST_REQUIRE(FloatSatP::dewPressure(vapor, 373.15f, eosType, pDew, recovered));
+    BOOST_REQUIRE(FloatSatP::dewPressure(vapor, 373.15f, /*eosRegionIdx=*/0, pDew, recovered));
     BOOST_CHECK_CLOSE(pDew, pBubble, 1.0e-3);
     for (int c = 0; c < numComponents; ++c) {
         BOOST_CHECK_SMALL(recovered[c] - liquid[c], 2.0e-5f);
@@ -371,14 +369,14 @@ BOOST_AUTO_TEST_CASE(SinglePrecisionRejectsTrivialBubbleRoot)
         const FloatSatP::CompVec liquid{0.0f, zMethane, 1.0f - zMethane};
         float pBubble = -1.0f;
         FloatSatP::CompVec vapor{};
-        BOOST_REQUIRE(FloatSatP::bubblePressure(liquid, 373.15f, eosType,
+        BOOST_REQUIRE(FloatSatP::bubblePressure(liquid, 373.15f, /*eosRegionIdx=*/0,
                                                 pBubble, vapor));
 
         Scalar pBubbleDouble = -1.0;
         CompVec vaporDouble{};
         BOOST_REQUIRE(SatP::bubblePressure(
             {0.0, static_cast<Scalar>(zMethane), 1.0 - static_cast<Scalar>(zMethane)},
-            temperature, eosType, pBubbleDouble, vaporDouble));
+            temperature, /*eosRegionIdx=*/0, pBubbleDouble, vaporDouble));
         // The points are near critical, so float rounding moves the pressure
         // more than in the round-trip case above while preserving the branch.
         // Bounded loosely on purpose: the distance check below is what rejects
@@ -405,7 +403,7 @@ BOOST_AUTO_TEST_CASE(DewPressureLowerBranch)
         Scalar press = 0.0;
         CompVec liquid{};
 
-        BOOST_REQUIRE_MESSAGE(SatP::dewPressure(vapor, temperature, eosType, press, liquid),
+        BOOST_REQUIRE_MESSAGE(SatP::dewPressure(vapor, temperature, /*eosRegionIdx=*/0, press, liquid),
                               "dew point must converge for y_C1 = " << yMethane);
         BOOST_CHECK_GT(press, 0.0);
         BOOST_CHECK_LT(press, 5.0e5);
@@ -431,11 +429,11 @@ BOOST_AUTO_TEST_CASE(DewSearchRejectsBubbleBoundary)
 
     Scalar pBubble = 0.0;
     CompVec bubbleVapor{};
-    BOOST_REQUIRE(SatP::bubblePressure(vapor, temp, eosType, pBubble, bubbleVapor));
+    BOOST_REQUIRE(SatP::bubblePressure(vapor, temp, /*eosRegionIdx=*/0, pBubble, bubbleVapor));
 
     Scalar pDew = 0.0;
     CompVec liquid{};
-    BOOST_REQUIRE(SatP::dewPressure(vapor, temp, eosType, pDew, liquid));
+    BOOST_REQUIRE(SatP::dewPressure(vapor, temp, /*eosRegionIdx=*/0, pDew, liquid));
     BOOST_CHECK_CLOSE(pBubble / 1.0e5, 44.36584124, 1.0e-4);
     BOOST_CHECK_CLOSE(pDew / 1.0e5, 12.72152110, 1.0e-4);
     BOOST_CHECK_LT(pDew, pBubble);
@@ -458,7 +456,7 @@ BOOST_AUTO_TEST_CASE(SupercriticalLiquidHasNoBubblePoint)
     Scalar press = -1.0;
     CompVec vapor{};
 
-    BOOST_CHECK(!SatP::bubblePressure(liquid, temperature, eosType, press, vapor));
+    BOOST_CHECK(!SatP::bubblePressure(liquid, temperature, /*eosRegionIdx=*/0, press, vapor));
     BOOST_CHECK_LT(press, 0.0);
 }
 
@@ -473,7 +471,7 @@ BOOST_AUTO_TEST_CASE(PureComponentSaturationPressure)
     Scalar pBubble = 0.0;
     CompVec vapor{};
 
-    BOOST_REQUIRE(SatP::bubblePressure(liquid, temperature, eosType, pBubble, vapor));
+    BOOST_REQUIRE(SatP::bubblePressure(liquid, temperature, /*eosRegionIdx=*/0, pBubble, vapor));
     BOOST_CHECK_GT(pBubble, 1.0e2);
     BOOST_CHECK_LT(pBubble, 1.0e5);
     for (int c = 0; c < numComponents; ++c) {
@@ -489,7 +487,7 @@ BOOST_AUTO_TEST_CASE(PureComponentSaturationPressure)
     // For a pure component the dew and bubble pressures are one and the same.
     Scalar pDew = 0.0;
     CompVec incipient{};
-    BOOST_REQUIRE(SatP::dewPressure(liquid, temperature, eosType, pDew, incipient));
+    BOOST_REQUIRE(SatP::dewPressure(liquid, temperature, /*eosRegionIdx=*/0, pDew, incipient));
     BOOST_CHECK_CLOSE(pDew, pBubble, 1.0e-3);
 }
 
@@ -504,7 +502,7 @@ BOOST_AUTO_TEST_CASE(TrivialSolutionIsNotReportedAsADewPoint)
         CompVec liquid{};
 
         const bool converged =
-            SatP::dewPressure(vapor, temperature, eosType, press, liquid);
+            SatP::dewPressure(vapor, temperature, /*eosRegionIdx=*/0, press, liquid);
 
         if (converged) {
             // If a root is reported at all it must be a real one, i.e. a
@@ -540,7 +538,7 @@ BOOST_AUTO_TEST_CASE(NearCriticalBubblePoints)
         Scalar press = 0.0;
         CompVec vapor{};
 
-        BOOST_REQUIRE_MESSAGE(SatP::bubblePressure(liquid, temperature, eosType, press, vapor),
+        BOOST_REQUIRE_MESSAGE(SatP::bubblePressure(liquid, temperature, /*eosRegionIdx=*/0, press, vapor),
                               "bubble point must converge for x_C1 = " << xMethane);
         BOOST_CHECK_CLOSE(press, pExpected, 1.0e-4);
 
@@ -563,12 +561,12 @@ BOOST_AUTO_TEST_CASE(RetrogradeDewPointOfBubblePointVapour)
     const CompVec liquid{0.0, 0.17, 0.83};
     Scalar pBubble = 0.0;
     CompVec vapor{};
-    BOOST_REQUIRE(SatP::bubblePressure(liquid, temperature, eosType, pBubble, vapor));
+    BOOST_REQUIRE(SatP::bubblePressure(liquid, temperature, /*eosRegionIdx=*/0, pBubble, vapor));
     BOOST_CHECK_CLOSE(pBubble, 44.4490922e5, 1.0e-4);
 
     Scalar pDew = 0.0;
     CompVec incipient{};
-    BOOST_REQUIRE(SatP::dewPressure(vapor, temperature, eosType, pDew, incipient));
+    BOOST_REQUIRE(SatP::dewPressure(vapor, temperature, /*eosRegionIdx=*/0, pDew, incipient));
     BOOST_CHECK_CLOSE(pDew, 57.6521308e5, 1.0e-4);
     BOOST_CHECK_GT(pDew, pBubble);
 
@@ -591,7 +589,7 @@ BOOST_AUTO_TEST_CASE(NearCriticalRetrogradeDewPoint)
     const CompVec vapor{0.0, 0.90, 0.10};
     Scalar press = 0.0;
     CompVec liquid{};
-    BOOST_REQUIRE(SatP::dewPressure(vapor, temperature, eosType, press, liquid));
+    BOOST_REQUIRE(SatP::dewPressure(vapor, temperature, /*eosRegionIdx=*/0, press, liquid));
     BOOST_CHECK_GT(press, 300.0e5);
     BOOST_CHECK_LT(press, 340.0e5);
 
@@ -672,7 +670,7 @@ END
 
     Scalar press = 0.0;
     SatP7::CompVec liquid{};
-    BOOST_REQUIRE(SatP7::dewPressure(vapor, temp, eosType, press, liquid));
+    BOOST_REQUIRE(SatP7::dewPressure(vapor, temp, /*eosRegionIdx=*/0, press, liquid));
 
     // The restart file stores PSAT in single precision; 1e-3 percent is well
     // above that quantization.
@@ -701,7 +699,7 @@ BOOST_AUTO_TEST_CASE(RetrogradeDewPointOfANearCriticalGas)
     Scalar press = -123.0;
     CompVec liquid{};
 
-    BOOST_REQUIRE(SatP::dewPressure(vapor, temperature, eosType, press, liquid));
+    BOOST_REQUIRE(SatP::dewPressure(vapor, temperature, /*eosRegionIdx=*/0, press, liquid));
     BOOST_CHECK_CLOSE(press / 1.0e5, 331.3565338, 1.0e-3);
 
     const auto res = equilibriumResidual(vapor, FluidSystem::gasPhaseIdx,
@@ -724,11 +722,11 @@ BOOST_AUTO_TEST_CASE(NarrowRetrogradeEnvelopeKeepsTheUpperDewPoint)
         const CompVec liquid{xCO2, 1.0 - xCO2, 0.0};
         CompVec vapor{};
         Scalar pBubble{};
-        BOOST_REQUIRE(SatP::bubblePressure(liquid, temp, eosType, pBubble, vapor));
+        BOOST_REQUIRE(SatP::bubblePressure(liquid, temp, /*eosRegionIdx=*/0, pBubble, vapor));
 
         Scalar pDew = -123.0;
         CompVec recovered{};
-        BOOST_REQUIRE_MESSAGE(SatP::dewPressure(vapor, temp, eosType, pDew, recovered),
+        BOOST_REQUIRE_MESSAGE(SatP::dewPressure(vapor, temp, /*eosRegionIdx=*/0, pDew, recovered),
                               "upper dew point must converge for x_CO2 = " << xCO2);
         BOOST_CHECK_CLOSE(pDew, pBubble, 1.0e-4);
         for (int c = 0; c < numComponents; ++c) {
@@ -753,7 +751,7 @@ BOOST_AUTO_TEST_CASE(OrdinaryDewPointAfterFollowingTheBubbleBoundary)
           std::tuple{570.0, CompVec{0.25, 0.3, 0.45}, 38.68411340}}) {
         Scalar press = -123.0;
         CompVec liquid{};
-        BOOST_REQUIRE(SatP::dewPressure(vapor, temp, eosType, press, liquid));
+        BOOST_REQUIRE(SatP::dewPressure(vapor, temp, /*eosRegionIdx=*/0, press, liquid));
         BOOST_CHECK_CLOSE(press / 1.0e5, expectedBar, 1.0e-4);
         const auto res = equilibriumResidualFor<FluidSystem>(
             vapor, FluidSystem::gasPhaseIdx, liquid, FluidSystem::oilPhaseIdx, press, temp);
@@ -787,7 +785,7 @@ BOOST_AUTO_TEST_CASE(AcceleratedDewSearchKeepsFiniteIterates)
         CompVec liquid{};
         bool converged = false;
         BOOST_REQUIRE_NO_THROW(
-            converged = SatP::dewPressure(vapor, temp, eosType, press, liquid));
+            converged = SatP::dewPressure(vapor, temp, /*eosRegionIdx=*/0, press, liquid));
 
         if (expectedBar == 0.0) {
             BOOST_CHECK_MESSAGE(!converged,
@@ -818,7 +816,7 @@ BOOST_AUTO_TEST_CASE(NearCriticalDewSearchFinishesTheStationaryTrial)
     Scalar press = -123.0;
     CompVec liquid{};
 
-    BOOST_REQUIRE(SatP::dewPressure(vapor, temp, eosType, press, liquid));
+    BOOST_REQUIRE(SatP::dewPressure(vapor, temp, /*eosRegionIdx=*/0, press, liquid));
     // The retrograde branch near 332 bar, not the sub-bar lower dew point
     // returned when the stationary trial cannot be completed. A bound rather
     // than a value: the boundary is near critical, so the pressure itself
@@ -842,7 +840,7 @@ BOOST_AUTO_TEST_CASE(DewTraceCrossesAFixedPressureFailureGap)
     Scalar press = -123.0;
     CompVec liquid{};
 
-    BOOST_REQUIRE(SatP::dewPressure(vapor, temp, eosType, press, liquid));
+    BOOST_REQUIRE(SatP::dewPressure(vapor, temp, /*eosRegionIdx=*/0, press, liquid));
     BOOST_CHECK_CLOSE(press / 1.0e5, 0.00143343, 1.0e-2);
 
     const auto res = equilibriumResidualFor<FluidSystem>(
@@ -870,7 +868,7 @@ BOOST_AUTO_TEST_CASE(DewPointReachedFromTheBubbleBoundary)
     for (const auto& [temp, vapor, expectedBar] : cases) {
         Scalar pDew = -123.0;
         CompVec liquid{};
-        BOOST_REQUIRE_MESSAGE(SatP::dewPressure(vapor, temp, eosType, pDew, liquid),
+        BOOST_REQUIRE_MESSAGE(SatP::dewPressure(vapor, temp, /*eosRegionIdx=*/0, pDew, liquid),
                               "dew point must be found for z_CO2 = " << vapor[0]);
         BOOST_CHECK_CLOSE(pDew / 1.0e5, expectedBar, 1.0e-3);
 
@@ -878,7 +876,7 @@ BOOST_AUTO_TEST_CASE(DewPointReachedFromTheBubbleBoundary)
         // lies above it.
         Scalar pBubble = 0.0;
         CompVec bubbleVapor{};
-        BOOST_REQUIRE(SatP::bubblePressure(vapor, temp, eosType, pBubble, bubbleVapor));
+        BOOST_REQUIRE(SatP::bubblePressure(vapor, temp, /*eosRegionIdx=*/0, pBubble, bubbleVapor));
         BOOST_CHECK_LT(pDew, pBubble);
 
         const auto res = equilibriumResidualFor<FluidSystem>(
@@ -938,6 +936,7 @@ BOOST_AUTO_TEST_CASE(PropertyProbeOverEosVariantsAndStates)
 
     std::size_t calls = 0, converged = 0;
     for (const auto eos : eosVariants) {
+        FluidSystem::setEosType(eos);
         for (const Scalar temp : temperatures) {
             for (const auto& z : mixtures) {
                 for (const bool bubble : {true, false}) {
@@ -946,8 +945,8 @@ BOOST_AUTO_TEST_CASE(PropertyProbeOverEosVariantsAndStates)
 
                     bool ok = false;
                     BOOST_REQUIRE_NO_THROW(
-                        ok = bubble ? SatP::bubblePressure(z, temp, eos, press, incipient)
-                                    : SatP::dewPressure(z, temp, eos, press, incipient));
+                        ok = bubble ? SatP::bubblePressure(z, temp, /*eosRegionIdx=*/0, press, incipient)
+                                    : SatP::dewPressure(z, temp, /*eosRegionIdx=*/0, press, incipient));
                     ++calls;
 
                     if (!ok) {
@@ -972,6 +971,8 @@ BOOST_AUTO_TEST_CASE(PropertyProbeOverEosVariantsAndStates)
             }
         }
     }
+    // The other tests use the default Peng-Robinson.
+    FluidSystem::setEosType(Opm::CompositionalConfig::EOSType::PR);
 
     BOOST_CHECK_EQUAL(calls, eosVariants.size() * temperatures.size() * mixtures.size() * 2);
     // The probe is worthless if nothing converges; it is a coverage floor, not

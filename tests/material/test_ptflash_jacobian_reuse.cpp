@@ -48,8 +48,6 @@
 #include <opm/material/fluidstates/CompositionalFluidState.hpp>
 #include <opm/material/fluidsystems/GenericOilGasWaterFluidSystem.hpp>
 
-#include <opm/input/eclipse/EclipseState/Compositional/CompositionalConfig.hpp>
-
 #include <opm/common/Exceptions.hpp>
 
 #include <array>
@@ -68,14 +66,12 @@ using FluidSystem = Opm::GenericOilGasWaterFluidSystem<Scalar, numComponents, fa
 using Evaluation = Opm::DenseAd::Evaluation<Scalar, numComponents>;
 using FluidState = Opm::CompositionalFluidState<Evaluation, FluidSystem>;
 using ScalarFluidState = Opm::CompositionalFluidState<Scalar, FluidSystem>;
-using EOSType = Opm::CompositionalConfig::EOSType;
 using PTFlashMethod = Opm::PTFlashMethod;
 using Composition = std::array<Scalar, numComponents>;
 
 constexpr auto oilPhaseIdx = FluidSystem::oilPhaseIdx;
 constexpr auto gasPhaseIdx = FluidSystem::gasPhaseIdx;
 constexpr Scalar flashTolerance = 1e-8;
-constexpr EOSType eosType = EOSType::PR;
 
 // Exposes the two stages that solve() chains: the scalar flash and the
 // derivative pass.
@@ -122,7 +118,7 @@ FluidState makeState(const Scalar pressure, const Scalar temperature, const Comp
     }
     fs.setMoleFraction(numComponents - 1, last);
     for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
-        fs.setKvalue(compIdx, fs.wilsonK_(compIdx));
+        fs.setKvalue(compIdx, fs.wilsonK_(compIdx, /*eosRegionIdx=*/0));
     }
     // No previous split: the flash starts with stability analysis.
     fs.setLvalue(-1.0);
@@ -154,7 +150,7 @@ FluidState withDerivatives(const ScalarFluidState& scalar,
         fs.setMoleFraction(oilPhaseIdx, compIdx, scalar.moleFraction(oilPhaseIdx, compIdx));
         fs.setMoleFraction(gasPhaseIdx, compIdx, scalar.moleFraction(gasPhaseIdx, compIdx));
     }
-    ExposedPtFlash::updateDerivatives_(scalar, fs, eosType, false, newtonJacobian);
+    ExposedPtFlash::updateDerivatives_(scalar, fs, /*eosRegionIdx=*/0, false, newtonJacobian);
     return fs;
 }
 
@@ -211,7 +207,7 @@ std::optional<Flash> flash(const FluidState& state, const PTFlashMethod method)
     Flash result{state, scalarCopy(state), std::nullopt, true};
     try {
         auto [singlePhase, newtonJacobian]
-            = ExposedPtFlash::flashScalar_(result.scalar, method, flashTolerance, eosType, 0);
+            = ExposedPtFlash::flashScalar_(result.scalar, method, flashTolerance, /*eosRegionIdx=*/0, 0);
         result.singlePhase = singlePhase;
         result.newtonJacobian = std::move(newtonJacobian);
     } catch (const Opm::NumericalProblem&) {
@@ -278,7 +274,7 @@ BOOST_AUTO_TEST_CASE(ReusedJacobianGivesTheSameDerivatives)
                             // The Newton Jacobian is the one the derivative
                             // pass would assemble, to the last bit.
                             const auto assembled
-                                = ExposedPtFlash::compositionJacobian_(result.scalar, eosType);
+                                = ExposedPtFlash::compositionJacobian_(result.scalar, /*eosRegionIdx=*/0);
                             BOOST_CHECK(result.newtonJacobian->jacobian == assembled);
                         }
                         const auto reusing
@@ -289,7 +285,7 @@ BOOST_AUTO_TEST_CASE(ReusedJacobianGivesTheSameDerivatives)
 
                         // solve() takes the same path end to end.
                         auto solved = result.state;
-                        ExposedPtFlash::solve(solved, method, flashTolerance, eosType);
+                        ExposedPtFlash::solve(solved, method, flashTolerance, /*eosRegionIdx=*/0);
                         BOOST_CHECK(sameFlashDerivatives(solved, assembling));
                     }
                 }
@@ -346,7 +342,7 @@ BOOST_AUTO_TEST_CASE(JacobianOfAnotherStateIsNotReused)
 
     // The check above has teeth: the swapped state has another Jacobian, and
     // using the stale one there would change the derivatives.
-    const auto swappedJacobian = ExposedPtFlash::compositionJacobian_(swapped, eosType);
+    const auto swappedJacobian = ExposedPtFlash::compositionJacobian_(swapped, /*eosRegionIdx=*/0);
     BOOST_CHECK(swappedJacobian != converged.newtonJacobian->jacobian);
     const OptionalJacobian forged = ExposedPtFlash::NewtonJacobian{
         converged.newtonJacobian->jacobian, ExposedPtFlash::jacobianState_(swapped)};

@@ -41,7 +41,6 @@
 #include <opm/material/fluidsystems/GenericOilGasWaterFluidSystem.hpp>
 
 #include <opm/input/eclipse/Deck/Deck.hpp>
-#include <opm/input/eclipse/EclipseState/Compositional/CompositionalConfig.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/Parser/Parser.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
@@ -57,8 +56,6 @@ using Scalar = double;
 constexpr int numComponents = 7;
 using FluidSystem = Opm::GenericOilGasWaterFluidSystem<Scalar, numComponents, false>;
 using CompVec = std::array<Scalar, numComponents>;
-
-constexpr auto eosType = Opm::CompositionalConfig::EOSType::PR;
 
 // RTEMP = 100 degC.
 constexpr Scalar temperature = 373.15;
@@ -153,7 +150,7 @@ phaseProperties(const unsigned phaseIdx, const Scalar pressure, const CompVec& z
         fs.setMoleFraction(phaseIdx, c, z[c]);
     }
 
-    typename FluidSystem::template ParameterCache<Scalar> paramCache(eosType);
+    typename FluidSystem::template ParameterCache<Scalar> paramCache(/*eosRegionIdx=*/0);
     paramCache.updatePhase(fs, phaseIdx);
 
     return {FluidSystem::density(fs, paramCache, phaseIdx),
@@ -183,7 +180,7 @@ BOOST_AUTO_TEST_CASE(ZcritSetsTheCriticalVolumes)
         for (int c = 0; c < numComponents; ++c) {
             BOOST_TEST_CONTEXT(keywords << "component " << c)
             {
-                BOOST_CHECK_CLOSE(FluidSystem::criticalVolume(c), expected[c], 5.0e-3);
+                BOOST_CHECK_CLOSE(FluidSystem::criticalVolume(c, /*eosRegionIdx=*/0), expected[c], 5.0e-3);
             }
         }
     }
@@ -196,7 +193,7 @@ BOOST_AUTO_TEST_CASE(VcritAppliesWithoutZcrit)
     for (int c = 0; c < numComponents; ++c) {
         BOOST_TEST_CONTEXT("component " << c)
         {
-            BOOST_CHECK_CLOSE(FluidSystem::criticalVolume(c), vcrit[c], 1.0e-12);
+            BOOST_CHECK_CLOSE(FluidSystem::criticalVolume(c, /*eosRegionIdx=*/0), vcrit[c], 1.0e-12);
         }
     }
 }

@@ -75,8 +75,6 @@
 #include <opm/material/densead/Math.hpp>
 #include <opm/material/fluidstates/CompositionalFluidState.hpp>
 
-#include <opm/input/eclipse/EclipseState/Compositional/CompositionalConfig.hpp>
-
 namespace Opm {
 
 //! Which enthalpy model the P-H stack evaluates.
@@ -91,8 +89,6 @@ enum class EnthalpyModel { caloric, eos_departure };
 template <class Scalar, class FluidSystem>
 struct MixtureEnthalpy {
     static constexpr int numComponents = FluidSystem::numComponents;
-
-    using EOSType = CompositionalConfig::EOSType;
 
     /*!
      * \brief Molar enthalpy of one phase [J/mol], caloric model.
@@ -192,13 +188,13 @@ struct MixtureEnthalpy {
     template <class FluidState>
     static Scalar phaseResidualEnthalpy(const FluidState& fluidState,
                                         const unsigned phaseIdx,
-                                        const EOSType& eosType)
+                                        const unsigned eosRegionIdx)
     {
         using Eval1 = DenseAd::Evaluation<Scalar, 1>;
         using ParamCache = typename FluidSystem::template ParameterCache<Eval1>;
 
         const auto seeded = temperatureSeededCopy_(fluidState, phaseIdx);
-        ParamCache paramCache(eosType);
+        ParamCache paramCache(eosRegionIdx);
         paramCache.updatePhase(seeded, phaseIdx);
 
         const Eval1& T = seeded.temperature(phaseIdx);
@@ -232,12 +228,12 @@ struct MixtureEnthalpy {
     phaseEnthalpy(const FluidState& fluidState,
                   const unsigned phaseIdx,
                   const CpTable<Scalar, numComponents>& cpTable,
-                  const EOSType& eosType,
+                  const unsigned eosRegionIdx,
                   const EnthalpyModel model)
     {
         Scalar h = Opm::getValue(phaseEnthalpy(fluidState, phaseIdx, cpTable));
         if (model == EnthalpyModel::eos_departure)
-            h += phaseResidualEnthalpy(fluidState, phaseIdx, eosType);
+            h += phaseResidualEnthalpy(fluidState, phaseIdx, eosRegionIdx);
         return h;
     }
 
@@ -255,7 +251,7 @@ struct MixtureEnthalpy {
     static Scalar
     mixtureEnthalpy(const FluidState& fluidState,
                     const CpTable<Scalar, numComponents>& cpTable,
-                    const EOSType& eosType,
+                    const unsigned eosRegionIdx,
                     const EnthalpyModel model)
     {
         const Scalar L = Opm::getValue(fluidState.L());
@@ -264,9 +260,9 @@ struct MixtureEnthalpy {
         Scalar hGas = Opm::getValue(phaseEnthalpy(fluidState, FluidSystem::gasPhaseIdx, cpTable));
         if (model == EnthalpyModel::eos_departure) {
             if (L > 0.0)
-                hOil += phaseResidualEnthalpy(fluidState, FluidSystem::oilPhaseIdx, eosType);
+                hOil += phaseResidualEnthalpy(fluidState, FluidSystem::oilPhaseIdx, eosRegionIdx);
             if (L < 1.0)
-                hGas += phaseResidualEnthalpy(fluidState, FluidSystem::gasPhaseIdx, eosType);
+                hGas += phaseResidualEnthalpy(fluidState, FluidSystem::gasPhaseIdx, eosRegionIdx);
         }
         return L * hOil + (1.0 - L) * hGas;
     }

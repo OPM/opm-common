@@ -41,8 +41,6 @@
 #include <opm/material/Constants.hpp>
 #include <opm/material/eos/CubicEOS.hpp>
 
-#include <opm/input/eclipse/EclipseState/Compositional/CompositionalConfig.hpp>
-
 #include <opm/common/ErrorMacros.hpp>
 #include <opm/common/Exceptions.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
@@ -84,7 +82,6 @@ class PTFlash
     static constexpr int numMisciblePhases = FluidSystem::numMisciblePhases; //oil, gas
     static constexpr int numEq = numMisciblePhases + numMisciblePhases * numMiscibleComponents;
 
-    using EOSType = CompositionalConfig::EOSType;
 
     // Tangent-plane distance below which a trial phase does not split off.
     static constexpr Scalar stabilityTolerance = 1e-5;
@@ -102,7 +99,7 @@ public:
     static bool solve(FluidState& fluid_state,
                       PTFlashMethod twoPhaseMethod,
                       Scalar flash_tolerance,
-                      const EOSType& eos_type,
+                      const unsigned eosRegionIdx,
                       int verbosity = 0)
     {
         using ScalarFluidState = CompositionalFluidState<Scalar, FluidSystem>;
@@ -124,7 +121,7 @@ public:
         scalar_state.setTemperature(Opm::getValue(fluid_state.temperature(0)));
 
         const auto [is_single_phase, newton_jacobian]
-            = flashScalar_(scalar_state, twoPhaseMethod, flash_tolerance, eos_type, verbosity);
+            = flashScalar_(scalar_state, twoPhaseMethod, flash_tolerance, eosRegionIdx, verbosity);
 
         // Transfer the converged values before reconstructing their derivatives.
         for (int compIdx=0; compIdx<numComponents; ++compIdx){
@@ -134,7 +131,7 @@ public:
             fluid_state.setMoleFraction(gasPhaseIdx, compIdx, vapour_mole_fraction);
         }
 
-        updateDerivatives_(scalar_state, fluid_state, eos_type, is_single_phase, newton_jacobian);
+        updateDerivatives_(scalar_state, fluid_state, eosRegionIdx, is_single_phase, newton_jacobian);
 
         return is_single_phase;
     } //end solve
@@ -183,16 +180,16 @@ public:
     static bool flash_solve_scalar(FluidState& fluid_state,
                                    PTFlashMethod twoPhaseMethod,
                                    const Scalar flash_tolerance,
-                                   const EOSType& eos_type,
+                                   const unsigned eosRegionIdx,
                                    const int verbosity = 0)
     {
         const bool is_single_phase
-            = flashScalar_(fluid_state, twoPhaseMethod, flash_tolerance, eos_type, verbosity)
+            = flashScalar_(fluid_state, twoPhaseMethod, flash_tolerance, eosRegionIdx, verbosity)
                   .single_phase;
         // The solve leaves those of its last evaluation, which need not be the result.
         using ParamCache =
             typename FluidSystem::template ParameterCache<typename FluidState::ValueType>;
-        ParamCache param_cache(eos_type);
+        ParamCache param_cache(eosRegionIdx);
         for (unsigned phaseIdx = 0; phaseIdx < numMisciblePhases; ++phaseIdx) {
             param_cache.updatePhase(fluid_state, phaseIdx);
             for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
@@ -232,7 +229,7 @@ protected:
     static ScalarFlashResult flashScalar_(FluidState& fluid_state,
                                           PTFlashMethod twoPhaseMethod,
                                           const Scalar flash_tolerance,
-                                          const EOSType& eos_type,
+                                          const unsigned eosRegionIdx,
                                           const int verbosity)
     {
         std::optional<NewtonJacobian> newton_jacobian;
@@ -256,7 +253,7 @@ protected:
                 OpmLog::debug("Perform stability test (L <= 0 or L >= 1)!");
             }
             phaseStabilityTest_(
-                is_single_phase, K_scalar, fluid_state, z_scalar, eos_type, verbosity);
+                is_single_phase, K_scalar, fluid_state, z_scalar, eosRegionIdx, verbosity);
         }
         if (verbosity >= 1) {
             OpmLog::debug(fmt::format("Inputs after stability test are K = [{}], L = [{}], z = [{}], P = {}, and T = {}",
@@ -270,7 +267,7 @@ protected:
                 try {
                     L_scalar = RachfordRice::solve(K_scalar, z_scalar, verbosity);
                     newton_jacobian = flash_2ph(z_scalar, twoPhaseMethod, K_scalar, L_scalar,
-                                                fluid_state, flash_tolerance, eos_type, verbosity);
+                                                fluid_state, flash_tolerance, eosRegionIdx, verbosity);
                     return true;
                 }
                 catch (const NumericalProblem& error) {
@@ -326,10 +323,10 @@ protected:
                 // stability trials. Restart from Wilson estimates to obtain an
                 // independent test.
                 for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
-                    K_scalar[compIdx] = fluid_state.wilsonK_(compIdx);
+                    K_scalar[compIdx] = fluid_state.wilsonK_(compIdx, eosRegionIdx);
                 }
                 phaseStabilityTest_(
-                    is_single_phase, K_scalar, fluid_state, z_scalar, eos_type, verbosity);
+                    is_single_phase, K_scalar, fluid_state, z_scalar, eosRegionIdx, verbosity);
                 if (!is_single_phase) {
                     // Stability found a distinct trial phase and returned a
                     // fresh K estimate. Retry the split once from that state.
@@ -357,7 +354,7 @@ protected:
             }
             if (!is_negative_flash) {
                 // Cell is one-phase. Use Li's phase labeling method to see if it's liquid or vapor
-                L_scalar = li_single_phase_label_(fluid_state, z_scalar, verbosity);
+                L_scalar = li_single_phase_label_(fluid_state, z_scalar, eosRegionIdx, verbosity);
             }
         }
         fluid_state.setLvalue(L_scalar);
@@ -365,13 +362,13 @@ protected:
     }
 
     template <class Vector, class FlashFluidState>
-    static typename Vector::field_type li_single_phase_label_(const FlashFluidState& fluid_state, const Vector& z, int verbosity)
+    static typename Vector::field_type li_single_phase_label_(const FlashFluidState& fluid_state, const Vector& z, const unsigned eosRegionIdx, int verbosity)
     {
         // Calculate intermediate sum
         typename Vector::field_type sumVz = 0.0;
         for (int compIdx=0; compIdx<numComponents; ++compIdx){
             // Get component information
-            const auto& V_crit = FluidSystem::criticalVolume(compIdx);
+            const auto& V_crit = FluidSystem::criticalVolume(compIdx, eosRegionIdx);
 
             // Sum calculation
             sumVz += (V_crit * z[compIdx]);
@@ -381,8 +378,8 @@ protected:
         typename Vector::field_type Tc_est = 0.0;
         for (int compIdx=0; compIdx<numComponents; ++compIdx){
             // Get component information
-            const auto& V_crit = FluidSystem::criticalVolume(compIdx);
-            const auto& T_crit = FluidSystem::criticalTemperature(compIdx);
+            const auto& V_crit = FluidSystem::criticalVolume(compIdx, eosRegionIdx);
+            const auto& T_crit = FluidSystem::criticalTemperature(compIdx, eosRegionIdx);
 
             // Sum calculation
             Tc_est += (V_crit * T_crit * z[compIdx] / sumVz);
@@ -430,11 +427,11 @@ protected:
      * \param[in,out] K Starting ratios in, refined ratios out for a two-phase mixture.
      * \param[in,out] fluid_state The mixture; a stable one gets \f$z\f$ as both phase compositions.
      * \param z The mixture composition.
-     * \param eos_type The equation of state.
+     * \param eosRegionIdx The reservoir EOS region of the equation of state.
      * \param verbosity Level of debug logging.
      */
     template <class FlashFluidState, class ComponentVector>
-    static void phaseStabilityTest_(bool& isStable, ComponentVector& K, FlashFluidState& fluid_state, const ComponentVector& z, const EOSType& eos_type, int verbosity)
+    static void phaseStabilityTest_(bool& isStable, ComponentVector& K, FlashFluidState& fluid_state, const ComponentVector& z, const unsigned eosRegionIdx, int verbosity)
     {
         bool liquid_trial_is_trivial, vapour_trial_is_trivial;
         ComponentVector liquid_trial_composition, vapour_trial_composition;
@@ -453,7 +450,7 @@ protected:
                         vapour_trial_sum,
                         z,
                         /*is_vapour_trial=*/true,
-                        eos_type,
+                        eosRegionIdx,
                         verbosity);
         const bool vapour_trial_finds_no_instability
             = (vapour_trial_sum < (1.0 + stabilityTolerance)) || vapour_trial_is_trivial;
@@ -469,7 +466,7 @@ protected:
                         liquid_trial_sum,
                         z,
                         /*is_vapour_trial=*/false,
-                        eos_type,
+                        eosRegionIdx,
                         verbosity);
         const bool liquid_trial_finds_no_instability
             = (liquid_trial_sum < (1.0 + stabilityTolerance)) || liquid_trial_is_trivial;
@@ -536,7 +533,7 @@ protected:
      * \param[out] trial_sum The mole number sum \f$S\f$ of the trial phase.
      * \param z The mixture composition.
      * \param is_vapour_trial Whether to grow a vapour-like or liquid-like trial.
-     * \param eos_type The equation of state.
+     * \param eosRegionIdx The reservoir EOS region of the equation of state.
      * \param verbosity Level of debug logging.
      */
     template <class FlashFluidState, class ComponentVector>
@@ -547,7 +544,7 @@ protected:
                                 typename FlashFluidState::ValueType& trial_sum,
                                 const ComponentVector& z,
                                 bool is_vapour_trial,
-                                const EOSType& eos_type,
+                                const unsigned eosRegionIdx,
                                 int verbosity)
     {
         using FlashEval = typename FlashFluidState::ValueType;
@@ -599,10 +596,10 @@ protected:
                 reference_state.setMoleFraction(reference_phase_idx, compIdx, z[compIdx]);
             }
 
-            ParamCache trial_param_cache(eos_type);
+            ParamCache trial_param_cache(eosRegionIdx);
             trial_param_cache.updatePhase(trial_state, trial_phase_idx);
 
-            ParamCache reference_param_cache(eos_type);
+            ParamCache reference_param_cache(eosRegionIdx);
             reference_param_cache.updatePhase(reference_state, reference_phase_idx);
 
             // Fugacity coefficients of the trial phase and reference phase.
@@ -706,7 +703,7 @@ protected:
                           typename FluidState::ValueType& L_scalar,
                           FluidState& fluid_state_scalar,
                           const Scalar flash_tolerance,
-                          const EOSType& eos_type,
+                          const unsigned eosRegionIdx,
                           int verbosity = 0) -> std::optional<NewtonJacobian> {
         if (verbosity >= 1) {
             OpmLog::debug(fmt::format("Cell is two-phase! Solve Rachford-Rice with initial K = [{}]",
@@ -722,7 +719,7 @@ protected:
                 OpmLog::debug("Calculate composition using Newton.");
             }
             newton_jacobian = newtonComposition_(K_scalar, L_scalar, fluid_state_scalar, z_scalar,
-                                                 flash_tolerance, eos_type, verbosity);
+                                                 flash_tolerance, eosRegionIdx, verbosity);
             converged = true;
             break;
 
@@ -730,11 +727,11 @@ protected:
             if (verbosity >= 1) {
                 OpmLog::debug("Calculate composition using Successive Substitution.");
             }
-            converged = successiveSubstitutionComposition_(K_scalar, L_scalar, fluid_state_scalar, z_scalar, false, flash_tolerance, eos_type, verbosity);
+            converged = successiveSubstitutionComposition_(K_scalar, L_scalar, fluid_state_scalar, z_scalar, false, flash_tolerance, eosRegionIdx, verbosity);
             break;
 
         case PTFlashMethod::SsiNewton:
-            converged = successiveSubstitutionComposition_(K_scalar, L_scalar, fluid_state_scalar, z_scalar, true, flash_tolerance, eos_type, verbosity);
+            converged = successiveSubstitutionComposition_(K_scalar, L_scalar, fluid_state_scalar, z_scalar, true, flash_tolerance, eosRegionIdx, verbosity);
             if (!converged) {
                 // In this method Newton is an accelerator, not the
                 // guarantee: when its composition update fails to converge —
@@ -753,11 +750,11 @@ protected:
                             "Newton did not finish the composition update ({}); "
                             "switching back to successive substitution.", error.what()));
                     }
-                    converged = successiveSubstitutionComposition_(K_scalar, L_scalar, fluid_state_scalar, z_scalar, false, flash_tolerance, eos_type, verbosity);
+                    converged = successiveSubstitutionComposition_(K_scalar, L_scalar, fluid_state_scalar, z_scalar, false, flash_tolerance, eosRegionIdx, verbosity);
                 };
                 try {
                     newton_jacobian = newtonComposition_(K_scalar, L_scalar, fluid_state_scalar,
-                                                         z_scalar, flash_tolerance, eos_type,
+                                                         z_scalar, flash_tolerance, eosRegionIdx,
                                                          verbosity);
                     converged = true;
                 }
@@ -878,7 +875,7 @@ protected:
                                    FlashFluidState& fluid_state,
                                    const ComponentVector& z,
                                    const Scalar tolerance,
-                                   const EOSType& eos_type,
+                                   const unsigned eosRegionIdx,
                                    int verbosity) -> NewtonJacobian
     {
         constexpr std::size_t num_equations = numMisciblePhases * numMiscibleComponents + 1;
@@ -961,7 +958,7 @@ protected:
         }
 
         using ParamCache = typename FluidSystem::template ParameterCache<NewtonEval>;
-        ParamCache paramCache(eos_type);
+        ParamCache paramCache(eosRegionIdx);
 
         for (unsigned phaseIdx = 0; phaseIdx < numMisciblePhases; ++phaseIdx) {
             paramCache.updatePhase(newton_state, phaseIdx);
@@ -1152,7 +1149,7 @@ protected:
      */
     template <typename FlashFluidStateScalar>
     static Dune::FieldMatrix<Scalar, numFlashUnknowns, numFlashUnknowns>
-    compositionJacobian_(const FlashFluidStateScalar& fluid_state_scalar, const EOSType& eos_type)
+    compositionJacobian_(const FlashFluidStateScalar& fluid_state_scalar, const unsigned eosRegionIdx)
     {
         constexpr std::size_t num_equations = numFlashUnknowns;
         constexpr std::size_t num_flash_unknowns = numFlashUnknowns;
@@ -1185,7 +1182,7 @@ protected:
         unknown_derivative_state.setTemperature(fluid_state_scalar.temperature(0));
 
         using UnknownParamCache = typename FluidSystem::template ParameterCache<UnknownEval>;
-        UnknownParamCache unknown_param_cache(eos_type);
+        UnknownParamCache unknown_param_cache(eosRegionIdx);
         for (unsigned phase_idx = 0; phase_idx < numMisciblePhases; ++phase_idx) {
             unknown_param_cache.updatePhase(unknown_derivative_state, phase_idx);
             for (unsigned comp_idx = 0; comp_idx < numComponents; ++comp_idx) {
@@ -1219,12 +1216,12 @@ protected:
     template <typename FlashFluidStateScalar, typename FluidState>
     static void updateDerivatives_(const FlashFluidStateScalar& fluid_state_scalar,
                                    FluidState& fluid_state,
-                                   const EOSType& eos_type,
+                                   const unsigned eosRegionIdx,
                                    bool is_single_phase,
                                    const std::optional<NewtonJacobian>& newton_jacobian)
     {
         if (!is_single_phase) {
-            updateDerivativesTwoPhase_(fluid_state_scalar, fluid_state, eos_type, newton_jacobian);
+            updateDerivativesTwoPhase_(fluid_state_scalar, fluid_state, eosRegionIdx, newton_jacobian);
         } else {
             updateDerivativesSinglePhase_(fluid_state_scalar, fluid_state);
         }
@@ -1248,7 +1245,7 @@ protected:
     template <typename FlashFluidStateScalar, typename FluidState>
     static void updateDerivativesTwoPhase_(const FlashFluidStateScalar& fluid_state_scalar,
                                            FluidState& fluid_state,
-                                           const EOSType& eos_type,
+                                           const unsigned eosRegionIdx,
                                            const std::optional<NewtonJacobian>& newton_jacobian)
     {
         using InputEval = typename FluidState::ValueType;
@@ -1304,7 +1301,7 @@ protected:
         state_derivative_state.setLvalue(scalar_liquid_fraction);
         // Saturations do not enter the flash residual and remain unset here.
         using StateParamCache = typename FluidSystem::template ParameterCache<StateEval>;
-        StateParamCache state_param_cache(eos_type);
+        StateParamCache state_param_cache(eosRegionIdx);
         for (unsigned phase_idx = 0; phase_idx < numMisciblePhases; ++phase_idx) {
             state_param_cache.updatePhase(state_derivative_state, phase_idx);
             for (unsigned comp_idx = 0; comp_idx < numComponents; ++comp_idx) {
@@ -1329,7 +1326,7 @@ protected:
         UnknownJacobian unknown_jacobian
             = (newton_jacobian && newton_jacobian->state == jacobianState_(fluid_state_scalar))
             ? newton_jacobian->jacobian
-            : compositionJacobian_(fluid_state_scalar, eos_type);
+            : compositionJacobian_(fluid_state_scalar, eosRegionIdx);
 
         // DUNE 2.6 cannot solve directly with a matrix right-hand side, so form
         // the inverse explicitly before multiplying the state Jacobian.
@@ -1493,7 +1490,7 @@ protected:
                                                    const ComponentVector& z,
                                                    const bool run_newton_afterwards,
                                                    const Scalar flash_tolerance,
-                                                   const EOSType& eos_type,
+                                                   const unsigned eosRegionIdx,
                                                    const int verbosity)
     {
         // Limit conditioning passes before Newton; standalone substitution runs longer.
@@ -1529,7 +1526,7 @@ protected:
 
             // Calculate fugacity coefficient
             using ParamCache = typename FluidSystem::template ParameterCache<typename FlashFluidState::ValueType>;
-            ParamCache paramCache(eos_type);
+            ParamCache paramCache(eosRegionIdx);
             for (int phaseIdx=0; phaseIdx<numMisciblePhases; ++phaseIdx){
                 paramCache.updatePhase(fluid_state, phaseIdx);
                 for (int compIdx=0; compIdx<numComponents; ++compIdx){
