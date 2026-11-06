@@ -35,6 +35,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <opm/material/fluidsystems/BlackOilFluidSystem.hpp>
+#include <opm/material/fluidsystems/BlackOilFluidSystemNonStatic.hpp>
 #include <opm/material/fluidstates/BlackOilFluidState.hpp>
 #include <opm/material/densead/Evaluation.hpp>
 
@@ -706,6 +707,39 @@ END
     } catch (const std::exception& error) {
         BOOST_CHECK(std::string {error.what()}.find("compositional simulator") == std::string::npos);
     }
+}
+
+BOOST_AUTO_TEST_CASE(DispersionFlagFollowsDisperc)
+{
+    // The dispersion flag must be set from DISPERC in initFromState() and be
+    // reset again when initialising from a deck without it.
+    using FluidSystem = Opm::BlackOilFluidSystem<double>;
+
+    const auto python = std::make_shared<Opm::Python>();
+    const auto initialise = [&python](const std::string& deckStr)
+    {
+        const auto deck = Opm::Parser {}.parseString(deckStr);
+        const Opm::EclipseState eclState {deck};
+        const Opm::Schedule schedule {deck, eclState, python};
+        FluidSystem::initFromState(eclState, schedule);
+    };
+
+    const std::string plainDeck {deckString1};
+    const std::string gridKw {"\nGRID\n"};
+    const auto gridPos = plainDeck.find(gridKw);
+    BOOST_REQUIRE(gridPos != std::string::npos);
+
+    // DISPERC is a cell-wise array; the deck has 10 * 10 * 3 = 300 cells.
+    std::string dispercDeck = plainDeck;
+    dispercDeck.insert(gridPos + gridKw.size(), "DISPERC\n  300*0.1 /\n");
+
+    initialise(dispercDeck);
+    BOOST_CHECK(FluidSystem::enableDispersion());
+    BOOST_CHECK(FluidSystem::getNonStaticInstance().enableDispersion());
+
+    initialise(plainDeck);
+    BOOST_CHECK(!FluidSystem::enableDispersion());
+    BOOST_CHECK(!FluidSystem::getNonStaticInstance().enableDispersion());
 }
 
 BOOST_AUTO_TEST_CASE_TEMPLATE(BlackOil, Evaluation, Types)
