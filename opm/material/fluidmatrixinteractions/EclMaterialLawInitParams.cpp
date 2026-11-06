@@ -85,6 +85,16 @@ run(const IntLookupFunction& fieldPropIntOnLeafAssigner,
     std::vector<std::vector<MaterialLawParams>*> mlpArray;
     initArrays_(satnumArray, imbnumArray, mlpArray);
     const auto num_arrays = mlpArray.size();
+    // One contiguous arena per parameter array. Without this each cell's
+    // nested parameter object is a separate heap allocation reached through
+    // its own shared_ptr control block, so the evaluation loop walks the
+    // parameter set in allocation order rather than in cell order.
+    const auto approach = this->parent_.threePhaseApproach();
+    params_.materialLawParamArenas.resize(num_arrays);
+    for (unsigned i = 0; i < num_arrays; i++) {
+        params_.materialLawParamArenas[i] =
+            MaterialLawParams::makeArena(approach, this->numCompressedElems_);
+    }
     for (unsigned i = 0; i < num_arrays; i++) {
 #ifdef _OPENMP
 #pragma omp parallel for
@@ -111,7 +121,9 @@ run(const IntLookupFunction& fieldPropIntOnLeafAssigner,
                 hystParams.setImbibitionParamsGasWater(elemIdx, imbRegionIdx, lookupIdxOnLevelZeroAssigner);
             }
             hystParams.finalize();
-            initThreePhaseParams_(hystParams, (*mlpArray[i])[elemIdx], satRegionIdx, elemIdx);
+            initThreePhaseParams_(hystParams, (*mlpArray[i])[elemIdx], satRegionIdx, elemIdx,
+                                  MaterialLawParams::arenaSlot(params_.materialLawParamArenas[i],
+                                                               approach, elemIdx));
         }
     }
 }
@@ -229,14 +241,15 @@ InitParams<Traits>::
 initThreePhaseParams_(HystParams<Traits>& hystParams,
                       MaterialLawParams& materialParams,
                       unsigned satRegionIdx,
-                      unsigned elemIdx)
+                      unsigned elemIdx,
+                      std::shared_ptr<void> pooledParams)
 {
     const auto& epsInfo = this->params_.oilWaterScaledEpsInfoDrainage[elemIdx];
 
     auto oilWaterParams = hystParams.getOilWaterParams();
     auto gasOilParams = hystParams.getGasOilParams();
     auto gasWaterParams = hystParams.getGasWaterParams();
-    materialParams.setApproach(this->parent_.threePhaseApproach());
+    materialParams.setApproach(this->parent_.threePhaseApproach(), std::move(pooledParams));
     switch (materialParams.approach()) {
         case EclMultiplexerApproach::Stone1: {
             auto& realParams = materialParams.template getRealParams<EclMultiplexerApproach::Stone1>();
