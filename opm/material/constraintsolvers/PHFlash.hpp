@@ -36,8 +36,8 @@
  * with a safeguarded Newton iteration from the temperature of the incoming
  * state. The slope dH/dT comes from the temperature derivatives that the
  * isothermal flash carries, without a further flash. Where that iteration
- * does not converge, the temperature is bracketed and refined by false
- * position.
+ * does not converge, or the flash at its solution does not confirm it, the
+ * temperature is bracketed and refined by false position.
  *
  * Contract notes:
  * - The specified enthalpy is molar [J/mol] and has to be computed on the
@@ -325,15 +325,18 @@ struct PHFlash {
                 };
 
                 const auto outcome = newton(evaluateWithSlope, start, tLo, tHi, cfg);
-                if (outcome.temperature) {
-                    return acceptAt(*outcome.temperature);
+                if (outcome.temperature && acceptAt(*outcome.temperature)) {
+                    return true;
                 }
                 bracket = outcome.bracket;
                 if (verbosity >= 1) {
-                    OpmLog::debug(fmt::format("PHFlash: the Newton stage from {} K did not "
-                                              "converge; the bracket search goes on {}",
-                                              start, bracket ? "from its bracket"
-                                                             : "over the interval"));
+                    const auto stop = outcome.temperature
+                                          ? "is not confirmed by the flash at its solution"
+                                          : "did not converge";
+                    OpmLog::debug(fmt::format("PHFlash: the Newton stage from {} K {}; the "
+                                              "bracket search goes on {}",
+                                              start, stop,
+                                              bracket ? "from its bracket" : "over the interval"));
                 }
             }
         }
@@ -376,8 +379,8 @@ private:
         std::optional<Scalar> slope;
     };
 
-    //! Where the Newton stage stopped: the converged temperature, or else the
-    //! bracket it found, if any.
+    //! Where the Newton stage stopped: the converged temperature, if it
+    //! converged, and the bracket it found, if any.
     struct NewtonOutcome
     {
         std::optional<Scalar> temperature;
@@ -615,7 +618,8 @@ private:
      * iteration bisects between the bounds once both are evaluated, and before
      * that moves toward the root by maxNewtonStep. No step is longer than
      * maxNewtonStep. The iteration has converged when the Newton step is
-     * within cfg.temperatureTolerance, or the bounds are.
+     * within cfg.temperatureTolerance, and then returns the temperature after
+     * that step, or when the bounds are.
      *
      * It stops without a temperature where a trial cannot be evaluated, where
      * it reaches an end of the interval without a sign change, or after
@@ -623,8 +627,8 @@ private:
      *
      * \param evaluate returns r(T) and dr/dT, or nothing where r cannot be
      *        evaluated
-     * \return the converged temperature, or else the bracket of the evaluated
-     *         bounds, if both are
+     * \return the converged temperature, if any, and the bracket of the
+     *         evaluated bounds, if both are
      */
     template <class EvaluateWithSlope>
     static NewtonOutcome newton(const EvaluateWithSlope& evaluate,
@@ -651,7 +655,7 @@ private:
             }
             const Trial& trial = sloped->trial;
             if (trial.residual == 0.0) {
-                return {t, std::nullopt};
+                return {t, bracket()};
             }
             if (trial.residual > 0.0) {
                 above = trial;
@@ -664,11 +668,13 @@ private:
 
             const bool newtonStep = sloped->slope && *sloped->slope > 0.0;
             const Scalar step = newtonStep ? -trial.residual / *sloped->slope : 0.0;
+            // The step costs no evaluation and makes the residual at the
+            // solution quadratically small rather than of order slope * step.
             if (newtonStep && std::abs(step) <= cfg.temperatureTolerance) {
-                return {t, std::nullopt};
+                return {std::clamp(t + step, lower, upper), bracket()};
             }
             if (below && above && upper - lower <= cfg.temperatureTolerance) {
-                return {t, std::nullopt};
+                return {t, bracket()};
             }
 
             Scalar next = t + step;

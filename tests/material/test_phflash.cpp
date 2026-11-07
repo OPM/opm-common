@@ -956,8 +956,9 @@ BOOST_AUTO_TEST_CASE(MatrixErrorIsNotEvaluable)
 {
     // Dune::FMatrixError, which the isothermal flash can throw for a singular
     // matrix, is not a std::runtime_error. During the search it is treated
-    // like a trial that cannot be evaluated; at the check at the solution,
-    // solve() returns false instead of throwing.
+    // like a trial that cannot be evaluated. At the check at the solution of
+    // the bracket search, solve() returns false instead of throwing; at that
+    // of the Newton stage, the bracket search takes over.
     constexpr double Tstar = 340.;
     const double hSpec = enthalpyF1(f1Pressure, Tstar, EnthalpyModel::caloric);
     EnthalpyBadCallF1::kind = EnthalpyBadCallF1::Kind::matrixError;
@@ -975,7 +976,10 @@ BOOST_AUTO_TEST_CASE(MatrixErrorIsNotEvaluable)
             bool solved = true;
             BOOST_CHECK_NO_THROW(solved = FlashBadCall::solve(fs, hSpec, cfg, PTFlashMethod::Ssi,
                                                               ptTolerance, EOSType::PR));
-            BOOST_CHECK(!solved);
+            BOOST_CHECK_EQUAL(solved, newtonStart);
+            if (solved) {
+                BOOST_CHECK_SMALL(Opm::getValue(fs.temperature(0)) - Tstar, roundTripTolerance);
+            }
         }
     }
 }
@@ -1090,6 +1094,38 @@ BOOST_AUTO_TEST_CASE(BracketOfNewtonStageIsKept)
     BOOST_CHECK_SMALL(T - Tstar, roundTripTolerance);
     BOOST_CHECK_GT(QuarticEnthalpyF1::lowest, 379.99);
     BOOST_CHECK_LT(QuarticEnthalpyF1::highest, 401.7);
+}
+
+BOOST_AUTO_TEST_CASE(SolutionMeetsTightEnthalpyTolerance)
+{
+    // An enthalpy tolerance far below slope * temperatureTolerance: the
+    // solution after the last Newton step meets it.
+    constexpr double Tstar = 360.;
+    for (const auto model : {EnthalpyModel::caloric, EnthalpyModel::eos_departure}) {
+        BOOST_TEST_CONTEXT("model " << static_cast<int>(model)) {
+            auto cfg = newtonConfigF1(model);
+            cfg.enthalpyTolerance = 1e-6;
+            const double hSpec = enthalpyF1(f1Pressure, Tstar, model);
+            const double T = recoverTemperatureF1<PhFlashF1>(f1Pressure, hSpec, cfg, f1Z, 325.);
+            BOOST_CHECK_SMALL(T - Tstar, roundTripTolerance);
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(UnconfirmedSolutionHandsOver)
+{
+    // Started 0.5 mK below the 5 kJ/mol step of H(T) at 350 K, the slope
+    // spans the step and the Newton step is within the temperature tolerance,
+    // 4.5 mK above the root. The flash there does not confirm it, and the
+    // bracket search finds the root.
+    using Flash = Opm::PHFlash<Scalar, FluidSystemF1, EnthalpyStepAt350KF1>;
+    constexpr double Tstar = EnthalpyStepAt350KF1::stepTemperature - 5e-3;
+    auto cfg = newtonConfigF1(EnthalpyModel::caloric);
+    cfg.enthalpyTolerance = 0.1;
+    const double hSpec = enthalpyF1(f1Pressure, Tstar, EnthalpyModel::caloric);
+    const double T = recoverTemperatureF1<Flash>(f1Pressure, hSpec, cfg, f1Z,
+                                                 EnthalpyStepAt350KF1::stepTemperature - 5e-4);
+    BOOST_CHECK_SMALL(T - Tstar, 1e-5);
 }
 
 // A provider that does not declare newtonStage is evaluated on the caller's
