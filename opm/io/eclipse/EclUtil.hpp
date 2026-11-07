@@ -31,10 +31,18 @@
 
 namespace Opm { namespace EclIO {
 
+    [[deprecated("Use byteswap(), toFileOrder(), or fromFileOrder() from <opm/io/eclipse/ByteOrder.hpp>")]]
     int flipEndianInt(int num);
+
+    [[deprecated("Use byteswap(), toFileOrder(), or fromFileOrder() from <opm/io/eclipse/ByteOrder.hpp>")]]
     std::int64_t flipEndianLongInt(std::int64_t num);
+
+    [[deprecated("Use byteswap(), toFileOrder(), or fromFileOrder() from <opm/io/eclipse/ByteOrder.hpp>")]]
     float flipEndianFloat(float num);
+
+    [[deprecated("Use byteswap(), toFileOrder(), or fromFileOrder() from <opm/io/eclipse/ByteOrder.hpp>")]]
     double flipEndianDouble(double num);
+
     bool isEOF(std::fstream* fileH);
     bool fileExists(const std::filesystem::path& filename);
     bool isFormatted(const std::filesystem::path& filename);
@@ -68,9 +76,14 @@ namespace Opm { namespace EclIO {
     void readFormattedHeader(std::fstream& fileH, std::string& arrName,
                       std::int64_t &num, Opm::EclIO::eclArrType &arrType, int& elementSize);
 
+    /// Read array data from a binary file.
+    ///
+    /// Numeric elements (\p T2 is a 4 or 8 byte integer or floating-point
+    /// type) are converted to the host's native byte order before being
+    /// passed to \p process.
     template<typename T, typename T2>
     std::vector<T> readBinaryArray(std::fstream& fileH, const std::int64_t size, Opm::EclIO::eclArrType type,
-                               std::function<T(T2)>& flip, int elementSize);
+                               std::function<T(T2)>& process, int elementSize);
 
     std::vector<int> readBinaryInteArray(std::fstream &fileH, const std::int64_t size);
     std::vector<float> readBinaryRealArray(std::fstream& fileH, const std::int64_t size);

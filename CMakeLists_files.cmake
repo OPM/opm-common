@@ -1309,6 +1309,7 @@ list(APPEND PUBLIC_HEADER_FILES
   opm/io/eclipse/ERst.hpp
   opm/io/eclipse/ESmry.hpp
   opm/io/eclipse/EclFile.hpp
+  opm/io/eclipse/ByteOrder.hpp
   opm/io/eclipse/EclIOdata.hpp
   opm/io/eclipse/EclOutput.hpp
   opm/io/eclipse/FluxFile.hpp

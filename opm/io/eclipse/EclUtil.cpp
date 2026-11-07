@@ -21,6 +21,8 @@
 
 #include <opm/common/ErrorMacros.hpp>
 
+#include <opm/io/eclipse/ByteOrder.hpp>
+
 #include <algorithm>
 #include <array>
 #include <cmath>
@@ -34,51 +36,25 @@
 
 #include <fmt/format.h>
 
-#ifdef _MSC_VER
-#include <intrin.h>
-#endif
-
 int Opm::EclIO::flipEndianInt(int num)
 {
-#ifdef _MSC_VER
-    unsigned int tmp = _byteswap_ulong(num);
-    return static_cast<int>(tmp);
-#else
-    unsigned int tmp = __builtin_bswap32(num);
-    return static_cast<int>(tmp);
-#endif
+    return byteswap(num);
 }
 
 std::int64_t Opm::EclIO::flipEndianLongInt(std::int64_t num)
 {
-#ifdef _MSC_VER
-    std::uint64_t tmp = _byteswap_uint64(num);
-    return static_cast<std::int64_t>(tmp);
-#else
-    std::uint64_t tmp = __builtin_bswap64(num);
-    return static_cast<std::int64_t>(tmp);
-#endif
+    return byteswap(num);
 }
 
 float Opm::EclIO::flipEndianFloat(float num)
 {
-    float value = num;
-
-    char* floatToConvert = reinterpret_cast<char*>(&value);
-    std::reverse(floatToConvert, floatToConvert+4);
-
-    return value;
+    return byteswap(num);
 }
 
 
 double Opm::EclIO::flipEndianDouble(double num)
 {
-    double value = num;
-
-    char* doubleToConvert = reinterpret_cast<char*>(&value);
-    std::reverse(doubleToConvert, doubleToConvert+8);
-
-    return value;
+    return byteswap(num);
 }
 
 bool Opm::EclIO::fileExists(const std::filesystem::path& filename){
@@ -119,9 +95,9 @@ bool Opm::EclIO::isFormatted(const std::filesystem::path& filename)
 
 bool Opm::EclIO::isEOF(std::fstream* fileH)
 {
-    int num;
+    std::array<char, 4> buf{};
     std::int64_t pos = fileH->tellg();
-    fileH->read(reinterpret_cast<char*>(&num), sizeof(num));
+    fileH->read(buf.data(), buf.size());
 
     if (fileH->eof()) {
         return true;
@@ -313,10 +289,7 @@ std::uint64_t Opm::EclIO::sizeOnDiskFormatted(const std::int64_t num, Opm::EclIO
 void Opm::EclIO::readBinaryHeader(std::fstream& fileH, std::string& tmpStrName,
                       int& tmpSize, std::string& tmpStrType)
 {
-    int bhead;
-
-    fileH.read(reinterpret_cast<char*>(&bhead), sizeof(bhead));
-    bhead = Opm::EclIO::flipEndianInt(bhead);
+    auto bhead = readFileOrder<std::int32_t>(fileH);
 
     if (bhead != 16) {
         OPM_THROW(std::runtime_error,
@@ -326,13 +299,11 @@ void Opm::EclIO::readBinaryHeader(std::fstream& fileH, std::string& tmpStrName,
 
     fileH.read(&tmpStrName[0], 8);
 
-    fileH.read(reinterpret_cast<char*>(&tmpSize), sizeof(tmpSize));
-    tmpSize = Opm::EclIO::flipEndianInt(tmpSize);
+    tmpSize = readFileOrder<std::int32_t>(fileH);
 
     fileH.read(&tmpStrType[0], 4);
 
-    fileH.read(reinterpret_cast<char*>(&bhead), sizeof(bhead));
-    bhead = Opm::EclIO::flipEndianInt(bhead);
+    bhead = readFileOrder<std::int32_t>(fileH);
 
     if (bhead != 16) {
         OPM_THROW(std::runtime_error,
@@ -448,7 +419,7 @@ void Opm::EclIO::readFormattedHeader(std::fstream& fileH, std::string& arrName,
 
 template<typename T, typename T2>
 std::vector<T> Opm::EclIO::readBinaryArray(std::fstream& fileH, const std::int64_t size, Opm::EclIO::eclArrType type,
-                               std::function<T(T2)>& flip, int elementSize)
+                               std::function<T(T2)>& process, int elementSize)
 {
     std::vector<T> arr;
 
@@ -468,9 +439,7 @@ std::vector<T> Opm::EclIO::readBinaryArray(std::fstream& fileH, const std::int64
     std::int64_t rest = size;
 
     while (rest > 0) {
-        int dhead;
-        fileH.read(reinterpret_cast<char*>(&dhead), sizeof(dhead));
-        dhead = Opm::EclIO::flipEndianInt(dhead);
+        const auto dhead = readFileOrder<std::int32_t>(fileH);
         const int num = dhead / sizeOfElement;
 
         if ((num > maxNumberOfElements) || (num < 0)) {
@@ -482,14 +451,18 @@ std::vector<T> Opm::EclIO::readBinaryArray(std::fstream& fileH, const std::int64
                 T2 value;
                 value.resize(sizeOfElement) ;
                 fileH.read(&value[0], sizeOfElement);
-                arr.push_back(flip(value));
+                arr.push_back(process(value));
             }
         } else {
             std::vector<T2> buf(num);
-            fileH.read(reinterpret_cast<char*>(buf.data()), buf.size()*sizeof(T2));
+            if constexpr (FileScalar<T2>) {
+                readFileOrder(fileH, buf);
+            } else {
+                fileH.read(reinterpret_cast<char*>(buf.data()), buf.size()*sizeof(T2));
+            }
 
             for (const auto& value : buf)
-                arr.push_back(flip(value));
+                arr.push_back(process(value));
         }
 
         rest -= num;
@@ -499,9 +472,7 @@ std::vector<T> Opm::EclIO::readBinaryArray(std::fstream& fileH, const std::int64
             OPM_THROW(std::runtime_error, "Error reading binary data, incorrect number of elements");
         }
 
-        int dtail;
-        fileH.read(reinterpret_cast<char*>(&dtail), sizeof(dtail));
-        dtail = Opm::EclIO::flipEndianInt(dtail);
+        const auto dtail = readFileOrder<std::int32_t>(fileH);
 
         if (dhead != dtail) {
             OPM_THROW(std::runtime_error, "Error reading binary data, tail not matching header.");
@@ -514,21 +485,21 @@ std::vector<T> Opm::EclIO::readBinaryArray(std::fstream& fileH, const std::int64
 
 std::vector<int> Opm::EclIO::readBinaryInteArray(std::fstream &fileH, const std::int64_t size)
 {
-    std::function<int(int)> f = Opm::EclIO::flipEndianInt;
+    std::function<int(int)> f = [](int intVal) { return intVal; };
     return readBinaryArray<int,int>(fileH, size, Opm::EclIO::INTE, f, sizeOfInte);
 }
 
 
 std::vector<float> Opm::EclIO::readBinaryRealArray(std::fstream& fileH, const std::int64_t size)
 {
-    std::function<float(float)> f = Opm::EclIO::flipEndianFloat;
+    std::function<float(float)> f = [](float floatVal) { return floatVal; };
     return readBinaryArray<float,float>(fileH, size, Opm::EclIO::REAL, f, sizeOfReal);
 }
 
 
 std::vector<double> Opm::EclIO::readBinaryDoubArray(std::fstream& fileH, const std::int64_t size)
 {
-    std::function<double(double)> f = Opm::EclIO::flipEndianDouble;
+    std::function<double(double)> f = [](double doubVal) { return doubVal; };
     return readBinaryArray<double,double>(fileH, size, Opm::EclIO::DOUB, f, sizeOfDoub);
 }
 
