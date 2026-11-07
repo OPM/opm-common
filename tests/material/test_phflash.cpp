@@ -44,6 +44,10 @@
 #include <opm/material/constraintsolvers/PHFlash.hpp>
 #include <opm/material/constraintsolvers/PTFlashMethod.hpp>
 
+#include <opm/common/OpmLog/LogUtil.hpp>
+#include <opm/common/OpmLog/OpmLog.hpp>
+#include <opm/common/OpmLog/StreamLog.hpp>
+
 #include <opm/input/eclipse/EclipseState/Compositional/CompositionalConfig.hpp>
 
 #include <dune/common/fmatrix.hh>
@@ -54,7 +58,10 @@
 #include <array>
 #include <cmath>
 #include <limits>
+#include <memory>
+#include <sstream>
 #include <stdexcept>
+#include <string>
 
 using Scalar = double;
 using EOSType = Opm::CompositionalConfig::EOSType;
@@ -409,6 +416,73 @@ struct EnthalpyBadCallF1
         return EnthalpyF1::mixtureEnthalpy(fs, cpTable, eosType, model);
     }
 };
+
+// A state flashed at (pressure, temperature): the phase split a simulator
+// carries into the next isenthalpic flash.
+template <class FluidSystem, class Evaluation>
+Opm::CompositionalFluidState<Evaluation, FluidSystem>
+carriedState(const double pressure, const double temperature,
+             const std::array<double, FluidSystem::numComponents>& z)
+{
+    FlashCase<FluidSystem::numComponents> probe{"carried state", pressure, temperature, z};
+    return runFlash<FluidSystem, Evaluation>(probe).state;
+}
+
+PhFlashF2::Config departureConfigF2()
+{
+    PhFlashF2::Config cfg;
+    cfg.cpTable = Opm::FlashTest::f2CpTable();
+    cfg.model = EnthalpyModel::eos_departure;
+    cfg.tempMin = 250.;
+    cfg.tempMax = 500.;
+    cfg.newtonStart = true;
+    return cfg;
+}
+
+// the eos_departure mixture enthalpy of F2 flashed at (pressure, temperature)
+double enthalpyF2(const double pressure, const double temperature,
+                  const std::array<double, 3>& z = f2Z)
+{
+    return EnthalpyF2::mixtureEnthalpy(carriedState<FluidSystemF2, EvaluationF2>(pressure,
+                                                                                temperature, z),
+                                       Opm::FlashTest::f2CpTable(), EOSType::PR,
+                                       EnthalpyModel::eos_departure);
+}
+
+// The OpmLog debug messages issued while it lives.
+class DebugMessages
+{
+public:
+    DebugMessages()
+    {
+        Opm::OpmLog::addBackend(name,
+                                std::make_shared<Opm::StreamLog>(stream_,
+                                                                 Opm::Log::MessageType::Debug));
+    }
+
+    ~DebugMessages()
+    {
+        Opm::OpmLog::removeBackend(name);
+    }
+
+    bool contain(const std::string& text) const
+    {
+        return stream_.str().find(text) != std::string::npos;
+    }
+
+private:
+    static constexpr const char* name = "PHFlashTest";
+    std::ostringstream stream_;
+};
+
+// Solve from fs; true if the solution came from its phase split.
+template <class Flash, class FluidState>
+bool solvedFromSplit(FluidState& fs, const double hSpec, const typename Flash::Config& cfg)
+{
+    DebugMessages messages;
+    BOOST_REQUIRE(Flash::solve(fs, hSpec, cfg, PTFlashMethod::Ssi, ptTolerance, EOSType::PR, 1));
+    return messages.contain("solved from the incoming phase split");
+}
 
 } // anonymous namespace
 
@@ -1163,6 +1237,246 @@ BOOST_AUTO_TEST_CASE(CallerStateProviderGetsBracketSearch)
     // A template, which a check of the call alone would let into the Newton
     // stage, where its body does not compile.
     checkBracketSearchAlone<GenericCallerStateEnthalpyF1, CallerStateF1>();
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE(IncomingSplit)
+
+BOOST_AUTO_TEST_CASE(TwoPhaseSplitF2)
+{
+    // Two-phase states carried from near and far: the split and the
+    // temperature are solved for together, to the state that the bracket
+    // search alone finds.
+    constexpr double pressure = 50e5;
+    const auto cfg = departureConfigF2();
+    auto bracketOnly = cfg;
+    bracketOnly.newtonStart = false;
+    for (const double Tstar : {300., 380.}) {
+        const double hSpec = enthalpyF2(pressure, Tstar);
+        auto reference = makeInitialState<FluidSystemF2, EvaluationF2>(pressure, Tstar, f2Z);
+        BOOST_REQUIRE(PhFlashF2::solve(reference, hSpec, bracketOnly, PTFlashMethod::Ssi,
+                                       ptTolerance, EOSType::PR));
+        for (const double start : {Tstar, Tstar - 20., Tstar - 5., Tstar - 1., Tstar + 1.,
+                                   Tstar + 5., Tstar + 20.}) {
+            BOOST_TEST_CONTEXT(Tstar << " K from " << start << " K") {
+                auto fs = carriedState<FluidSystemF2, EvaluationF2>(pressure, start, f2Z);
+                const double L0 = Opm::getValue(fs.L());
+                BOOST_REQUIRE(L0 > 0. && L0 < 1.);
+                BOOST_CHECK(solvedFromSplit<PhFlashF2>(fs, hSpec, cfg));
+                BOOST_CHECK_SMALL(Opm::getValue(fs.temperature(0)) - Tstar, roundTripTolerance);
+                BOOST_CHECK_SMALL(Opm::getValue(fs.L()) - Opm::getValue(reference.L()), 1e-6);
+                for (int compIdx = 0; compIdx < numComponentsF2; ++compIdx) {
+                    for (const auto phaseIdx : {FluidSystemF2::oilPhaseIdx,
+                                                FluidSystemF2::gasPhaseIdx}) {
+                        const double w = Opm::getValue(fs.moleFraction(phaseIdx, compIdx));
+                        const double ref = Opm::getValue(reference.moleFraction(phaseIdx, compIdx));
+                        BOOST_CHECK_SMALL(w - ref, 1e-6);
+                    }
+                }
+            }
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(SinglePhaseStatesF1)
+{
+    // A liquid (the equimolar feed at 200 bar) and a vapour (a methane-rich
+    // feed at 10 bar), carried within the single-phase region.
+    struct Case
+    {
+        double pressure;
+        std::array<double, 2> z;
+        double Tstar;
+        double label;
+    };
+    const auto cfg = newtonConfigF1(EnthalpyModel::eos_departure);
+    for (const auto& [pressure, z, Tstar, label] : {Case{200e5, f1Z, 350., 1.},
+                                                    Case{10e5, {0.97, 0.03}, 430., 0.}}) {
+        const double hSpec = enthalpyF1(pressure, Tstar, EnthalpyModel::eos_departure, z);
+        for (const double start : {Tstar, Tstar - 15., Tstar + 15.}) {
+            BOOST_TEST_CONTEXT(pressure << " Pa, " << Tstar << " K from " << start << " K") {
+                auto fs = carriedState<FluidSystemF1, EvaluationF1>(pressure, start, z);
+                BOOST_REQUIRE_EQUAL(Opm::getValue(fs.L()), label);
+                BOOST_CHECK(solvedFromSplit<PhFlashF1>(fs, hSpec, cfg));
+                BOOST_CHECK_SMALL(Opm::getValue(fs.temperature(0)) - Tstar, roundTripTolerance);
+                BOOST_CHECK_EQUAL(Opm::getValue(fs.L()), label);
+            }
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(PhaseCountChangesF2)
+{
+    // At 100 bar the F2 feed is a liquid up to its bubble point between 290
+    // and 300 K. From the split at 300 K the combined iteration converges to
+    // a liquid fraction above one, and the single-phase iteration goes on
+    // from there. From the liquid at 280 K the single-phase solution lies
+    // above the bubble point, and the stage runs again from the split the
+    // flash there finds.
+    constexpr double pressure = 100e5;
+    const auto cfg = departureConfigF2();
+    for (const auto& [Tstar, start] : {std::pair{280., 300.}, std::pair{300., 280.}}) {
+        BOOST_TEST_CONTEXT(Tstar << " K from " << start << " K") {
+            const double hSpec = enthalpyF2(pressure, Tstar);
+            auto fs = carriedState<FluidSystemF2, EvaluationF2>(pressure, start, f2Z);
+            const double L0 = Opm::getValue(fs.L());
+            BOOST_REQUIRE((L0 == 1.) == (Tstar > start));
+            BOOST_CHECK(solvedFromSplit<PhFlashF2>(fs, hSpec, cfg));
+            BOOST_CHECK_SMALL(Opm::getValue(fs.temperature(0)) - Tstar, roundTripTolerance);
+            const double L = Opm::getValue(fs.L());
+            BOOST_CHECK((L == 1.) == (Tstar < start));
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(SplitEndsInVapourF1)
+{
+    // At 10 bar the methane-rich feed is a vapour above its dew point between
+    // 395 and 400 K. From the split at 390 K the combined iteration converges
+    // to a liquid fraction below zero, and the single-phase iteration goes on
+    // from there.
+    constexpr double pressure = 10e5;
+    constexpr std::array<double, 2> z = {0.97, 0.03};
+    constexpr double Tstar = 420.;
+    const double hSpec = enthalpyF1(pressure, Tstar, EnthalpyModel::eos_departure, z);
+    auto fs = carriedState<FluidSystemF1, EvaluationF1>(pressure, 390., z);
+    const double L0 = Opm::getValue(fs.L());
+    BOOST_REQUIRE(L0 > 0. && L0 < 1.);
+    BOOST_CHECK(solvedFromSplit<PhFlashF1>(fs, hSpec,
+                                           newtonConfigF1(EnthalpyModel::eos_departure)));
+    BOOST_CHECK_SMALL(Opm::getValue(fs.temperature(0)) - Tstar, roundTripTolerance);
+    BOOST_CHECK_EQUAL(Opm::getValue(fs.L()), 0.);
+}
+
+BOOST_AUTO_TEST_CASE(ChangedFeedF2)
+{
+    // The overall composition has changed since the state was flashed, as
+    // between two iterations of a simulator: the split is solved for the new
+    // feed.
+    constexpr double pressure = 50e5;
+    constexpr double Tstar = 320.;
+    constexpr std::array<double, 3> z = {0.45, 0.33, 0.22};
+    const double hSpec = enthalpyF2(pressure, Tstar, z);
+    auto fs = carriedState<FluidSystemF2, EvaluationF2>(pressure, 325., f2Z);
+    for (int compIdx = 0; compIdx < numComponentsF2; ++compIdx) {
+        fs.setMoleFraction(compIdx, EvaluationF2(z[compIdx]));
+    }
+    BOOST_CHECK(solvedFromSplit<PhFlashF2>(fs, hSpec, departureConfigF2()));
+    BOOST_CHECK_SMALL(Opm::getValue(fs.temperature(0)) - Tstar, roundTripTolerance);
+}
+
+BOOST_AUTO_TEST_CASE(StartOutsideIntervalF2)
+{
+    // Splits carried from below and above the search interval, and one whose
+    // temperature is not finite: the stage starts from the nearer end of the
+    // interval, or from its midpoint, with the carried split.
+    constexpr double pressure = 50e5;
+    constexpr double Tstar = 300.;
+    auto cfg = departureConfigF2();
+    cfg.tempMin = 290.;
+    cfg.tempMax = 320.;
+    const double hSpec = enthalpyF2(pressure, Tstar);
+    const double nan = std::numeric_limits<double>::quiet_NaN();
+    for (const auto& [flashedAt, incoming] :
+         {std::pair{280., 280.}, std::pair{330., 330.}, std::pair{310., nan}}) {
+        BOOST_TEST_CONTEXT("split from " << flashedAt << " K, incoming " << incoming << " K") {
+            auto fs = carriedState<FluidSystemF2, EvaluationF2>(pressure, flashedAt, f2Z);
+            fs.setTemperature(EvaluationF2(incoming));
+            const double L0 = Opm::getValue(fs.L());
+            BOOST_REQUIRE(L0 > 0. && L0 < 1.);
+            BOOST_CHECK(solvedFromSplit<PhFlashF2>(fs, hSpec, cfg));
+            BOOST_CHECK_SMALL(Opm::getValue(fs.temperature(0)) - Tstar, roundTripTolerance);
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(TightEnthalpyToleranceF2)
+{
+    // At this tolerance the flash at the solution of the combined iteration
+    // does not confirm it: the split it solves differs slightly from that of
+    // the flash. The later stages meet the tolerance.
+    constexpr double pressure = 50e5;
+    constexpr double Tstar = 300.;
+    auto cfg = departureConfigF2();
+    cfg.enthalpyTolerance = 1e-6;
+    const double hSpec = enthalpyF2(pressure, Tstar);
+    for (const double start : {Tstar - 20., Tstar - 1., Tstar + 1., Tstar + 20.}) {
+        BOOST_TEST_CONTEXT("from " << start << " K") {
+            auto fs = carriedState<FluidSystemF2, EvaluationF2>(pressure, start, f2Z);
+            BOOST_REQUIRE(PhFlashF2::solve(fs, hSpec, cfg, PTFlashMethod::Ssi, ptTolerance,
+                                           EOSType::PR));
+            const double residual
+                = EnthalpyF2::mixtureEnthalpy(fs, cfg.cpTable, EOSType::PR, cfg.model) - hSpec;
+            BOOST_CHECK_SMALL(residual, cfg.enthalpyTolerance);
+            BOOST_CHECK_SMALL(Opm::getValue(fs.temperature(0)) - Tstar, roundTripTolerance);
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(SplitIsNotUsed)
+{
+    constexpr double Tstar = 300.;
+    const double hDeparture = enthalpyF1(f1Pressure, Tstar, EnthalpyModel::eos_departure);
+
+    // makeInitialState leaves L = 1 with zero phase compositions, which is
+    // not a flashed state.
+    {
+        DebugMessages messages;
+        auto fs = makeInitialState<FluidSystemF1, EvaluationF1>(f1Pressure, 310., f1Z);
+        BOOST_REQUIRE(PhFlashF1::solve(fs, hDeparture, newtonConfigF1(EnthalpyModel::eos_departure),
+                                       PTFlashMethod::Ssi, ptTolerance, EOSType::PR, 1));
+        BOOST_CHECK(!messages.contain("incoming phase split"));
+        BOOST_CHECK_SMALL(Opm::getValue(fs.temperature(0)) - Tstar, roundTripTolerance);
+    }
+
+    // The caloric model searches without a flash anyway.
+    {
+        DebugMessages messages;
+        const double hCaloric = enthalpyF1(f1Pressure, Tstar, EnthalpyModel::caloric);
+        auto fs = carriedState<FluidSystemF1, EvaluationF1>(f1Pressure, 310., f1Z);
+        BOOST_REQUIRE(PhFlashF1::solve(fs, hCaloric, newtonConfigF1(EnthalpyModel::caloric),
+                                       PTFlashMethod::Ssi, ptTolerance, EOSType::PR, 1));
+        BOOST_CHECK(!messages.contain("incoming phase split"));
+        BOOST_CHECK_SMALL(Opm::getValue(fs.temperature(0)) - Tstar, roundTripTolerance);
+    }
+
+    // A replacement provider defines its own enthalpy: from a split carried
+    // at the root, the Newton stage on T evaluates it four times, as from a
+    // state that was not flashed.
+    {
+        using Flash = Opm::PHFlash<Scalar, FluidSystemF1, PassThroughEnthalpyF1>;
+        auto fs = carriedState<FluidSystemF1, EvaluationF1>(f1Pressure, Tstar, f1Z);
+        PassThroughEnthalpyF1::calls = 0;
+        BOOST_REQUIRE(Flash::solve(fs, hDeparture, newtonConfigF1(EnthalpyModel::eos_departure),
+                                   PTFlashMethod::Ssi, ptTolerance, EOSType::PR));
+        BOOST_CHECK_EQUAL(PassThroughEnthalpyF1::calls, 4);
+        BOOST_CHECK_SMALL(Opm::getValue(fs.temperature(0)) - Tstar, roundTripTolerance);
+    }
+
+    // By default the bracket search alone runs.
+    {
+        DebugMessages messages;
+        auto fs = carriedState<FluidSystemF1, EvaluationF1>(f1Pressure, 310., f1Z);
+        BOOST_REQUIRE(PhFlashF1::solve(fs, hDeparture, makeConfigF1(EnthalpyModel::eos_departure),
+                                       PTFlashMethod::Ssi, ptTolerance, EOSType::PR, 1));
+        BOOST_CHECK(!messages.contain("incoming phase split"));
+        BOOST_CHECK_SMALL(Opm::getValue(fs.temperature(0)) - Tstar, roundTripTolerance);
+    }
+
+    // A split without one of the components: the later stages solve it.
+    {
+        DebugMessages messages;
+        constexpr std::array<double, 3> z = {0., 0.6, 0.4};
+        constexpr double TstarF2 = 330.;
+        auto fs = carriedState<FluidSystemF2, EvaluationF2>(50e5, 325., z);
+        const double L0 = Opm::getValue(fs.L());
+        BOOST_REQUIRE(L0 > 0. && L0 < 1.);
+        BOOST_REQUIRE(PhFlashF2::solve(fs, enthalpyF2(50e5, TstarF2, z), departureConfigF2(),
+                                       PTFlashMethod::Ssi, ptTolerance, EOSType::PR, 1));
+        BOOST_CHECK(!messages.contain("incoming phase split"));
+        BOOST_CHECK_SMALL(Opm::getValue(fs.temperature(0)) - TstarF2, roundTripTolerance);
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

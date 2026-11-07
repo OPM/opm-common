@@ -37,7 +37,11 @@
  * state. The slope dH/dT comes from the temperature derivatives that the
  * isothermal flash carries, without a further flash. Where that iteration
  * does not converge, or the flash at its solution does not confirm it, the
- * temperature is bracketed and refined by false position.
+ * temperature is bracketed and refined by false position. With the built-in
+ * eos_departure model, a phase split carried by the incoming state is used
+ * first: the split and the temperature are solved for together by Newton's
+ * method, without an isothermal flash, and one flash at the solution
+ * verifies them.
  *
  * Contract notes:
  * - The specified enthalpy is molar [J/mol] and has to be computed on the
@@ -74,6 +78,7 @@
 #define OPM_PH_FLASH_HPP
 
 #include <opm/material/components/ComponentCp.hpp>
+#include <opm/material/Constants.hpp>
 #include <opm/material/constraintsolvers/MixtureEnthalpy.hpp>
 #include <opm/material/constraintsolvers/PTFlash.hpp>
 #include <opm/material/constraintsolvers/PTFlashMethod.hpp>
@@ -85,12 +90,14 @@
 #include <opm/input/eclipse/EclipseState/Compositional/CompositionalConfig.hpp>
 
 #include <dune/common/fmatrix.hh>
+#include <dune/common/fvector.hh>
 
 #include <algorithm>
 #include <array>
 #include <cmath>
 #include <cstddef>
 #include <limits>
+#include <numeric>
 #include <optional>
 #include <stdexcept>
 #include <type_traits>
@@ -136,15 +143,17 @@ struct PHFlashConfig {
     //! bracket converges onto the jump although there is no root; this check
     //! reports that case as a failure.
     Scalar enthalpyTolerance = 1.0;
-    //! Iteration limit of the Newton stage and of the bracket search, each.
-    //! The Newton stage hands over to the bracket search on reaching it, and
-    //! the bracket search fails.
+    //! Iteration limit of each Newton iteration on T and of the bracket
+    //! search. A Newton stage that reaches it hands over to the next stage,
+    //! and the bracket search fails. The combined Newton iteration of stage 1
+    //! has a limit of its own.
     int maxIterations = 100;
     EnthalpyModel model = EnthalpyModel::caloric;
-    //! Start with a safeguarded Newton iteration from the temperature of the
-    //! incoming state, with the bracket search as the fallback. Off by
-    //! default: the bracket search alone reads only the pressure and the
-    //! overall composition of the incoming state.
+    //! Start from the incoming state: with the built-in eos_departure model,
+    //! a Newton iteration on its phase split and temperature together, then
+    //! a safeguarded Newton iteration on the temperature, with the bracket
+    //! search as the fallback. Off by default: the bracket search alone reads
+    //! only the pressure and the overall composition of the incoming state.
     bool newtonStart = false;
 };
 
@@ -181,6 +190,15 @@ struct PHFlash {
      *        (moved to the nearer end of the search interval if outside it,
      *        and replaced by its midpoint if not finite). The closer it is to
      *        the solution, the fewer isothermal flashes the search needs.
+     *        With the built-in eos_departure model the liquid fraction and
+     *        phase compositions are read as a flashed split at that
+     *        temperature, as PTFlash leaves them: a two-phase split
+     *        (0 < L < 1) starts a Newton iteration on the split and the
+     *        temperature together, and a single-phase state (L = 0 or 1, both
+     *        phases at one composition) one on the temperature with the
+     *        enthalpy of the single phase. Their solution is accepted after a
+     *        flash there. Where that flash finds another split, they run once
+     *        more from it; otherwise the search goes on as without them.
      *        Out, on success: the solution temperature, and the
      *        liquid fraction and phase compositions of the state flashed
      *        there. On failure the state is left at the last trial and is not
@@ -192,12 +210,13 @@ struct PHFlash {
      * \param eosType cubic equation of state of the isothermal flash and of
      *        the eos_departure enthalpy
      * \param verbosity verbosity of the isothermal flash; at 1 or more a
-     *        Newton stage that hands over to the bracket search, and a
-     *        bracket found next to a temperature that cannot be evaluated,
-     *        are logged
-     * \return true when the temperature search (newton, or findBracket and
-     *         illinois) converged and the residual |H(T) - hSpec| of the
-     *         state flashed at the solution is within cfg.enthalpyTolerance.
+     *        solution from the incoming phase split, a Newton stage that
+     *        hands over to the next stage, and a bracket found next to a
+     *        temperature that cannot be evaluated, are logged
+     * \return true when the temperature search (fromIncomingSplit, newton,
+     *         or findBracket and illinois) converged and the residual
+     *         |H(T) - hSpec| of the state flashed at the solution is within
+     *         cfg.enthalpyTolerance.
      *         false for an all-zero cp table, a search interval that is empty
      *         after limiting it to the cp fit range, a failed search, a failed
      *         flash at the solution, or a final residual above the tolerance.
@@ -287,10 +306,46 @@ struct PHFlash {
 
         // Flash the state at the solution, and accept it only if the
         // enthalpy matches there.
-        auto acceptAt = [&](const Scalar T) {
-            const auto residual = residualAt(T);
+        auto withinTolerance = [&](const std::optional<Scalar>& residual) {
             return residual && std::abs(*residual) <= cfg.enthalpyTolerance;
         };
+        auto acceptAt = [&](const Scalar T) { return withinTolerance(residualAt(T)); };
+
+        // A phase split carried by the incoming state is solved for together
+        // with the temperature, without an isothermal flash; one flash at the
+        // solution verifies it. Where that flash finds another split, the
+        // stage runs once more, from the state that flash left.
+        if constexpr (builtInProvider) {
+            if (cfg.newtonStart && cfg.model == EnthalpyModel::eos_departure) {
+                Scalar from = start;
+                for (int attempt = 0; attempt < 2; ++attempt) {
+                    const auto temperature = fromIncomingSplit(fluidState, from, hSpec, tLo, tHi,
+                                                               cfg, warmStart, ptTolerance,
+                                                               eosType, verbosity);
+                    if (!temperature) {
+                        break;
+                    }
+                    const auto residual = residualAt(*temperature);
+                    if (withinTolerance(residual)) {
+                        if (verbosity >= 1) {
+                            OpmLog::debug(fmt::format("PHFlash: solved from the incoming phase "
+                                                      "split at {} K",
+                                                      *temperature));
+                        }
+                        return true;
+                    }
+                    if (verbosity >= 1) {
+                        OpmLog::debug(fmt::format("PHFlash: the flash at {} K does not confirm "
+                                                  "the solution from the incoming phase split",
+                                                  *temperature));
+                    }
+                    if (!residual) {
+                        break;
+                    }
+                    from = *temperature;
+                }
+            }
+        }
 
         std::optional<Bracket> bracket;
         if constexpr (newtonStageProvider) {
@@ -387,6 +442,15 @@ private:
         std::optional<Bracket> bracket;
     };
 
+    //! A converged split of the combined Newton stage: its temperature and
+    //! liquid fraction, which lies outside (0, 1) where the mixture is a
+    //! single phase at that temperature (a negative flash).
+    struct SplitSolution
+    {
+        Scalar temperature;
+        Scalar liquidFraction;
+    };
+
     //! Limit on one Newton step [K]. A poor slope, at a kink of H(T) or far
     //! from the root, cannot throw a trial across the interval.
     static constexpr Scalar maxNewtonStep = 30.0;
@@ -407,6 +471,20 @@ private:
     //! check of the call alone does not see into the body of a template.
     static constexpr bool newtonStageProvider =
         builtInProvider || requires { requires EnthalpyCalc::newtonStage; };
+
+    //! The state of the combined Newton stage, with AD variables x (slots
+    //! 0 to n-1), y (n to 2n-1), L (2n) and T (2n+1).
+    static constexpr int numSplitUnknowns = 2 * numComponents + 2;
+    using SplitEval = DenseAd::Evaluation<Scalar, numSplitUnknowns>;
+    using SplitState = CompositionalFluidState<SplitEval, FluidSystem>;
+
+    //! Limit on the iterations of the combined Newton stage. From a nearby
+    //! split it converges in a few; one that needs more hands over.
+    static constexpr int maxSplitIterations = 20;
+
+    //! Below this sum_i ln(y_i/x_i)^2 the two phases count as one, as in
+    //! PTFlash.
+    static constexpr Scalar coincidentPhases = 1e-5;
 
     /*!
      * \brief Warm start between nearby trials: the equilibrium ratios of a
@@ -694,6 +772,314 @@ private:
             t = next;
         }
         return {std::nullopt, bracket()};
+    }
+
+    /*!
+     * \brief Solution temperature from the phase split of the incoming state,
+     *        without an isothermal flash.
+     *
+     * A two-phase split (0 < L < 1, positive x and y, distinct phases) starts
+     * splitNewton() from the temperature start. Where that converges to a
+     * liquid fraction outside (0, 1), singlePhaseNewton() goes on from its
+     * temperature. A single-phase state as PTFlash leaves it (L = 0 or 1,
+     * x = y summing to one) starts singlePhaseNewton().
+     *
+     * \return the temperature, or nothing for another incoming state or where
+     *         the iteration does not converge
+     */
+    template <class FluidState>
+    static std::optional<Scalar> fromIncomingSplit(const FluidState& fluidState,
+                                                   const Scalar start,
+                                                   const Scalar hSpec,
+                                                   const Scalar tLo,
+                                                   const Scalar tHi,
+                                                   const Config& cfg,
+                                                   WarmStart& warmStart,
+                                                   const Scalar ptTolerance,
+                                                   const EOSType& eosType,
+                                                   const int verbosity)
+    {
+        const Scalar L = getValue(fluidState.L());
+        std::array<Scalar, numComponents> x{};
+        std::array<Scalar, numComponents> y{};
+        for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+            x[compIdx] = getValue(fluidState.moleFraction(FluidSystem::oilPhaseIdx, compIdx));
+            y[compIdx] = getValue(fluidState.moleFraction(FluidSystem::gasPhaseIdx, compIdx));
+        }
+
+        std::optional<Scalar> temperature;
+        if (L == 0.0 || L == 1.0) {
+            // PTFlash leaves both phases of a single-phase state at the
+            // overall composition; a state that was not flashed is not used.
+            const Scalar sumX = std::accumulate(x.begin(), x.end(), Scalar(0.0));
+            if (x != y || !(std::abs(sumX - 1.0) <= 1e-6)) {
+                return std::nullopt;
+            }
+            temperature = singlePhaseNewton(fluidState, start, hSpec, tLo, tHi, cfg, eosType);
+        }
+        else {
+            const auto inUnitInterval = [](const Scalar w) { return w > 0.0 && w <= 1.0; };
+            if (!(L > 0.0 && L < 1.0) || !std::ranges::all_of(x, inUnitInterval)
+                || !std::ranges::all_of(y, inUnitInterval) || phasesCoincide(x, y))
+            {
+                return std::nullopt;
+            }
+            const auto split = splitNewton(fluidState, x, y, L, start, hSpec, tLo, tHi, cfg,
+                                           warmStart, ptTolerance, eosType);
+            if (split && split->liquidFraction > 0.0 && split->liquidFraction < 1.0) {
+                temperature = split->temperature;
+            }
+            else if (split) {
+                temperature = singlePhaseNewton(fluidState, split->temperature, hSpec, tLo, tHi,
+                                                cfg, eosType);
+            }
+        }
+        if (!temperature && verbosity >= 1) {
+            OpmLog::debug(fmt::format("PHFlash: the Newton stage on the incoming phase split "
+                                      "from {} K did not converge",
+                                      start));
+        }
+        return temperature;
+    }
+
+    /*!
+     * \brief newton() on the enthalpy of the overall composition z as one
+     *        phase; its slope is dH/dT at fixed composition.
+     */
+    template <class FluidState>
+    static std::optional<Scalar> singlePhaseNewton(const FluidState& fluidState,
+                                                   const Scalar start,
+                                                   const Scalar hSpec,
+                                                   const Scalar tLo,
+                                                   const Scalar tHi,
+                                                   const Config& cfg,
+                                                   const EOSType& eosType)
+    {
+        SearchState state;
+        state.setPressure(FluidSystem::oilPhaseIdx,
+                          getValue(fluidState.pressure(FluidSystem::oilPhaseIdx)));
+        state.setPressure(FluidSystem::gasPhaseIdx,
+                          getValue(fluidState.pressure(FluidSystem::gasPhaseIdx)));
+        for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+            const Scalar z = getValue(fluidState.moleFraction(compIdx));
+            state.setMoleFraction(compIdx, z);
+            state.setMoleFraction(FluidSystem::oilPhaseIdx, compIdx, z);
+            state.setMoleFraction(FluidSystem::gasPhaseIdx, compIdx, z);
+        }
+        // Either label: MixtureEnthalpy takes one phase of z on its stable root.
+        state.setLvalue(1.0);
+
+        // The composition carries no derivatives, so the slope along the
+        // (empty) flash tangent is dH/dT at fixed composition.
+        auto evaluate = [&](const Scalar T) -> std::optional<SlopedTrial> {
+            state.setTemperature(SearchEval(T));
+            try {
+                const Scalar r = getValue(EnthalpyCalc::mixtureEnthalpy(
+                    state, cfg.cpTable, eosType, cfg.model)) - hSpec;
+                if (!std::isfinite(r)) {
+                    return std::nullopt;
+                }
+                return SlopedTrial{Trial{T, r}, slopeAlongFlash(state, tLo, tHi, cfg, eosType)};
+            }
+            catch (const std::runtime_error&) {
+                return std::nullopt;
+            }
+            catch (const Dune::FMatrixError&) {
+                return std::nullopt;
+            }
+        };
+        return newton(evaluate, start, tLo, tHi, cfg).temperature;
+    }
+
+    //! Whether the compositions x and y are one phase (see coincidentPhases).
+    static bool phasesCoincide(const std::array<Scalar, numComponents>& x,
+                               const std::array<Scalar, numComponents>& y)
+    {
+        Scalar measure = 0.0;
+        for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+            const Scalar logRatio = std::log(y[compIdx] / x[compIdx]);
+            measure += logRatio * logRatio;
+        }
+        return measure < coincidentPhases;
+    }
+
+    /*!
+     * \brief Molar enthalpy of phase phaseIdx under the eos_departure model,
+     *        with its derivatives in all unknowns of the combined Newton
+     *        stage.
+     *
+     * The residual part -R T^2 dS/dT, with S = sum_i w_i ln(phi_i) of
+     * MixtureEnthalpy::phaseSumLnPhi, takes dS/dT as the central difference
+     * of S over slopeStep, which keeps the derivatives of S in the unknowns.
+     */
+    static SplitEval splitPhaseEnthalpy(const SplitState& state,
+                                        const unsigned phaseIdx,
+                                        const Config& cfg,
+                                        const EOSType& eosType)
+    {
+        using BuiltIn = MixtureEnthalpy<Scalar, FluidSystem>;
+
+        const SplitEval& T = state.temperature(phaseIdx);
+        SplitState above = state;
+        SplitState below = state;
+        above.setTemperature(T + slopeStep);
+        below.setTemperature(T - slopeStep);
+        const SplitEval dSdT = (BuiltIn::phaseSumLnPhi(above, phaseIdx, eosType)
+                                - BuiltIn::phaseSumLnPhi(below, phaseIdx, eosType))
+                             / (2.0 * slopeStep);
+        return BuiltIn::phaseEnthalpy(state, phaseIdx, cfg.cpTable)
+             - Constants<Scalar>::R * T * T * dSdT;
+    }
+
+    /*!
+     * \brief Combined Newton iteration on the phase split and the
+     *        temperature, from the two-phase split (x, y, L) at T.
+     *
+     * The equations are those of the Newton iteration of PTFlash (component
+     * balances, equal fugacities scaled by the pressure, closure) and
+     * H(x, y, L, T) = hSpec under the eos_departure model. The step is
+     * damped to keep the mole fractions positive and to move T by at most
+     * maxNewtonStep; L is not bounded. The split is not checked for
+     * stability; the caller verifies the solution with a flash. A converged
+     * two-phase split is stored in the warm start, to seed that flash.
+     *
+     * \return T after the last step, and L, where the flash equations hold to
+     *         ptTolerance and that step is within cfg.temperatureTolerance;
+     *         nothing where T leaves [tLo, tHi], the Jacobian is singular, a
+     *         value is not finite, the phases coincide, or maxSplitIterations
+     *         is reached
+     */
+    template <class FluidState>
+    static std::optional<SplitSolution> splitNewton(const FluidState& fluidState,
+                                                    std::array<Scalar, numComponents> x,
+                                                    std::array<Scalar, numComponents> y,
+                                                    Scalar L,
+                                                    Scalar T,
+                                                    const Scalar hSpec,
+                                                    const Scalar tLo,
+                                                    const Scalar tHi,
+                                                    const Config& cfg,
+                                                    WarmStart& warmStart,
+                                                    const Scalar ptTolerance,
+                                                    const EOSType& eosType)
+    {
+        constexpr int liquidFractionIdx = 2 * numComponents;
+        constexpr int temperatureIdx = 2 * numComponents + 1;
+        constexpr auto oilPhaseIdx = FluidSystem::oilPhaseIdx;
+        constexpr auto gasPhaseIdx = FluidSystem::gasPhaseIdx;
+
+        const Scalar pressure = getValue(fluidState.pressure(oilPhaseIdx));
+        std::array<Scalar, numComponents> z{};
+        for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+            z[compIdx] = getValue(fluidState.moleFraction(compIdx));
+        }
+
+        SplitState state;
+        state.setPressure(oilPhaseIdx, pressure);
+        state.setPressure(gasPhaseIdx, getValue(fluidState.pressure(gasPhaseIdx)));
+
+        Dune::FieldMatrix<Scalar, numSplitUnknowns, numSplitUnknowns> jacobian;
+        Dune::FieldVector<Scalar, numSplitUnknowns> residual;
+        Dune::FieldVector<Scalar, numSplitUnknowns> step;
+        auto setRow = [&](const int row, const SplitEval& equation) {
+            residual[row] = equation.value();
+            for (int col = 0; col < numSplitUnknowns; ++col) {
+                jacobian[row][col] = equation.derivative(col);
+            }
+        };
+
+        for (int iteration = 0; iteration < maxSplitIterations; ++iteration) {
+            if (!(T >= tLo && T <= tHi)) {
+                return std::nullopt;
+            }
+            state.setTemperature(SplitEval::createVariable(T, temperatureIdx));
+            for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+                state.setMoleFraction(oilPhaseIdx, compIdx,
+                                      SplitEval::createVariable(x[compIdx], compIdx));
+                state.setMoleFraction(gasPhaseIdx, compIdx,
+                                      SplitEval::createVariable(y[compIdx],
+                                                                numComponents + compIdx));
+            }
+            const SplitEval liquidFraction = SplitEval::createVariable(L, liquidFractionIdx);
+            state.setLvalue(liquidFraction);
+
+            try {
+                typename FluidSystem::template ParameterCache<SplitEval> paramCache(eosType);
+                for (const auto phaseIdx : {oilPhaseIdx, gasPhaseIdx}) {
+                    paramCache.updatePhase(state, phaseIdx);
+                    for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+                        state.setFugacityCoefficient(phaseIdx, compIdx,
+                            FluidSystem::fugacityCoefficient(state, paramCache, phaseIdx, compIdx));
+                    }
+                }
+
+                SplitEval sumX = 0.0;
+                SplitEval sumY = 0.0;
+                for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+                    const SplitEval& xi = state.moleFraction(oilPhaseIdx, compIdx);
+                    const SplitEval& yi = state.moleFraction(gasPhaseIdx, compIdx);
+                    setRow(compIdx, liquidFraction * xi + (1.0 - liquidFraction) * yi - z[compIdx]);
+                    setRow(numComponents + compIdx,
+                           (state.fugacity(oilPhaseIdx, compIdx)
+                            - state.fugacity(gasPhaseIdx, compIdx)) / pressure);
+                    sumX += xi;
+                    sumY += yi;
+                }
+                setRow(liquidFractionIdx, sumX - sumY);
+                const SplitEval hOil = splitPhaseEnthalpy(state, oilPhaseIdx, cfg, eosType);
+                const SplitEval hGas = splitPhaseEnthalpy(state, gasPhaseIdx, cfg, eosType);
+                setRow(temperatureIdx,
+                       liquidFraction * hOil + (1.0 - liquidFraction) * hGas - hSpec);
+                jacobian.solve(step, residual);
+            }
+            catch (const std::runtime_error&) {
+                return std::nullopt;
+            }
+            catch (const Dune::FMatrixError&) {
+                return std::nullopt;
+            }
+            const auto isFinite = [](const Scalar v) { return std::isfinite(v); };
+            if (!std::ranges::all_of(step, isFinite)) {
+                return std::nullopt;
+            }
+
+            Scalar flashNorm = 0.0;
+            for (int row = 0; row < temperatureIdx; ++row) {
+                flashNorm += residual[row] * residual[row];
+            }
+            if (std::sqrt(flashNorm) < ptTolerance
+                && std::abs(step[temperatureIdx]) <= cfg.temperatureTolerance)
+            {
+                if (phasesCoincide(x, y)) {
+                    return std::nullopt;
+                }
+                if (L > 0.0 && L < 1.0) {
+                    warmStart.store(state, T);
+                }
+                // As in newton(), the last step costs no evaluation and makes
+                // the residual at the solution quadratically small.
+                return SplitSolution{std::clamp(T - step[temperatureIdx], tLo, tHi), L};
+            }
+
+            Scalar alpha = 1.0;
+            for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+                if (x[compIdx] - step[compIdx] <= 0.0) {
+                    alpha = std::min(alpha, Scalar(0.9) * x[compIdx] / step[compIdx]);
+                }
+                const Scalar dy = step[numComponents + compIdx];
+                if (y[compIdx] - dy <= 0.0) {
+                    alpha = std::min(alpha, Scalar(0.9) * y[compIdx] / dy);
+                }
+            }
+            alpha = std::min(alpha, maxNewtonStep / std::abs(step[temperatureIdx]));
+            for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+                x[compIdx] -= alpha * step[compIdx];
+                y[compIdx] -= alpha * step[numComponents + compIdx];
+            }
+            L -= alpha * step[liquidFractionIdx];
+            T -= alpha * step[temperatureIdx];
+        }
+        return std::nullopt;
     }
 
     /*!

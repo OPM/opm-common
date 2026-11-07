@@ -263,6 +263,40 @@ struct MixtureEnthalpy {
         return L * hOil + (1.0 - L) * hGas;
     }
 
+    /*!
+     * \brief sum_i w_i ln(phi_i) of the composition w of phase phaseIdx on the
+     *        cubic root of that phase (smallest root for oil, largest for
+     *        gas), in the closed form documented at phaseResidualEnthalpy.
+     *
+     * Generic in the fluid state's value type: the derivatives of an AD state
+     * are carried through.
+     */
+    template <class FluidState>
+    static typename FluidState::ValueType
+    phaseSumLnPhi(const FluidState& fluidState,
+                  const unsigned phaseIdx,
+                  const EOSType& eosType)
+    {
+        using Eval = typename FluidState::ValueType;
+        using ParamCache = typename FluidSystem::template ParameterCache<Eval>;
+
+        ParamCache paramCache(eosType);
+        paramCache.updatePhase(fluidState, phaseIdx);
+
+        const Eval& T = fluidState.temperature(phaseIdx);
+        const Eval& p = fluidState.pressure(phaseIdx);
+        const Eval A = paramCache.A(phaseIdx);
+        const Eval B = paramCache.B(phaseIdx);
+        const Eval m1 = paramCache.m1(phaseIdx);
+        const Eval m2 = paramCache.m2(phaseIdx);
+        const Eval Z = p * paramCache.molarVolume(phaseIdx) / (Constants<Scalar>::R * T);
+
+        Eval sumLnPhi = Z - 1.0 - log(Z - B)
+                      + A / ((m1 - m2) * B) * log((Z + m2 * B) / (Z + m1 * B));
+        sumLnPhi -= p * paramCache.phaseVolumeShift(phaseIdx) / (Constants<Scalar>::R * T);
+        return sumLnPhi;
+    }
+
 private:
     /*!
      * \brief AD-typed copy of the composition of phase phaseIdx, stored as
@@ -304,25 +338,8 @@ private:
               const unsigned rootIdx,
               const EOSType& eosType)
     {
-        using Eval1 = DenseAd::Evaluation<Scalar, 1>;
-        using ParamCache = typename FluidSystem::template ParameterCache<Eval1>;
-
-        const auto seeded = temperatureSeededCopy_(fluidState, phaseIdx, rootIdx);
-        ParamCache paramCache(eosType);
-        paramCache.updatePhase(seeded, rootIdx);
-
-        const Eval1& T = seeded.temperature(rootIdx);
-        const Eval1& p = seeded.pressure(rootIdx);
-        const Eval1 A = paramCache.A(rootIdx);
-        const Eval1 B = paramCache.B(rootIdx);
-        const Eval1 m1 = paramCache.m1(rootIdx);
-        const Eval1 m2 = paramCache.m2(rootIdx);
-        const Eval1 Z = p * paramCache.molarVolume(rootIdx) / (Constants<Scalar>::R * T);
-
-        Eval1 sumLnPhi = Z - 1.0 - log(Z - B)
-                       + A / ((m1 - m2) * B) * log((Z + m2 * B) / (Z + m1 * B));
-        sumLnPhi -= p * paramCache.phaseVolumeShift(rootIdx) / (Constants<Scalar>::R * T);
-        return sumLnPhi;
+        return phaseSumLnPhi(temperatureSeededCopy_(fluidState, phaseIdx, rootIdx),
+                             rootIdx, eosType);
     }
 
     //! -R T^2 d/dT [sum_i w_i ln(phi_i)] of phase phaseIdx, from sumLnPhi_.
