@@ -41,10 +41,14 @@ public:
         std::string name;
         std::string unit_string;
         Phase phase = Phase::OIL;
+        // Component that carries the tracer in a compositional run: a name from
+        // CNAMES, or WATER. The phase of a hydrocarbon component tracer is unused.
+        std::optional<std::string> component;
         std::optional<std::vector<double>> free_concentration;
         std::optional<std::vector<double>> solution_concentration;
-        std::optional<TracerVdTable> free_tvdp;
-        std::optional<TracerVdTable> solution_tvdp;
+        // Concentration versus depth, one table per tracer region
+        std::vector<TracerVdTable> free_tvdp;
+        std::vector<TracerVdTable> solution_tvdp;
         std::string fname() const {
             return this->name + "F";
         }
@@ -56,6 +60,16 @@ public:
         }
         std::string wellsname() const {
             return "S" + this->name;
+        }
+
+        //! Region array that selects a table of free_tvdp for each cell.
+        std::string free_region() const {
+            return (this->component.has_value() ? "TNUM" : "TNUMF") + this->name;
+        }
+
+        //! Region array that selects a table of solution_tvdp for each cell.
+        std::string solution_region() const {
+            return "TNUMS" + this->name;
         }
 
         TracerEntry() = default;
@@ -76,23 +90,6 @@ public:
             , solution_concentration(std::move(solution_concentration_))
         {}
 
-        TracerEntry(const std::string& name_, const std::string& unit_string_,
-                    Phase phase_, TracerVdTable free_tvdp_)
-            : name(name_)
-            , unit_string(unit_string_)
-            , phase(phase_)
-            , free_tvdp(std::move(free_tvdp_))
-        {}
-
-        TracerEntry(const std::string& name_, const std::string& unit_string_,
-                    Phase phase_, TracerVdTable free_tvdp_, TracerVdTable solution_tvdp_)
-            : name(name_)
-            , unit_string(unit_string_)
-            , phase(phase_)
-            , free_tvdp(std::move(free_tvdp_))
-            , solution_tvdp(std::move(solution_tvdp_))
-        {}
-
         TracerEntry(const std::string& name_, const std::string& unit_string_, Phase phase_)
             : name(name_)
             , unit_string(unit_string_)
@@ -103,6 +100,7 @@ public:
             return this->name == data.name &&
                    this->unit_string == data.unit_string &&
                    this->phase == data.phase &&
+                   this->component == data.component &&
                    this->free_concentration == data.free_concentration &&
                    this->solution_concentration == data.solution_concentration &&
                    this->free_tvdp == data.free_tvdp &&
@@ -115,6 +113,7 @@ public:
             serializer(name);
             serializer(unit_string);
             serializer(phase);
+            serializer(component);
             serializer(free_concentration);
             serializer(solution_concentration);
             serializer(this->free_tvdp);
@@ -123,7 +122,7 @@ public:
     };
 
     TracerConfig() = default;
-    TracerConfig(const UnitSystem& unit_system, const Deck& deck);
+    TracerConfig(const UnitSystem& unit_system, const Deck& deck, bool compositional);
 
     static TracerConfig serializationTestObject();
 

@@ -36,6 +36,7 @@
 #include <opm/input/eclipse/Deck/DeckItem.hpp>
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 
+#include <opm/input/eclipse/Parser/ParserKeywords/C.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/D.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/T.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/V.hpp>
@@ -44,6 +45,7 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -68,12 +70,44 @@ Opm::Phase phase_from_string(const std::string& phase_string)
     throw std::invalid_argument("Tracer: invalid fluid name " + phase_string);
 }
 
+std::vector<double> blockConcentration(const Opm::DeckKeyword& keyword,
+                                       const double inv_volume,
+                                       Opm::InfoLogger& logger)
+{
+    auto concentration = keyword.getRecord(0).getItem(0).getData<double>();
+    logger(keyword.location().format(
+        "Loading tracer concentration from {keyword} in {file} line {line}"));
+
+    std::ranges::transform(concentration, concentration.begin(),
+                           [inv_volume](const auto& c) { return c * inv_volume; });
+
+    return concentration;
+}
+
+// One table per tracer region
+std::vector<Opm::TracerVdTable> depthTables(const Opm::DeckKeyword& keyword,
+                                            const double inv_volume,
+                                            Opm::InfoLogger& logger)
+{
+    logger(keyword.location().format(
+        "Loading tracer concentration from {keyword} in {file} line {line}"));
+
+    auto tables = std::vector<Opm::TracerVdTable>{};
+    for (std::size_t table = 0; table < keyword.size(); ++table) {
+        tables.emplace_back(keyword.getRecord(table).getItem(0), inv_volume,
+                            static_cast<int>(table));
+    }
+
+    return tables;
+}
+
 } // Anonymous namespace
 
 namespace Opm {
 
 TracerConfig::TracerConfig([[maybe_unused]] const UnitSystem& unit_system,
-                           const Deck&                        deck)
+                           const Deck&                        deck,
+                           const bool                         compositional)
 {
     using TR = ParserKeywords::TRACER;
 
@@ -88,10 +122,38 @@ TracerConfig::TracerConfig([[maybe_unused]] const UnitSystem& unit_system,
     OpmLog::info(
         keyword.location().format("\nInitializing tracers from {keyword} in {file} line {line}"));
 
+    // A compositional run associates a tracer with a component and names its
+    // concentration keywords after the tracer, e.g. TVDPT1. A black-oil run
+    // associates it with a phase and has free and solution keywords, e.g.
+    // TVDPFT1 and TVDPST1.
+    const auto components = (compositional && deck.hasKeyword<ParserKeywords::CNAMES>())
+        ? deck.get<ParserKeywords::CNAMES>().back().getStringData()
+        : std::vector<std::string>{};
+
     InfoLogger logger("Tracer tables", 3);
     for (const auto& record : keyword) {
         const auto& name = record.getItem<TR::NAME>().get<std::string>(0);
-        const auto phase = phase_from_string(record.getItem<TR::FLUID>().get<std::string>(0));
+        const auto& fluid = record.getItem<TR::FLUID>().get<std::string>(0);
+
+        auto phase = Phase::OIL;
+        auto component = std::optional<std::string>{};
+        if (compositional) {
+            if (fluid == "WATER") {
+                phase = Phase::WATER;
+            }
+            else if (std::ranges::find(components, fluid) == components.end()) {
+                throw OpmInputError {
+                    fmt::format("Tracer {} is associated with '{}', which is neither "
+                                "a component in CNAMES nor WATER.", name, fluid),
+                    keyword.location()
+                };
+            }
+            component = fluid;
+        }
+        else {
+            phase = phase_from_string(fluid);
+        }
+        const auto free_suffix = compositional ? name : "F" + name;
 
         double inv_volume = 1.0; // Default scaling (vol/vol).
         auto unit_string = std::string {};
@@ -127,72 +189,32 @@ TracerConfig::TracerConfig([[maybe_unused]] const UnitSystem& unit_system,
             //    unit_system.getDimension(UnitSystem::measure::liquid_surface_volume).getSIScaling();
         }
 
-        if (std::string tracer_field = "TBLKF" + name; deck.hasKeyword(tracer_field)) {
-            const auto& tracer_keyword = deck[tracer_field].back();
-            auto free_concentration = tracer_keyword.getRecord(0).getItem(0).getData<double>();
-            logger(tracer_keyword.location().format(
-                "Loading tracer concentration from {keyword} in {file} line {line}"));
+        auto tracer = TracerEntry{name, unit_string, phase};
+        tracer.component = component;
 
-            std::ranges::transform(free_concentration,
-                                   free_concentration.begin(),
-                                   [inv_volume](const auto& c) { return c * inv_volume; });
+        if (const auto tracer_field = "TBLK" + free_suffix; deck.hasKeyword(tracer_field)) {
+            tracer.free_concentration
+                = blockConcentration(deck[tracer_field].back(), inv_volume, logger);
 
-            if (std::string tracer_field_solution = "TBLKS" + name;
-                deck.hasKeyword(tracer_field_solution))
+            if (const auto tracer_field_solution = "TBLKS" + name;
+                !compositional && deck.hasKeyword(tracer_field_solution))
             {
-                const auto& tracer_keyword_solution = deck[tracer_field_solution].back();
-                auto solution_concentration
-                    = tracer_keyword_solution.getRecord(0).getItem(0).getData<double>();
-                logger(tracer_keyword_solution.location().format(
-                    "Loading tracer concentration from {keyword} in {file} line {line}"));
-
-                std::ranges::transform(solution_concentration,
-                                       solution_concentration.begin(),
-                                       [inv_volume](const auto& c) { return c * inv_volume; });
-
-                this->tracers.emplace_back(name,
-                                           unit_string,
-                                           phase,
-                                           std::move(free_concentration),
-                                           std::move(solution_concentration));
-                continue;
+                tracer.solution_concentration
+                    = blockConcentration(deck[tracer_field_solution].back(), inv_volume, logger);
             }
+        }
+        else if (const auto tracer_table = "TVDP" + free_suffix; deck.hasKeyword(tracer_table)) {
+            tracer.free_tvdp = depthTables(deck[tracer_table].back(), inv_volume, logger);
 
-            this->tracers.emplace_back(name, unit_string, phase, std::move(free_concentration));
-            continue;
+            if (const auto tracer_table_solution = "TVDPS" + name;
+                !compositional && deck.hasKeyword(tracer_table_solution))
+            {
+                tracer.solution_tvdp
+                    = depthTables(deck[tracer_table_solution].back(), inv_volume, logger);
+            }
         }
 
-        if (std::string tracer_table = "TVDPF" + name; deck.hasKeyword(tracer_table)) {
-            const auto& tracer_keyword = deck[tracer_table].back();
-            const auto& deck_item = tracer_keyword.getRecord(0).getItem(0);
-            logger(tracer_keyword.location().format(
-                "Loading tracer concentration from {keyword} in {file} line {line}"));
-
-            if (std::string tracer_table_solution = "TVDPS" + name;
-                deck.hasKeyword(tracer_table_solution))
-            {
-                const auto& tracer_keyword_solution = deck[tracer_table_solution].back();
-                const auto& deck_item_solution = tracer_keyword_solution.getRecord(0).getItem(0);
-                logger(tracer_keyword_solution.location().format(
-                    "Loading tracer concentration from {keyword} in {file} line {line}"));
-
-                this->tracers.emplace_back(
-                    name,
-                    unit_string,
-                    phase,
-                    TracerVdTable(deck_item, inv_volume, this->tracers.size()),
-                    TracerVdTable(deck_item_solution, inv_volume, this->tracers.size()));
-                continue;
-            }
-
-            this->tracers.emplace_back(name,
-                                       unit_string,
-                                       phase,
-                                       TracerVdTable(deck_item, inv_volume, this->tracers.size()));
-            continue;
-        }
-
-        this->tracers.emplace_back(name, unit_string, phase);
+        this->tracers.push_back(std::move(tracer));
     }
 }
 
@@ -201,6 +223,7 @@ TracerConfig TracerConfig::serializationTestObject()
     TracerConfig result;
 
     result.tracers = {{"test", "", Phase::OIL, {1.0}}};
+    result.tracers.front().component = "C1";
     result.supportsSolutionGasTracer_ = true;
     result.supportsVaporisedOilTracer_ = true;
 

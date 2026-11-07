@@ -113,6 +113,12 @@ inline bool isFipxxx(const std::string& keyword) {
     return keyword[0] == 'F' && keyword[1] == 'I' && keyword[2] == 'P';
 }
 
+inline bool isTnumxxx(const std::string& keyword) {
+    // Tracer region arrays: TNUMF<tracer> and TNUMS<tracer> in black-oil runs,
+    // TNUM<tracer> in compositional runs.
+    return keyword.size() > 4 && keyword.starts_with("TNUM");
+}
+
 
 /*
   The aliased_keywords map defines aliases for other keywords. The FieldProps
