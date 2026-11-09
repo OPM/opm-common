@@ -22,6 +22,8 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <opm/common/utility/OpmInputError.hpp>
+
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/TracerConfig.hpp>
 
@@ -96,6 +98,126 @@ BOOST_AUTO_TEST_CASE(TracerConfigTest)
     BOOST_CHECK_EQUAL(it->phase, Phase::GAS);
     BOOST_CHECK_EQUAL(it->free_concentration.value().size(), 3U);
     BOOST_CHECK(!it->free_tvdp.has_value());
+}
+
+namespace {
+
+Deck createDiffusionDeck(const std::string& trdif, const std::string& unit = "METRIC")
+{
+    return Parser{}.parseString(R"xxx(RUNSPEC
+DIMENS
+ 10 10 10 /
+TABDIMS
+3 /
+)xxx" + unit + R"xxx(
+GRID
+DX
+1000*0.25 /
+DY
+1000*0.25 /
+DZ
+1000*0.25 /
+BOX
+  1 10  1 10  1 1 /
+TOPS
+  100*0.25 /
+ENDBOX
+EQLDIMS
+ 3 1 1 /
+
+PROPS
+
+TRACERS
+--  oil  water  gas  env
+    1*   1      1    1*   /
+TRACER
+SEA  WAT  /
+OCE  GAS /
+/
+)xxx" + trdif);
+}
+
+} // Anonymous namespace
+
+BOOST_AUTO_TEST_CASE(TracerDiffusionTest)
+{
+    // Different coefficients for the free tracer and the tracer in solution
+    const auto deck = createDiffusionDeck("TRDIFSEA\n 1.0E-9 2.0E-9 /\n");
+    const auto state = EclipseState{deck};
+    const auto& tc = state.tracer();
+
+    // METRIC input is m2/day, stored in SI (m2/s)
+    BOOST_CHECK_CLOSE(tc["SEA"].free_diffusion_coefficient, 1.0e-9 / 86400.0, 1e-6);
+    BOOST_CHECK_CLOSE(tc["SEA"].solution_diffusion_coefficient, 2.0e-9 / 86400.0, 1e-6);
+    // Tracers without a TRDIFxxx keyword have no diffusion
+    BOOST_CHECK_EQUAL(tc["OCE"].free_diffusion_coefficient, 0.0);
+    BOOST_CHECK_EQUAL(tc["OCE"].solution_diffusion_coefficient, 0.0);
+}
+
+BOOST_AUTO_TEST_CASE(TracerDiffusionSolutionDefaultTest)
+{
+    // The coefficient of the tracer in solution defaults to the one of the free tracer
+    for (const auto* record : {"TRDIFOCE\n 3.0E-9 /\n", "TRDIFOCE\n 3.0E-9 1* /\n"}) {
+        const auto state = EclipseState{createDiffusionDeck(record)};
+        const auto& tracer = state.tracer()["OCE"];
+        BOOST_CHECK_CLOSE(tracer.free_diffusion_coefficient, 3.0e-9 / 86400.0, 1e-6);
+        BOOST_CHECK_EQUAL(tracer.solution_diffusion_coefficient, tracer.free_diffusion_coefficient);
+    }
+
+    // Both coefficients can be given for several tracers, and 0 for the free tracer only
+    const auto state = EclipseState{createDiffusionDeck("TRDIFSEA\n 1.0E-9 /\nTRDIFOCE\n 0.0 4.0E-9 /\n")};
+    BOOST_CHECK_CLOSE(state.tracer()["SEA"].free_diffusion_coefficient, 1.0e-9 / 86400.0, 1e-6);
+    BOOST_CHECK_EQUAL(state.tracer()["OCE"].free_diffusion_coefficient, 0.0);
+    BOOST_CHECK_CLOSE(state.tracer()["OCE"].solution_diffusion_coefficient, 4.0e-9 / 86400.0, 1e-6);
+}
+
+BOOST_AUTO_TEST_CASE(TracerDiffusionUnitTest)
+{
+    // LAB: cm2/hr -> m2/s
+    const auto deck = createDiffusionDeck("TRDIFSEA\n 36.0 72.0 /\n", "LAB");
+    const auto state = EclipseState{deck};
+    BOOST_CHECK_CLOSE(state.tracer()["SEA"].free_diffusion_coefficient, 36.0e-4 / 3600.0, 1e-6);
+    BOOST_CHECK_CLOSE(state.tracer()["SEA"].solution_diffusion_coefficient, 72.0e-4 / 3600.0, 1e-6);
+}
+
+BOOST_AUTO_TEST_CASE(TracerDiffusionErrorTest)
+{
+    // Negative diffusion coefficients
+    BOOST_CHECK_THROW(EclipseState{createDiffusionDeck("TRDIFSEA\n -1.0E-9 /\n")}, OpmInputError);
+    BOOST_CHECK_THROW(EclipseState{createDiffusionDeck("TRDIFSEA\n 1.0E-9 -2.0E-9 /\n")}, OpmInputError);
+
+    // TRDIFxxx for a tracer that is not declared in TRACER is ignored, with a warning
+    BOOST_CHECK_NO_THROW(EclipseState{createDiffusionDeck("TRDIFXXX\n 1.0E-9 /\n")});
+}
+
+BOOST_AUTO_TEST_CASE(TracerDiffusionWithoutTracerTest)
+{
+    // TRDIFxxx requires tracers declared with TRACER (requires clause of the keyword)
+    BOOST_CHECK_THROW(Parser{}.parseString(R"xxx(RUNSPEC
+DIMENS
+ 10 10 10 /
+TABDIMS
+3 /
+GRID
+DX
+1000*0.25 /
+DY
+1000*0.25 /
+DZ
+1000*0.25 /
+BOX
+  1 10  1 10  1 1 /
+TOPS
+  100*0.25 /
+ENDBOX
+EQLDIMS
+ 3 1 1 /
+
+PROPS
+
+TRDIFSEA
+ 1.0E-9 /
+)xxx"), OpmInputError);
 }
 
 BOOST_AUTO_TEST_CASE(SolutionGasSupportTest)
