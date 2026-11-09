@@ -1199,3 +1199,98 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(SwatinitScaleUpAtConnate, Scalar, Types)
         BOOST_CHECK_CLOSE(scaleUpManager.oilWaterScaledEpsInfoDrainage(0).maxPcow, 2*maxPc, tol);
     }
 }
+
+static constexpr const char* swatinitGasWaterDeckString =
+    "RUNSPEC\n"
+    "DIMENS\n"
+    "   1 1 3 /\n"
+    "TABDIMS\n"
+    "/\n"
+    "GAS\n"
+    "WATER\n"
+    "METRIC\n"
+    "ENDSCALE\n"
+    "/\n"
+    "GRID\n"
+    "DX\n"
+    "   3*100 /\n"
+    "DY\n"
+    "   3*100 /\n"
+    "DZ\n"
+    "   3*10 /\n"
+    "TOPS\n"
+    "   2000 /\n"
+    "PORO\n"
+    "   3*0.2 /\n"
+    "PROPS\n"
+    "SGWFN\n"
+    "0.0  0.0  1.0  0.0\n"
+    "0.4  0.3  0.2  0.5\n"
+    "0.8  1.0  0.0  2.0 /\n"
+    "SWATINIT\n"
+    "   0.1 0.1 0.3 /\n";
+
+BOOST_AUTO_TEST_CASE_TEMPLATE(SwatinitScaleUpAtConnateGasWater, Scalar, Types)
+{
+    using MaterialLawManager = typename Fixture<Scalar>::MaterialLawManager;
+
+    Opm::Parser parser;
+    const Opm::EclipseState eclState(parser.parseString(swatinitGasWaterDeckString));
+    const std::size_t n = eclState.getInputGrid().getCartesianSize();
+
+    // Two-phase gas/water: the gas/water capillary pressure curve is scaled,
+    // with its maximum at the connate water saturation (Sw = 0.2, i.e.,
+    // Sg = 0.8).  Pcgw at Sw = 0.3 (Sg = 0.7) by linear interpolation.  In
+    // Pascal.
+    const Scalar maxPc = 2.0e5;
+    const Scalar pcAtSw03 = 1.625e5;
+    const Scalar tol = 1.0e-3; // percent
+
+    MaterialLawManager manager;
+    manager.initFromState(eclState);
+    manager.initParamsForElements(eclState, n, doOldLookup, doNothing);
+    BOOST_CHECK(!manager.swatinitScaleUpAtConnate());
+
+    for (unsigned elemIdx = 0; elemIdx < n; ++elemIdx) {
+        BOOST_REQUIRE_CLOSE(manager.oilWaterScaledEpsInfoDrainage(elemIdx).Swl, Scalar{0.2}, tol);
+        BOOST_REQUIRE_CLOSE(manager.oilWaterScaledEpsInfoDrainage(elemIdx).maxPcgo, maxPc, tol);
+    }
+
+    // Default: SWATINIT at or below connate does not scale the curve up.
+    {
+        const auto [sw, newSwatInit] = manager.applySwatinit(0, 2*maxPc, 0.1);
+        BOOST_CHECK_CLOSE(sw, Scalar{0.2}, tol);
+        BOOST_CHECK(!newSwatInit);
+        BOOST_CHECK_CLOSE(manager.oilWaterScaledEpsInfoDrainage(0).maxPcgo, maxPc, tol);
+    }
+
+    // Scaling down at connate saturation is still applied.
+    {
+        const auto [sw, newSwatInit] = manager.applySwatinit(1, 0.5*maxPc, 0.1);
+        BOOST_CHECK_CLOSE(sw, Scalar{0.2}, tol);
+        BOOST_CHECK(!newSwatInit);
+        BOOST_CHECK_CLOSE(manager.oilWaterScaledEpsInfoDrainage(1).maxPcgo, 0.5*maxPc, tol);
+    }
+
+    // Above connate saturation the curve is still scaled up.
+    {
+        const auto [sw, newSwatInit] = manager.applySwatinit(2, 2*pcAtSw03, 0.3);
+        BOOST_CHECK_CLOSE(sw, Scalar{0.3}, tol);
+        BOOST_CHECK(!newSwatInit);
+        BOOST_CHECK_CLOSE(manager.oilWaterScaledEpsInfoDrainage(2).maxPcgo, 2*maxPc, tol);
+    }
+
+    MaterialLawManager scaleUpManager;
+    scaleUpManager.initFromState(eclState);
+    scaleUpManager.initParamsForElements(eclState, n, doOldLookup, doNothing);
+    scaleUpManager.setSwatinitScaleUpAtConnate(true);
+
+    // Scale-up enabled: SWATINIT at or below connate scales the curve up to
+    // honour the requested capillary pressure.
+    {
+        const auto [sw, newSwatInit] = scaleUpManager.applySwatinit(0, 2*maxPc, 0.1);
+        BOOST_CHECK_CLOSE(sw, Scalar{0.2}, tol);
+        BOOST_CHECK(!newSwatInit);
+        BOOST_CHECK_CLOSE(scaleUpManager.oilWaterScaledEpsInfoDrainage(0).maxPcgo, 2*maxPc, tol);
+    }
+}
