@@ -63,6 +63,9 @@
  * Derivatives: the caloric overloads keep the fluid state's value type, and
  * their derivatives are complete. The overloads taking an EnthalpyModel return
  * a plain Scalar, because the residual part is evaluated on values only.
+ * departurePhaseEnthalpy keeps the value type under the eos_departure model,
+ * with the temperature derivative of the residual part taken as a central
+ * difference.
  */
 #ifndef OPM_MIXTURE_ENTHALPY_HPP
 #define OPM_MIXTURE_ENTHALPY_HPP
@@ -264,6 +267,44 @@ struct MixtureEnthalpy {
     }
 
     /*!
+     * \brief Molar enthalpy of one phase [J/mol] under the eos_departure model,
+     *        on the cubic root of that phase, with the derivatives of the
+     *        fluid state's value type carried through.
+     *
+     * The residual part -R T^2 dS/dT, with S = sum_i w_i ln(phi_i), takes
+     * dS/dT as the central difference of S over departureTemperatureStep. AD
+     * carries first derivatives only, so dS/dT by AD in temperature, as in
+     * phaseResidualEnthalpy, would drop the derivatives of the residual part
+     * in the state's own variables. The value is that of the model-switch
+     * phaseEnthalpy up to the error of the difference.
+     */
+    template <class FluidState>
+    static typename FluidState::ValueType
+    departurePhaseEnthalpy(const FluidState& fluidState,
+                           const unsigned phaseIdx,
+                           const CpTable<Scalar, numComponents>& cpTable,
+                           const EOSType& eosType)
+    {
+        const auto& T = fluidState.temperature(phaseIdx);
+        FluidState above = fluidState;
+        FluidState below = fluidState;
+        above.setTemperature(T + departureTemperatureStep);
+        below.setTemperature(T - departureTemperatureStep);
+        const auto dSdT = (phaseSumLnPhi_(above, phaseIdx, eosType)
+                           - phaseSumLnPhi_(below, phaseIdx, eosType))
+                        / (2.0 * departureTemperatureStep);
+        return phaseEnthalpy(fluidState, phaseIdx, cpTable)
+             - Constants<Scalar>::R * T * T * dSdT;
+    }
+
+private:
+    //! Half-width [K] of the central difference in departurePhaseEnthalpy:
+    //! about where its truncation error, of order step^2, and its round-off,
+    //! of order 1/step, balance. For methane/n-alkane phases at 250-450 K
+    //! the error measured near 1e-9 of the residual enthalpy.
+    static constexpr Scalar departureTemperatureStep = 1e-3;
+
+    /*!
      * \brief sum_i w_i ln(phi_i) of the composition w of phase phaseIdx on the
      *        cubic root of that phase (smallest root for oil, largest for
      *        gas), in the closed form documented at phaseResidualEnthalpy.
@@ -273,9 +314,9 @@ struct MixtureEnthalpy {
      */
     template <class FluidState>
     static typename FluidState::ValueType
-    phaseSumLnPhi(const FluidState& fluidState,
-                  const unsigned phaseIdx,
-                  const EOSType& eosType)
+    phaseSumLnPhi_(const FluidState& fluidState,
+                   const unsigned phaseIdx,
+                   const EOSType& eosType)
     {
         using Eval = typename FluidState::ValueType;
         using ParamCache = typename FluidSystem::template ParameterCache<Eval>;
@@ -297,7 +338,6 @@ struct MixtureEnthalpy {
         return sumLnPhi;
     }
 
-private:
     /*!
      * \brief AD-typed copy of the composition of phase phaseIdx, stored as
      *        phase rootIdx, with temperature as the single seeded variable
@@ -338,8 +378,8 @@ private:
               const unsigned rootIdx,
               const EOSType& eosType)
     {
-        return phaseSumLnPhi(temperatureSeededCopy_(fluidState, phaseIdx, rootIdx),
-                             rootIdx, eosType);
+        return phaseSumLnPhi_(temperatureSeededCopy_(fluidState, phaseIdx, rootIdx),
+                              rootIdx, eosType);
     }
 
     //! -R T^2 d/dT [sum_i w_i ln(phi_i)] of phase phaseIdx, from sumLnPhi_.

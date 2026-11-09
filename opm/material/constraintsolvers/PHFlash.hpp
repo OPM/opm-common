@@ -78,7 +78,6 @@
 #define OPM_PH_FLASH_HPP
 
 #include <opm/material/components/ComponentCp.hpp>
-#include <opm/material/Constants.hpp>
 #include <opm/material/constraintsolvers/MixtureEnthalpy.hpp>
 #include <opm/material/constraintsolvers/PTFlash.hpp>
 #include <opm/material/constraintsolvers/PTFlashMethod.hpp>
@@ -904,40 +903,13 @@ private:
     }
 
     /*!
-     * \brief Molar enthalpy of phase phaseIdx under the eos_departure model,
-     *        with its derivatives in all unknowns of the combined Newton
-     *        stage.
-     *
-     * The residual part -R T^2 dS/dT, with S = sum_i w_i ln(phi_i) of
-     * MixtureEnthalpy::phaseSumLnPhi, takes dS/dT as the central difference
-     * of S over slopeStep, which keeps the derivatives of S in the unknowns.
-     */
-    static SplitEval splitPhaseEnthalpy(const SplitState& state,
-                                        const unsigned phaseIdx,
-                                        const Config& cfg,
-                                        const EOSType& eosType)
-    {
-        using BuiltIn = MixtureEnthalpy<Scalar, FluidSystem>;
-
-        const SplitEval& T = state.temperature(phaseIdx);
-        SplitState above = state;
-        SplitState below = state;
-        above.setTemperature(T + slopeStep);
-        below.setTemperature(T - slopeStep);
-        const SplitEval dSdT = (BuiltIn::phaseSumLnPhi(above, phaseIdx, eosType)
-                                - BuiltIn::phaseSumLnPhi(below, phaseIdx, eosType))
-                             / (2.0 * slopeStep);
-        return BuiltIn::phaseEnthalpy(state, phaseIdx, cfg.cpTable)
-             - Constants<Scalar>::R * T * T * dSdT;
-    }
-
-    /*!
      * \brief Combined Newton iteration on the phase split and the
      *        temperature, from the two-phase split (x, y, L) at T.
      *
      * The equations are those of the Newton iteration of PTFlash (component
      * balances, equal fugacities scaled by the pressure, closure) and
-     * H(x, y, L, T) = hSpec under the eos_departure model. The step is
+     * H(x, y, L, T) = hSpec under the eos_departure model, with the phase
+     * enthalpies of MixtureEnthalpy::departurePhaseEnthalpy. The step is
      * damped to keep the mole fractions positive and to move T by at most
      * maxNewtonStep; L is not bounded. The split is not checked for
      * stability; the caller verifies the solution with a flash. A converged
@@ -967,6 +939,7 @@ private:
         constexpr int temperatureIdx = 2 * numComponents + 1;
         constexpr auto oilPhaseIdx = FluidSystem::oilPhaseIdx;
         constexpr auto gasPhaseIdx = FluidSystem::gasPhaseIdx;
+        using BuiltIn = MixtureEnthalpy<Scalar, FluidSystem>;
 
         const Scalar pressure = getValue(fluidState.pressure(oilPhaseIdx));
         std::array<Scalar, numComponents> z{};
@@ -1026,8 +999,10 @@ private:
                     sumY += yi;
                 }
                 setRow(liquidFractionIdx, sumX - sumY);
-                const SplitEval hOil = splitPhaseEnthalpy(state, oilPhaseIdx, cfg, eosType);
-                const SplitEval hGas = splitPhaseEnthalpy(state, gasPhaseIdx, cfg, eosType);
+                const SplitEval hOil = BuiltIn::departurePhaseEnthalpy(state, oilPhaseIdx,
+                                                                       cfg.cpTable, eosType);
+                const SplitEval hGas = BuiltIn::departurePhaseEnthalpy(state, gasPhaseIdx,
+                                                                       cfg.cpTable, eosType);
                 setRow(temperatureIdx,
                        liquidFraction * hOil + (1.0 - liquidFraction) * hGas - hSpec);
                 jacobian.solve(step, residual);
