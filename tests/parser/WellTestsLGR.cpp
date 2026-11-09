@@ -562,3 +562,70 @@ COMPDAT
     BOOST_CHECK(nested > 0);
     BOOST_CHECK_EQUAL(conns.outputAllGrids(es.getInputGrid()).size(), conns.size());
 }
+
+// A connection moved into an LGR keeps its filter cake and injection multiplier.
+BOOST_AUTO_TEST_CASE(RefinedConnectionKeepsDamage)
+{
+    const auto deck = Opm::Parser{}.parseString(R"(
+RUNSPEC
+DIMENS
+ 3 3 1 /
+OIL
+WATER
+START
+ 1 'JAN' 2020 /
+GRID
+CARFIN
+ 'LGR1' 2 2 2 2 1 1 3 3 3 /
+ENDFIN
+DX
+ 9*100 /
+DY
+ 9*100 /
+DZ
+ 9*10 /
+TOPS
+ 9*1000 /
+PORO
+ 9*0.2 /
+PERMX
+ 9*100 /
+PERMY
+ 9*100 /
+PERMZ
+ 9*10 /
+SCHEDULE
+WELSPECS
+ 'I' 'G' 2 2 1* 'WATER' /
+/
+COMPDAT
+ 'I' 2 2 1 1 'OPEN' /
+/
+WCONINJE
+ 'I' 'WATER' 'OPEN' 'RATE' 1000 /
+/
+WINJDAM
+ 'I' 'LINEAR' 1.0e-3 0.2 1* 30.0 2 2 1 /
+/
+WINJMULT
+ 'I' 300.0 0.5 'CIRR' 2 2 1 /
+/
+)");
+    const auto es = Opm::EclipseState { deck };
+    auto sched = Opm::Schedule { deck, es };
+    sched.refineConnectionsIntoLgrs(es.getLgrs());
+
+    double area = 0.0;
+    std::size_t refined = 0;
+    for (const auto& conn : sched.getWell("I", 0).getConnections()) {
+        BOOST_REQUIRE_EQUAL(conn.get_lgr_level(), 1);
+        ++refined;
+        BOOST_REQUIRE(conn.filterCakeActive());
+        BOOST_CHECK(conn.getFilterCake().geometry == Opm::FilterCake::FilterCakeGeometry::LINEAR);
+        area += conn.getFilterCakeArea();
+        BOOST_REQUIRE(conn.activeInjMult());
+        BOOST_CHECK_CLOSE(conn.injmult().multiplier_gradient, 0.5 / Opm::unit::barsa, 1e-10);
+    }
+    BOOST_CHECK(refined > 1);
+    BOOST_CHECK_CLOSE(area, 30.0, 1e-10);
+}

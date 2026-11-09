@@ -1738,6 +1738,16 @@ namespace {
                                      conn.satTableId(), conn.depth(), props,
                                      conn.sort_value(), conn.getDefaultSatTabId(),
                                      gridNumberOf(pl.lgr));
+                if (conn.filterCakeActive()) {
+                    auto cake = conn.getFilterCake();
+                    if (cake.flow_area.has_value()) {
+                        *cake.flow_area *= pl.fracAlong;
+                    }
+                    refined.back().setFilterCake(cake);
+                }
+                if (conn.activeInjMult()) {
+                    refined.back().setInjMult(conn.injmult());
+                }
                 lgrNames.insert(pl.lgr);
                 changed = true;
             }
