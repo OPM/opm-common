@@ -32,16 +32,17 @@
  *
  * The isothermal flash (PTFlash) is reused unmodified. The search solves
  * r(T) = H(T) - hSpec, with the mixture enthalpy H of MixtureEnthalpy
- * (caloric or eos_departure model) or of a replacement provider. It starts
- * with a safeguarded Newton iteration from the temperature of the incoming
- * state. The slope dH/dT comes from the temperature derivatives that the
- * isothermal flash carries, without a further flash. Where that iteration
- * does not converge, or the flash at its solution does not confirm it, the
- * temperature is bracketed and refined by false position. With the built-in
- * eos_departure model, a phase split carried by the incoming state is used
- * first: the split and the temperature are solved for together by Newton's
- * method, without an isothermal flash, and one flash at the solution
- * verifies them.
+ * (caloric or eos_departure model) or of a replacement provider, in up to
+ * three stages. Each falls back to the next stage if it does not converge or
+ * if a flash at its solution misses the enthalpy tolerance:
+ *
+ *   1. With the built-in eos_departure model, a phase split carried by the
+ *      incoming state and the temperature are solved for together by
+ *      Newton's method, without an isothermal flash.
+ *   2. A safeguarded Newton iteration on T from the incoming temperature.
+ *   3. A bracket search, refined by false position.
+ *
+ * See PHFlash::solve() for the stages and their derivatives.
  *
  * Contract notes:
  * - The specified enthalpy is molar [J/mol] and has to be computed on the
@@ -148,18 +149,18 @@ struct PHFlashConfig {
     //! has a limit of its own.
     int maxIterations = 100;
     EnthalpyModel model = EnthalpyModel::caloric;
-    //! Start from the incoming state: with the built-in eos_departure model,
-    //! a Newton iteration on its phase split and temperature together, then
-    //! a safeguarded Newton iteration on the temperature, with the bracket
-    //! search as the fallback. Off by default: the bracket search alone reads
-    //! only the pressure and the overall composition of the incoming state.
+    //! Run the Newton stages of PHFlash::solve() from the incoming
+    //! temperature and phase split before the bracket search. Off by default:
+    //! the bracket search alone reads only the pressure and the overall
+    //! composition of the incoming state.
     bool newtonStart = false;
 };
 
 /*!
  * \brief The isenthalpic (P-H) flash: solves H(p, T, z) = hSpec for the
- *        temperature by a bracketed search over the isothermal flash, with
- *        the mixture-enthalpy model selected in the configuration.
+ *        temperature by a bracketed search over the isothermal flash,
+ *        optionally preceded by Newton's method from the incoming state,
+ *        with the mixture-enthalpy model selected in the configuration.
  *
  * EnthalpyCalc provides the enthalpy. A replacement needs a static
  * mixtureEnthalpy(fluidState, cpTable, eosType, model) returning the molar
@@ -184,20 +185,38 @@ struct PHFlash {
      * \brief Solve H(p, T, z) = hSpec for T and flash the state at the
      *        solution.
      *
+     * The stages run in this order. A stage's solution is accepted once the
+     * state flashed there meets cfg.enthalpyTolerance. Each stage falls back
+     * to the next if it does not converge or if its solution is not accepted.
+     *
+     *   1. With cfg.newtonStart and the built-in eos_departure model, Newton's
+     *      method from the incoming phase split (fromIncomingSplit()): on the
+     *      split and T together for two phases, on T with the enthalpy of the
+     *      phase for one, without an isothermal flash. The two-phase Jacobian
+     *      is by AD, with the temperature derivative of the residual enthalpy
+     *      as a central difference (MixtureEnthalpy::departurePhaseEnthalpy);
+     *      the single-phase slope is taken as in stage 2. Where the flash at
+     *      the solution does not confirm it, the stage runs once more from
+     *      the state that flash left.
+     *   2. With cfg.newtonStart and the built-in provider, or a replacement
+     *      that declares newtonStage, a safeguarded Newton iteration on T
+     *      from the incoming temperature (newton()), one isothermal flash per
+     *      iterate (none with the built-in caloric model, see below). dH/dT
+     *      is a central difference of H along the tangent of the phase split,
+     *      which the flash carries by AD (slopeAlongFlash()).
+     *   3. False position (illinois()) on the bracket that stage 2 found, or
+     *      else on one searched for over the interval (findBracket()).
+     *
+     * With the caloric model of the built-in provider, H does not depend on
+     * the split: stages 2 and 3 then evaluate it without a flash, and dH/dT
+     * is the heat capacity.
+     *
      * \param[in,out] fluidState in: the pressure, the overall mole
-     *        fractions, and the temperature, where the Newton stage starts
+     *        fractions, and the temperature where stages 1 and 2 start
      *        (moved to the nearer end of the search interval if outside it,
-     *        and replaced by its midpoint if not finite). The closer it is to
-     *        the solution, the fewer isothermal flashes the search needs.
-     *        With the built-in eos_departure model the liquid fraction and
-     *        phase compositions are read as a flashed split at that
-     *        temperature, as PTFlash leaves them: a two-phase split
-     *        (0 < L < 1) starts a Newton iteration on the split and the
-     *        temperature together, and a single-phase state (L = 0 or 1, both
-     *        phases at one composition) one on the temperature with the
-     *        enthalpy of the single phase. Their solution is accepted after a
-     *        flash there. Where that flash finds another split, they run once
-     *        more from it; otherwise the search goes on as without them.
+     *        and replaced by its midpoint if not finite). For stage 1, the
+     *        liquid fraction and phase compositions as PTFlash leaves them at
+     *        that temperature; a state not flashed there skips the stage.
      *        Out, on success: the solution temperature, and the
      *        liquid fraction and phase compositions of the state flashed
      *        there. On failure the state is left at the last trial and is not
@@ -212,9 +231,8 @@ struct PHFlash {
      *        solution from the incoming phase split, a Newton stage that
      *        hands over to the next stage, and a bracket found next to a
      *        temperature that cannot be evaluated, are logged
-     * \return true when the temperature search (fromIncomingSplit, newton,
-     *         or findBracket and illinois) converged and the residual
-     *         |H(T) - hSpec| of the state flashed at the solution is within
+     * \return true when a stage converged and the residual |H(T) - hSpec| of
+     *         the state flashed at its solution is within
      *         cfg.enthalpyTolerance.
      *         false for an all-zero cp table, a search interval that is empty
      *         after limiting it to the cp fit range, a failed search, a failed
@@ -310,10 +328,10 @@ struct PHFlash {
         };
         auto acceptAt = [&](const Scalar T) { return withinTolerance(residualAt(T)); };
 
-        // A phase split carried by the incoming state is solved for together
-        // with the temperature, without an isothermal flash; one flash at the
-        // solution verifies it. Where that flash finds another split, the
-        // stage runs once more, from the state that flash left.
+        // Stage 1: a phase split carried by the incoming state is solved for
+        // together with the temperature, without an isothermal flash; one
+        // flash at the solution verifies it. Where that flash does not
+        // confirm it, the stage runs once more, from the state that flash left.
         if constexpr (builtInProvider) {
             if (cfg.newtonStart && cfg.model == EnthalpyModel::eos_departure) {
                 Scalar from = start;
@@ -346,6 +364,7 @@ struct PHFlash {
             }
         }
 
+        // Stage 2: Newton's method on T; its bracket, if any, seeds stage 3.
         std::optional<Bracket> bracket;
         if constexpr (newtonStageProvider) {
             if (cfg.newtonStart) {
@@ -394,6 +413,8 @@ struct PHFlash {
                 }
             }
         }
+
+        // Stage 3: false position on a bracket.
         if (!bracket) {
             bracket = findBracket(evaluate, tLo, tHi, cfg, verbosity);
             if (!bracket) {
@@ -455,7 +476,9 @@ private:
     static constexpr Scalar maxNewtonStep = 30.0;
 
     //! Distance [K] from T of the two states whose enthalpies give dr/dT:
-    //! small against the curvature of H(T), large against its round-off.
+    //! small against the curvature of H(T), large against its round-off. An
+    //! error in the slope changes the Newton step, not the solution, which
+    //! the residual decides.
     static constexpr Scalar slopeStep = 1e-3;
 
     //! The state of the Newton stage: temperature is the one AD variable.
@@ -638,7 +661,8 @@ private:
      * the state. The enthalpy is evaluated on two copies of the state moved
      * along that tangent to slopeStep on either side of T, within [tLo, tHi],
      * and dr/dT is their difference quotient. This needs no further flash,
-     * and holds for single-phase states too, whose split does not move.
+     * and holds for single-phase states too, whose split does not move. The
+     * enthalpy provider returns values only, which rules out AD for dr/dT.
      *
      * \return dr/dT, or nothing where the enthalpy cannot be evaluated on a
      *         copy or the quotient is not finite
