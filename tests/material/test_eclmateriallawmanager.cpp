@@ -1203,7 +1203,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(SwatinitScaleUpAtConnate, Scalar, Types)
 static constexpr const char* swatinitGasWaterDeckString =
     "RUNSPEC\n"
     "DIMENS\n"
-    "   1 1 3 /\n"
+    "   1 1 4 /\n"
     "TABDIMS\n"
     "/\n"
     "GAS\n"
@@ -1213,22 +1213,22 @@ static constexpr const char* swatinitGasWaterDeckString =
     "/\n"
     "GRID\n"
     "DX\n"
-    "   3*100 /\n"
+    "   4*100 /\n"
     "DY\n"
-    "   3*100 /\n"
+    "   4*100 /\n"
     "DZ\n"
-    "   3*10 /\n"
+    "   4*10 /\n"
     "TOPS\n"
     "   2000 /\n"
     "PORO\n"
-    "   3*0.2 /\n"
+    "   4*0.2 /\n"
     "PROPS\n"
     "SGWFN\n"
     "0.0  0.0  1.0  0.0\n"
     "0.4  0.3  0.2  0.5\n"
     "0.8  1.0  0.0  2.0 /\n"
     "SWATINIT\n"
-    "   0.1 0.1 0.3 /\n";
+    "   0.1 0.1 0.3 0.2 /\n";
 
 BOOST_AUTO_TEST_CASE_TEMPLATE(SwatinitScaleUpAtConnateGasWater, Scalar, Types)
 {
@@ -1278,6 +1278,16 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(SwatinitScaleUpAtConnateGasWater, Scalar, Types)
         BOOST_CHECK_CLOSE(sw, Scalar{0.3}, tol);
         BOOST_CHECK(!newSwatInit);
         BOOST_CHECK_CLOSE(manager.oilWaterScaledEpsInfoDrainage(2).maxPcgo, 2*maxPc, tol);
+    }
+
+    // SWATINIT equal to the connate saturation, which is derived as one minus
+    // the maximum gas saturation of SGWFN, is treated as connate despite
+    // roundoff, so the curve is not scaled up.
+    {
+        const auto [sw, newSwatInit] = manager.applySwatinit(3, 2*maxPc, 0.2);
+        BOOST_CHECK_CLOSE(sw, Scalar{0.2}, tol);
+        BOOST_CHECK(!newSwatInit);
+        BOOST_CHECK_CLOSE(manager.oilWaterScaledEpsInfoDrainage(3).maxPcgo, maxPc, tol);
     }
 
     MaterialLawManager scaleUpManager;

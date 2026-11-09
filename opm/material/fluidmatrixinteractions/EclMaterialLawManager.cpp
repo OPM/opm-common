@@ -145,7 +145,11 @@ applySwatinit(unsigned elemIdx,
     }
 
     auto& elemScaledEpsInfo = params_.oilWaterScaledEpsInfoDrainage[elemIdx];
-    const bool atConnate = Sw <= elemScaledEpsInfo.Swl;
+    // Saturations within this tolerance of the connate saturation are treated
+    // as connate, to be robust against roundoff, e.g., in connate saturations
+    // derived as one minus the maximum gas saturation.
+    constexpr Scalar connateTolerance = 1.0e-6;
+    const bool atConnate = Sw <= elemScaledEpsInfo.Swl + connateTolerance;
     if (atConnate)
         Sw = elemScaledEpsInfo.Swl;
 
