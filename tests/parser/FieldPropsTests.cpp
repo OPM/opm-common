@@ -359,6 +359,103 @@ COPY
                       OpmInputError);
 }
 
+namespace {
+
+// Deck in which PERMX is defined in layers 1-5 only, followed by a
+// user-supplied GRID section tail.
+std::string partiallyDefinedDeck(const std::string& tail)
+{
+    return R"(RUNSPEC
+DIMENS
+ 10 10 10 /
+GRID
+EQUALS
+ PERMX 100 2* 2* 1 5 /
+/
+)" + tail;
+}
+
+std::string undefinedOperationMessage(const std::string& deck_string)
+{
+    const auto deck = Opm::Parser{}.parseString(deck_string);
+
+    // Note: 'grid' must be mutable.
+    auto grid = Opm::EclipseGrid { 10, 10, 10 };
+
+    try {
+        Opm::FieldPropsManager(deck, Opm::Phases{true, true, true}, grid, Opm::TableManager{});
+    }
+    catch (const Opm::OpmInputError& e) {
+        return e.what();
+    }
+
+    return {};
+}
+
+} // Anonymous namespace
+
+BOOST_AUTO_TEST_CASE(UNDEFINED_SCALAR_OPERATION_REPORTS_BOX)
+{
+    const auto msg = undefinedOperationMessage(partiallyDefinedDeck(R"(MINVALUE
+ PERMX 50 /
+/
+)"));
+
+    BOOST_CHECK_MESSAGE(msg.find("PERMX does not have an original value in 500/1000 "
+                                 "active cells of the input box (1-10, 1-10, 1-10)") != std::string::npos,
+                        "Message was: " << msg);
+    BOOST_CHECK_MESSAGE(msg.find("MINVALUE cannot be applied") != std::string::npos,
+                        "Message was: " << msg);
+}
+
+BOOST_AUTO_TEST_CASE(UNDEFINED_SCALAR_OPERATION_REPORTS_SUBBOX)
+{
+    const auto msg = undefinedOperationMessage(partiallyDefinedDeck(R"(ADD
+ PERMX 50 2 3 4 5 4 7 /
+/
+)"));
+
+    BOOST_CHECK_MESSAGE(msg.find("PERMX does not have an original value in 8/16 "
+                                 "active cells of the input box (2-3, 4-5, 4-7)") != std::string::npos,
+                        "Message was: " << msg);
+    BOOST_CHECK_MESSAGE(msg.find("ADD cannot be applied") != std::string::npos,
+                        "Message was: " << msg);
+}
+
+BOOST_AUTO_TEST_CASE(UNDEFINED_OPERATE_SOURCE_REPORTS_BOX)
+{
+    const auto msg = undefinedOperationMessage(partiallyDefinedDeck(R"(PORO
+ 1000*0.2 /
+OPERATE
+ PORO 1 10 1 10 1 10 MULTA PERMX 2 3 /
+/
+)"));
+
+    BOOST_CHECK_MESSAGE(msg.find("Source array PERMX does not have an original value in 500/1000 "
+                                 "active cells of the input box (1-10, 1-10, 1-10)") != std::string::npos,
+                        "Message was: " << msg);
+    BOOST_CHECK_MESSAGE(msg.find("OPERATE MULTA cannot be applied") != std::string::npos,
+                        "Message was: " << msg);
+}
+
+BOOST_AUTO_TEST_CASE(UNDEFINED_OPERATER_SOURCE_REPORTS_REGION)
+{
+    const auto msg = undefinedOperationMessage(partiallyDefinedDeck(R"(PORO
+ 1000*0.2 /
+OPERNUM
+ 1000*1 /
+OPERATER
+ PORO 1 MULTA PERMX 2 3 /
+/
+)"));
+
+    BOOST_CHECK_MESSAGE(msg.find("Source array PERMX does not have an original value in 500/1000 "
+                                 "active cells of region 1 of region set OPERNUM") != std::string::npos,
+                        "Message was: " << msg);
+    BOOST_CHECK_MESSAGE(msg.find("OPERATER MULTA cannot be applied") != std::string::npos,
+                        "Message was: " << msg);
+}
+
 BOOST_AUTO_TEST_CASE(INVALID_COPY_PARTIALLY_DEFINED)
 {
     const auto deck = Parser{}.parseString(R"(RUNSPEC
