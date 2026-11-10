@@ -168,15 +168,28 @@ public:
                   Scalar pcow,
                   Scalar Sw);
 
-    /// Apply SWATINIT-like scaling of oil/water capillary pressure curve at
-    /// simulation restart.
+    /// Apply SWATINIT-like scaling of the water capillary pressure curve
+    /// at simulation restart.
+    ///
+    /// Scales the oil/water capillary pressure curve, or the gas/water
+    /// curve in two-phase gas/water runs, like applySwatinit().
     ///
     /// \param[in] elemIdx Active cell index
     ///
-    /// \param[in] maxPcow Scaled maximum oil/water capillary pressure.
-    ///   Typically the PPCW restart file array's entry for the
-    ///   corresponding cell.
-    void applyRestartSwatInit(const unsigned elemIdx, const Scalar maxPcow);
+    /// \param[in] maxPc Scaled maximum capillary pressure.  Typically the
+    ///   PPCW restart file array's entry for the corresponding cell.
+    void applyRestartSwatInit(const unsigned elemIdx, const Scalar maxPc);
+
+    /// Maximum capillary pressure of the curve scaled by SWATINIT, i.e.,
+    /// the value reported as PPCW.  This is the gas/water curve in
+    /// two-phase gas/water runs and the oil/water curve otherwise.
+    ///
+    /// \param[in] elemIdx Active cell index
+    Scalar swatinitMaxPc(const std::size_t elemIdx) const
+    {
+        const auto& info = params_.oilWaterScaledEpsInfoDrainage[elemIdx];
+        return this->isTwoPhaseGasWater_() ? info.maxPcgo : info.maxPcow;
+    }
 
     bool enableEndPointScaling() const
     { return enableEndPointScaling_; }
@@ -503,6 +516,14 @@ public:
 
 private:
     const MaterialLawParams& materialLawParamsFunc_(unsigned elemIdx, FaceDir::DirEnum facedir) const;
+
+    /// Whether this is a two-phase gas/water run, in which SWATINIT scales
+    /// the gas/water capillary pressure curve (stored as maxPcgo).
+    bool isTwoPhaseGasWater_() const
+    {
+        return (threePhaseApproach_ == EclMultiplexerApproach::TwoPhase)
+            && (twoPhaseApproach_ == EclTwoPhaseApproach::GasWater);
+    }
 
     void readGlobalEpsOptions_(const EclipseState& eclState);
 

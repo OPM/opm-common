@@ -151,8 +151,7 @@ applySwatinit(unsigned elemIdx,
     // Two-phase gas/water runs have no oil/water curve: scale the gas/water
     // Pc curve instead.  Its scaling reference is maxPcgo (see
     // EclEpsScalingPoints::init for the GasWater system type).
-    const bool gasWater = (threePhaseApproach_ == EclMultiplexerApproach::TwoPhase)
-        && (twoPhaseApproach_ == EclTwoPhaseApproach::GasWater);
+    const bool gasWater = this->isTwoPhaseGasWater_();
     Scalar& maxPc = gasWater ? elemScaledEpsInfo.maxPcgo : elemScaledEpsInfo.maxPcow;
 
     // specify a fluid state which only stores the saturations
@@ -226,19 +225,29 @@ template<class TraitsT>
 void
 Manager<TraitsT>::
 applyRestartSwatInit(const unsigned elemIdx,
-                     const Scalar   maxPcow)
+                     const Scalar   maxPc)
 {
     // Maximum capillary pressure adjusted from SWATINIT data.
 
     auto& elemScaledEpsInfo =
         this->params_.oilWaterScaledEpsInfoDrainage[elemIdx];
 
-    elemScaledEpsInfo.maxPcow = maxPcow;
+    if (this->isTwoPhaseGasWater_()) {
+        elemScaledEpsInfo.maxPcgo = maxPc;
 
-    this->oilWaterScaledEpsPointsDrainage(elemIdx)
-        .init(elemScaledEpsInfo,
-              this->oilWaterConfig_,
-              EclTwoPhaseSystemType::OilWater);
+        this->gasWaterScaledEpsPointsDrainage(elemIdx)
+            .init(elemScaledEpsInfo,
+                  this->gasWaterConfig_,
+                  EclTwoPhaseSystemType::GasWater);
+    }
+    else {
+        elemScaledEpsInfo.maxPcow = maxPc;
+
+        this->oilWaterScaledEpsPointsDrainage(elemIdx)
+            .init(elemScaledEpsInfo,
+                  this->oilWaterConfig_,
+                  EclTwoPhaseSystemType::OilWater);
+    }
 }
 
 namespace

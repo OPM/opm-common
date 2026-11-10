@@ -44,7 +44,9 @@
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 
+#include <array>
 #include <cstddef>
+#include <string>
 
 // values of strings taken from the SPE1 test case1 of opm-data
 static constexpr const char* fam1DeckString =
@@ -986,6 +988,121 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(Let, Scalar, Types)
                                 "Inconsistent LET relative permeabilities family 1 wat/oil");
             BOOST_CHECK_MESSAGE(std::abs(pcLET[waterPhaseIdx] - pcow_let) <= 1e-2,
                                 "Inconsistent LET capillary pressure family 1 wat/oil");
+        }
+    }
+}
+
+namespace {
+
+// One-cell decks with SWATINIT.  In two-phase gas/water runs SWATINIT scales
+// the gas/water capillary pressure curve, otherwise the oil/water curve.
+std::string swatinitDeckString(const bool gasWater)
+{
+    const std::string satfunc = gasWater
+        ? "SWFN\n"
+          "0.1 0.0 4.0\n"
+          "0.5 0.2 1.0\n"
+          "1.0 1.0 0.1 /\n"
+          "SGFN\n"
+          "0.0 0.0 0.0\n"
+          "0.9 1.0 0.0 /\n"
+        : "SWOF\n"
+          "0.1 0.0 1.0 4.0\n"
+          "0.5 0.2 0.3 1.0\n"
+          "1.0 1.0 0.0 0.1 /\n";
+
+    return std::string {
+        "RUNSPEC\n"
+        "DIMENS\n"
+        " 1 1 1 /\n"
+        "TABDIMS\n"
+        "/\n"
+    }
+    + (gasWater ? "GAS\nWATER\n" : "OIL\nWATER\n")
+    + "METRIC\n"
+      "GRID\n"
+      "DX\n 100 /\n"
+      "DY\n 100 /\n"
+      "DZ\n 10 /\n"
+      "TOPS\n 1000 /\n"
+      "PORO\n 0.25 /\n"
+      "PROPS\n"
+    + satfunc
+    + "SWATINIT\n 0.5 /\n";
+}
+
+template <class Scalar>
+Scalar waterPc(const typename Fixture<Scalar>::MaterialLawManager& mgr,
+               const unsigned elemIdx,
+               const Scalar sw,
+               const bool gasWater)
+{
+    using F = Fixture<Scalar>;
+    typename F::FluidState fs;
+    fs.setSaturation(F::waterPhaseIdx, sw);
+    fs.setSaturation(F::oilPhaseIdx, gasWater ? Scalar{0} : 1 - sw);
+    fs.setSaturation(F::gasPhaseIdx, gasWater ? 1 - sw : Scalar{0});
+
+    std::array<Scalar, F::numPhases> pc{};
+    F::MaterialLaw::capillaryPressures(pc, mgr.materialLawParams(elemIdx), fs);
+
+    const auto nonWetting = gasWater ? F::gasPhaseIdx : F::oilPhaseIdx;
+    return pc[nonWetting] - pc[F::waterPhaseIdx];
+}
+
+} // Anonymous namespace
+
+BOOST_AUTO_TEST_CASE_TEMPLATE(SwatinitMaxPcAndRestart, Scalar, Types)
+{
+    using MaterialLawManager = typename Fixture<Scalar>::MaterialLawManager;
+
+    for (const bool gasWater : {true, false}) {
+        BOOST_TEST_CONTEXT("gasWater = " << gasWater) {
+            const auto deck = Opm::Parser{}.parseString(swatinitDeckString(gasWater));
+            const Opm::EclipseState eclState(deck);
+            const std::size_t n = eclState.getInputGrid().getCartesianSize();
+
+            auto makeManager = [&eclState, n]()
+            {
+                MaterialLawManager mgr;
+                mgr.initFromState(eclState);
+                mgr.initParamsForElements(eclState, n, doOldLookup, doNothing);
+                return mgr;
+            };
+
+            constexpr unsigned elemIdx = 0;
+            const Scalar bar = 1.0e5;
+            const Scalar swatinit = 0.5;
+            const Scalar pcTarget = 3 * bar; // Unscaled Pc(Sw = 0.5) = 1 bar
+
+            auto scaled = makeManager();
+            const Scalar maxPcUnscaled = scaled.swatinitMaxPc(elemIdx);
+            BOOST_CHECK_CLOSE(maxPcUnscaled, 4 * bar, 1.0e-3);
+
+            const auto [sw, newSwatInit] = scaled.applySwatinit(elemIdx, pcTarget, swatinit);
+            BOOST_CHECK(!newSwatInit);
+            BOOST_CHECK_CLOSE(sw, swatinit, 1.0e-3);
+
+            // SWATINIT is honoured by tripling the maximum capillary pressure,
+            // and swatinitMaxPc() (PPCW) reports the scaled value.
+            const Scalar maxPcScaled = scaled.swatinitMaxPc(elemIdx);
+            BOOST_CHECK_CLOSE(maxPcScaled, 3 * maxPcUnscaled, 1.0e-3);
+            BOOST_CHECK_CLOSE(waterPc<Scalar>(scaled, elemIdx, swatinit, gasWater),
+                              pcTarget, 1.0e-3);
+
+            // Restoring the scaled maximum, as at restart from PPCW, must
+            // reproduce the scaled capillary pressure curve.
+            auto restarted = makeManager();
+            restarted.applyRestartSwatInit(elemIdx, maxPcScaled);
+            BOOST_CHECK_CLOSE(restarted.swatinitMaxPc(elemIdx), maxPcScaled, 1.0e-5);
+
+            for (const Scalar s : {0.1, 0.3, 0.5, 0.7, 0.9, 1.0}) {
+                BOOST_TEST_CONTEXT("Sw = " << s) {
+                    BOOST_CHECK_CLOSE(waterPc<Scalar>(restarted, elemIdx, s, gasWater),
+                                      waterPc<Scalar>(scaled, elemIdx, s, gasWater),
+                                      1.0e-3);
+                }
+            }
         }
     }
 }
