@@ -46,6 +46,7 @@
 
 #include <opm/input/eclipse/Parser/Parser.hpp>
 
+#include <array>
 #include <cstddef>
 #include <cstdio>
 #include <ctime>
@@ -4633,17 +4634,15 @@ BOOST_AUTO_TEST_CASE(ContinuumGridCornerPointSharesMatrixGeometry) {
     BOOST_CHECK_EQUAL(fracture.getNZ(), 2U);
     BOOST_CHECK_EQUAL(matrix.getCartesianSize(), half);
 
-    bool stackingMatters = false;
     for (std::size_t c = 0; c < half; ++c) {
         checkSameGeometry(matrix, c, grid, c);
         checkSameGeometry(fracture, c, matrix, c);
 
-        // In the doubled grid the stacked fracture twin has a different
-        // geometry, which is why the continua are built as grids of their own.
-        stackingMatters = stackingMatters
-            || std::abs(grid.getCellVolume(c + half) - grid.getCellVolume(c)) > 1e-6;
+        // The doubled grid reports the geometry of the matrix twin for a fracture
+        // cell too, although its fracture layers are stacked below the matrix with
+        // non-parallel pillars.
+        checkSameGeometry(grid, c + half, grid, c);
     }
-    BOOST_CHECK(stackingMatters);
 }
 
 BOOST_AUTO_TEST_CASE(ContinuumGridKeepsOwnActivity) {
@@ -4748,4 +4747,73 @@ BOOST_AUTO_TEST_CASE(ContinuumGridRejectsRadialGeometry) {
                       std::invalid_argument);
     BOOST_CHECK_THROW(grid.continuumGrid(Opm::EclipseGrid::Continuum::Fracture),
                       std::invalid_argument);
+}
+
+BOOST_AUTO_TEST_CASE(DualPorosityFractureCellsReportTheMatrixTwinGeometry) {
+    // Stacked fracture layers below the matrix: all geometric queries for a
+    // fracture cell give those of its twin.
+    const auto deck = createDualContinuumCornerPointDeck();
+    const Opm::EclipseGrid grid(deck);
+
+    for (std::size_t c = 0; c < 4; ++c) {
+        const auto twin = c + 4;
+        BOOST_CHECK_CLOSE(grid.getCellDepth(twin), grid.getCellDepth(c), 1e-12);
+        BOOST_CHECK_CLOSE(grid.getCellVolume(twin), grid.getCellVolume(c), 1e-12);
+        BOOST_CHECK_CLOSE(grid.getCellThickness(twin), grid.getCellThickness(c), 1e-12);
+        const auto dimsTwin = grid.getCellDims(twin);
+        const auto dims = grid.getCellDims(c);
+        const auto centerTwin = grid.getCellCenter(twin);
+        const auto center = grid.getCellCenter(c);
+        for (int d = 0; d < 3; ++d) {
+            BOOST_CHECK_CLOSE(dimsTwin[d], dims[d], 1e-12);
+            BOOST_CHECK_CLOSE(centerTwin[d], center[d], 1e-12);
+        }
+    }
+
+    // The corner positions too: the well trajectory code builds its cell search
+    // from getCornerPos(). The first fracture layer lies at the top of the grid.
+    for (std::size_t c = 0; c < 4; ++c) {
+        const auto [i, j, k] = grid.getIJK(c + 4);
+        const auto [im, jm, km] = grid.getIJK(c);
+        BOOST_CHECK_EQUAL(k, km + 2);
+        for (std::size_t corner = 0; corner < 8; ++corner) {
+            const auto pos = grid.getCornerPos(i, j, k, corner);
+            const auto posMatrix = grid.getCornerPos(im, jm, km, corner);
+            for (int d = 0; d < 3; ++d) {
+                BOOST_CHECK_EQUAL(pos[d], posMatrix[d]);
+            }
+        }
+    }
+    BOOST_CHECK_EQUAL(grid.getCornerPos(1, 0, 2, 0)[2], 2000.0);
+    BOOST_CHECK_EQUAL(grid.getCornerPos(1, 0, 2, 4)[2], 2010.0);
+}
+
+BOOST_AUTO_TEST_CASE(DualContinuumWarnsWhenFractureSizesDiffer) {
+    // Without DPGRID the sizes given for fracture cells are not used either.
+    // Differing sizes are reported in one warning, at DUALPORO or DUALPERM.
+    const auto warnings = [](const std::string& model, const std::string& sizes) {
+        auto counter = std::make_shared<Opm::CounterLog>(Opm::Log::MessageType::Warning);
+        Opm::OpmLog::addBackend("DUAL_TEST_COUNTER", counter);
+        {
+            const auto deck = Opm::Parser{}.parseString(
+                "RUNSPEC\n"
+                "OIL\nWATER\n"
+                "DIMENS\n 2 1 2 /\n" +
+                model + "\n"
+                "GRID\n" +
+                sizes +
+                "TOPS\n 4*2000 /\n"
+                "PORO\n 0.20 0.20 0.01 0.01 /\n"
+                "PERMX\n 4*1.0 /\n");
+            const Opm::EclipseGrid grid{ deck };
+        }
+        Opm::OpmLog::removeBackend("DUAL_TEST_COUNTER");
+        return counter->numMessages(Opm::Log::MessageType::Warning);
+    };
+
+    for (const std::string model : {"DUALPORO", "DUALPERM"}) {
+        const auto same = warnings(model, "DX\n 4*100 /\nDY\n 4*100 /\nDZ\n 4*10 /\n");
+        BOOST_CHECK_EQUAL(warnings(model, "DX\n 2*100 2*7 /\nDY\n 4*100 /\nDZ\n 2*10 2*99 /\n"), same + 1);
+        BOOST_CHECK_EQUAL(warnings(model, "DX\n 2*100 /\nDY\n 2*100 /\nDZ\n 2*10 /\n"), same);
+    }
 }

@@ -861,17 +861,15 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
         std::vector<double> DY = EclipseGrid::createDVector(  this->getNXYZ(), 1 , "DY" , "DYV" , deck);
         std::vector<double> DZ = EclipseGrid::createDVector(  this->getNXYZ(), 2 , "DZ" , "DZV" , deck);
 
-        // DPGRID: the fracture system shares the matrix geometry — the matrix
-        // half's cell sizes are copied onto the fracture half. Sizes the deck
-        // gave for fracture cells that differ are replaced, with a warning.
-        // Depths follow through the twin-depth contract; the stacked corner
-        // depths built below stay pillar-monotone.
+        // A fracture cell takes all its geometry from its matrix twin, so DX, DY
+        // and DZ given for the fracture half are not used. Say so when they differ.
+        // With DPGRID the fracture half's sizes are also replaced here, which keeps
+        // the stacked corner depths built below pillar-monotone; depths follow
+        // through the twin-depth contract.
         // Odd NZ is rejected just after initGrid(); the parity guard here keeps
-        // the copy loop in bounds until that rejection fires.
-        if (this->m_dualPorosity &&
-            deck.hasKeyword<ParserKeywords::DPGRID>() &&
-            this->getNZ() % 2 == 0)
-        {
+        // the loops in bounds until that rejection fires.
+        if (this->m_dualPorosity && this->getNZ() % 2 == 0) {
+            const bool dpgrid = deck.hasKeyword<ParserKeywords::DPGRID>();
             const std::size_t half = this->getCartesianSize() / 2;
             std::size_t replaced = 0;
             for (const auto& [sizes, key] : {std::pair{&DX, "DX"}, std::pair{&DY, "DY"}, std::pair{&DZ, "DZ"}}) {
@@ -886,17 +884,23 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
                     replaced += ((*sizes)[this->fractureTwin(g)] != (*sizes)[g]);
                 }
             }
-            for (std::size_t g = 0; g < half; ++g) {
-                DX[this->fractureTwin(g)] = DX[g];
-                DY[this->fractureTwin(g)] = DY[g];
-                DZ[this->fractureTwin(g)] = DZ[g];
+            if (dpgrid) {
+                for (std::size_t g = 0; g < half; ++g) {
+                    DX[this->fractureTwin(g)] = DX[g];
+                    DY[this->fractureTwin(g)] = DY[g];
+                    DZ[this->fractureTwin(g)] = DZ[g];
+                }
             }
             if (replaced > 0) {
-                const auto message = fmt::format("DPGRID: the fracture cells take the sizes of their "
+                const auto& keyword = dpgrid ? deck.get<ParserKeywords::DPGRID>().back()
+                    : deck.hasKeyword<ParserKeywords::DUALPORO>()
+                    ? deck.get<ParserKeywords::DUALPORO>().back()
+                    : deck.get<ParserKeywords::DUALPERM>().back();
+                const auto message = fmt::format("{}: the fracture cells take the sizes of their "
                                                  "matrix cells; {} values of DX, DY or DZ given for "
-                                                 "fracture cells differ and are not used.", replaced);
-                OpmLog::warning(Log::fileMessage(deck.get<ParserKeywords::DPGRID>().back().location(),
-                                                 message));
+                                                 "fracture cells differ and are not used.",
+                                                 dpgrid ? "DPGRID" : keyword.name(), replaced);
+                OpmLog::warning(Log::fileMessage(keyword.location(), message));
             }
         }
 
@@ -975,7 +979,16 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
                                      std::array<double,8>& Z) const
     {
         this->assertGlobalIndex(globalIndex);
-        auto ijk = this->getIJK(globalIndex);
+
+        // The fracture system has no geometry of its own, it is co-located with the
+        // matrix. All geometric queries of a fracture cell go through here, so it
+        // reports the corners of its matrix twin instead of those of the stacked
+        // fracture half.
+        const auto index = this->isFractureCell(globalIndex)
+            ? this->matrixTwin(globalIndex)
+            : globalIndex;
+
+        const auto ijk = this->getIJK(index);
         this->getCellCorners(ijk, this->getNXYZ(), X, Y, Z);
     }
 
@@ -1972,19 +1985,13 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         if (corner_index >= 8)
             throw std::invalid_argument("Invalid corner position");
         {
-            const std::array<int, 3> dims = getNXYZ();
-
             std::array<double,8> X = {0.0};
             std::array<double,8> Y = {0.0};
             std::array<double,8> Z = {0.0};
 
-            std::array<int, 3> ijk;
-
-            ijk[0] = i;
-            ijk[1] = j;
-            ijk[2] = k;
-
-            getCellCorners(ijk, dims, X, Y, Z );
+            // Through the global-index overload, so that a fracture cell
+            // reports the corners of its matrix twin.
+            this->getCellCorners(this->getGlobalIndex(i, j, k), X, Y, Z);
 
             return std::array<double, 3> {{X[corner_index], Y[corner_index], Z[corner_index]}};
         }
