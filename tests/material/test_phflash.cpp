@@ -62,6 +62,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 using Scalar = double;
 using EOSType = Opm::CompositionalConfig::EOSType;
@@ -1247,20 +1248,34 @@ BOOST_AUTO_TEST_CASE(TwoPhaseSplitF2)
 {
     // Two-phase states carried from near and far: the split and the
     // temperature are solved for together, to the state that the bracket
-    // search alone finds.
-    constexpr double pressure = 50e5;
+    // search alone finds, phases included. Near-pure CO2 at 70 bar is close
+    // to its critical point; from these starts the combined iteration ends
+    // with the two phases exchanged.
+    struct Case
+    {
+        double pressure;
+        std::array<double, 3> z;
+        double Tstar;
+        std::vector<double> starts;
+    };
+    constexpr std::array<double, 3> nearCO2 = {0.95, 0.045, 0.005};
+    const auto around = [](const double T) {
+        return std::vector<double>{T, T - 20., T - 5., T - 1., T + 1., T + 5., T + 20.};
+    };
     const auto cfg = departureConfigF2();
     auto bracketOnly = cfg;
     bracketOnly.newtonStart = false;
-    for (const double Tstar : {300., 380.}) {
-        const double hSpec = enthalpyF2(pressure, Tstar);
-        auto reference = makeInitialState<FluidSystemF2, EvaluationF2>(pressure, Tstar, f2Z);
+    for (const auto& [pressure, z, Tstar, starts] : {Case{50e5, f2Z, 300., around(300.)},
+                                                     Case{50e5, f2Z, 380., around(380.)},
+                                                     Case{70e5, nearCO2, 297.5, {324.75}},
+                                                     Case{70e5, nearCO2, 298.574332, {318.75}}}) {
+        const double hSpec = enthalpyF2(pressure, Tstar, z);
+        auto reference = makeInitialState<FluidSystemF2, EvaluationF2>(pressure, Tstar, z);
         BOOST_REQUIRE(PhFlashF2::solve(reference, hSpec, bracketOnly, PTFlashMethod::Ssi,
                                        ptTolerance, EOSType::PR));
-        for (const double start : {Tstar, Tstar - 20., Tstar - 5., Tstar - 1., Tstar + 1.,
-                                   Tstar + 5., Tstar + 20.}) {
-            BOOST_TEST_CONTEXT(Tstar << " K from " << start << " K") {
-                auto fs = carriedState<FluidSystemF2, EvaluationF2>(pressure, start, f2Z);
+        for (const double start : starts) {
+            BOOST_TEST_CONTEXT(pressure << " Pa, " << Tstar << " K from " << start << " K") {
+                auto fs = carriedState<FluidSystemF2, EvaluationF2>(pressure, start, z);
                 const double L0 = Opm::getValue(fs.L());
                 BOOST_REQUIRE(L0 > 0. && L0 < 1.);
                 BOOST_CHECK(solvedFromSplit<PhFlashF2>(fs, hSpec, cfg));

@@ -212,11 +212,14 @@ struct PHFlash {
      * is the heat capacity.
      *
      * \param[in,out] fluidState in: the pressure, the overall mole
-     *        fractions, and the temperature where stages 1 and 2 start
-     *        (moved to the nearer end of the search interval if outside it,
-     *        and replaced by its midpoint if not finite). For stage 1, the
-     *        liquid fraction and phase compositions as PTFlash leaves them at
-     *        that temperature; a state not flashed there skips the stage.
+     *        fractions, and, with cfg.newtonStart, the temperature where
+     *        stages 1 and 2 start (moved to the nearer end of the search
+     *        interval if outside it, and replaced by its midpoint if not
+     *        finite). For stage 1, the liquid fraction and phase compositions
+     *        as PTFlash leaves them, only as a starting point. A two-phase
+     *        state with a zero mole fraction in either phase skips the stage,
+     *        as does a single-phase state whose two phases do not hold one
+     *        composition summing to one.
      *        Out, on success: the solution temperature, and the
      *        liquid fraction and phase compositions of the state flashed
      *        there. On failure the state is left at the last trial and is not
@@ -337,8 +340,8 @@ struct PHFlash {
                 Scalar from = start;
                 for (int attempt = 0; attempt < 2; ++attempt) {
                     const auto temperature = fromIncomingSplit(fluidState, from, hSpec, tLo, tHi,
-                                                               cfg, warmStart, ptTolerance,
-                                                               eosType, verbosity);
+                                                               cfg, ptTolerance, eosType,
+                                                               verbosity);
                     if (!temperature) {
                         break;
                     }
@@ -817,7 +820,6 @@ private:
                                                    const Scalar tLo,
                                                    const Scalar tHi,
                                                    const Config& cfg,
-                                                   WarmStart& warmStart,
                                                    const Scalar ptTolerance,
                                                    const EOSType& eosType,
                                                    const int verbosity)
@@ -848,7 +850,7 @@ private:
                 return std::nullopt;
             }
             const auto split = splitNewton(fluidState, x, y, L, start, hSpec, tLo, tHi, cfg,
-                                           warmStart, ptTolerance, eosType);
+                                           ptTolerance, eosType);
             if (split && split->liquidFraction > 0.0 && split->liquidFraction < 1.0) {
                 temperature = split->temperature;
             }
@@ -935,9 +937,10 @@ private:
      * H(x, y, L, T) = hSpec under the eos_departure model, with the phase
      * enthalpies of MixtureEnthalpy::departurePhaseEnthalpy. The step is
      * damped to keep the mole fractions positive and to move T by at most
-     * maxNewtonStep; L is not bounded. The split is not checked for
-     * stability; the caller verifies the solution with a flash. A converged
-     * two-phase split is stored in the warm start, to seed that flash.
+     * maxNewtonStep; L is not bounded. The split is neither checked for
+     * stability nor labelled: near a critical point the iteration can end
+     * with the two phases exchanged. The caller verifies the solution with a
+     * flash that starts from its own initial K, not from this split.
      *
      * \return T after the last step, and L, where the flash equations hold to
      *         ptTolerance and that step is within cfg.temperatureTolerance;
@@ -955,7 +958,6 @@ private:
                                                     const Scalar tLo,
                                                     const Scalar tHi,
                                                     const Config& cfg,
-                                                    WarmStart& warmStart,
                                                     const Scalar ptTolerance,
                                                     const EOSType& eosType)
     {
@@ -1051,9 +1053,6 @@ private:
             {
                 if (phasesCoincide(x, y)) {
                     return std::nullopt;
-                }
-                if (L > 0.0 && L < 1.0) {
-                    warmStart.store(state, T);
                 }
                 // As in newton(), the last step costs no evaluation and makes
                 // the residual at the solution quadratically small.
