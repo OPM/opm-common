@@ -88,7 +88,9 @@ class PTFlash
     using EOSType = CompositionalConfig::EOSType;
 
     // Tangent-plane distance below which a trial phase does not split off.
-    static constexpr Scalar stabilityTolerance = 1e-5;
+    // Close to a critical point an unstable feed lowers it by as little as
+    // 1e-7 well inside the two-phase region.
+    static constexpr Scalar stabilityTolerance = 1e-8;
     // Successive substitution has converged, or has collapsed onto the
     // trivial solution with all equilibrium ratios at one.
     static constexpr Scalar substitutionTolerance = 1e-10;

@@ -305,6 +305,26 @@ BOOST_AUTO_TEST_CASE(StableLiquidKeepsLiquidLabelF1)
     }
 }
 
+// Near its critical point a methane-rich feed splits into two phases that
+// differ little: at 395 bar and 320 K the vapour-like trial phase grows to a
+// mole-number sum of only 1 + 6e-6, but the split, about half liquid, has
+// the lower Gibbs energy. Successive substitution alone does not converge
+// the split this close to the critical point; the Newton methods do.
+BOOST_AUTO_TEST_CASE(NearCriticalFeedSplitsF1)
+{
+    constexpr std::array<double, 2> methaneRichZ = {0.9, 0.1};
+    for (const auto method : {Opm::PTFlashMethod::Newton, Opm::PTFlashMethod::SsiNewton}) {
+        FlashCase<numComponentsF1> testCase{"near-critical feed F1", 395e5, 320., methaneRichZ};
+        testCase.method = method;
+        testCase.expected = ExpectedPhase::two_phase;
+        BOOST_TEST_CONTEXT("method " << Opm::ptFlashMethodToString(method)) {
+            const auto outcome = runFlash<FluidSystemF1, EvaluationF1>(testCase);
+            checkExpectedPhase(testCase, outcome.summary);
+            checkTwoPhaseInvariants<FluidSystemF1>(outcome.state, testCase.z, testCase.eos_type);
+        }
+    }
+}
+
 // Two-phase split invariants: normalization, mass balance, equal fugacity
 BOOST_AUTO_TEST_CASE(TwoPhaseInvariantsF1)
 {
