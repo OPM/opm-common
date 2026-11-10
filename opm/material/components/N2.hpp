@@ -51,6 +51,12 @@ class N2 : public Component<Scalar, N2<Scalar> >
 {
     typedef ::Opm::IdealGas<Scalar> IdealGas;
 
+    // Ideal-gas heat capacity cp = A + B*T + C*T^2 + D*T^3 [J/(mol K)], method of Joback
+    static constexpr Scalar cpVapA = 31.15;
+    static constexpr Scalar cpVapB = -0.01357;
+    static constexpr Scalar cpVapC = 2.680e-5;
+    static constexpr Scalar cpVapD = -1.168e-8;
+
 public:
     /*!
      * \brief A human readable name for nitrogen.
@@ -205,12 +211,6 @@ public:
     static Evaluation gasEnthalpy(const Evaluation& temperature,
                                   const Evaluation&)
     {
-        // method of Joback
-        const Scalar cpVapA = 31.15;
-        const Scalar cpVapB = -0.01357;
-        const Scalar cpVapC = 2.680e-5;
-        const Scalar cpVapD = -1.168e-8;
-
         // calculate: \int_0^T c_p dT
         return
             1/molarMass()* // conversion from [J/(mol K)] to [J/(kg K)]
@@ -255,19 +255,11 @@ public:
     static Evaluation gasHeatCapacity(const Evaluation& temperature,
                                       const Evaluation&)
     {
-        // method of Joback
-        const Scalar cpVapA = 31.15;
-        const Scalar cpVapB = -0.01357;
-        const Scalar cpVapC = 2.680e-5;
-        const Scalar cpVapD = -1.168e-8;
+        // [J/(mol K)]
+        const Evaluation molarCp =
+            cpVapA + temperature * (cpVapB + temperature * (cpVapC + temperature * cpVapD));
 
-        return
-            1/molarMass()* // conversion from [J/(mol K)] to [J/(kg K)]
-
-            cpVapA + temperature*
-            (cpVapB + temperature*
-             (cpVapC + temperature*
-              (cpVapD)));
+        return molarCp / molarMass(); // [J/(kg K)]
     }
     /*!
      * \brief The dynamic viscosity \f$\mathrm{[Pa*s]}\f$ of \f$N_2\f$ at a given pressure and temperature.
