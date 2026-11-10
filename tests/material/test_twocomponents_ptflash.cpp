@@ -199,12 +199,8 @@ BOOST_AUTO_TEST_CASE(SinglePhaseLiquidF1)
 }
 
 // Low pressure / high temperature -> single-phase vapor (L = 0).
-// The single-phase L label comes from Li's correlation (PTFlash
-// li_single_phase_label_): liquid iff T < Tc_est = sum(Vc_i*Tc_i*z_i)/sum(Vc_i*z_i),
-// independent of pressure. For the equimolar C1/nC10 feed Tc_est = 558.24 K,
-// e.g. this fixture at 1 bar / 500 K is physically gaseous but still returns
-// the liquid label (L = 1). 600 K sits above the Li threshold and is
-// unambiguously vapor at 1 bar.
+// 600 K is above Li's temperature Tc_est = sum(Vc_i*Tc_i*z_i)/sum(Vc_i*z_i)
+// = 558.24 K of the equimolar C1/nC10 feed, and unambiguously vapor at 1 bar.
 BOOST_AUTO_TEST_CASE(SinglePhaseVaporF1)
 {
     FlashCase<numComponentsF1> testCase{"single-phase vapor F1", 1e5, 600., f1Z};
@@ -256,6 +252,27 @@ BOOST_AUTO_TEST_CASE(LeanVapourIsSinglePhaseF1)
                               Opm::PTFlashMethod::SsiNewton}) {
         for (const double T : {450., 500., 540.}) {
             FlashCase<numComponentsF1> testCase{"lean vapour F1", 1e5, T, leanZ};
+            testCase.method = method;
+            testCase.expected = ExpectedPhase::single_vapor;
+            BOOST_TEST_CONTEXT("T = " << T << " K, method " << Opm::ptFlashMethodToString(method)) {
+                FlashResult<numComponentsF1> result{};
+                BOOST_CHECK_NO_THROW(
+                    (result = runFlash<FluidSystemF1, EvaluationF1>(testCase).summary));
+                checkExpectedPhase(testCase, result);
+            }
+        }
+    }
+}
+
+// The equimolar feed at 1 bar is a gas below Li's temperature too: its cubic
+// has a single root, about a hundred times the pseudo-critical volume
+// sum(z_i*Vc_i) of the feed. The flash labels it vapour with every method.
+BOOST_AUTO_TEST_CASE(SingleRootGasIsVapourF1)
+{
+    for (const auto method : {Opm::PTFlashMethod::Ssi, Opm::PTFlashMethod::Newton,
+                              Opm::PTFlashMethod::SsiNewton}) {
+        for (const double T : {450., 500., 540.}) {
+            FlashCase<numComponentsF1> testCase{"single-root gas F1", 1e5, T, f1Z};
             testCase.method = method;
             testCase.expected = ExpectedPhase::single_vapor;
             BOOST_TEST_CONTEXT("T = " << T << " K, method " << Opm::ptFlashMethodToString(method)) {

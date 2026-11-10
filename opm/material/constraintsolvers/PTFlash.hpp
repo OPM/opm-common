@@ -42,6 +42,7 @@
 #include <opm/material/eos/CubicEOS.hpp>
 
 #include <opm/input/eclipse/EclipseState/Compositional/CompositionalConfig.hpp>
+#include <opm/input/eclipse/Units/Units.hpp>
 
 #include <opm/common/ErrorMacros.hpp>
 #include <opm/common/Exceptions.hpp>
@@ -61,7 +62,6 @@
 #include <stdexcept>
 #include <string>
 #include <type_traits>
-#include <utility>
 
 #include <fmt/format.h>
 #include <fmt/ranges.h>
@@ -358,9 +358,10 @@ protected:
             }
             if (!is_negative_flash) {
                 // A feed whose cubic has a liquid and a vapour root is labelled
-                // by the root with the lower Gibbs energy. With a single root,
-                // Li's correlation labels it.
-                const auto [stable_phase_idx, has_two_roots]
+                // by the root with the lower Gibbs energy. A single root larger
+                // than the pseudo-critical volume of the feed is a vapour; a
+                // smaller one is labelled by Li's correlation.
+                const auto [stable_phase_idx, has_two_roots, molar_volume]
                     = feedStableRoot_(fluid_state, z_scalar, eos_type);
                 if (has_two_roots) {
                     L_scalar = stable_phase_idx == static_cast<int>(oilPhaseIdx) ? 1.0 : 0.0;
@@ -370,13 +371,32 @@ protected:
                     }
                 }
                 else {
-                    L_scalar = li_single_phase_label_(fluid_state, z_scalar, verbosity);
+                    const Scalar critical_volume = pseudoCriticalVolume_(z_scalar);
+                    if (molar_volume > critical_volume) {
+                        L_scalar = 0.0;
+                        if (verbosity >= 1) {
+                            OpmLog::debug(fmt::format("Cell is single-phase, vapor (L = 0.0): its cubic "
+                                                      "root is larger than the pseudo-critical volume "
+                                                      "({} > {} m3/mol)", molar_volume, critical_volume));
+                        }
+                    }
+                    else {
+                        L_scalar = li_single_phase_label_(fluid_state, z_scalar, verbosity);
+                    }
                 }
             }
         }
         fluid_state.setLvalue(L_scalar);
         return {is_single_phase, newton_jacobian};
     }
+
+    //! The stable cubic root of a feed, see feedStableRoot_().
+    struct FeedRoot
+    {
+        int phase_idx; //!< phase index of the stable root
+        bool has_two_roots; //!< whether the cubic has a separate liquid and vapour root
+        Scalar molar_volume; //!< molar volume of the stable root [m^3/mol]
+    };
 
     /*!
      * \brief The cubic root of the feed with the lower Gibbs energy.
@@ -389,13 +409,14 @@ protected:
      * fugacity coefficients on it are clamped to their maximum, so it is never
      * the stable one. With a single root both labels give the same root.
      *
-     * \return the phase index of the stable root, and whether the cubic has a
-     *         separate liquid and vapour root
+     * \return the phase index of the stable root, whether the cubic has a
+     *         separate liquid and vapour root, and the molar volume of the
+     *         stable root
      */
     template <class FlashFluidState, class ComponentVector>
-    static std::pair<int, bool> feedStableRoot_(const FlashFluidState& fluid_state,
-                                                const ComponentVector& z,
-                                                const EOSType& eos_type)
+    static FeedRoot feedStableRoot_(const FlashFluidState& fluid_state,
+                                    const ComponentVector& z,
+                                    const EOSType& eos_type)
     {
         using FlashEval = typename FlashFluidState::ValueType;
         using CubicEOS = typename Opm::CubicEOS<Scalar, FluidSystem>;
@@ -418,7 +439,7 @@ protected:
         const Scalar liquid_volume = Opm::getValue(oil_cache.molarVolume(oil));
         const Scalar vapour_volume = Opm::getValue(gas_cache.molarVolume(gas));
         if (!(liquid_volume < (1.0 - 1e-6) * vapour_volume)) {
-            return {oil, false};
+            return {oil, false, vapour_volume};
         }
 
         const auto sum_z_ln_phi = [&](const ParamCache& cache, const int phase_idx) {
@@ -434,7 +455,26 @@ protected:
             return sum;
         };
         const bool vapour_is_stable = sum_z_ln_phi(gas_cache, gas) < sum_z_ln_phi(oil_cache, oil);
-        return {vapour_is_stable ? gas : oil, true};
+        return {vapour_is_stable ? gas : oil, true, vapour_is_stable ? vapour_volume : liquid_volume};
+    }
+
+    /*!
+     * \brief The pseudo-critical molar volume of the feed by Kay's rule,
+     *        \f$\sum_i z_i V_{c,i}\f$ [m^3/mol].
+     *
+     * A single cubic root larger than it is less dense than the critical
+     * state of the feed: a vapour, also below Li's temperature.
+     */
+    template <class ComponentVector>
+    static Scalar pseudoCriticalVolume_(const ComponentVector& z)
+    {
+        Scalar critical_volume = 0.0;
+        for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+            // The fluid systems give the critical volume in m^3/kmol.
+            critical_volume += Opm::getValue(z[compIdx])
+                * FluidSystem::criticalVolume(compIdx) / prefix::kilo;
+        }
+        return critical_volume;
     }
 
     template <class Vector, class FlashFluidState>
@@ -516,7 +556,7 @@ protected:
         ComponentVector liquid_trial_k = K;
 
         // Both trials are measured against the feed on its stable root.
-        const int reference_phase_idx = feedStableRoot_(fluid_state, z, eos_type).first;
+        const int reference_phase_idx = feedStableRoot_(fluid_state, z, eos_type).phase_idx;
 
         // Grow a vapour-like trial phase.
         if (verbosity == 3 || verbosity == 4) {
