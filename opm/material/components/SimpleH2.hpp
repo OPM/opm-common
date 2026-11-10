@@ -52,6 +52,12 @@ class SimpleH2 : public Component<Scalar, SimpleH2<Scalar> >
 {
     using IdealGas = Opm::IdealGas<Scalar>;
 
+    // Ideal-gas heat capacity cp = A + B*T + C*T^2 + D*T^3 [J/(mol K)], method of Joback
+    static constexpr Scalar cpVapA = 27.14;
+    static constexpr Scalar cpVapB = 9.273e-3;
+    static constexpr Scalar cpVapC = -1.381e-5;
+    static constexpr Scalar cpVapD = 7.645e-9;
+
 public:
     /*!
      * \brief A human readable name for the \f$H_2\f$.
@@ -230,14 +236,18 @@ public:
     /*!
      * \brief Specific enthalpy \f$\mathrm{[J/kg]}\f$ of pure hydrogen gas.
      *
-     * \param temperature temperature of component in \f$\mathrm{[K]}\f$
+     * \param T temperature of component in \f$\mathrm{[K]}\f$
      * \param pressure pressure of component in \f$\mathrm{[Pa]}\f$
      */
     template <class Evaluation>
-    static const Evaluation gasEnthalpy(Evaluation temperature,
-                                        Evaluation pressure)
+    static const Evaluation gasEnthalpy(Evaluation T,
+                                        Evaluation /*pressure*/)
     {
-        return gasHeatCapacity(temperature, pressure) * temperature;
+        // \int_0^T c_p dT [J/mol]
+        const Evaluation molarH =
+            T * (cpVapA + T * (cpVapB / 2 + T * (cpVapC / 3 + T * cpVapD / 4)));
+
+        return molarH / molarMass(); // [J/kg]
     }
 
     /*!
@@ -253,20 +263,13 @@ public:
      */
     template <class Evaluation>
     static const Evaluation gasHeatCapacity(Evaluation T,
-                                            Evaluation pressure)
+                                            Evaluation /*pressure*/)
     {
-        // method of Joback
-        const Scalar cpVapA = 27.14;
-        const Scalar cpVapB = 9.273e-3;
-        const Scalar cpVapC = -1.381e-5;
-        const Scalar cpVapD = 7.645e-9;
+        // [J/(mol K)]
+        const Evaluation molarCp =
+            cpVapA + T * (cpVapB + T * (cpVapC + T * cpVapD));
 
-        return
-            1/molarMass()* // conversion from [J/(mol*K)] to [J/(kg*K)]
-            (cpVapA + T*
-              (cpVapB/2 + T*
-                (cpVapC/3 + T*
-                 (cpVapD/4))));
+        return molarCp / molarMass(); // [J/(kg K)]
     }
 };
 
