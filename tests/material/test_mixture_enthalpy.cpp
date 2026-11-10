@@ -40,6 +40,9 @@
 #include <opm/material/components/C1.hpp>
 #include <opm/material/components/C10.hpp>
 #include <opm/material/components/ComponentCp.hpp>
+#include <opm/material/components/H2.hpp>
+#include <opm/material/components/H2O.hpp>
+#include <opm/material/components/N2.hpp>
 #include <opm/material/components/SimpleCO2.hpp>
 #include <opm/material/constraintsolvers/MixtureEnthalpy.hpp>
 
@@ -219,29 +222,36 @@ BOOST_AUTO_TEST_CASE(EnthalpyIntegralMatchesHeatCapacity)
 // expectation from the same coefficients it verifies, so a corrupt row
 // passes it. The pinned values are the ideal-gas heat capacities of the
 // reference equations of state (Setzmann & Wagner 1991 methane; Lemmon &
-// Span 2006 n-decane; Span & Wagner 1996 CO2) at four temperatures spanning
-// the fit range.
+// Span 2006 n-decane; Span & Wagner 1996 CO2; Span et al. 2000 nitrogen;
+// Wagner & Pruss 2002 water; Leachman et al. 2009 hydrogen) at five
+// temperatures spanning the fit range.
 BOOST_AUTO_TEST_CASE(CardsMatchReferenceIdealGasCp)
 {
-    constexpr std::array<double, 4> temps{298.15, 350., 450., 600.};
+    constexpr std::array<double, 5> temps{250., 298.15, 350., 450., 600.};
     const struct {
         const char* name;
         Opm::ComponentCp<double> card;
-        std::array<double, 4> cpRef; // [J/(mol K)] at temps[]
+        std::array<double, 5> cpRef; // [J/(mol K)] at temps[]
     } pins[] = {
         {"methane", Opm::C1<double>::idealGasHeatCapacityPolynomial(),
-         {35.7085, 37.9628, 43.5052, 52.4919}},
+         {34.2675, 35.7085, 37.9628, 43.5052, 52.4919}},
         {"decane", Opm::C10<double>::idealGasHeatCapacityPolynomial(),
-         {233.0250, 266.2081, 328.2699, 405.7329}},
+         {204.0430, 233.0250, 266.2081, 328.2699, 405.7329}},
         {"carbonDioxide", Opm::SimpleCO2<double>::idealGasHeatCapacityPolynomial(),
-         {37.1408, 39.3941, 43.0700, 47.3303}},
+         {34.8382, 37.1408, 39.3941, 43.0700, 47.3303}},
+        {"nitrogen", Opm::N2<double>::idealGasHeatCapacityPolynomial(),
+         {29.1117, 29.1253, 29.1665, 29.3869, 30.1091}},
+        {"water", Opm::H2O<double>::idealGasHeatCapacityPolynomial(),
+         {33.4258, 33.5873, 33.8786, 34.7197, 36.3249}},
+        {"hydrogen", Opm::H2<double>::idealGasHeatCapacityPolynomial(),
+         {28.3227, 28.8341, 29.0864, 29.2280, 29.3287}},
     };
 
     for (const auto& pin : pins) {
         for (std::size_t i = 0; i < temps.size(); ++i) {
             BOOST_TEST_CONTEXT(pin.name << " at T = " << temps[i]) {
-                // 1% relative: an order looser than the fit residuals (max
-                // 0.3%), an order tighter than the defect class it guards
+                // 1% relative: above the fit residuals (max 0.4%), an order
+                // tighter than the defect class it guards
                 BOOST_CHECK_CLOSE(pin.card.heatCapacity(temps[i]),
                                   pin.cpRef[i], 1.0); // [%]
             }
@@ -260,6 +270,9 @@ BOOST_AUTO_TEST_CASE(CardsCarryTheirFitRange)
         {"methane", Opm::C1<double>::idealGasHeatCapacityPolynomial()},
         {"decane", Opm::C10<double>::idealGasHeatCapacityPolynomial()},
         {"carbonDioxide", Opm::SimpleCO2<double>::idealGasHeatCapacityPolynomial()},
+        {"nitrogen", Opm::N2<double>::idealGasHeatCapacityPolynomial()},
+        {"water", Opm::H2O<double>::idealGasHeatCapacityPolynomial()},
+        {"hydrogen", Opm::H2<double>::idealGasHeatCapacityPolynomial()},
     };
 
     for (const auto& c : cards) {
