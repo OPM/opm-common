@@ -26,17 +26,23 @@ along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 #include <opm/input/eclipse/EclipseState/Aquifer/AquiferConfig.hpp>
 #include <opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquiferRegionSplit.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/input/eclipse/EclipseState/checkDeck.hpp>
+#include <opm/input/eclipse/EclipseState/Tables/Aqudims.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
 
 #include <opm/input/eclipse/Units/Units.hpp>
 
 #include <opm/input/eclipse/Deck/Deck.hpp>
+#include <opm/input/eclipse/Parser/ErrorGuard.hpp>
+#include <opm/input/eclipse/Parser/ParseContext.hpp>
 #include <opm/input/eclipse/Parser/Parser.hpp>
+#include <opm/input/eclipse/Parser/ParserKeyword.hpp>
 
 #include <opm/common/utility/OpmInputError.hpp>
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <cstddef>
 #include <initializer_list>
 #include <iterator>
@@ -47,6 +53,8 @@ along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 #include <utility>
 #include <memory>
 #include <stdexcept>
+
+#include <fmt/format.h>
 
 using namespace Opm;
 
@@ -1189,12 +1197,18 @@ namespace {
 std::string regionSplitDeck(const std::string& aqunum,
                             const std::string& aqucon,
                             const std::string& regionEdits,
-                            const std::string& gridEdits = "")
+                            const std::string& gridEdits = "",
+                            const std::string& editEdits = "",
+                            const std::string& propsEdits = "")
 {
     return std::string { R"(
 RUNSPEC
 DIMENS
  5 4 5 /
+OIL
+WATER
+ENDSCALE
+/
 TABDIMS
  1 2 /
 EQLDIMS
@@ -1228,7 +1242,12 @@ ACTNUM
  20*0
  5*0 15*1
  5*0 15*1 /
-)" } + gridEdits + aqunum + aqucon + R"(
+)" } + gridEdits + aqunum + aqucon + "\nEDIT\n" + editEdits + R"(
+PROPS
+SWOF
+ 0.0 0.0 1.0 0.0
+ 1.0 1.0 0.0 0.0 /
+)" + propsEdits + R"(
 REGIONS
 EQLNUM
  40*1 60*2 /
@@ -1295,6 +1314,8 @@ struct RegionSplitInput
     AquiferRecords aqucon{};
     std::string regionEdits{};
     std::string gridEdits{};
+    std::string editEdits{};
+    std::string propsEdits{};
 };
 
 // Records of a keyword in the suggested deck changes, without the keyword
@@ -1307,6 +1328,16 @@ std::string suggestedRecords(const std::string& changes, const std::string& keyw
     const auto block = keywordBlock(changes, keyword);
     const auto first = block.find('\n', 1) + 1;
     return block.substr(first, block.size() - 2 - first);
+}
+
+// Records of the EQUALS keyword suggested at the end of a section.
+std::string suggestedEquals(const std::string& changes, const std::string& section)
+{
+    const auto header = changes.find("\n* " + section + " section, at the end of the section");
+    if (header == std::string::npos) {
+        return "";
+    }
+    return suggestedRecords(changes.substr(header), "EQUALS");
 }
 
 // Deck from the input, with the suggested deck changes applied if given:
@@ -1328,15 +1359,21 @@ std::string regionSplitDeck(const RegionSplitInput& input,
         return out + suggested + "/\n";
     };
 
+    auto equals = [&changes](const std::string& section) {
+        const auto records = suggestedEquals(changes, section);
+        return records.empty() ? std::string{} : "EQUALS\n" + records + "/\n";
+    };
+
     const std::vector<std::size_t> none{};
-    const auto equals = suggestedRecords(changes, "EQUALS");
     return regionSplitDeck(
         keyword("AQUNUM", input.aqunum, split ? split->replacedAqunumIds() : none,
                 suggestedRecords(changes, "AQUNUM")),
         keyword("AQUCON", input.aqucon, split ? split->replacedAquconIds() : none,
-                suggestedRecords(changes, "AQUCON")),
-        input.regionEdits + (equals.empty() ? "" : "EQUALS\n" + equals + "/\n"),
-        input.gridEdits);
+                suggestedRecords(changes, "AQUCON")) + equals("GRID"),
+        input.regionEdits + equals("REGIONS"),
+        input.gridEdits,
+        input.editEdits,
+        input.propsEdits + equals("PROPS"));
 }
 
 struct AppliedRegionSplit
@@ -1487,6 +1524,110 @@ BOOST_AUTO_TEST_CASE(NumericalAquiferRegionSplitAppliedToDeck)
     BOOST_CHECK_CLOSE(copy->permeability, orig->permeability, 1.0e-8);
     BOOST_CHECK_CLOSE(copy->depth, orig->depth, 1.0e-8);
     BOOST_CHECK(!fixed.aquifers.getAquifer(3).getCellPrt(0)->init_pressure.has_value());
+}
+
+BOOST_AUTO_TEST_CASE(NumericalAquiferRegionSplitCopiesCellProperties)
+{
+    // The new aquifer is placed in the inactive cell (1,1,3), whose NTG,
+    // THCONR, MULTNUM, SWU, PCW and FIPNUM differ from those of the aquifer
+    // cell (1,1,5).  NTG is halved in all cells after its definition, so
+    // the final NTG of the aquifer cell is 0.45, which must not be halved
+    // again for the new cell.
+    const auto input = RegionSplitInput {
+        { {1, " 1 1 1 5 1.0e6 1000 0.25 500 1* 1* 2 1 /"} },
+        { {1, " 1 1 5 2 2 1 5 'J-' /"} },
+        "FIPNUM\n 100*3 /\nEQUALS\n 'FIPNUM' 7 1 1 1 1 5 5 /\n/\n",
+        "NTG\n 100*0.8 /\nTHCONR\n 100*100 /\nMULTNUM\n 100*1 /\n"
+        "EQUALS\n 'NTG' 0.9 1 1 1 1 5 5 /\n 'THCONR' 500 1 1 1 1 5 5 /\n 'MULTNUM' 2 1 1 1 1 5 5 /\n/\n"
+        "MULTIPLY\n 'NTG' 0.5 /\n/\n",
+        "",
+        "SWU\n 100*0.5 /\nPCW\n 100*1.0 /\n"
+        "EQUALS\n 'SWU' 0.9 1 1 1 1 5 5 /\n 'PCW' 2.5 1 1 1 1 5 5 /\n/\n",
+    };
+    const auto applied = applyRegionSplit(input, {1});
+    const auto& split = *applied.split;
+    const std::array<std::size_t, 3> host{0, 0, 2};
+
+    auto recordsOf = [&host](const auto& records) {
+        std::map<std::string, double> values;
+        for (const auto& rec : records) {
+            BOOST_CHECK_EQUAL(rec.aquiferId, std::size_t{2});
+            BOOST_CHECK(rec.ijk == host);
+            values[rec.keyword] = rec.value;
+        }
+        return values;
+    };
+    const auto gridValues = recordsOf(split.gridRecords());
+    BOOST_REQUIRE(gridValues.contains("NTG"));
+    BOOST_CHECK_CLOSE(gridValues.at("NTG"), 0.45, 1.0e-10);
+    BOOST_REQUIRE(gridValues.contains("THCONR"));
+    BOOST_REQUIRE(gridValues.contains("MULTNUM"));
+    BOOST_CHECK_EQUAL(gridValues.at("MULTNUM"), 2.0);
+    BOOST_CHECK(!gridValues.contains("PORO"));
+    BOOST_CHECK(!gridValues.contains("PERMX"));
+    const auto propsValues = recordsOf(split.propsRecords());
+    BOOST_CHECK_EQUAL(propsValues.size(), std::size_t{2});
+    BOOST_REQUIRE(propsValues.contains("SWU"));
+    BOOST_CHECK_CLOSE(propsValues.at("SWU"), 0.9, 1.0e-10);
+    BOOST_REQUIRE(propsValues.contains("PCW"));
+    BOOST_CHECK_CLOSE(propsValues.at("PCW"), 2.5 * Opm::unit::barsa, 1.0e-10);
+    const auto regionValues = recordsOf(split.regionsRecords());
+    BOOST_REQUIRE(regionValues.contains("FIPNUM"));
+    BOOST_CHECK_EQUAL(regionValues.at("FIPNUM"), 7.0);
+    BOOST_CHECK(!regionValues.contains("EQLNUM"));
+    BOOST_CHECK(!regionValues.contains("PVTNUM"));
+
+    // After applying the deck changes, the new aquifer cell has the final
+    // properties of the original aquifer cell.
+    const auto& fixed = applied.fixed->state;
+    const auto& fixedGrid = fixed.getInputGrid();
+    const auto sourceIndex = fixedGrid.activeIndex(0, 0, 4);
+    const auto hostIndex = fixedGrid.activeIndex(host[0], host[1], host[2]);
+    for (const auto* name : {"NTG", "THCONR", "SWU", "PCW"}) {
+        const auto& values = fixed.fieldProps().get_double(name);
+        BOOST_CHECK_MESSAGE(std::abs(values[hostIndex] - values[sourceIndex])
+                            <= 1.0e-12 * std::abs(values[sourceIndex]),
+                            name << " of new aquifer cell " << values[hostIndex]
+                            << " differs from source cell value " << values[sourceIndex]);
+    }
+    BOOST_CHECK_CLOSE(fixed.fieldProps().get_double("NTG")[hostIndex], 0.45, 1.0e-10);
+    BOOST_CHECK_CLOSE(fixed.fieldProps().get_double("SWU")[hostIndex], 0.9, 1.0e-10);
+    BOOST_CHECK_CLOSE(fixed.fieldProps().get_double("PCW")[hostIndex], 2.5 * Opm::unit::barsa, 1.0e-10);
+    BOOST_CHECK_EQUAL(fixed.fieldProps().get_int("MULTNUM")[hostIndex], 2);
+    BOOST_CHECK_EQUAL(fixed.fieldProps().get_int("FIPNUM")[hostIndex], 7);
+
+    // The copied GRID section properties are assigned at the end of the GRID
+    // section.  This gives the final values since they are not valid in the
+    // EDIT section, whereby operations on them there, such as MULTIPLY, are
+    // rejected.
+    const Opm::Parser parser;
+    for (const auto& rec : split.gridRecords()) {
+        BOOST_CHECK_MESSAGE(!parser.getKeyword(rec.keyword).isValidSection("EDIT"),
+                            rec.keyword << " is valid in the EDIT section");
+    }
+    auto completeDeck = [&parser](const RegionSplitInput& deckInput) {
+        return parser.parseString(regionSplitDeck(deckInput) + "SOLUTION\nSCHEDULE\n");
+    };
+    Opm::ErrorGuard errors;
+    BOOST_CHECK(Opm::checkDeck(completeDeck(input), parser, Opm::ParseContext{}, errors));
+    BOOST_CHECK(!errors);
+    auto editInput = input;
+    editInput.editEdits = "MULTIPLY\n 'NTG' 0.5 /\n/\n";
+    BOOST_CHECK(!Opm::checkDeck(completeDeck(editInput), parser, Opm::ParseContext{}, errors));
+    BOOST_CHECK(errors);
+    errors.clear();
+
+    // AQUDIMS defaults to one line of AQUNUM and AQUCON data.
+    const auto& original = *applied.original;
+    BOOST_CHECK((original.aquifers.numConnectionRecords() == std::map<std::size_t, std::size_t>{{1, 1}}));
+    BOOST_CHECK_EQUAL(split.numAqunumRecords(), std::size_t{2});
+    BOOST_CHECK_EQUAL(split.numAquconRecords(), split.aquconRecords().size());
+    const auto changes = split.deckChanges(original.state.getDeckUnitSystem(),
+                                           original.state.getTableManager().getAqudims());
+    const auto expectAqudims = fmt::format("\nAQUDIMS\n 2 {} 1 36 10 50 0 0 /\n",
+                                           split.aquconRecords().size());
+    BOOST_CHECK_MESSAGE(changes.find(expectAqudims) != std::string::npos, changes);
+    BOOST_CHECK(changes.find("if needed") == std::string::npos);
 }
 
 BOOST_AUTO_TEST_CASE(NumericalAquiferRegionSplitTransferredConnectionNextToSourceAquifer)

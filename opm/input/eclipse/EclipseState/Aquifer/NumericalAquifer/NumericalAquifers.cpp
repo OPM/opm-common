@@ -97,6 +97,14 @@ namespace Opm {
     initConnections(const Deck& deck, const EclipseGrid& grid) {
         const auto aquifer_connections = NumericalAquiferConnection::generateConnections(deck, grid);
 
+        this->m_num_connection_records.clear();
+        for (const auto& keyword : deck.getKeywordList<ParserKeywords::AQUCON>()) {
+            for (const auto& record : *keyword) {
+                const auto id = record.getItem<ParserKeywords::AQUCON::ID>().get<int>(0);
+                ++this->m_num_connection_records[static_cast<std::size_t>(id)];
+            }
+        }
+
         for (auto& pair : this->m_aquifers) {
             const std::size_t aqu_id = pair.first;
             const auto& aqu_cons = aquifer_connections.find(aqu_id);
@@ -138,7 +146,8 @@ namespace Opm {
 
     bool NumericalAquifers::operator==(const NumericalAquifers& other) const {
         return (this->m_aquifers == other.m_aquifers)
-            && (this->m_num_records == other.m_num_records);
+            && (this->m_num_records == other.m_num_records)
+            && (this->m_num_connection_records == other.m_num_connection_records);
     }
 
     std::size_t NumericalAquifers::size() const {
@@ -148,6 +157,7 @@ namespace Opm {
     NumericalAquifers NumericalAquifers::serializationTestObject() {
         NumericalAquifers result;
         result.m_aquifers  = {{1, SingleNumericalAquifer{1}}};
+        result.m_num_connection_records = {{1, 2}};
         return result;
     }
 
