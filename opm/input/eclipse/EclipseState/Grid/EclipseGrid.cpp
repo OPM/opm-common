@@ -455,6 +455,64 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
         return (static_cast<std::size_t>(cartDims[0]) * cartDims[1] * cartDims[2]) / 2;
     }
 
+    EclipseGrid EclipseGrid::continuumGrid(const Continuum continuum) const {
+        if (!this->m_dualPorosity) {
+            throw std::invalid_argument {
+                "continuumGrid() is meaningful only for a dual-continuum grid"
+            };
+        }
+
+        if (!this->lgr_children_cells.empty() || !this->m_aquifer_cells.empty() ||
+            this->m_thetav.has_value() || this->m_rv.has_value())
+        {
+            throw std::invalid_argument {
+                "continuumGrid() is not supported for grids with local grid refinement, "
+                "numerical aquifers or radial geometry"
+            };
+        }
+
+        const std::size_t half = this->getCartesianSize() / 2;
+        const std::size_t first = (continuum == Continuum::Fracture) ? half : 0;
+
+        EclipseGrid grid(*this);
+        grid.m_dualPorosity = false;
+        grid.m_dualPermeability = false;
+        grid.m_nz = this->getNZ() / 2;
+
+        // Both continua have the geometry of the matrix half, which comes first
+        // in the corner point arrays.
+        grid.m_zcorn.resize(8 * half);
+        grid.m_input_zcorn.reset();
+        grid.m_input_coord.reset();
+
+        if (this->m_minpvVector.size() == this->getCartesianSize()) {
+            grid.m_minpvVector.assign(this->m_minpvVector.begin() + first,
+                                      this->m_minpvVector.begin() + first + half);
+        }
+
+        // The depth edits are indexed by active cell, matrix cells first.
+        grid.m_depth.reset();
+        if (this->m_depth.has_value()) {
+            const auto isActive = [](const int value) { return value > 0; };
+            const auto numActiveMatrix =
+                std::count_if(this->m_actnum.begin(), this->m_actnum.begin() + half, isActive);
+            const auto numActiveHalf =
+                std::count_if(this->m_actnum.begin() + first, this->m_actnum.begin() + first + half,
+                              isActive);
+            const auto begin = this->m_depth->begin()
+                + ((continuum == Continuum::Fracture) ? numActiveMatrix : 0);
+            grid.m_depth = std::vector<double>(begin, begin + numActiveHalf);
+        }
+
+        // Rebuild the active cell mappings of the half. Done last, with the
+        // dual-continuum flags cleared, as it uses the layer count set above.
+        const std::vector<int> actnum(this->m_actnum.begin() + first,
+                                      this->m_actnum.begin() + first + half);
+        grid.resetACTNUM(actnum.data());
+
+        return grid;
+    }
+
     void EclipseGrid::initGrid(const Deck& deck, const int* actnum)
     {
         enum GridType { COORD, DEPTHZ, TOPS, RADIAL, SPIDER, GDFILE, GT_SIZE };

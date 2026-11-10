@@ -316,6 +316,29 @@ namespace Opm {
         /// differently, in the simulator's writer and transmissibility paths.
         bool isTwinPair(std::size_t a, std::size_t b) const;
 
+        /// The two continua of a dual-continuum grid.
+        enum class Continuum { Matrix, Fracture };
+
+        /// Ordinary single-continuum grid of one continuum of a
+        /// dual-continuum grid, for building a grid per continuum.
+        ///
+        /// The result has NZ/2 layers, and cell (i,j,k) of it corresponds to
+        /// cell (i,j,k) of this grid for the matrix and to the fracture twin,
+        /// cell (i,j,k+NZ/2), for the fracture continuum. Both continua use
+        /// the geometry of the matrix half: the fracture system has no
+        /// geometry of its own, and whatever the deck gives for the fracture
+        /// half is not used. The activity (ACTNUM), the MINPV vector and any
+        /// cell depth edits are those of the continuum's own half. Pillars,
+        /// PINCH and MINPV settings and map axes are as in this grid.
+        ///
+        /// Because each continuum is a grid of its own, the stacking of the
+        /// fracture half in the doubled grid has no influence on the result.
+        ///
+        /// Throws std::invalid_argument if this is not a dual-continuum grid,
+        /// or if it has local grid refinement, numerical aquifers or a radial
+        /// geometry, none of which is supported with dual continua.
+        EclipseGrid continuumGrid(Continuum continuum) const;
+
         /// The number of matrix cells implied by a set of Cartesian dimensions.
         /// Static because a consumer may need the twin arithmetic where no grid
         /// object is available -- on a distributed run the input grid exists on
