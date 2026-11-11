@@ -166,12 +166,15 @@ make_udq_tokens(const std::vector<std::string>& string_tokens)
         // Quoted items are always names (summary vectors or UDQs).  Strip
         // the quotes so that downstream consumers, e.g., the requisite
         // summary vector set, see the normalised keyword.
-        const auto is_quoted = Opm::RawConsts::is_quote{}(string_tokens[token_index].front())
-            && (string_tokens[token_index].size() >= 2);
+        const auto& raw_token = string_tokens[token_index];
+        const auto is_quoted = (raw_token.size() >= 2)
+            && Opm::RawConsts::is_quote{}(raw_token.front())
+            && Opm::RawConsts::is_quote{}(raw_token.back())
+            && (raw_token.front() == raw_token.back());
 
         const auto string_token = is_quoted
-            ? string_tokens[token_index].substr(1, string_tokens[token_index].size() - 2)
-            : string_tokens[token_index];
+            ? raw_token.substr(1, raw_token.size() - 2)
+            : raw_token;
 
         const auto token_type = is_quoted
             ? Opm::UDQTokenType::ecl_expr
