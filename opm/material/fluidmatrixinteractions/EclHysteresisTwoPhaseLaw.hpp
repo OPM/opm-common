@@ -189,63 +189,29 @@ public:
 
         // Reversal
         Scalar Swma = 1.0-params.Sncrt();
-
-        // Killough scanning curve between the drainage turning point and Swma
-        auto pcKillough = [&](const Evaluation& Sw_) -> Evaluation {
+        if (Sw >= Swma) {
+            const Evaluation& Pci = EffectiveLaw::template twoPhaseSatPcnw<Evaluation, Args...>(params.imbibitionParams(), Sw);
+            return Pci;
+        }
+        else {
             Scalar pciwght = params.pcWght(); // Align pci and pcd at Swir
-            Evaluation SwScaled = Sw_; // Use without scaling. This is Killough 1976
+            Evaluation SwScaled = Sw; // Use without scaling. This is Killough 1976
             if (params.config().enablePcScalingHyst()) {
-                // The scan fraction is 1 at Swma. If Swma coincides with the turning
-                // point (fully trapped) it is undefined (0/0): use 1.
-                const Evaluation SwScan = (Swma > params.pcSwMdc())
-                    ? (Sw_-params.pcSwMdc())/(Swma-params.pcSwMdc())
-                    : Evaluation(1.0);
+                const Evaluation SwScan = (Sw-params.pcSwMdc())/(Swma-params.pcSwMdc());
                 SwScaled = params.Swcri() + (1 - params.Sncri() - params.Swcri()) * SwScan;
             }
             const Evaluation dPc = pciwght*EffectiveLaw::template twoPhaseSatPcnw<Evaluation, Args...>(params.imbibitionParams(), SwScaled) - EffectiveLaw::twoPhaseSatPcnw(params.drainageParams(), SwScaled);
-            const Evaluation Pcd = EffectiveLaw::template twoPhaseSatPcnw<Evaluation, Args...>(params.drainageParams(), Sw_);
+            const Evaluation Pcd = EffectiveLaw::template twoPhaseSatPcnw<Evaluation, Args...>(params.drainageParams(), Sw);
             if (dPc == 0.0)
                 return Pcd;
 
-            // The scanning curve weight is 1 at Swma. If Swma coincides with the
-            // turning point (fully trapped), the weight is undefined: use 1.
-            if (!(Swma > params.pcSwMdc()))
-                return Pcd+dPc;
-
-            const Evaluation F = (1.0/(Sw_-params.pcSwMdc()+params.curvatureCapPrs())-1.0/params.curvatureCapPrs())
+            const Evaluation F = (1.0/(Sw-params.pcSwMdc()+params.curvatureCapPrs())-1.0/params.curvatureCapPrs())
                                 / (1.0/(Swma-params.pcSwMdc()+params.curvatureCapPrs())-1.0/params.curvatureCapPrs());
 
             return Pcd+F*dPc;
-        };
-
-        if (Sw >= Swma) {
-            // The gas saturation is below the trapped gas saturation (e.g. due to
-            // pressurisation or dissolution of trapped gas). Within the imbibition
-            // table, use it as is.
-            const Scalar SwTab = imbibitionSwTableMax_(params);
-            if (Sw <= SwTab)
-                return EffectiveLaw::template twoPhaseSatPcnw<Evaluation, Args...>(params.imbibitionParams(), Sw);
-
-            // Beyond the end of the imbibition table (generally at Sg = Sncri) the
-            // table would give a flat extrapolation. Instead interpolate linearly
-            // in Sg to the drainage value at Sg = 0, from the Killough value at
-            // Sg = Sncrt (continuity) if the table ends above Sncrt, otherwise
-            // from the table end.
-            const Evaluation Pcd_end = EffectiveLaw::template twoPhaseSatPcnw<Evaluation, Args...>(params.drainageParams(), Evaluation(1.0));
-            const bool anchorAtTrapped = !(SwTab > Swma);
-            const Scalar Sg_a = anchorAtTrapped ? params.Sncrt() : 1.0 - SwTab;
-            if (!(Sg_a > 0.0))
-                return Pcd_end;
-
-            const Evaluation Pc_a = anchorAtTrapped
-                ? pcKillough(Evaluation(Swma))
-                : EffectiveLaw::template twoPhaseSatPcnw<Evaluation, Args...>(params.imbibitionParams(), Evaluation(SwTab));
-            // 1 at Sg = Sg_a, 0 at Sg = 0 (clamped to guard against Sw > 1)
-            const Evaluation t = max(Evaluation(0.0), (1.0 - Sw) / Sg_a);
-            return Pcd_end + t * (Pc_a - Pcd_end);
         }
 
-        return pcKillough(Sw);
+        return 0.0;
     }
 
     /*!
