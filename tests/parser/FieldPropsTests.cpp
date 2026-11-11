@@ -155,6 +155,100 @@ PERMX
 
 
 
+BOOST_AUTO_TEST_CASE(SigmaVFieldProps) {
+    // SIGMAV is a per-cell array (JSON schema: "data", no "size") -- fits FieldProps'
+    // GRID::double_keywords registry exactly like PORO/PERMX.
+    std::string deck_string_sigmav = R"(
+GRID
+
+PORO
+   8*0.10 /
+
+SIGMAV
+  8*0.12 /
+)";
+    EclipseGrid grid(EclipseGrid(2,2,2));
+    Deck deck_sigmav = Parser{}.parseString(deck_string_sigmav);
+    FieldPropsManager fpm_sigmav(deck_sigmav, Phases{true, true, false}, grid, TableManager());
+
+    BOOST_CHECK(fpm_sigmav.has_double("SIGMAV"));
+    const auto& sigmav = fpm_sigmav.get_double("SIGMAV");
+    BOOST_CHECK_EQUAL(sigmav.size(), grid.getNumActive());
+    for (const auto& value : sigmav) {
+        BOOST_CHECK_CLOSE(value, 0.12, 1e-10);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(SigmaDeckScalar) {
+    // SIGMA is a single global scalar (JSON schema: "size": 1), not a per-cell array like
+    // SIGMAV (schema: "data", no "size"). FieldProps::GRID::double_keywords is strictly a
+    // per-cell array registry: verify_deck_data() in FieldProps.cpp requires
+    // deck_data.size() == box.size() * num_value unconditionally, with no broadcast path for
+    // a single supplied value. SIGMA is intentionally not registered there; in dual-continuum
+    // runs applyDualPorosityScalars broadcasts its value into the SIGMAV carrier instead.
+    // This test proves the raw parse of a size-1 keyword works standalone.
+    std::string deck_string_sigma = R"(
+GRID
+
+SIGMA
+  0.12 /
+)";
+    auto deck_sigma = Parser{}.parseString(deck_string_sigma);
+    BOOST_CHECK(deck_sigma.hasKeyword("SIGMA"));
+    const auto sigma_value = deck_sigma["SIGMA"].back().getRecord(0).getItem(0).get<double>(0);
+    BOOST_CHECK_CLOSE(sigma_value, 0.12, 1e-10);
+}
+
+BOOST_AUTO_TEST_CASE(SigmaVUnitConventions) {
+    // SIGMAV has dimension 1/Length^2: 1/m^2 in METRIC, 1/ft^2 in FIELD, 1/cm^2 in LAB.
+    const auto sigmav = [](const std::string& unit_convention)
+    {
+        const auto deck = Parser{}.parseString("RUNSPEC\n" + unit_convention + R"(
+GRID
+
+PORO
+   8*0.10 /
+
+SIGMAV
+  8*0.12 /
+)");
+        EclipseGrid grid(2, 2, 2);
+        const FieldPropsManager fpm(deck, Phases{true, true, false}, grid, TableManager());
+        return fpm.get_double("SIGMAV");
+    };
+
+    const auto check = [](const std::vector<double>& values, const double length)
+    {
+        BOOST_CHECK_EQUAL(values.size(), std::size_t{8});
+        for (const auto& value : values) {
+            BOOST_CHECK_CLOSE(value, 0.12 / unit::square(length), 1e-10);
+        }
+    };
+
+    check(sigmav("METRIC"), Metric::Length);
+    check(sigmav("FIELD"), Field::Length);
+    check(sigmav("LAB"), Lab::Length);
+}
+
+BOOST_AUTO_TEST_CASE(SigmaUnitConventions) {
+    // The scalar SIGMA has the same dimension as SIGMAV.
+    const auto sigma = [](const std::string& unit_convention)
+    {
+        const auto deck = Parser{}.parseString("RUNSPEC\n" + unit_convention + R"(
+GRID
+
+SIGMA
+  0.12 /
+)");
+        return deck["SIGMA"].back().getRecord(0).getItem(0).getSIDouble(0);
+    };
+
+    BOOST_CHECK_CLOSE(sigma("METRIC"), 0.12 / unit::square(Metric::Length), 1e-10);
+    BOOST_CHECK_CLOSE(sigma("FIELD"), 0.12 / unit::square(Field::Length), 1e-10);
+    BOOST_CHECK_CLOSE(sigma("LAB"), 0.12 / unit::square(Lab::Length), 1e-10);
+}
+
+
 BOOST_AUTO_TEST_CASE(CreateFieldPropsForActnum) {
     std::string deck_string = R"(
 GRID
