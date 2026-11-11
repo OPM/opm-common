@@ -522,6 +522,26 @@ private:
     }
 
     /*!
+     * \brief Relative tolerance for treating two relative permeability values as
+     *        equal in the three-point vertical scaling.
+     *
+     * The values Kr(Sr) and Kr(Smax) both typically come from table interpolation,
+     * so two values that are equal in the table may differ by round-off. A
+     * strict comparison could then select the "normal" scaling branch with a
+     * (nearly) zero denominator.
+     */
+    static constexpr Scalar krEqualityTolerance_ = 1000 * std::numeric_limits<Scalar>::epsilon();
+
+    /*!
+     * \brief True if the end point relative permeability Kr(Smax) is larger than
+     *        Kr(Sr) by more than round-off.
+     */
+    OPM_HOST_DEVICE static bool krMaxExceedsKrR_(const Scalar fmax, const Scalar fdisp)
+    {
+        return fmax - fdisp > krEqualityTolerance_ * std::max(Scalar(1), fmax);
+    }
+
+    /*!
      * \brief Scale the wetting phase relative permeability of a phase according to the given parameters
      */
     template <class Evaluation>
@@ -560,10 +580,8 @@ private:
             // Pure vertical scaling in left interval ([SWL, SR])
             return unscaledKrw * (fr / fdisp);
         }
-        else if (fmax - fdisp > 1000 * std::numeric_limits<Scalar>::epsilon() * std::max(Scalar(1), fmax)) {
+        else if (krMaxExceedsKrR_(fmax, fdisp)) {
             // s \in [sr, sm), sm > sr; normal case: Kr(Smax) > Kr(Sr).
-            // (A round-off tolerance is used as both values typically come from
-            // table interpolation: a flat table must not be seen as Kr(Smax) > Kr(Sr).)
             //
             // Linear function between (sr,fr) and (sm,fm) in terms of
             // function value 'unscaledKrw'.  This usually alters the shape
@@ -644,9 +662,8 @@ private:
             // Pure vertical scaling in right-hand interval ([SR, SWU])
             return unscaledKrn * (fr / fdisp);
         }
-        else if (fmax - fdisp > 1000 * std::numeric_limits<Scalar>::epsilon() * std::max(Scalar(1), fmax)) {
+        else if (krMaxExceedsKrR_(fmax, fdisp)) {
             // s \in [SWL, SR), SWL < SR; normal case: Kr(Swl) > Kr(Sr).
-            // (A round-off tolerance is used, see unscaledToScaledKrw_.)
             //
             // Linear function between (sr,fr) and (sl,fm) in terms of
             // function value 'unscaledKrn'.  This usually alters the shape
