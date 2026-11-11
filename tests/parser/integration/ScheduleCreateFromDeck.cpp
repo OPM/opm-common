@@ -682,6 +682,11 @@ BOOST_AUTO_TEST_CASE(WellTestWGRUPCONWellPropertiesSet) {
 BOOST_AUTO_TEST_CASE(TestDefaultedCOMPDATIJ)
 {
     const auto deck = Parser{}.parseString(R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 START
 
 10 MAI 2007 /
@@ -1080,6 +1085,11 @@ BOOST_AUTO_TEST_CASE(TestWellEvents) {
 BOOST_AUTO_TEST_CASE(TestRequestOpenCompletionEvent)
 {
     const auto deck = Parser{}.parseString(R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 START
 10 MAI 2007 /
 

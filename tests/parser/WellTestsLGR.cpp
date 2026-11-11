@@ -119,7 +119,12 @@ SCHEDULE
 
 BOOST_AUTO_TEST_CASE(WellLGR)
 {
-    const auto deck = Parser{}.parseString(twoLgrDeck(R"(WELSPECL
+    const auto deck = Parser{}.parseString(twoLgrDeck(R"(RUNSPEC
+OIL
+GAS
+WATER
+
+WELSPECL
 -- Item #: 1	 2	3	4	5	 6 7
 	'PROD'	'G1' 'LGR2'	3	2	8400	'OIL' /
 	'INJ'	'G1' 'LGR1'	1	1	8335	'GAS' /
@@ -149,7 +154,12 @@ COMPDATL
 // the connection is placed in the local grid named in WELSPECL.
 BOOST_AUTO_TEST_CASE(WellLGRConnectionInOtherLGR)
 {
-    const auto deck = Parser{}.parseString(twoLgrDeck(R"(WELSPECL
+    const auto deck = Parser{}.parseString(twoLgrDeck(R"(RUNSPEC
+OIL
+GAS
+WATER
+
+WELSPECL
 	'PROD'	'G1' 'LGR2'	3	2	8400	'OIL' /
 /
 COMPDATL
@@ -164,7 +174,12 @@ COMPDATL
 // A well in the global grid (WELSPECS) cannot get a COMPDATL connection.
 BOOST_AUTO_TEST_CASE(GlobalWellConnectionInLGR)
 {
-    const auto deck = Parser{}.parseString(twoLgrDeck(R"(WELSPECS
+    const auto deck = Parser{}.parseString(twoLgrDeck(R"(RUNSPEC
+OIL
+GAS
+WATER
+
+WELSPECS
 	'PROD'	'G1' 2	2	8400	'OIL' /
 /
 COMPDATL
@@ -179,7 +194,12 @@ COMPDATL
 // A well in a local grid (WELSPECL) cannot get a COMPDAT connection.
 BOOST_AUTO_TEST_CASE(WellLGRConnectionInGlobalGrid)
 {
-    const auto deck = Parser{}.parseString(twoLgrDeck(R"(WELSPECL
+    const auto deck = Parser{}.parseString(twoLgrDeck(R"(RUNSPEC
+OIL
+GAS
+WATER
+
+WELSPECL
 	'PROD'	'G1' 'LGR2'	3	2	8400	'OIL' /
 /
 COMPDAT
@@ -196,6 +216,9 @@ COMPDAT
 BOOST_AUTO_TEST_CASE(WellLGRDepthHalf)
 {
     const auto deck = Parser{}.parseString(R"(RUNSPEC
+OIL
+GAS
+WATER
 DIMENS
 3 3 1 /
 GRID
@@ -273,6 +296,9 @@ COMPDATL
 BOOST_AUTO_TEST_CASE(WellLGRDepthThird)
 {
     const auto deck = Parser{}.parseString(R"(RUNSPEC
+OIL
+GAS
+WATER
 DIMENS
 3 3 1 /
 GRID

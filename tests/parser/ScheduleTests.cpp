@@ -146,6 +146,11 @@ SCHEDULE
     std::string createDeckWithWells()
     {
         return { R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 START             -- 0
 10 MAI 2007 /
 SCHEDULE
@@ -359,6 +364,11 @@ WCONINJH
     std::string createDeckWithWellsOrdered()
     {
         return { R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 START             -- 0
 10 MAI 2007 /
 WELLDIMS
@@ -375,6 +385,11 @@ WELSPECS
     std::string createDeckWithWellsOrderedGRUPTREE()
     {
         return { R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 START             -- 0
 10 MAI 2007 /
 SCHEDULE
@@ -548,6 +563,11 @@ END
 
 BOOST_AUTO_TEST_CASE(Change_Injector_Type) {
     const auto input = std::string { R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 SCHEDULE
 WELSPECS
 -- Group 'I' does not exist before now (report step 4, zero-based = 3)
@@ -650,6 +670,9 @@ namespace {
     std::string createDeckWithWellsAndSkinFactorChanges()
     {
         return { R"(RUNSPEC
+OIL
+GAS
+WATER
 START             -- 0
 1 NOV 1979 /
 GRID
@@ -759,6 +782,11 @@ namespace {
     std::string createDeckWithWPIMULTandWELPIandCSKIN()
     {
         return { R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 START             -- 0
 1 NOV 1979 /
 GRID
@@ -960,6 +988,11 @@ namespace {
     std::string createDeckWithWellsAndConnectionDataWithWELOPEN()
     {
         return { R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 START             -- 0
 1 NOV 1979 /
 GRID
@@ -1072,6 +1105,11 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsAndConnectionDataWithWELOPEN) {
 BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithWELOPEN_TryToOpenWellWithShutCompletionsDoNotOpenWell) {
     Opm::Parser parser;
     std::string input = R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 START             -- 0
 1 NOV 1979 /
 GRID
@@ -1127,6 +1165,11 @@ WELOPEN
 BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithWELOPEN_CombineShutCompletionsAndAddNewCompletionsDoNotShutWell) {
   Opm::Parser parser;
   std::string input = R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 START             -- 0
 1 NOV 1979 /
 GRID
@@ -1203,6 +1246,11 @@ DATES             -- 6
 BOOST_AUTO_TEST_CASE(WellWithoutControlModeCannotOpen)
 {
     const auto schedule = make_schedule(R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 START             -- 0
 1 NOV 1979 /
 GRID
@@ -1505,6 +1553,11 @@ WELTARG
 
 BOOST_AUTO_TEST_CASE(createDeckWithWeltArg_UDA_Exception) {
     std::string input = R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 START             -- 0
 19 JUN 2007 /
 SCHEDULE
@@ -1692,6 +1745,11 @@ WELTARG
 
 BOOST_AUTO_TEST_CASE(createDeckWithWPIMULT) {
     std::string input = R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 START             -- 0
 19 JUN 2007 /
 GRID
@@ -1764,6 +1822,11 @@ COMPDAT
 
 BOOST_AUTO_TEST_CASE(createDeckWithMultipleWPIMULT) {
     std::string input = R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 START             -- 0
 19 JUN 2007 /
 GRID
@@ -1949,6 +2012,11 @@ END
 BOOST_AUTO_TEST_CASE(WINJMULT_before_WCONINJE_on_the_well_creation_date) {
     // WINJMULT may precede WCONINJE on the date a well is created
     const auto schedule = make_schedule(R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 START             -- 0
 1 JAN 2025 /
 GRID
@@ -2007,6 +2075,11 @@ TSTEP
 
 BOOST_AUTO_TEST_CASE(WINJMULT_applies_only_while_injecting) {
     const auto schedule = make_schedule(R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 START             -- 0
 1 JAN 2025 /
 GRID
@@ -2069,6 +2142,9 @@ BOOST_AUTO_TEST_CASE(WELSPECS_WGNAME_SPACE) {
         START  -- 0
          10 'JAN' 2000 /
         RUNSPEC
+OIL
+GAS
+WATER
         DIMENS
           10 10 10 /
         GRID
@@ -2124,6 +2200,9 @@ BOOST_AUTO_TEST_CASE(createDeckModifyMultipleGCONPROD) {
         START  -- 0
          10 'JAN' 2000 /
         RUNSPEC
+OIL
+GAS
+WATER
         DIMENS
           10 10 10 /
         GRID
@@ -2426,6 +2505,11 @@ DATES             -- 1
 
 BOOST_AUTO_TEST_CASE(changeBhpLimitInHistoryModeWithWeltarg) {
     std::string input = R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 START             -- 0
 19 JUN 2007 /
 GRID
@@ -2516,6 +2600,11 @@ WCONINJH
 
 BOOST_AUTO_TEST_CASE(changeModeWithWHISTCTL) {
     std::string input = R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 START             -- 0
 19 JUN 2007 /
 GRID
@@ -2728,6 +2817,11 @@ DATES             -- 3
 BOOST_AUTO_TEST_CASE(WHISTCTL_NEW_WELL) {
     Opm::Parser parser;
     std::string input = R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 START             -- 0
 19 JUN 2007 /
 GRID
@@ -2846,6 +2940,11 @@ WCONHIST
 
 BOOST_AUTO_TEST_CASE(unsupportedOptionWHISTCTL) {
     const std::string input = R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 START             -- 0
 19 JUN 2007 /
 SCHEDULE
@@ -2886,6 +2985,11 @@ WHISTCTL
 
 BOOST_AUTO_TEST_CASE(move_HEAD_I_location) {
     const std::string input = R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
             START             -- 0
             19 JUN 2007 /
             SCHEDULE
@@ -2921,6 +3025,11 @@ BOOST_AUTO_TEST_CASE(move_HEAD_I_location) {
 
 BOOST_AUTO_TEST_CASE(change_ref_depth) {
     const std::string input = R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
             START             -- 0
             19 JUN 2007 /
             SCHEDULE
@@ -2957,6 +3066,11 @@ BOOST_AUTO_TEST_CASE(change_ref_depth) {
 
 BOOST_AUTO_TEST_CASE(WTEMP_well_template) {
     const std::string input = R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
             START             -- 0
             19 JUN 2007 /
             SCHEDULE
@@ -3007,6 +3121,11 @@ BOOST_AUTO_TEST_CASE(WTEMP_well_template) {
 
 BOOST_AUTO_TEST_CASE(WTEMPINJ_well_template) {
     const std::string input = R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
             START             -- 0
             19 JUN 2007 /
             SCHEDULE
@@ -3057,6 +3176,11 @@ BOOST_AUTO_TEST_CASE(WTEMPINJ_well_template) {
 
 BOOST_AUTO_TEST_CASE( COMPDAT_sets_automatic_complnum ) {
     const auto deck = Parser{}.parseString(R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 START             -- 0
 19 JUN 2007 /
 GRID
@@ -3116,6 +3240,11 @@ END
 
 BOOST_AUTO_TEST_CASE( COMPDAT_multiple_wells ) {
     const auto deck = Parser{}.parseString(R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 START             -- 0
 19 JUN 2007 /
 GRID
@@ -3194,6 +3323,11 @@ COMPDAT
 
 BOOST_AUTO_TEST_CASE( COMPDAT_multiple_records_same_completion ) {
     const auto deck = Parser{}.parseString(R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 START             -- 0
 19 JUN 2007 /
 GRID
@@ -3240,6 +3374,11 @@ COMPDAT
 
 BOOST_AUTO_TEST_CASE( complump_less_than_1 ) {
     const std::string input = R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
             START             -- 0
             19 JUN 2007 /
             GRID
@@ -3276,6 +3415,11 @@ BOOST_AUTO_TEST_CASE( complump_less_than_1 ) {
 
 BOOST_AUTO_TEST_CASE( complump ) {
     const auto deck = Parser{}.parseString(R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 START             -- 0
 19 JUN 2007 /
 GRID
@@ -3391,6 +3535,11 @@ WELOPEN
 
 BOOST_AUTO_TEST_CASE( COMPLUMP_specific_coordinates ) {
     const auto deck = Parser{}.parseString(R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 START             -- 0
 19 JUN 2007 /
 GRID
@@ -3877,6 +4026,11 @@ BOOST_AUTO_TEST_CASE(GuideRatePhaseEnum2Loop) {
 
 BOOST_AUTO_TEST_CASE(handleWEFAC) {
     const std::string input = R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 START             -- 0
 19 JUN 2007 /
 GRID
@@ -4135,6 +4289,11 @@ VFPINJ
 // tests for the polymer injectivity case
 BOOST_AUTO_TEST_CASE(POLYINJ_TEST) {
     const std::string deckData = R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 START
    8 MAR 2018/
 GRID
@@ -4207,6 +4366,11 @@ TSTEP
 // Test for WFOAM
 BOOST_AUTO_TEST_CASE(WFOAM_TEST) {
     const std::string input = R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 START
    8 MAR 2018/
 GRID
@@ -4817,6 +4981,9 @@ COMPDAT
 
 BOOST_AUTO_TEST_CASE(Injection_Control_Mode_From_Well) {
     const auto input = R"(RUNSPEC
+OIL
+GAS
+WATER
 
 SCHEDULE
 WELSPECS
@@ -4936,7 +5103,12 @@ BOOST_AUTO_TEST_CASE(GASLIFT_OPT) {
 }
 
 BOOST_AUTO_TEST_CASE(GASLIFT_OPT_DECK) {
-    const auto input = R"(-- Turns on gas lift optimization
+    const auto input = R"(RUNSPEC
+OIL
+GAS
+WATER
+
+-- Turns on gas lift optimization
 SCHEDULE
 
 GRUPTREE
@@ -5012,6 +5184,9 @@ WLIFTOPT
 
 BOOST_AUTO_TEST_CASE(WellPI) {
     const auto deck = Parser{}.parseString(R"(RUNSPEC
+OIL
+GAS
+WATER
 START
 7 OCT 2020 /
 
@@ -5140,6 +5315,9 @@ END
 
 BOOST_AUTO_TEST_CASE(Schedule_ApplyWellProdIndexScaling) {
     const auto deck = Parser{}.parseString(R"(RUNSPEC
+OIL
+GAS
+WATER
 START
 7 OCT 2020 /
 
@@ -5533,6 +5711,11 @@ SCHEDULE
 
 BOOST_AUTO_TEST_CASE(WELLSTRE_rounded_composition_is_normalized) {
     const auto sched = make_schedule(gptable_deck(R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 WELSPECS
  'INJ' 'G1' 1 1 2000 'GAS' /
 /
@@ -5667,6 +5850,11 @@ WELLSTRE
 
 BOOST_AUTO_TEST_CASE(WCONINJE_HCGAS_and_HCOIL_are_gas_and_oil_injectors) {
     const auto sched = make_schedule(gptable_deck(R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 WELSPECS
  'GINJ' 'G1' 1 1 2000 'GAS' /
  'OINJ' 'G1' 2 2 2000 'OIL' /
@@ -5685,6 +5873,11 @@ TSTEP
 
 BOOST_AUTO_TEST_CASE(WCONINJH_rejects_HCGAS) {
     BOOST_CHECK_THROW(make_schedule(gptable_deck(R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 WELSPECS
  'INJ' 'G1' 1 1 2000 'GAS' /
 /
@@ -5696,6 +5889,11 @@ WCONINJH
 
 BOOST_AUTO_TEST_CASE(WINJOIL_sets_the_oil_injection_stream) {
     const auto sched = make_schedule(gptable_deck(R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 WELSPECS
  'INJ1' 'G1' 1 1 2000 'OIL' /
  'INJ2' 'G1' 2 2 2000 'OIL' /
@@ -5734,6 +5932,11 @@ TSTEP
 BOOST_AUTO_TEST_CASE(WINJOIL_rejects_other_fluids_and_unknown_streams) {
     // STREAM is the only fluid nature WINJOIL defines, so the error says so.
     BOOST_CHECK_EXCEPTION(make_schedule(gptable_deck(R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 WELSPECS
  'INJ' 'G1' 1 1 2000 'OIL' /
 /
@@ -5749,6 +5952,11 @@ WINJOIL
     });
 
     BOOST_CHECK_THROW(make_schedule(gptable_deck(R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 WELSPECS
  'INJ' 'G1' 1 1 2000 'OIL' /
 /
@@ -5760,6 +5968,11 @@ WINJOIL
 
 BOOST_AUTO_TEST_CASE(WINJGAS_takes_the_two_character_stream_abbreviation) {
     const auto sched = make_schedule(gptable_deck(R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 WELSPECS
  'INJ' 'G1' 1 1 2000 'GAS' /
 /
@@ -5778,6 +5991,11 @@ WINJGAS
 
 BOOST_AUTO_TEST_CASE(WINJGAS_rejects_other_fluids_and_unknown_streams) {
     BOOST_CHECK_THROW(make_schedule(gptable_deck(R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 WELSPECS
  'INJ' 'G1' 1 1 2000 'GAS' /
 /
@@ -5790,6 +6008,11 @@ WINJGAS
 )")), Opm::OpmInputError);
 
     BOOST_CHECK_THROW(make_schedule(gptable_deck(R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 WELSPECS
  'INJ' 'G1' 1 1 2000 'GAS' /
 /
@@ -5801,6 +6024,11 @@ WINJGAS
 
 BOOST_AUTO_TEST_CASE(WINJFCNC_concentration_basis) {
     const auto sched = make_schedule(gptable_deck(R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 WELSPECS
  'WINJ' 'G1' 1 1 2000 'WATER' /
  'GINJ' 'G1' 2 2 2000 'GAS' /
@@ -5843,6 +6071,11 @@ TSTEP
 
 BOOST_AUTO_TEST_CASE(WINJFCNC_rejects_unknown_concentration_basis) {
     BOOST_CHECK_THROW(make_schedule(gptable_deck(R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 WELSPECS
  'GINJ' 'G1' 2 2 2000 'GAS' /
 /
@@ -5864,6 +6097,11 @@ BOOST_AUTO_TEST_CASE(Injection_stream_keywords_need_a_stream_name) {
     for (const auto* keyword : { "WINJGAS", "WINJOIL" }) {
         for (const auto* record : { "'INJ' 'STREAM' /", "'INJ' 'STREAM' 1* /" }) {
             BOOST_CHECK_EXCEPTION(make_schedule(gptable_deck(fmt::format(R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 WELSPECS
  'INJ' 'G1' 1 1 2000 'GAS' /
 /
@@ -5880,6 +6118,11 @@ WELLSTRE
 
 BOOST_AUTO_TEST_CASE(Injection_streams_leave_producers_alone) {
     const auto sched = make_schedule(gptable_deck(R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 WELSPECS
  'P1' 'G1' 1 1 2000 'OIL' /
  'P2' 'G1' 2 2 2000 'OIL' /
@@ -5940,6 +6183,11 @@ TSTEP
 
 BOOST_AUTO_TEST_CASE(Injection_streams_follow_a_well_through_conversions) {
     const auto sched = make_schedule(gptable_deck(R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 WELSPECS
  'W' 'G1' 1 1 2000 'OIL' /
 /
@@ -5989,6 +6237,11 @@ TSTEP
 
 BOOST_AUTO_TEST_CASE(Injection_stream_change_is_an_injection_update) {
     const auto sched = make_schedule(gptable_deck(R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 WELSPECS
  'P' 'G1' 1 1 2000 'OIL' /
  'I' 'G1' 2 2 2000 'GAS' /
@@ -6467,6 +6720,11 @@ connected_wells_deck(const std::string& schedule_body)
 BOOST_AUTO_TEST_CASE(Gas_injector_takes_the_GINJGAS_stream_of_its_nearest_group)
 {
     const auto sched = make_schedule(connected_wells_deck(R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 WELLSTRE
  'CO2' 0.0 1.0 0.0 /
  'LEAN' 0.9 0.1 0.0 /
@@ -6521,6 +6779,11 @@ TSTEP
 BOOST_AUTO_TEST_CASE(Gas_injector_follows_its_group_to_a_new_parent)
 {
     const auto sched = make_schedule(connected_wells_deck(R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 WELLSTRE
  'CO2' 0.0 1.0 0.0 /
  'LEAN' 0.9 0.1 0.0 /
@@ -6559,6 +6822,11 @@ TSTEP
 BOOST_AUTO_TEST_CASE(WINJGAS_stream_takes_precedence_over_the_group_stream)
 {
     const auto sched = make_schedule(connected_wells_deck(R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 WELLSTRE
  'CO2' 0.0 1.0 0.0 /
  'LEAN' 0.9 0.1 0.0 /
@@ -6610,6 +6878,11 @@ BOOST_AUTO_TEST_CASE(WINJGAS_can_return_to_the_group_stream)
     // Both two-character abbreviations and a defaulted FLUID select GRUP.
     for (const auto* fluid : {"'GRUP'", "'GR'", "1*"}) {
         const auto sched = make_schedule(connected_wells_deck(fmt::format(R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 WELLSTRE
  'CO2' 0.0 1.0 0.0 /
  'LEAN' 0.9 0.1 0.0 /
@@ -6656,6 +6929,11 @@ BOOST_AUTO_TEST_CASE(WINJGAS_GRUP_without_a_group_stream_is_valid_only_for_shut_
 {
     const auto deck = [](const std::string& status) {
         return connected_wells_deck(fmt::format(R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 WELLSTRE
  'LEAN' 0.9 0.1 0.0 /
 /
@@ -6694,6 +6972,11 @@ BOOST_AUTO_TEST_CASE(Gas_injector_without_a_stream_stops_the_schedule)
 {
     const auto deck = [](const std::string& status) {
         return connected_wells_deck(R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 WELLSTRE
  'CO2' 0.0 1.0 0.0 /
 /
@@ -6743,6 +7026,11 @@ TSTEP
 
 BOOST_AUTO_TEST_CASE(WPAVE) {
     const std::string deck_string = R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 START
 7 OCT 2020 /
 
@@ -7296,6 +7584,11 @@ WCONPROD
 
 BOOST_AUTO_TEST_CASE(WCONHIST_WCONINJH_VFP) {
     const std::string deck_string = R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 START
 7 OCT 2020 /
 
@@ -7438,6 +7731,9 @@ WCONINJH
 
 BOOST_AUTO_TEST_CASE(SUMTHIN_IN_SUMMARY) {
     const auto deck = Parser{}.parseString(R"(RUNSPEC
+OIL
+GAS
+WATER
 DIMENS
   10 10 10 /
 
@@ -7590,6 +7886,9 @@ BOOST_CHECK_THROW(Schedule(deck, es), Opm::OpmInputError);
 
 BOOST_AUTO_TEST_CASE(RPTONLY_IN_SUMMARY) {
     const auto deck = Parser{}.parseString(R"(RUNSPEC
+OIL
+GAS
+WATER
 DIMENS
   10 10 10 /
 
@@ -7649,6 +7948,10 @@ END
 
 BOOST_AUTO_TEST_CASE(DUMP_DECK) {
     const std::string part1 = R"(
+RUNSPEC
+OIL
+GAS
+WATER
 DIMENS
   10 10 10 /
 
@@ -7669,6 +7972,11 @@ SUMMARY
 RPTONLY
 )";
     const std::string schedule_string = R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 SCHEDULE
 WELSPECS
      'W_1'  'OP'   30   37  3.33 'OIL'  7* /
@@ -7760,6 +8068,11 @@ PERMZ
 
 BOOST_AUTO_TEST_CASE(Test_wvfpexp) {
         std::string input = R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 DIMENS
  10 10 10 /
 
@@ -7815,6 +8128,11 @@ END
 
 BOOST_AUTO_TEST_CASE(Test_weldraw) {
         std::string input = R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 DIMENS
  10 10 10 /
 
@@ -7904,6 +8222,9 @@ END
 BOOST_AUTO_TEST_CASE(Test_weldraw_defaulted_drawdown) {
     const auto input = std::string { R"(
 RUNSPEC
+OIL
+GAS
+WATER
 DIMENS
  10 10 10 /
 START
@@ -7956,6 +8277,11 @@ END
 
 BOOST_AUTO_TEST_CASE(Test_wdfac) {
     const auto deck = Parser{}.parseString(R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 DIMENS
  10 10 10 /
 
@@ -8365,6 +8691,9 @@ DATES             -- 1
 BOOST_AUTO_TEST_CASE(Well_Fracture_Seeds)
 {
     const auto deck = Parser{}.parseString(R"(RUNSPEC
+OIL
+GAS
+WATER
 DIMENS
   10 10 10 /
 
@@ -8545,6 +8874,9 @@ END
 BOOST_AUTO_TEST_CASE(Well_Fracture_Seeds_With_Size)
 {
     const auto deck = Parser{}.parseString(R"(RUNSPEC
+OIL
+GAS
+WATER
 DIMENS
   10 10 10 /
 

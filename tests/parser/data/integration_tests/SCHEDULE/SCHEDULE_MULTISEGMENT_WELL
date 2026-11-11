@@ -6,6 +6,9 @@
 -- Copyright (C) 2015 SINTEF ICT, Applied Mathematics
 
 RUNSPEC
+OIL
+GAS
+WATER
 
 DIMENS
 20 1 5 /

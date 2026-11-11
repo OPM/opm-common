@@ -90,6 +90,9 @@ SUMMARY
 Deck createDeck(const std::string& summary)
 {
     const auto header = std::string { R"(RUNSPEC
+OIL
+GAS
+WATER
 START             -- 0
 10 MAI 2007 /
 

@@ -206,6 +206,11 @@ TSTEP
 
 
     const auto WITH_GRID = std::string{ R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 SCHEDULE
 
 WELSPECS
@@ -269,6 +274,11 @@ TSTEP
 BOOST_AUTO_TEST_CASE(ECHO_NOECHO_ALLOWED_IN_ACTIONX)
 {
     const auto deck_string = std::string{ R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 SCHEDULE
 
 WELSPECS
@@ -310,6 +320,11 @@ BOOST_AUTO_TEST_CASE(COMPDAT)
 {
 
     const auto TRAILING_COMPDAT = std::string{ R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 GRID
 
 PORO
@@ -952,6 +967,11 @@ BOOST_AUTO_TEST_CASE(Conditions)
 BOOST_AUTO_TEST_CASE(SCAN2)
 {
     const auto deck_string = std::string{ R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 SCHEDULE
 
 TSTEP
@@ -1193,6 +1213,11 @@ ENDACTIO
 BOOST_AUTO_TEST_CASE(ActionID)
 {
     const auto deck_string = std::string{ R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 SCHEDULE
 
 TSTEP
@@ -1246,6 +1271,11 @@ ENDACTIO
 BOOST_AUTO_TEST_CASE(Action_GCON)
 {
     const auto deck_string = std::string{ R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 SCHEDULE
 
 WELSPECS
@@ -1367,6 +1397,9 @@ BOOST_AUTO_TEST_CASE(GASLIFT_OPT_DECK)
 {
     const auto input = R"(-- Turns on gas lift optimization
 RUNSPEC
+OIL
+GAS
+WATER
 LIFTOPT
 /
 
@@ -1459,6 +1492,11 @@ BOOST_AUTO_TEST_CASE(ACTIONX_WGNAME)
 BOOST_AUTO_TEST_CASE(Action_COMPDAT_ACTION)
 {
     const auto deck_string = std::string{ R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 GRID
 PORO
     1000*0.1 /
@@ -1518,6 +1556,11 @@ END
 BOOST_AUTO_TEST_CASE(Action_WELOPEN_WellWithoutControlMode)
 {
     const auto deck_string = std::string{ R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 GRID
 PORO
     1000*0.1 /
@@ -1575,6 +1618,11 @@ END
 BOOST_AUTO_TEST_CASE(Action_WELPI)
 {
     const auto deck_string = std::string{ R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 GRID
 PORO
     1000*0.1 /
@@ -1659,6 +1707,11 @@ END
 BOOST_AUTO_TEST_CASE(Action_MULTZ)
 {
     const auto deck_string = std::string{ R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 GRID
 PORO
     1000*0.1 /
@@ -1856,6 +1909,11 @@ BOOST_AUTO_TEST_CASE(MatchingWellsSpecified1)
 BOOST_AUTO_TEST_CASE(MatchingWellsSpecified2)
 {
     const auto deck_string = std::string{ R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 SCHEDULE
 
 WELSPECS

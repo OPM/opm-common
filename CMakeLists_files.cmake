@@ -622,6 +622,7 @@ list(APPEND TEST_SOURCE_FILES
   tests/parser/CarfinTests.cpp
   tests/parser/ColumnSchemaTests.cpp
   tests/parser/ConnectionTests.cpp
+  tests/parser/InactivePhaseTests.cpp
   tests/parser/COMPSEGUnits.cpp
   tests/parser/CompositionalTests.cpp
   tests/parser/CopyRegTests.cpp

@@ -135,6 +135,11 @@ bool contains(const std::vector<std::size_t>& index_list,
 BOOST_AUTO_TEST_CASE(WPAVE_CALCULATOR)
 {
     const std::string deck_string = R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 START
 7 OCT 2020 /
 
