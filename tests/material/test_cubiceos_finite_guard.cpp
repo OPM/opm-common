@@ -354,7 +354,7 @@ BOOST_AUTO_TEST_CASE(CubicRootsWithoutLinearTerm)
 
 // The closed forms of the limiting branches miss derivatives: those of p for a
 // cubic without a linear term, and those off the double-root manifold for the
-// simple root beside a double root. Both roots take them from the full cubic.
+// roots beside a double root. They are taken from the full cubic.
 BOOST_AUTO_TEST_CASE(CubicRootsLimitingBranchDerivatives)
 {
     using Eval = Opm::DenseAd::Evaluation<Scalar, 2>;
@@ -385,6 +385,10 @@ BOOST_AUTO_TEST_CASE(CubicRootsLimitingBranchDerivatives)
     BOOST_CHECK_CLOSE(x[0].derivative(1), -1.0 / 9.0, 1e-10);
     BOOST_CHECK_CLOSE(x[1].value(), 1.0, 1e-12);
     BOOST_CHECK_CLOSE(x[2].value(), 1.0, 1e-12);
+
+    // The double root moves with the mean of the pair, -(b/a + x0)/2.
+    BOOST_CHECK_CLOSE(x[1].derivative(0), -1.0 / 9.0, 1e-10);
+    BOOST_CHECK_CLOSE(x[1].derivative(1), 1.0 / 18.0, 1e-10);
 }
 
 // The coefficients are integers, which makes p, q and the sign of the discriminant

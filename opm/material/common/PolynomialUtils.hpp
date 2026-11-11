@@ -440,10 +440,10 @@ unsigned cubicRoots(SolContainer* sol,
     }
     // If p != 0, then we have a simple root and a double root
     else {
-        // These formulas hold on the double-root manifold only. The simple root
-        // takes its derivatives from the cubic; the double root has none.
+        // The simple root takes its derivatives from the cubic. The double root has
+        // unbounded true derivatives; it takes those of the pair's mean, -(b/a + x0)/2.
         sol[0] = cubicSimpleRootDerivatives_<Scalar>((3.0 * q / p) - b / (3.0 * a), a, b, c, d);
-        sol[1] = sol[2] = (-3.0 * q) / (2.0 * p) - b / (3.0 * a);
+        sol[1] = sol[2] = -0.5 * (b / a + sol[0]);
         std::sort(sol, sol + 3);
     }
     return 3;
