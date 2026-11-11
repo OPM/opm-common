@@ -297,8 +297,20 @@ public:
             return EffectiveLaw::template twoPhaseSatKrw<Evaluation, Args...>(params.drainageParams(), Sw);
 
         // use imbibition curve for wetting phase
-        if (params.config().krHysteresisModel() == 1 || params.config().krHysteresisModel() == 3)
+        if (params.config().krHysteresisModel() == 1 || params.config().krHysteresisModel() == 3) {
+            // The imbibition table generally ends at Sg = Sncri, so reading it
+            // below that gas saturation would give a flat extrapolation. Instead
+            // interpolate linearly in Sg between the imbibition value at Sg = Sncri
+            // and the drainage end point at Sg = 0.
+            if (params.Sncri() > 0.0 && (1.0 - Sw) < params.Sncri()) {
+                const Evaluation Krwi_r = EffectiveLaw::template twoPhaseSatKrw<Evaluation, Args...>(params.imbibitionParams(), Evaluation(1.0 - params.Sncri()));
+                const Evaluation Krwd_end = EffectiveLaw::template twoPhaseSatKrw<Evaluation, Args...>(params.drainageParams(), Evaluation(1.0));
+                // 1 at Sg = Sncri, 0 at Sg = 0 (clamped to guard against Sw > 1)
+                const Evaluation t = max(Evaluation(0.0), (1.0 - Sw) / params.Sncri());
+                return Krwd_end + t * (Krwi_r - Krwd_end);
+            }
             return EffectiveLaw::template twoPhaseSatKrw<Evaluation, Args...>(params.imbibitionParams(), Sw);
+        }
 
         if (Sw <= params.krnSwMdc()) {
             return EffectiveLaw::template twoPhaseSatKrw<Evaluation, Args...>(params.drainageParams(), Sw);
