@@ -175,29 +175,49 @@ public:
 
         // Reversal
         Scalar Swma = 1.0-params.Sncrt();
-        if (Sw >= Swma) {
-            const Evaluation& Pci = EffectiveLaw::template twoPhaseSatPcnw<Evaluation, Args...>(params.imbibitionParams(), Sw);
-            return Pci;
-        }
-        else {
+
+        // Killough scanning curve between the drainage turning point and Swma
+        auto pcKillough = [&](const Evaluation& Sw_) -> Evaluation {
             Scalar pciwght = params.pcWght(); // Align pci and pcd at Swir
-            Evaluation SwScaled = Sw; // Use without scaling. This is Killough 1976
+            Evaluation SwScaled = Sw_; // Use without scaling. This is Killough 1976
             if (params.config().enablePcScalingHyst()) {
-                const Evaluation SwScan = (Sw-params.pcSwMdc())/(Swma-params.pcSwMdc());
+                const Evaluation SwScan = (Sw_-params.pcSwMdc())/(Swma-params.pcSwMdc());
                 SwScaled = params.Swcri() + (1 - params.Sncri() - params.Swcri()) * SwScan;
             }
             const Evaluation dPc = pciwght*EffectiveLaw::template twoPhaseSatPcnw<Evaluation, Args...>(params.imbibitionParams(), SwScaled) - EffectiveLaw::twoPhaseSatPcnw(params.drainageParams(), SwScaled);
-            const Evaluation Pcd = EffectiveLaw::template twoPhaseSatPcnw<Evaluation, Args...>(params.drainageParams(), Sw);
+            const Evaluation Pcd = EffectiveLaw::template twoPhaseSatPcnw<Evaluation, Args...>(params.drainageParams(), Sw_);
             if (dPc == 0.0)
                 return Pcd;
 
-            const Evaluation F = (1.0/(Sw-params.pcSwMdc()+params.curvatureCapPrs())-1.0/params.curvatureCapPrs())
+            // The scanning curve weight is 1 at Swma. If Swma coincides with the
+            // turning point (fully trapped), the weight is undefined: use 1.
+            if (!(Swma > params.pcSwMdc()))
+                return Pcd+dPc;
+
+            const Evaluation F = (1.0/(Sw_-params.pcSwMdc()+params.curvatureCapPrs())-1.0/params.curvatureCapPrs())
                                 / (1.0/(Swma-params.pcSwMdc()+params.curvatureCapPrs())-1.0/params.curvatureCapPrs());
 
             return Pcd+F*dPc;
+        };
+
+        if (Sw >= Swma) {
+            // The gas saturation is below the trapped gas saturation (e.g. due to
+            // pressurisation or dissolution of trapped gas). The imbibition table
+            // generally ends at Sg = Sncri, so reading it at Sw would give a flat
+            // extrapolation. Instead interpolate linearly in Sg between the
+            // Killough value at Sg = Sncrt (continuity) and the drainage value at
+            // Sg = 0.
+            const Evaluation Pcd_end = EffectiveLaw::template twoPhaseSatPcnw<Evaluation, Args...>(params.drainageParams(), Evaluation(1.0));
+            if (params.Sncrt() <= 0.0)
+                return Pcd_end;
+
+            const Evaluation Pc_t = pcKillough(Evaluation(Swma));
+            // 1 at Sg = Sncrt, 0 at Sg = 0 (clamped to guard against Sw > 1)
+            const Evaluation t = max(Evaluation(0.0), (1.0 - Sw) / params.Sncrt());
+            return Pcd_end + t * (Pc_t - Pcd_end);
         }
 
-        return 0.0;
+        return pcKillough(Sw);
     }
 
     /*!
