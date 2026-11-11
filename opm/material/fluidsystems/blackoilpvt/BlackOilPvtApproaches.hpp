@@ -76,6 +76,12 @@ using LiveOilDryGasPvtApproaches = BlackOilPvtApproaches<GasPvtApproach::DryGas,
                                                          OilPvtApproach::LiveOil,
                                                          WaterPvtApproach::ConstantCompressibilityWater>;
 
+//! Live oil with wet gas: dissolved gas and vaporized oil (PVTO, PVTG and PVTW). Used by
+//! for example Norne.
+using LiveOilWetGasPvtApproaches = BlackOilPvtApproaches<GasPvtApproach::WetGas,
+                                                         OilPvtApproach::LiveOil,
+                                                         WaterPvtApproach::ConstantCompressibilityWater>;
+
 namespace detail {
 
 template <class>
