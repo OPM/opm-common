@@ -3564,6 +3564,28 @@ DEFINE FUNNY (WBP 'XD-1H') + ((WGIR 'XD-2H')/((WPI4 'XD-1Z') + 1.0)) /
                                   expect.begin(), expect.end());
 }
 
+BOOST_AUTO_TEST_CASE(Quoted_Keywords_In_Define_Are_Normalised)
+{
+    // FUNKY is a field level UDQ (FU prefix), FOPR is a summary vector.
+    const auto schedule = make_schedule(R"(RUNSPEC
+UDQDIMS
+   10* 'Y'/
+SCHEDULE
+UDQ
+DEFINE FUNKYCAP ('FUNKY' - (GGLIR 'G-42')) + 'FOPR' /
+/
+)");
+
+    const auto& def = schedule[0].udq().define("FUNKYCAP");
+
+    auto keys = std::unordered_set<std::string>{};
+    def.required_summary(keys);
+
+    // Quoted UDQ name must be recognised as a UDQ, not as a summary vector.
+    const auto expect = std::unordered_set<std::string> { "GGLIR", "FOPR" };
+    BOOST_CHECK(keys == expect);
+}
+
 BOOST_AUTO_TEST_CASE(UDQ_REQUIRED_GROUP_OBJECTS)
 {
     const auto schedule = make_schedule(R"(RUNSPEC

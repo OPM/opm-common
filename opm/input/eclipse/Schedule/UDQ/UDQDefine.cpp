@@ -163,8 +163,20 @@ make_udq_tokens(const std::vector<std::string>& string_tokens)
     std::vector<Opm::UDQToken> tokens;
     std::size_t token_index = 0;
     while (true) {
-        const auto& string_token = string_tokens[token_index];
-        const auto token_type = Opm::UDQ::tokenType(string_tokens[token_index]);
+        // Quoted items are always names (summary vectors or UDQs).  Strip
+        // the quotes so that downstream consumers, e.g., the requisite
+        // summary vector set, see the normalised keyword.
+        const auto is_quoted = Opm::RawConsts::is_quote{}(string_tokens[token_index].front())
+            && (string_tokens[token_index].size() >= 2);
+
+        const auto string_token = is_quoted
+            ? string_tokens[token_index].substr(1, string_tokens[token_index].size() - 2)
+            : string_tokens[token_index];
+
+        const auto token_type = is_quoted
+            ? Opm::UDQTokenType::ecl_expr
+            : Opm::UDQ::tokenType(string_token);
+
         token_index += 1;
 
         if (token_type == Opm::UDQTokenType::ecl_expr) {
