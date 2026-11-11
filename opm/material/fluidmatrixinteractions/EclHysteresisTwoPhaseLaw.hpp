@@ -144,6 +144,20 @@ public:
         throw std::invalid_argument("The pcnw(fs) method is not yet implemented");
     }
 
+    /*!
+     * \brief The largest wetting-phase saturation covered by the (scaled)
+     *        imbibition table, i.e. 1 - Sg at the first tabulated gas saturation
+     *        (e.g. 1 - Sgr,max for a table that starts at the critical saturation).
+     */
+    static Scalar imbibitionSwTableMax_(const Params& params)
+    {
+        const auto& imbParams = params.imbibitionParams();
+        const auto& points = imbParams.config().enableSatScaling()
+            ? imbParams.scaledPoints()
+            : imbParams.unscaledPoints();
+        return points.saturationKrwPoints()[2];
+    }
+
     template <class Evaluation, class ...Args>
     static Evaluation twoPhaseSatPcnw(const Params& params, const Evaluation& Sw)
     {
@@ -181,7 +195,11 @@ public:
             Scalar pciwght = params.pcWght(); // Align pci and pcd at Swir
             Evaluation SwScaled = Sw_; // Use without scaling. This is Killough 1976
             if (params.config().enablePcScalingHyst()) {
-                const Evaluation SwScan = (Sw_-params.pcSwMdc())/(Swma-params.pcSwMdc());
+                // The scan fraction is 1 at Swma. If Swma coincides with the turning
+                // point (fully trapped) it is undefined (0/0): use 1.
+                const Evaluation SwScan = (Swma > params.pcSwMdc())
+                    ? (Sw_-params.pcSwMdc())/(Swma-params.pcSwMdc())
+                    : Evaluation(1.0);
                 SwScaled = params.Swcri() + (1 - params.Sncri() - params.Swcri()) * SwScan;
             }
             const Evaluation dPc = pciwght*EffectiveLaw::template twoPhaseSatPcnw<Evaluation, Args...>(params.imbibitionParams(), SwScaled) - EffectiveLaw::twoPhaseSatPcnw(params.drainageParams(), SwScaled);
@@ -202,19 +220,29 @@ public:
 
         if (Sw >= Swma) {
             // The gas saturation is below the trapped gas saturation (e.g. due to
-            // pressurisation or dissolution of trapped gas). The imbibition table
-            // generally ends at Sg = Sncri, so reading it at Sw would give a flat
-            // extrapolation. Instead interpolate linearly in Sg between the
-            // Killough value at Sg = Sncrt (continuity) and the drainage value at
-            // Sg = 0.
+            // pressurisation or dissolution of trapped gas). Within the imbibition
+            // table, use it as is.
+            const Scalar SwTab = imbibitionSwTableMax_(params);
+            if (Sw <= SwTab)
+                return EffectiveLaw::template twoPhaseSatPcnw<Evaluation, Args...>(params.imbibitionParams(), Sw);
+
+            // Beyond the end of the imbibition table (generally at Sg = Sncri) the
+            // table would give a flat extrapolation. Instead interpolate linearly
+            // in Sg to the drainage value at Sg = 0, from the Killough value at
+            // Sg = Sncrt (continuity) if the table ends above Sncrt, otherwise
+            // from the table end.
             const Evaluation Pcd_end = EffectiveLaw::template twoPhaseSatPcnw<Evaluation, Args...>(params.drainageParams(), Evaluation(1.0));
-            if (params.Sncrt() <= 0.0)
+            const bool anchorAtTrapped = !(SwTab > Swma);
+            const Scalar Sg_a = anchorAtTrapped ? params.Sncrt() : 1.0 - SwTab;
+            if (!(Sg_a > 0.0))
                 return Pcd_end;
 
-            const Evaluation Pc_t = pcKillough(Evaluation(Swma));
-            // 1 at Sg = Sncrt, 0 at Sg = 0 (clamped to guard against Sw > 1)
-            const Evaluation t = max(Evaluation(0.0), (1.0 - Sw) / params.Sncrt());
-            return Pcd_end + t * (Pc_t - Pcd_end);
+            const Evaluation Pc_a = anchorAtTrapped
+                ? pcKillough(Evaluation(Swma))
+                : EffectiveLaw::template twoPhaseSatPcnw<Evaluation, Args...>(params.imbibitionParams(), Evaluation(SwTab));
+            // 1 at Sg = Sg_a, 0 at Sg = 0 (clamped to guard against Sw > 1)
+            const Evaluation t = max(Evaluation(0.0), (1.0 - Sw) / Sg_a);
+            return Pcd_end + t * (Pc_a - Pcd_end);
         }
 
         return pcKillough(Sw);
@@ -298,18 +326,24 @@ public:
 
         // use imbibition curve for wetting phase
         if (params.config().krHysteresisModel() == 1 || params.config().krHysteresisModel() == 3) {
+            // Within the imbibition table, use it as is.
+            const Scalar SwTab = imbibitionSwTableMax_(params);
+            if (Sw <= SwTab)
+                return EffectiveLaw::template twoPhaseSatKrw<Evaluation, Args...>(params.imbibitionParams(), Sw);
+
             // The imbibition table generally ends at Sg = Sncri, so reading it
-            // below that gas saturation would give a flat extrapolation. Instead
-            // interpolate linearly in Sg between the imbibition value at Sg = Sncri
-            // and the drainage end point at Sg = 0.
-            if (params.Sncri() > 0.0 && (1.0 - Sw) < params.Sncri()) {
-                const Evaluation Krwi_r = EffectiveLaw::template twoPhaseSatKrw<Evaluation, Args...>(params.imbibitionParams(), Evaluation(1.0 - params.Sncri()));
-                const Evaluation Krwd_end = EffectiveLaw::template twoPhaseSatKrw<Evaluation, Args...>(params.drainageParams(), Evaluation(1.0));
-                // 1 at Sg = Sncri, 0 at Sg = 0 (clamped to guard against Sw > 1)
-                const Evaluation t = max(Evaluation(0.0), (1.0 - Sw) / params.Sncri());
-                return Krwd_end + t * (Krwi_r - Krwd_end);
-            }
-            return EffectiveLaw::template twoPhaseSatKrw<Evaluation, Args...>(params.imbibitionParams(), Sw);
+            // beyond that would give a flat extrapolation. Instead interpolate
+            // linearly in Sg between the imbibition value at the table end and the
+            // drainage end point at Sg = 0.
+            const Scalar Sg_a = 1.0 - SwTab;
+            const Evaluation Krwd_end = EffectiveLaw::template twoPhaseSatKrw<Evaluation, Args...>(params.drainageParams(), Evaluation(1.0));
+            if (!(Sg_a > 0.0))
+                return Krwd_end;
+
+            const Evaluation Krwi_a = EffectiveLaw::template twoPhaseSatKrw<Evaluation, Args...>(params.imbibitionParams(), Evaluation(SwTab));
+            // 1 at Sg = Sg_a, 0 at Sg = 0 (clamped to guard against Sw > 1)
+            const Evaluation t = max(Evaluation(0.0), (1.0 - Sw) / Sg_a);
+            return Krwd_end + t * (Krwi_a - Krwd_end);
         }
 
         if (Sw <= params.krnSwMdc()) {
@@ -320,22 +354,33 @@ public:
 
         if ( (1.0-Sw-params.Sncrt()) < 0.0) {
             // The gas saturation is below the trapped gas saturation (e.g. due to
-            // pressurisation or dissolution of trapped gas). The imbibition table
-            // generally ends at Sg = Sncri, so reading it at Sw would give a flat
-            // extrapolation. Instead interpolate linearly in Sg between the
-            // Killough value at Sg = Sncrt (continuity) and the drainage end point
-            // at Sg = 0.
+            // pressurisation or dissolution of trapped gas). Within the imbibition
+            // table, use it as is.
+            const Scalar SwTab = imbibitionSwTableMax_(params);
+            if (Sw <= SwTab)
+                return EffectiveLaw::template twoPhaseSatKrw<Evaluation, Args...>(params.imbibitionParams(), Sw);
+
+            // Beyond the end of the imbibition table (generally at Sg = Sncri) the
+            // table would give a flat extrapolation. Instead interpolate linearly
+            // in Sg to the drainage end point at Sg = 0, from the Killough value at
+            // Sg = Sncrt (continuity) if the table ends above Sncrt, otherwise
+            // from the table end.
             const Evaluation Krwd_end = EffectiveLaw::template twoPhaseSatKrw<Evaluation, Args...>(params.drainageParams(), Evaluation(1.0));
-            if (params.Sncrt() <= 0.0) {
+            const bool anchorAtTrapped = !(SwTab > 1.0 - params.Sncrt());
+            const Scalar Sg_a = anchorAtTrapped ? params.Sncrt() : 1.0 - SwTab;
+            if (!(Sg_a > 0.0))
                 return Krwd_end;
+
+            Evaluation Krw_a = EffectiveLaw::template twoPhaseSatKrw<Evaluation, Args...>(params.imbibitionParams(), Evaluation(SwTab));
+            if (anchorAtTrapped) {
+                const Evaluation Krwd_t = params.config().enableWettingPhaseKilloughFix()
+                    ? EffectiveLaw::template twoPhaseSatKrw<Evaluation, Args...>(params.drainageParams(), Evaluation(1.0 - params.Sncrt()))
+                    : Evaluation(params.KrwdHy());
+                Krw_a = Krwd_t + params.krwWght(Krwd_t) * (params.Krwi_snrmax() - params.Krwi_snmax());
             }
-            const Evaluation Krwd_t = params.config().enableWettingPhaseKilloughFix()
-                ? EffectiveLaw::template twoPhaseSatKrw<Evaluation, Args...>(params.drainageParams(), Evaluation(1.0 - params.Sncrt()))
-                : Evaluation(params.KrwdHy());
-            const Evaluation Krw_t = Krwd_t + params.krwWght(Krwd_t) * (params.Krwi_snrmax() - params.Krwi_snmax());
-            // 1 at Sg = Sncrt, 0 at Sg = 0 (clamped to guard against Sw > 1)
-            const Evaluation t = max(Evaluation(0.0), (1.0 - Sw) / params.Sncrt());
-            return Krwd_end + t * (Krw_t - Krwd_end);
+            // 1 at Sg = Sg_a, 0 at Sg = 0 (clamped to guard against Sw > 1)
+            const Evaluation t = max(Evaluation(0.0), (1.0 - Sw) / Sg_a);
+            return Krwd_end + t * (Krw_a - Krwd_end);
         }
         Evaluation Snorm = params.Sncri()+(1.0-Sw-params.Sncrt())*(params.Snmaxd()-params.Sncri())/(params.Snhy()-params.Sncrt());
         Evaluation Krwi_snorm = EffectiveLaw::template twoPhaseSatKrw<Evaluation, Args...>(params.imbibitionParams(), 1 - Snorm);
