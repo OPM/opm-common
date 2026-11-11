@@ -310,6 +310,11 @@ GRUPMAST
 BOOST_AUTO_TEST_CASE(FAIL_SUBORDINATE_WELLS) {
         std::string deck_string = R"(
 
+RUNSPEC
+OIL
+GAS
+WATER
+
 SCHEDULE
 
 SLAVES
@@ -341,7 +346,7 @@ GRUPMAST
 /
 )";
 
-    assertRaisesInputErrorException(deck_string, /*slave_mode=*/false, /*exception_string=*/"Problem with keyword GRUPMAST\nIn <memory string> line 26\nGroup 'D1_M' has wells: A master group cannot contain any wells or subordinate groups.");
+    assertRaisesInputErrorException(deck_string, /*slave_mode=*/false, /*exception_string=*/"Problem with keyword GRUPMAST\nIn <memory string> line 31\nGroup 'D1_M' has wells: A master group cannot contain any wells or subordinate groups.");
 }
 
 BOOST_AUTO_TEST_CASE(SYNTAX_OK) {

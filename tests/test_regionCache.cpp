@@ -99,6 +99,9 @@ BOOST_AUTO_TEST_CASE(create)
 BOOST_AUTO_TEST_CASE(InactiveLayers)
 {
     const auto deck = Opm::Parser{}.parseString(R"(RUNSPEC
+OIL
+GAS
+WATER
 DIMENS
 5 5 6 /
 START
