@@ -33,6 +33,7 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <limits>
 #include <type_traits>
 
 namespace Opm {
@@ -559,8 +560,10 @@ private:
             // Pure vertical scaling in left interval ([SWL, SR])
             return unscaledKrw * (fr / fdisp);
         }
-        else if (fmax > fdisp) {
+        else if (fmax - fdisp > 1000 * std::numeric_limits<Scalar>::epsilon() * std::max(Scalar(1), fmax)) {
             // s \in [sr, sm), sm > sr; normal case: Kr(Smax) > Kr(Sr).
+            // (A round-off tolerance is used as both values typically come from
+            // table interpolation: a flat table must not be seen as Kr(Smax) > Kr(Sr).)
             //
             // Linear function between (sr,fr) and (sm,fm) in terms of
             // function value 'unscaledKrw'.  This usually alters the shape
@@ -641,8 +644,9 @@ private:
             // Pure vertical scaling in right-hand interval ([SR, SWU])
             return unscaledKrn * (fr / fdisp);
         }
-        else if (fmax > fdisp) {
+        else if (fmax - fdisp > 1000 * std::numeric_limits<Scalar>::epsilon() * std::max(Scalar(1), fmax)) {
             // s \in [SWL, SR), SWL < SR; normal case: Kr(Swl) > Kr(Sr).
+            // (A round-off tolerance is used, see unscaledToScaledKrw_.)
             //
             // Linear function between (sr,fr) and (sl,fm) in terms of
             // function value 'unscaledKrn'.  This usually alters the shape
