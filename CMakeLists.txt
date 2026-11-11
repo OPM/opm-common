@@ -53,17 +53,20 @@ macro(opm-common_prereqs_hook)
     # Set the build directory for the python modules.
     get_property(_opm_multi_config GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
     # The build directory for the python modules is set to a configuration specific.
-    set(OPM_COMMON_PYTHON_BUILD_DIR ${PROJECT_BINARY_DIR}/python/$<$<BOOL:${_opm_multi_config}>:$<CONFIG>>)
-    # Name suffix of per-configuration files kept in the build root, such as
-    # the setup-*.sh helper scripts: empty, or -<config> if multi-config.
-    set(OPM_PYTHON_SCRIPT_SUFFIX $<$<BOOL:${_opm_multi_config}>:-$<CONFIG>>)
+    if (_opm_multi_config)
+      set(OPM_COMMON_PYTHON_BUILD_DIR ${PROJECT_BINARY_DIR}/python/$<CONFIG>)
+      set(OPM_PYTHON_SCRIPT_SUFFIX -$<CONFIG>)
+    else()
+      set(OPM_COMMON_PYTHON_BUILD_DIR ${PROJECT_BINARY_DIR}/python)
+      set(OPM_PYTHON_SCRIPT_SUFFIX)
+    endif()
 
     # Directory to install common (for opm modules) python scripts
     set(OPM_PYTHON_COMMON_DIR "${CMAKE_INSTALL_DATAROOTDIR}/opm/python")
     string(APPEND OPM_PROJECT_EXTRA_CODE_INTREE
       "\n  set(opm-common_PYTHON_COMMON_DIR ${OPM_COMMON_PYTHON_BUILD_DIR})")
     string(APPEND OPM_PROJECT_EXTRA_CODE_INSTALLED
-        "\n  set(opm-common_PYTHON_COMMON_DIR ${CMAKE_INSTALL_PREFIX}/${OPM_PYTHON_COMMON_DIR})")
+      "\n  set(opm-common_PYTHON_COMMON_DIR ${CMAKE_INSTALL_PREFIX}/${OPM_PYTHON_COMMON_DIR})")
 
     find_package(pybind11 CONFIG)
     if (NOT pybind11_FOUND)
@@ -348,6 +351,8 @@ macro(opm-common_targets_hook)
         ${PROJECT_SOURCE_DIR}/python/MANIFEST.in
         ${PROJECT_SOURCE_DIR}/python/requirements.txt
         ${PROJECT_SOURCE_DIR}/python/pyproject.toml
+        ${PROJECT_SOURCE_DIR}/python/generate_docstring_hpp.py
+        ${PROJECT_SOURCE_DIR}/python/install.py
         ${OPM_COMMON_PYTHON_BUILD_DIR}
     )
     add_custom_target(copy_python ALL ${_copy_python_commands})
@@ -440,11 +445,12 @@ macro(opm-common_install_hook)
         CODE
           "execute_process(
              COMMAND
-               $<TARGET_FILE:Python3::Interpreter>
-               python/install.py
-               ${OPM_COMMON_PYTHON_BUILD_DIR}/opm
-               ${CMAKE_INSTALL_PREFIX}/${PYTHON_INSTALL_PREFIX}
+               \"$<TARGET_FILE:Python3::Interpreter>\"
+               \"${PROJECT_SOURCE_DIR}/python/install.py\"
+               \"${OPM_COMMON_PYTHON_BUILD_DIR}/opm\"
+               \"$<INSTALL_PREFIX>/${PYTHON_INSTALL_PREFIX}\"
                1
+             COMMAND_ERROR_IS_FATAL ANY
            )"
       )
     endif()
@@ -453,11 +459,12 @@ macro(opm-common_install_hook)
         CODE
           "execute_process(
              COMMAND
-               $<TARGET_FILE:Python3::Interpreter>
-               python/install.py
-               ${OPM_COMMON_PYTHON_BUILD_DIR}/opm_embedded
-               ${CMAKE_INSTALL_PREFIX}/${PYTHON_INSTALL_PREFIX}
+               \"$<TARGET_FILE:Python3::Interpreter>\"
+               \"${PROJECT_SOURCE_DIR}/python/install.py\"
+               \"${OPM_COMMON_PYTHON_BUILD_DIR}/opm_embedded\"
+               \"$<INSTALL_PREFIX>/${PYTHON_INSTALL_PREFIX}\"
                1
+             COMMAND_ERROR_IS_FATAL ANY
            )"
       )
     endif()
@@ -465,7 +472,7 @@ macro(opm-common_install_hook)
     # opm-simulators when building against an installed opm-common
     install(
       PROGRAMS
-        python/install.py
+        ${PROJECT_SOURCE_DIR}/python/install.py
       DESTINATION
         ${OPM_PYTHON_COMMON_DIR}
     )
@@ -477,13 +484,13 @@ macro(opm-common_install_hook)
     # by opm-simulators when building against an installed opm-common
     install(
       PROGRAMS
-        python/generate_docstring_hpp.py
+        ${PROJECT_SOURCE_DIR}/python/generate_docstring_hpp.py
       DESTINATION
         ${OPM_PYTHON_COMMON_DIR}
     )
     install(
       FILES
-        python/docstrings_common.json
+        ${PROJECT_SOURCE_DIR}/python/docstrings_common.json
       DESTINATION
         ${OPM_PYTHON_COMMON_DIR}
     )
