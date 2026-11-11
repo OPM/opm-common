@@ -29,11 +29,23 @@
 
 #include <opm/common/utility/gpuDecorators.hpp>
 
+#include <limits>
 #include <string>
 
 namespace Opm {
 
 class EclipseState;
+
+/*!
+ * \brief Relative tolerance (with respect to the magnitude of the values) for
+ *        treating two relative permeability values as equal.
+ *
+ * Relative permeability values that are equal in the tables may differ by
+ * round-off after interpolation and scaling. A strict comparison could then
+ * select a branch with a (nearly) zero denominator.
+ */
+template <class Scalar>
+inline constexpr Scalar krEqualityTolerance = 1000 * std::numeric_limits<Scalar>::epsilon();
 
 /*!
  * \brief Specified which fluids are involved in a given twophase material law for

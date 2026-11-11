@@ -2958,6 +2958,392 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(GasWaterKrEndpointScaling, Scalar, Types)
     }
 }
 
+// Gas-water hysteresis deck (relperm hysteresis model 1, i.e. the water
+// relperm always follows the imbibition curve) with ENDSCALE. The vertical
+// end-point scaling keywords are injected through 'scaling' so that the same
+// deck can be used with and without them. Saturation scaling is a no-op as the
+// tables' end points are used as they are. The critical gas saturation of 0.2
+// puts the three-point (KRWR) water relperm point at Sw = 0.8.
+static std::string gasWaterImbibitionKrEndScaleDeck(const std::string& scaling)
+{
+    return R"(
+    RUNSPEC
+    DIMENS
+       1 1 1 /
+    TABDIMS
+     2 /
+    WATER
+    GAS
+    ENDSCALE
+    /
+    GRID
+    DX
+       1*1000 /
+    DY
+       1*1000 /
+    DZ
+       1*50 /
+    TOPS
+       1*0 /
+    PORO
+      1*0.15 /
+    EHYSTR
+      0.1 1 0.1 1* BOTH /
+    SATOPTS
+      HYSTER /
+    PROPS
+    SGFN
+    0.0 0.0 0.0
+    0.2 0.0 0.0
+    0.8 1.0 0.0 /
+    0.0 0.0 0.0
+    0.2 0.0 0.0
+    0.8 1.0 0.0 /
+    SWFN
+    0.2 0.0 0.0
+    1.0 1.0 0.0 /
+    0.2 0.0 0.0
+    1.0 1.0 0.0 /
+)" + scaling + R"(
+    REGIONS
+    SATNUM
+    1*1 /
+    IMBNUM
+    1*2 / )";
+}
+
+// The imbibition-only end-point keywords (IKRW, IKRWR) must be honoured even
+// if the corresponding drainage keywords (KRW, KRWR) are absent. Previously
+// EclEpsConfig only looked for the drainage keywords, so the imbibition
+// scaling was silently ignored.
+BOOST_AUTO_TEST_CASE_TEMPLATE(GasWaterImbibitionOnlyKrEndpointScaling, Scalar, Types)
+{
+    using MaterialLaw = typename Fixture<Scalar>::MaterialLaw;
+    using MaterialLawManager = typename Fixture<Scalar>::MaterialLawManager;
+    constexpr int numPhases = Fixture<Scalar>::numPhases;
+
+    // krwMax is the expected water relperm at Sw = 1, krwr the expected one at
+    // the three-point scaling point Sw = 0.8 (negative if not scaled).
+    const auto check = [](const std::string& scaling, const Scalar krwMax, const Scalar krwr)
+    {
+        Opm::Parser parser;
+        const auto deck = parser.parseString(gasWaterImbibitionKrEndScaleDeck(scaling));
+        const Opm::EclipseState eclState(deck);
+
+        const std::size_t n = eclState.getInputGrid().getCartesianSize();
+
+        MaterialLawManager manager;
+        manager.initFromState(eclState);
+        manager.initParamsForElements(eclState, n, doOldLookup, doNothing);
+        auto& param = manager.materialLawParams(0);
+
+        std::array<Scalar,numPhases> kr = {0.0, 0.0, 0.0};
+        // Drain to Sg = 0.5 and imbibe back to Sg = 0.
+        std::vector<int> sgPercent;
+        for (int i = 0; i <= 50; ++i) {
+            sgPercent.push_back(i);
+        }
+        for (int i = 49; i >= 0; --i) {
+            sgPercent.push_back(i);
+        }
+        for (const int i : sgPercent) {
+            const Scalar Sg = Scalar(i) / 100;
+            const Scalar Sw = 1 - Sg;
+            typename Fixture<Scalar>::FluidState fs;
+            fs.setSaturation(Fixture<Scalar>::waterPhaseIdx, Sw);
+            fs.setSaturation(Fixture<Scalar>::oilPhaseIdx, 0.0);
+            fs.setSaturation(Fixture<Scalar>::gasPhaseIdx, Sg);
+
+            MaterialLaw::relativePermeabilities(kr, param, fs);
+            MaterialLaw::updateHysteresis(param, fs);
+
+            Scalar Krw = linearScaledRelperm(Sw, Scalar(0.2), Scalar(1.0), krwMax);
+            if (krwr >= 0) {
+                // Piecewise linear: (0.2, 0) - (0.8, krwr) - (1.0, krwMax)
+                Krw = (Sw <= Scalar(0.8))
+                    ? linearScaledRelperm(Sw, Scalar(0.2), Scalar(0.8), krwr)
+                    : krwr + (krwMax - krwr) * (Sw - Scalar(0.8)) / Scalar(0.2);
+            }
+            // Compare absolutely as the expected value is zero for Sw <= 0.2.
+            BOOST_CHECK_SMALL(Krw - kr[Fixture<Scalar>::waterPhaseIdx], Scalar(1e-5));
+        }
+
+        // Just beyond the end of the tables, where the drainage and imbibition
+        // end saturations coincide, the water relperm must stay continuous
+        // (flat at the imbibition value), not jump to the drainage end value.
+        typename Fixture<Scalar>::FluidState fs;
+        fs.setSaturation(Fixture<Scalar>::waterPhaseIdx, Scalar(1.00001));
+        fs.setSaturation(Fixture<Scalar>::oilPhaseIdx, 0.0);
+        fs.setSaturation(Fixture<Scalar>::gasPhaseIdx, 0.0);
+        MaterialLaw::relativePermeabilities(kr, param, fs);
+        BOOST_CHECK_SMALL(kr[Fixture<Scalar>::waterPhaseIdx] - krwMax, Scalar(1e-4));
+    };
+
+    // No end-point scaling keywords: tabulated values.
+    check("", Scalar(1.0), Scalar(-1));
+    // Imbibition-only maximum (IKRW).
+    check("IKRW\n 1*0.5 /\n", Scalar(0.5), Scalar(-1));
+    // Imbibition-only three-point scaling (IKRWR below IKRW).
+    check("IKRWR\n 1*0.25 /\nIKRW\n 1*0.5 /\n", Scalar(0.5), Scalar(0.25));
+}
+
+// Gas-water hysteresis deck with separate drainage (region 1) and imbibition
+// (region 2) tables given as strings, the EHYSTR record and extra keywords.
+static std::string gasWaterHysteresisDeck(const std::string& ehystr,
+                                          const std::string& sgfnDrain,
+                                          const std::string& sgfnImb,
+                                          const std::string& swfnDrain,
+                                          const std::string& swfnImb,
+                                          const std::string& extra = "")
+{
+    return R"(
+    RUNSPEC
+    DIMENS
+       1 1 1 /
+    TABDIMS
+     2 /
+    WATER
+    GAS
+    ENDSCALE
+    /
+    GRID
+    DX
+       1*1000 /
+    DY
+       1*1000 /
+    DZ
+       1*50 /
+    TOPS
+       1*0 /
+    PORO
+      1*0.15 /
+    EHYSTR
+      )" + ehystr + R"(
+    SATOPTS
+      HYSTER /
+    PROPS
+    SGFN
+    )" + sgfnDrain + "\n    " + sgfnImb + R"(
+    SWFN
+    )" + swfnDrain + "\n    " + swfnImb + "\n" + extra + R"(
+    REGIONS
+    SATNUM
+    1*1 /
+    IMBNUM
+    1*2 / )";
+}
+
+// Evaluate the relperms of a one-cell gas-water deck along a saturation path
+// (given as gas saturations). Returns {krw, krg} for each point.
+template <class Scalar>
+static std::vector<std::array<Scalar,2>> gasWaterRelpermPath(const std::string& deckString,
+                                                             const std::vector<Scalar>& sgPath)
+{
+    using MaterialLaw = typename Fixture<Scalar>::MaterialLaw;
+    using MaterialLawManager = typename Fixture<Scalar>::MaterialLawManager;
+
+    Opm::Parser parser;
+    const auto deck = parser.parseString(deckString);
+    const Opm::EclipseState eclState(deck);
+    const std::size_t n = eclState.getInputGrid().getCartesianSize();
+
+    MaterialLawManager manager;
+    manager.initFromState(eclState);
+    manager.initParamsForElements(eclState, n, doOldLookup, doNothing);
+    auto& param = manager.materialLawParams(0);
+
+    std::vector<std::array<Scalar,2>> result;
+    std::array<Scalar,Fixture<Scalar>::numPhases> kr = {0.0, 0.0, 0.0};
+    for (const Scalar Sg : sgPath) {
+        typename Fixture<Scalar>::FluidState fs;
+        fs.setSaturation(Fixture<Scalar>::waterPhaseIdx, 1 - Sg);
+        fs.setSaturation(Fixture<Scalar>::oilPhaseIdx, 0.0);
+        fs.setSaturation(Fixture<Scalar>::gasPhaseIdx, Sg);
+        MaterialLaw::relativePermeabilities(kr, param, fs);
+        MaterialLaw::updateHysteresis(param, fs);
+        result.push_back({kr[Fixture<Scalar>::waterPhaseIdx], kr[Fixture<Scalar>::gasPhaseIdx]});
+    }
+    return result;
+}
+
+// Models 1 and 3: the imbibition SWFN table ends at Sw = 0.7 with Krw = 0.3,
+// while the drainage table runs to Sw = 1 with Krw = 1. Within the imbibition
+// table its values are used; beyond it Krw is interpolated linearly in
+// saturation to the drainage value at Sw = 1 (Sg = 0), not held flat at 0.3.
+BOOST_AUTO_TEST_CASE_TEMPLATE(GasWaterTruncatedImbibitionTableModels13, Scalar, Types)
+{
+    const std::string sgfn = "0.0 0.0 0.0\n    0.8 1.0 0.0 /";
+    const std::string swfnDrain = "0.2 0.0 0.0\n    1.0 1.0 0.0 /";
+    const std::string swfnImb = "0.2 0.0 0.0\n    0.7 0.3 0.0 /";
+
+    for (const char* model : {"1", "3"}) {
+        const auto deckString = gasWaterHysteresisDeck(std::string("0.1 ") + model + " 0.1 1* BOTH /",
+                                                       sgfn, sgfn, swfnDrain, swfnImb);
+        const std::vector<Scalar> sgPath = {0.0, 0.15, 0.30, 0.4, 0.5};
+        const auto kr = gasWaterRelpermPath<Scalar>(deckString, sgPath);
+        const Scalar tol = 1e-4;
+        // Sg = 0 (Sw = 1): drainage end point
+        BOOST_CHECK_SMALL(kr[0][0] - Scalar(1.0), tol);
+        // Sg = 0.15 (Sw = 0.85): halfway between (0.7, 0.3) and (1.0, 1.0)
+        BOOST_CHECK_SMALL(kr[1][0] - Scalar(0.65), tol);
+        // Sg = 0.30 (Sw = 0.7): end of the imbibition table
+        BOOST_CHECK_SMALL(kr[2][0] - Scalar(0.3), tol);
+        // Sg = 0.4 (Sw = 0.6): inside the imbibition table
+        BOOST_CHECK_SMALL(kr[3][0] - Scalar(0.3 * 0.4 / 0.5), tol);
+        BOOST_CHECK_SMALL(kr[4][0] - Scalar(0.3 * 0.3 / 0.5), tol);
+    }
+}
+
+// Model 4 (Killough) with the same truncated imbibition table: after drainage
+// to Sg = 0.6 and imbibition back to Sg = 0 the water relperm must be finite and
+// free of jumps across the table end (Sg = 0.3) and the trapped gas saturation,
+// rise monotonically towards the drainage end point below the trapped gas
+// saturation, and reach the drainage value (1.0) at Sg = 0. Above the table end
+// the Killough model itself is not monotone for these tables, so only the
+// interval affected by the interpolation is checked for monotonicity.
+BOOST_AUTO_TEST_CASE_TEMPLATE(GasWaterTruncatedImbibitionTableKillough, Scalar, Types)
+{
+    const std::string sgfnDrain = "0.0 0.0 0.0\n    0.8 1.0 0.0 /";
+    const std::string sgfnImb = "0.3 0.0 0.0\n    0.8 1.0 0.0 /";
+    const std::string swfnDrain = "0.2 0.0 0.0\n    1.0 1.0 0.0 /";
+    const std::string swfnImb = "0.2 0.0 0.0\n    0.7 0.3 0.0 /";
+    const auto deckString = gasWaterHysteresisDeck("0.1 4 1* 1* BOTH RETR DRAIN 1* 4* 1 1 /",
+                                                   sgfnDrain, sgfnImb, swfnDrain, swfnImb);
+
+    std::vector<Scalar> sgPath;
+    for (int i = 0; i <= 60; ++i) {
+        sgPath.push_back(Scalar(i) / 100);
+    }
+    for (int i = 59; i >= 0; --i) {
+        sgPath.push_back(Scalar(i) / 100);
+    }
+    const auto kr = gasWaterRelpermPath<Scalar>(deckString, sgPath);
+
+    // imbibition branch: from index 61 (Sg = 0.59) down to Sg = 0
+    for (std::size_t i = 61; i < kr.size(); ++i) {
+        BOOST_CHECK(std::isfinite(kr[i][0]));
+        const Scalar jump = kr[i][0] - kr[i - 1][0];
+        BOOST_CHECK_LT(std::abs(jump), Scalar(0.15));
+        if (sgPath[i] <= Scalar(0.3)) {
+            // around and below the table end and the trapped gas saturation: no
+            // jump at the anchor ...
+            BOOST_CHECK_LT(std::abs(jump), Scalar(0.05));
+        }
+        if (sgPath[i] <= Scalar(0.25)) {
+            // ... and Krw rises towards the drainage end point
+            BOOST_CHECK_GT(jump, Scalar(0.0));
+        }
+    }
+    BOOST_CHECK_SMALL(kr.back()[0] - Scalar(1.0), Scalar(1e-4));
+}
+
+// Model 4 with a zero imbibition water relperm (IKRW = 0): Krwi_snrmax and
+// Krwi_snmax are both zero, which must not turn the value below the trapped gas
+// saturation into NaN.
+BOOST_AUTO_TEST_CASE_TEMPLATE(GasWaterKilloughZeroImbibitionKrw, Scalar, Types)
+{
+    const std::string sgfn = "0.0 0.0 0.0\n    0.8 1.0 0.0 /";
+    const std::string swfnDrain = "0.2 0.0 0.0\n    1.0 1.0 0.0 /";
+    const std::string swfnImb = "0.2 0.0 0.0\n    0.7 0.3 0.0 /";
+    const auto deckString = gasWaterHysteresisDeck("0.1 4 1* 1* BOTH RETR DRAIN 1* 4* 1 1 /",
+                                                   sgfn, sgfn, swfnDrain, swfnImb,
+                                                   "IKRW\n 1*0.0 /\n");
+    std::vector<Scalar> sgPath;
+    for (int i = 0; i <= 60; ++i) {
+        sgPath.push_back(Scalar(i) / 100);
+    }
+    sgPath.push_back(Scalar(0.0)); // back to zero gas saturation
+    const auto kr = gasWaterRelpermPath<Scalar>(deckString, sgPath);
+    BOOST_CHECK(std::isfinite(kr.back()[0]));
+    BOOST_CHECK_GE(kr.back()[0], Scalar(0.0));
+}
+
+// Carlson (model 0): the scanning curve is shifted using the inverse of the
+// imbibition end-point scaling. With IKRGR given only for the imbibition curve,
+// the three-point scaling must be inverted consistently, otherwise the gas
+// relperm jumps at the reversal point.
+BOOST_AUTO_TEST_CASE_TEMPLATE(GasWaterCarlsonImbibitionThreePointKrg, Scalar, Types)
+{
+    // Swcr = 0.3 puts the gas reference point (KRGR) at Sg = 0.7, strictly below
+    // Sgu = 0.8, so that Krg(Sr) < Krg(Smax) and the scaling is a true three-point one.
+    const std::string sgfn = "0.0 0.0 0.0\n    0.2 0.0 0.0\n    0.8 1.0 0.0 /";
+    const std::string swfn = "0.3 0.0 0.0\n    1.0 1.0 0.0 /";
+    const auto deckString = gasWaterHysteresisDeck("0.1 0 0.1 1* BOTH /",
+                                                   sgfn, sgfn, swfn, swfn,
+                                                   "IKRGR\n 1*0.3 /\n");
+    // drain to Sg = 0.5, reverse
+    std::vector<Scalar> sgPath;
+    for (int i = 0; i <= 50; ++i) {
+        sgPath.push_back(Scalar(i) / 100);
+    }
+    sgPath.push_back(Scalar(0.49));
+    sgPath.push_back(Scalar(0.48));
+    const auto kr = gasWaterRelpermPath<Scalar>(deckString, sgPath);
+
+    const Scalar krgReversal = kr[50][1];
+    BOOST_CHECK_CLOSE(krgReversal, Scalar(0.5), Scalar(1e-2));
+    // continuity: right after the reversal Krg is close to the reversal value
+    BOOST_CHECK_GT(kr[51][1], Scalar(0.4));
+    BOOST_CHECK_LE(kr[51][1], krgReversal + Scalar(1e-5));
+    BOOST_CHECK_GT(kr[52][1], Scalar(0.3));
+    BOOST_CHECK_LE(kr[52][1], kr[51][1] + Scalar(1e-5));
+}
+
+// Three-point scaling where the tabulated water relperm is zero at the
+// reference point (Krw = 0 up to Sw = 0.8 = 1 - Sgcr). The ratio of the
+// scaled and unscaled reference values is then 0/0 for the unchanged drainage
+// curve (and x/0 for the imbibition curve), which must not produce NaN or
+// infinity. Left of the reference point the water relperm stays zero, right of
+// it it is linear between (0.8, IKRWR) and (1.0, IKRW).
+BOOST_AUTO_TEST_CASE_TEMPLATE(GasWaterZeroReferenceKrEndpointScaling, Scalar, Types)
+{
+    using MaterialLaw = typename Fixture<Scalar>::MaterialLaw;
+    using MaterialLawManager = typename Fixture<Scalar>::MaterialLawManager;
+    constexpr int numPhases = Fixture<Scalar>::numPhases;
+
+    std::string deckString = gasWaterImbibitionKrEndScaleDeck("IKRWR\n 1*0.1 /\nIKRW\n 1*0.5 /\n");
+    const std::string oldTable = "0.2 0.0 0.0\n    1.0 1.0 0.0 /";
+    const std::string newTable = "0.2 0.0 0.0\n    0.8 0.0 0.0\n    1.0 1.0 0.0 /";
+    for (auto pos = deckString.find(oldTable); pos != std::string::npos;
+         pos = deckString.find(oldTable, pos + newTable.size())) {
+        deckString.replace(pos, oldTable.size(), newTable);
+    }
+
+    Opm::Parser parser;
+    const auto deck = parser.parseString(deckString);
+    const Opm::EclipseState eclState(deck);
+    const std::size_t n = eclState.getInputGrid().getCartesianSize();
+
+    MaterialLawManager manager;
+    manager.initFromState(eclState);
+    manager.initParamsForElements(eclState, n, doOldLookup, doNothing);
+    auto& param = manager.materialLawParams(0);
+
+    std::array<Scalar,numPhases> kr = {0.0, 0.0, 0.0};
+    for (int i = 0; i <= 50; ++i) {
+        const Scalar Sg = Scalar(i) / 100;
+        const Scalar Sw = 1 - Sg;
+        typename Fixture<Scalar>::FluidState fs;
+        fs.setSaturation(Fixture<Scalar>::waterPhaseIdx, Sw);
+        fs.setSaturation(Fixture<Scalar>::oilPhaseIdx, 0.0);
+        fs.setSaturation(Fixture<Scalar>::gasPhaseIdx, Sg);
+
+        MaterialLaw::relativePermeabilities(kr, param, fs);
+        MaterialLaw::updateHysteresis(param, fs);
+
+        const Scalar krw = kr[Fixture<Scalar>::waterPhaseIdx];
+        BOOST_CHECK(std::isfinite(krw));
+        BOOST_CHECK(std::isfinite(kr[Fixture<Scalar>::gasPhaseIdx]));
+        if (std::abs(Sw - Scalar(0.8)) < Scalar(1e-4)) {
+            continue; // the reference point itself
+        }
+        const Scalar expected = Sw < Scalar(0.8)
+            ? Scalar(0.0)
+            : Scalar(0.1) + Scalar(0.4) * (Sw - Scalar(0.8)) / Scalar(0.2);
+        BOOST_CHECK_SMALL(krw - expected, Scalar(1e-5));
+    }
+}
+
 BOOST_AUTO_TEST_CASE_TEMPLATE(GasWaterThreePointKrEndpointScaling, Scalar, Types)
 {
     using MaterialLaw = typename Fixture<Scalar>::MaterialLaw;

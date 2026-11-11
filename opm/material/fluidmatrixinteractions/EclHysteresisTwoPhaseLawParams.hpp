@@ -508,13 +508,25 @@ public:
     Scalar krnWght() const
     { return KrndHy_/KrndMax_; }
 
-    template <class Evaluation>
-    Evaluation krwWght(const Evaluation& Krwd) const
+    /*!
+     * \brief The Killough wetting phase relative permeability at the trapped
+     *        non-wetting saturation, independent of the current drainage value.
+     *
+     * This is what Krwd + krwWght(Krwd) * (Krwi_snrmax - Krwi_snmax) evaluates to
+     * when Sw = 1 - Sncrt, without dividing by (Krwi_snrmax - Krwi_snmax) which
+     * vanishes e.g. if the imbibition water relperm is zero.
+     */
+    Scalar krwiAtTrapped() const
     {
         // a = 1 (deltaKrw)^a Formulation according to KILLOUGH 1976
         Scalar deltaKrw = Krwi_snrmax() - Krwd_sncri();
-        Scalar Krwi_snr = Krwd_sncrt() + deltaKrw * (Sncrt() / max(saturationEpsilon_, Sncri()));
-        return (Krwi_snr - Krwd) / ( Krwi_snrmax() - Krwi_snmax());
+        return Krwd_sncrt() + deltaKrw * (Sncrt() / max(saturationEpsilon_, Sncri()));
+    }
+
+    template <class Evaluation>
+    Evaluation krwWght(const Evaluation& Krwd) const
+    {
+        return (krwiAtTrapped() - Krwd) / ( Krwi_snrmax() - Krwi_snmax());
     }
 
     Scalar krwdMax() const
