@@ -105,7 +105,8 @@ std::vector<PTFlashMethod> test_methods
 {
     PTFlashMethod::Newton,
     PTFlashMethod::Ssi,
-    PTFlashMethod::SsiNewton
+    PTFlashMethod::SsiNewton,
+    PTFlashMethod::SsiAccelerated
 };
 std::vector<EOSType> test_eos_types {EOSType::PR, EOSType::PRCORR, EOSType::SRK, EOSType::RK};
 

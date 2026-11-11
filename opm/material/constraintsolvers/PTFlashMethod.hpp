@@ -45,6 +45,10 @@ enum class PTFlashMethod {
     //! A few substitution steps to condition the Newton start, falling back
     //! to substitution should Newton fail.
     SsiNewton,
+    //! Successive substitution extrapolated every few steps, for
+    //! near-critical states where plain substitution converges slowly.
+    //! Experimental.
+    SsiAccelerated,
 };
 
 //! \brief The name the two-phase flash method is selected by on the command line.
@@ -58,6 +62,8 @@ ptFlashMethodToString(PTFlashMethod method)
         return "newton";
     case PTFlashMethod::SsiNewton:
         return "ssi+newton";
+    case PTFlashMethod::SsiAccelerated:
+        return "ssi-accelerated";
     }
 
     throw std::invalid_argument("Unknown PTFlashMethod");
@@ -76,9 +82,12 @@ ptFlashMethodFromString(std::string_view str)
     if (str == "ssi+newton") {
         return PTFlashMethod::SsiNewton;
     }
+    if (str == "ssi-accelerated") {
+        return PTFlashMethod::SsiAccelerated;
+    }
 
     throw std::invalid_argument("Unknown two phase flash method " + std::string {str}
-                                + " is specified. Available options are: ssi, newton, ssi+newton");
+                                + " is specified. Available options are: ssi, newton, ssi+newton, ssi-accelerated");
 }
 
 inline std::ostream&

@@ -308,12 +308,15 @@ BOOST_AUTO_TEST_CASE(StableLiquidKeepsLiquidLabelF1)
 // Near its critical point a methane-rich feed splits into two phases that
 // differ little: at 395 bar and 320 K the vapour-like trial phase grows to a
 // mole-number sum of only 1 + 6e-6, but the split, about half liquid, has
-// the lower Gibbs energy. Successive substitution alone does not converge
-// the split this close to the critical point; the Newton methods do.
+// the lower Gibbs energy. Plain successive substitution converges so slowly
+// this close to the critical point that it stops at its iteration limit; the
+// extrapolated substitution, ssi-accelerated, converges, as do the Newton
+// methods.
 BOOST_AUTO_TEST_CASE(NearCriticalFeedSplitsF1)
 {
     constexpr std::array<double, 2> methaneRichZ = {0.9, 0.1};
-    for (const auto method : {Opm::PTFlashMethod::Newton, Opm::PTFlashMethod::SsiNewton}) {
+    for (const auto method : {Opm::PTFlashMethod::SsiAccelerated, Opm::PTFlashMethod::Newton,
+                              Opm::PTFlashMethod::SsiNewton}) {
         FlashCase<numComponentsF1> testCase{"near-critical feed F1", 395e5, 320., methaneRichZ};
         testCase.method = method;
         testCase.expected = ExpectedPhase::two_phase;
@@ -336,12 +339,23 @@ BOOST_AUTO_TEST_CASE(TwoPhaseInvariantsF1)
     checkTwoPhaseInvariants<FluidSystemF1>(outcome.state, testCase.z, testCase.eos_type);
 }
 
-// ssi / newton / ssi+newton converge to the same solution
+// Each method is selected by its name.
+BOOST_AUTO_TEST_CASE(MethodNames)
+{
+    for (const auto method : {Opm::PTFlashMethod::Ssi, Opm::PTFlashMethod::Newton,
+                              Opm::PTFlashMethod::SsiNewton, Opm::PTFlashMethod::SsiAccelerated}) {
+        BOOST_CHECK(Opm::ptFlashMethodFromString(Opm::ptFlashMethodToString(method)) == method);
+    }
+    BOOST_CHECK(Opm::ptFlashMethodFromString("ssi-accelerated") == Opm::PTFlashMethod::SsiAccelerated);
+}
+
+// ssi / newton / ssi+newton / ssi-accelerated converge to the same solution
 BOOST_AUTO_TEST_CASE(MethodParityF1)
 {
     const std::vector<Opm::PTFlashMethod> methods {Opm::PTFlashMethod::Ssi,
                                                    Opm::PTFlashMethod::Newton,
-                                                   Opm::PTFlashMethod::SsiNewton};
+                                                   Opm::PTFlashMethod::SsiNewton,
+                                                   Opm::PTFlashMethod::SsiAccelerated};
 
     std::vector<FlashResult<numComponentsF1>> results;
     for (const auto& method : methods) {

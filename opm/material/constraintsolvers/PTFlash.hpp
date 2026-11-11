@@ -95,6 +95,9 @@ class PTFlash
     // trivial solution with all equilibrium ratios at one.
     static constexpr Scalar substitutionTolerance = 1e-10;
     static constexpr Scalar trivialSolutionTolerance = 1e-5;
+    // Plain substitution steps of the two-phase split between two
+    // extrapolations, see successiveSubstitutionComposition_().
+    static constexpr int substitutionAccelerationInterval = 5;
 
 public:
     /*!
@@ -852,6 +855,14 @@ protected:
             converged = successiveSubstitutionComposition_(K_scalar, L_scalar, fluid_state_scalar, z_scalar, false, flash_tolerance, eos_type, verbosity);
             break;
 
+        case PTFlashMethod::SsiAccelerated:
+            if (verbosity >= 1) {
+                OpmLog::debug("Calculate composition using extrapolated Successive Substitution.");
+            }
+            converged = successiveSubstitutionComposition_(K_scalar, L_scalar, fluid_state_scalar, z_scalar, false, flash_tolerance, eos_type, verbosity,
+                                                           /*extrapolate=*/true);
+            break;
+
         case PTFlashMethod::SsiNewton:
             converged = successiveSubstitutionComposition_(K_scalar, L_scalar, fluid_state_scalar, z_scalar, true, flash_tolerance, eos_type, verbosity);
             if (!converged) {
@@ -1594,6 +1605,94 @@ protected:
     } //end updateDerivativesSinglePhase
 
     /*!
+     * \brief The Gibbs energy of a two-phase split, per mole of feed and
+     *        divided by RT, up to a constant,
+     *
+     * \f[ L \sum_i x_i \ln(x_i \varphi_i^{L})
+     *     + (1 - L) \sum_i y_i \ln(y_i \varphi_i^{V}), \f]
+     *
+     * from the compositions and fugacity coefficients in the fluid state.
+     * Absent components do not contribute.
+     */
+    template <class FlashFluidState, class ComponentVector>
+    static typename ComponentVector::field_type
+    splitGibbsEnergy_(const FlashFluidState& fluid_state,
+                      const typename ComponentVector::field_type& L,
+                      const ComponentVector& z)
+    {
+        typename ComponentVector::field_type gibbs = 0.;
+        for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+            if (!(Opm::getValue(z[compIdx]) > 0.)) {
+                continue;
+            }
+            const auto x = fluid_state.moleFraction(oilPhaseIdx, compIdx);
+            const auto y = fluid_state.moleFraction(gasPhaseIdx, compIdx);
+            gibbs += L * x * log(x * fluid_state.fugacityCoefficient(oilPhaseIdx, compIdx))
+                + (1. - L) * y * log(y * fluid_state.fugacityCoefficient(gasPhaseIdx, compIdx));
+        }
+        return gibbs;
+    }
+
+    /*!
+     * \brief The sum of the steps that successive substitution has still to
+     *        take, from its last three steps (newest first).
+     *
+     * Near convergence the steps follow the linear recurrence of the two
+     * dominant eigenvalues of the iteration,
+     * \f$ s_{n+1} + b_1 s_n + b_2 s_{n-1} = 0 \f$, with \f$b_1, b_2\f$ fitted
+     * to the last three steps by least squares. Summing the recurrence gives
+     *
+     * \f[ \sum_{m \ge 1} s_{n+m}
+     *     = -\frac{(b_1 + b_2)\, s_n + b_2\, s_{n-1}}{1 + b_1 + b_2}. \f]
+     *
+     * Where the two older steps are parallel, one eigenvalue
+     * \f$\lambda = s_n \cdot s_n / s_{n-1} \cdot s_n\f$ is used:
+     * \f$ \lambda s_n / (1 - \lambda) \f$.
+     *
+     * \return false where neither gives a finite sum of a contracting
+     *         iteration
+     */
+    template <class ComponentVector>
+    static bool extrapolateSubstitution_(const std::array<ComponentVector, 3>& steps,
+                                         ComponentVector& extrapolation)
+    {
+        using FieldType = typename ComponentVector::field_type;
+        const auto& [newest, middle, oldest] = steps;
+        const FieldType mm = middle * middle;
+        const FieldType mo = middle * oldest;
+        const FieldType oo = oldest * oldest;
+        const FieldType determinant = mm * oo - mo * mo;
+        bool found = false;
+        if (determinant > 1e-10 * mm * oo) {
+            const FieldType b1 = (-(middle * newest) * oo + mo * (oldest * newest)) / determinant;
+            const FieldType b2 = (-mm * (oldest * newest) + mo * (middle * newest)) / determinant;
+            const FieldType denominator = 1. + b1 + b2;
+            if (denominator > 1e-12) {
+                for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+                    extrapolation[compIdx]
+                        = -((b1 + b2) * newest[compIdx] + b2 * middle[compIdx]) / denominator;
+                }
+                found = true;
+            }
+        }
+        if (!found) {
+            const FieldType eigenvalue = (newest * newest) / (middle * newest);
+            if (!(eigenvalue > 0. && eigenvalue < 1.)) {
+                return false;
+            }
+            for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+                extrapolation[compIdx] = newest[compIdx] * eigenvalue / (1. - eigenvalue);
+            }
+        }
+        for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+            if (!std::isfinite(Opm::getValue(extrapolation[compIdx]))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /*!
      * \brief Successive substitution for the two-phase compositions.
      *
      * Each step recomputes the compositions from the current ratios, then
@@ -1602,8 +1701,19 @@ protected:
      * \f[ K_i \leftarrow K_i \frac{f_i^{L}}{f_i^{V}}, \f]
      *
      * until \f$\| f^{L} / f^{V} - 1 \|\f$ is below tolerance. As a
-     * conditioner for Newton it takes a few steps; on its own it may take
-     * many.
+     * conditioner for Newton it takes a few steps.
+     *
+     * The steps in \f$\ln K\f$ shrink by a nearly constant factor, which tends
+     * to one near a critical point, where the two phases become alike: there
+     * plain substitution needs thousands of steps. With \p extrapolate
+     * (PTFlashMethod::SsiAccelerated), every substitutionAccelerationInterval
+     * steps the remaining steps are summed (general dominant eigenvalue
+     * method): the last three steps give
+     * the two dominant eigenvalues of the iteration, and their geometric
+     * series extrapolates \f$\ln K\f$. Substitution never increases the Gibbs
+     * energy of the split, see splitGibbsEnergy_(). The extrapolated ratios
+     * are kept only if they lower it below its value at the last evaluated
+     * ratios; otherwise the iteration continues from the plain step.
      */
     template <class FlashFluidState, class ComponentVector>
     static bool successiveSubstitutionComposition_(ComponentVector& K,
@@ -1613,10 +1723,13 @@ protected:
                                                    const bool run_newton_afterwards,
                                                    const Scalar flash_tolerance,
                                                    const EOSType& eos_type,
-                                                   const int verbosity)
+                                                   const int verbosity,
+                                                   const bool extrapolate = false)
     {
-        // Limit conditioning passes before Newton; standalone substitution runs longer.
-        const int max_iterations = run_newton_afterwards ? 5 : 100;
+        // Limit conditioning passes before Newton; standalone substitution runs
+        // longer. With the extrapolation, the limit only stops a split that
+        // does not converge.
+        const int max_iterations = run_newton_afterwards ? 5 : (extrapolate ? 1000 : 100);
 
         // Print initial guess
         if (verbosity >= 1) {
@@ -1642,6 +1755,16 @@ protected:
                 K[compIdx] = 1.;
             }
         }
+        // The last three plain steps in ln K, newest first, and the plain
+        // point to return to when an extrapolation does not lower the Gibbs
+        // energy.
+        using FieldType = typename ComponentVector::field_type;
+        std::array<ComponentVector, 3> steps{};
+        int plain_steps = 0;
+        bool extrapolated = false;
+        ComponentVector plain_K = K;
+        FieldType plain_L = L;
+        FieldType gibbs_before = 0.;
         for (int iteration = 0; iteration < max_iterations; ++iteration) {
             // Compute (normalized) liquid and vapor mole fractions
             computeLiquidVapor_(fluid_state, L, K, z);
@@ -1687,6 +1810,19 @@ protected:
                                           precision));
             }
 
+            const bool split_is_interior = L > 0. && L < 1.;
+            const FieldType gibbs = extrapolate && split_is_interior ? splitGibbsEnergy_(fluid_state, L, z) : FieldType{0.};
+            if (extrapolated) {
+                extrapolated = false;
+                if (!(split_is_interior && gibbs < gibbs_before)) {
+                    // Continue from the plain step instead.
+                    K = plain_K;
+                    L = plain_L;
+                    plain_steps = 0;
+                    continue;
+                }
+            }
+
             // Check convergence
             if (fugacity_residual.two_norm() < flash_tolerance) {
                 // Print info
@@ -1715,12 +1851,38 @@ protected:
             //  If convergence is not met, K is updated in a successive substitution manner
             else {
                 // Update K
+                ComponentVector step(0.);
                 for (int compIdx=0; compIdx<numComponents; ++compIdx){
+                    if (extrapolate) {
+                        step[compIdx] = log(fugacity_ratio[compIdx]);
+                    }
                     K[compIdx] *= fugacity_ratio[compIdx];
                 }
 
                 // Solve Rachford-Rice to get L from updated K
                 L = RachfordRice::solve(K, z, 0);
+
+                steps = {step, steps[0], steps[1]};
+                ++plain_steps;
+                ComponentVector extrapolation;
+                if (extrapolate && split_is_interior && plain_steps >= substitutionAccelerationInterval
+                    && extrapolateSubstitution_(steps, extrapolation)) {
+                    plain_K = K;
+                    plain_L = L;
+                    gibbs_before = gibbs;
+                    for (int compIdx=0; compIdx<numComponents; ++compIdx){
+                        K[compIdx] *= exp(extrapolation[compIdx]);
+                    }
+                    try {
+                        L = RachfordRice::solve(K, z, 0);
+                        extrapolated = true;
+                    }
+                    catch (const NumericalProblem&) {
+                        K = plain_K;
+                        L = plain_L;
+                    }
+                    plain_steps = 0;
+                }
             }
         }
         // did not get converged. check whether we will do more newton later afterward
