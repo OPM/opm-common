@@ -626,9 +626,14 @@ namespace Opm {
         /// which joins the rest of the well through exactly one segment.
         /// Typical causes are two disjoint sets of segments sharing the
         /// same branch number, or a segment having more than one inlet
-        /// segment on its own branch.  Such a structure is not supported
-        /// by the restart and RFT output, so this category throws and
-        /// terminates the run by default.
+        /// segment on its own branch.  This category throws and terminates
+        /// the run by default.
+        ///
+        /// \note Branch numbers do not affect the simulation itself, so the
+        /// input can still be simulated if this category is relaxed.  RFT
+        /// and restart output then remain usable by OPM Flow, but the
+        /// branch-oriented restart arrays (ILBS, ILBR) are only approximate
+        /// and may be misinterpreted by other applications.
         const static std::string SCHEDULE_WELSEGS_INVALID_BRANCH;
 
         /// Inconsistent network topology (BRANPROP, NODEPROP keywords).

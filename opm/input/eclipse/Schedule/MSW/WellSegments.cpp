@@ -889,7 +889,10 @@ In {{file}} line {{line}}
 Invalid branch structure in WELSEGS for well {}:{}
 Each branch must be a single, unbranched chain of segments with exactly one
 segment whose outlet segment is on a different branch.  Segments starting
-a new chain, e.g., a new lateral or device, must be given a new branch number.)",
+a new chain, e.g., a new lateral or device, must be given a new branch number.
+This check is controlled by SCHEDULE_WELSEGS_INVALID_BRANCH.  If relaxed,
+the simulation is unaffected, but branch data in restart files may be
+misinterpreted by applications other than OPM Flow.)",
                                          well_name, problems);
 
         parseContext.handleError(ParseContext::SCHEDULE_WELSEGS_INVALID_BRANCH,
