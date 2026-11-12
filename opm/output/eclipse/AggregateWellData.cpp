@@ -257,6 +257,40 @@ namespace {
             }
         }
 
+        // Rate which the group target controls for a well under group
+        // control.
+        int groupTargetCtrlMode(const Opm::Well& well, const Opm::data::Well& xw)
+        {
+            const auto& curr = xw.current_control;
+
+            return curr.isProducer
+                ? Opm::Well::eclipseControlMode(curr.groupTargetProd)
+                : Opm::Well::eclipseControlMode(curr.groupTargetInj, well.injectorType());
+        }
+
+        // One-based index, in the group arrays, of the group which controls
+        // a well under group control.  Zero if the well is not under group
+        // control or if that group does not exist at this report step.
+        int controllingGroupIndex(const Opm::Schedule&   sched,
+                                  const std::size_t      simStep,
+                                  const int              nGMaxz,
+                                  const Opm::data::Well& xw)
+        {
+            const auto& curr = xw.current_control;
+
+            if (! curr.underGroupTarget()) {
+                return 0;
+            }
+
+            if (curr.controllingGroup == "FIELD") {
+                return nGMaxz;
+            }
+
+            return sched.hasGroup(curr.controllingGroup, simStep)
+                ? static_cast<int>(sched.getGroup(curr.controllingGroup, simStep).insert_index())
+                : 0;
+        }
+
         int compOrder(const Opm::Well& well)
         {
             using WCO   = ::Opm::Connection::Order;
@@ -772,12 +806,20 @@ namespace {
         template <class IWellArray>
         void dynamicContribOpen(const Opm::Well&       well,
                                 const Opm::data::Well& xw,
+                                const int              ctrlGroup,
                                 IWellArray&            iWell)
         {
             using Ix = VI::IWell::index;
             using Value = VI::IWell::Value::Status;
 
-            if (wellControlDefined(xw)) {
+            if (ctrlGroup > 0) {
+                // Well under group control.  Active control is the rate
+                // which the group target controls, and the group control
+                // flag holds the one-based index of the controlling group.
+                setCurrentControl(groupTargetCtrlMode(well, xw), iWell);
+                iWell[Ix::WGrupConControllable] = ctrlGroup;
+            }
+            else if (wellControlDefined(xw)) {
                 setCurrentControl(ctrlMode(well, xw), iWell);
             }
 
@@ -1866,6 +1908,7 @@ AggregateWellData(const std::vector<int>& inteHead)
     , zWell_ (ZWell::allocate(inteHead))
     , lgWell_(LGWell::allocate(inteHead))
     , nWGMax_(maxNumGroups(inteHead))
+    , nGMaxz_(inteHead[VI::intehead::NGMAXZ])
 {}
 
 // ---------------------------------------------------------------------
@@ -2102,7 +2145,7 @@ captureDynamicWellData(const Opm::Schedule&       sched,
     const auto& wells = sched.wellNames(sim_step);
 
     // Dynamic contributions to IWEL array.
-    wellLoop(wells, sched, sim_step, [this, &xw]
+    wellLoop(wells, sched, sim_step, [this, &xw, &sched, sim_step]
         (const Well& well, const std::size_t wellID) -> void
     {
         auto iWell = this->iWell_[wellID];
@@ -2115,7 +2158,10 @@ captureDynamicWellData(const Opm::Schedule&       sched,
             IWell::dynamicContribStop(i->second, iWell);
         }
         else {
-            IWell::dynamicContribOpen(well, i->second, iWell);
+            const auto ctrlGroup = IWell::
+                controllingGroupIndex(sched, sim_step, this->nGMaxz_, i->second);
+
+            IWell::dynamicContribOpen(well, i->second, ctrlGroup, iWell);
         }
     });
 
@@ -2142,7 +2188,7 @@ captureDynamicWellDataLGR(const Opm::Schedule&       sched,
     const auto& wells = sched.wellNames(sim_step);
 
     // Dynamic contributions to IWEL array.
-    wellLoop(wells, sched, sim_step, lgr_tag, lgr_number, [this, &xw]
+    wellLoop(wells, sched, sim_step, lgr_tag, lgr_number, [this, &xw, &sched, sim_step]
         (const Well& well, const std::size_t wellID) -> void
     {
         auto iWell = this->iWell_[wellID];
@@ -2155,7 +2201,10 @@ captureDynamicWellDataLGR(const Opm::Schedule&       sched,
             IWell::dynamicContribStop(i->second, iWell);
         }
         else {
-            IWell::dynamicContribOpen(well, i->second, iWell);
+            const auto ctrlGroup = IWell::
+                controllingGroupIndex(sched, sim_step, this->nGMaxz_, i->second);
+
+            IWell::dynamicContribOpen(well, i->second, ctrlGroup, iWell);
         }
     });
 
