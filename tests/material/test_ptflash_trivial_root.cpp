@@ -392,3 +392,93 @@ BOOST_AUTO_TEST_CASE(InvalidActiveCompositionIsNotCoincident)
 
     BOOST_CHECK(!ExposedPtFlash::phasesCoincide_(fs));
 }
+
+// A single component cannot split. The stability trials only compared its
+// two EoS roots, returned K = 1, and the flash failed in Rachford-Rice.
+BOOST_AUTO_TEST_CASE(SingleComponentIsSinglePhase)
+{
+    struct Case
+    {
+        int component;
+        Scalar pressure;
+        Scalar temperature;
+        Scalar liquidFraction;
+    };
+    // CO2 saturates near 51 bar at 288.15 K, and decane boils near 447 K at
+    // 1 bar. Methane is supercritical at 300 K, where Li's criterion decides.
+    const Case cases[] = {{0, 40.e5, 288.15, 0.0},
+                          {0, 50.e5, 288.15, 0.0},
+                          {0, 60.e5, 288.15, 1.0},
+                          {2, 1.e5, 288.15, 1.0},
+                          {2, 1.e5, 470.0, 0.0},
+                          {1, 100.e5, 300.0, 0.0}};
+    for (const auto method :
+         {PTFlashMethod::Newton, PTFlashMethod::Ssi, PTFlashMethod::SsiNewton}) {
+        for (const auto& c : cases) {
+            for (const Scalar initialLiquidFraction : {-1.0, 0.5}) {
+                BOOST_TEST_CONTEXT("method " << static_cast<int>(method) << ", component "
+                                             << c.component << " at " << c.pressure << " Pa and "
+                                             << c.temperature
+                                             << " K from L = " << initialLiquidFraction)
+                {
+                    FluidState fs;
+                    for (unsigned phaseIdx = 0; phaseIdx < FluidSystem::numPhases; ++phaseIdx) {
+                        fs.setPressure(phaseIdx, c.pressure);
+                    }
+                    fs.setTemperature(c.temperature);
+                    for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+                        fs.setMoleFraction(compIdx, compIdx == c.component ? 1.0 : 0.0);
+                        fs.setKvalue(compIdx, fs.wilsonK_(compIdx));
+                    }
+                    fs.setLvalue(initialLiquidFraction);
+
+                    BOOST_REQUIRE(PtFlash::solve(fs, method, flashTolerance, EOSType::PR));
+                    BOOST_CHECK_EQUAL(Opm::getValue(fs.L()), c.liquidFraction);
+                    for (unsigned phaseIdx = 0; phaseIdx < FluidSystem::numPhases; ++phaseIdx) {
+                        BOOST_CHECK_EQUAL(Opm::getValue(fs.moleFraction(phaseIdx, c.component)),
+                                          1.0);
+                    }
+                }
+            }
+        }
+    }
+}
+
+// With unequal phase pressures each label sits at the pressure of its slot,
+// so the fugacities decide, and a component with one EoS root keeps Li's label.
+BOOST_AUTO_TEST_CASE(SingleComponentAtUnequalPhasePressures)
+{
+    struct Case
+    {
+        int component;
+        Scalar oilPressure;
+        Scalar gasPressure;
+        Scalar temperature;
+        Scalar liquidFraction;
+    };
+    // At 288.15 K liquid CO2 at 50 bar has a lower fugacity than vapour at
+    // 51 bar, and vapour at 50 bar a lower one than liquid at 51 bar.
+    const Case cases[] = {{0, 50.e5, 51.e5, 288.15, 1.0},
+                          {0, 51.e5, 50.e5, 288.15, 0.0},
+                          {1, 100.e5, 101.e5, 300.0, 0.0},
+                          {1, 101.e5, 100.e5, 300.0, 0.0}};
+    for (const auto& c : cases) {
+        BOOST_TEST_CONTEXT("component " << c.component << " at " << c.oilPressure
+                                        << " Pa (oil) and " << c.gasPressure << " Pa (gas)")
+        {
+            FluidState fs;
+            fs.setPressure(FluidSystem::oilPhaseIdx, c.oilPressure);
+            fs.setPressure(FluidSystem::gasPhaseIdx, c.gasPressure);
+            fs.setTemperature(c.temperature);
+            for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+                fs.setMoleFraction(compIdx, compIdx == c.component ? 1.0 : 0.0);
+                fs.setKvalue(compIdx, fs.wilsonK_(compIdx));
+            }
+            fs.setLvalue(-1.0);
+
+            BOOST_REQUIRE(
+                PtFlash::solve(fs, PTFlashMethod::SsiNewton, flashTolerance, EOSType::PR));
+            BOOST_CHECK_EQUAL(Opm::getValue(fs.L()), c.liquidFraction);
+        }
+    }
+}
