@@ -42,6 +42,8 @@
 #include <sstream>
 #include <string_view>
 #include <tuple>
+#include <utility>
+#include <vector>
 
 #include <math.h>
 #include <stdio.h>
@@ -189,6 +191,20 @@ Bytes expected_ix_logicals()
     return bytes;
 }
 
+// Whether or not readFileOrder() accepts a range of type R as destination.
+template <typename R>
+concept CanReadFileOrder = requires(std::istream& is, R&& values)
+{
+    readFileOrder(is, std::forward<R>(values));
+};
+
+// Whether or not writeFileOrder() accepts a range of type R as source.
+template <typename R>
+concept CanWriteFileOrder = requires(std::ostream& os, R&& values)
+{
+    writeFileOrder(os, std::forward<R>(values));
+};
+
 } // Anonymous namespace
 
 BOOST_AUTO_TEST_CASE(TestEclFile_X231)
@@ -272,6 +288,46 @@ BOOST_AUTO_TEST_CASE(ByteOrder_FileRepresentation)
         const auto bytes = object_bytes(toFileOrder(-2.0));
         BOOST_CHECK_EQUAL_COLLECTIONS(bytes.begin(), bytes.end(), expect.begin(), expect.end());
     }
+}
+
+BOOST_AUTO_TEST_CASE(ByteOrder_RangeConstraints)
+{
+    // Mutable ranges may both receive values read from a file and supply
+    // values to be written to a file.
+    static_assert(FileOutputScalarRange<std::vector<int>&>);
+    static_assert(FileOutputScalarRange<std::array<double, 2>&>);
+    static_assert(FileOutputScalarRange<std::span<float>>);
+
+    static_assert(CanReadFileOrder<std::vector<int>&>);
+    static_assert(CanReadFileOrder<std::array<double, 2>&>);
+    static_assert(CanReadFileOrder<std::span<float>>);
+
+    static_assert(CanWriteFileOrder<std::vector<int>&>);
+    static_assert(CanWriteFileOrder<std::span<float>>);
+
+    // Immutable ranges may only supply values to be written to a file.
+    static_assert(FileScalarRange<const std::vector<int>&>);
+    static_assert(FileScalarRange<const std::array<double, 2>&>);
+    static_assert(FileScalarRange<std::span<const float>>);
+
+    static_assert(! FileOutputScalarRange<const std::vector<int>&>);
+    static_assert(! FileOutputScalarRange<const std::array<double, 2>&>);
+    static_assert(! FileOutputScalarRange<std::span<const float>>);
+
+    static_assert(! CanReadFileOrder<const std::vector<int>&>);
+    static_assert(! CanReadFileOrder<const std::array<double, 2>&>);
+    static_assert(! CanReadFileOrder<std::span<const float>>);
+
+    static_assert(CanWriteFileOrder<const std::vector<int>&>);
+    static_assert(CanWriteFileOrder<const std::array<double, 2>&>);
+    static_assert(CanWriteFileOrder<std::span<const float>>);
+
+    // Non-contiguous ranges and unsupported element types are rejected.
+    static_assert(! FileScalarRange<std::vector<bool>&>);
+    static_assert(! FileScalarRange<std::vector<char>&>);
+    static_assert(! FileScalarRange<std::vector<std::int16_t>&>);
+
+    BOOST_CHECK_MESSAGE(true, "Range constraints verified at compile time");
 }
 
 BOOST_AUTO_TEST_CASE(ByteOrder_StreamRoundTrip)

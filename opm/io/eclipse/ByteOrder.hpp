@@ -136,12 +136,18 @@ namespace Opm::EclIO {
         return toFileOrder(value);
     }
 
-    /// Contiguous sequence of numeric values that can be read from or
-    /// written to a binary file in a single operation.
+    /// Contiguous sequence of numeric values that can be written to a
+    /// binary file in a single operation.  The values need not be mutable.
     template <typename R>
     concept FileScalarRange = std::ranges::contiguous_range<R>
         && std::ranges::sized_range<R>
         && FileScalar<std::ranges::range_value_t<R>>;
+
+    /// Contiguous sequence of mutable numeric values that can receive the
+    /// values read from a binary file in a single operation.
+    template <typename R>
+    concept FileOutputScalarRange = FileScalarRange<R>
+        && std::ranges::output_range<R, std::ranges::range_value_t<R>>;
 
     /// Read a sequence of numeric values stored in big-endian byte order
     /// and convert them to native byte order.
@@ -151,7 +157,7 @@ namespace Opm::EclIO {
     /// \param[out] values Destination of converted values, e.g., a
     /// std::vector<> or a std::span<>.  The number of values to read is
     /// \code std::ranges::size(values) \endcode.
-    template <FileScalarRange R>
+    template <FileOutputScalarRange R>
     void readFileOrder(std::istream& is, R&& values)
     {
         using T = std::ranges::range_value_t<R>;
