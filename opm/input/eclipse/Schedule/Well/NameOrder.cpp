@@ -24,6 +24,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <initializer_list>
+#include <iterator>
 #include <optional>
 #include <string>
 #include <unordered_map>
