@@ -32,6 +32,7 @@
 #include <opm/common/utility/gpuDecorators.hpp>
 
 #include <algorithm>
+#include <cmath>
 #include <cstddef>
 #include <limits>
 #include <type_traits>
@@ -522,8 +523,9 @@ private:
     }
 
     /*!
-     * \brief Relative tolerance for treating two relative permeability values as
-     *        equal in the three-point vertical scaling.
+     * \brief Relative tolerance (with respect to the magnitude of the values) for
+     *        treating two relative permeability values as equal in the three-point
+     *        vertical scaling.
      *
      * The values Kr(Sr) and Kr(Smax) both typically come from table interpolation,
      * so two values that are equal in the table may differ by round-off. A
@@ -538,7 +540,7 @@ private:
      */
     OPM_HOST_DEVICE static bool krMaxExceedsKrR_(const Scalar fmax, const Scalar fdisp)
     {
-        return fmax - fdisp > krEqualityTolerance_ * std::max(Scalar(1), fmax);
+        return fmax - fdisp > krEqualityTolerance_ * std::max(std::abs(fmax), std::abs(fdisp));
     }
 
     /*!
