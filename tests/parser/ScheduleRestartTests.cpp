@@ -1537,19 +1537,19 @@ BOOST_AUTO_TEST_CASE(RestartWINJMULT)
         const auto& conns = wi1.getConnections();
         BOOST_REQUIRE_EQUAL(conns.size(), std::size_t{3});
 
-        BOOST_CHECK_CLOSE(conns[0].injmult().fracture_pressure, 350.0e5, 1.0e-5);
+        BOOST_CHECK_CLOSE(conns[0].injmult().fracture_pressure.getSI(), 350.0e5, 1.0e-5);
         BOOST_CHECK_CLOSE(conns[0].injmult().multiplier_gradient, 0.001e-5, 1.0e-5);
 
-        BOOST_CHECK_CLOSE(conns[1].injmult().fracture_pressure, 300.0e5, 1.0e-5);
+        BOOST_CHECK_CLOSE(conns[1].injmult().fracture_pressure.getSI(), 300.0e5, 1.0e-5);
         BOOST_CHECK_CLOSE(conns[1].injmult().multiplier_gradient, 0.002e-5, 1.0e-5);
 
-        BOOST_CHECK_CLOSE(conns[2].injmult().fracture_pressure, 360.0e5, 1.0e-5);
+        BOOST_CHECK_CLOSE(conns[2].injmult().fracture_pressure.getSI(), 360.0e5, 1.0e-5);
         BOOST_CHECK_CLOSE(conns[2].injmult().multiplier_gradient, 0.003e-5, 1.0e-5);
 
         const auto& wi2 = restart_sched.getWell("WI2", report_step);
         BOOST_CHECK(wi2.getInjMultMode() == Well::InjMultMode::WREV);
         BOOST_REQUIRE(wi2.aciveWellInjMult());
-        BOOST_CHECK_CLOSE(wi2.getWellInjMult().fracture_pressure, 360.0e5, 1.0e-5);
+        BOOST_CHECK_CLOSE(wi2.getWellInjMult().fracture_pressure.getSI(), 360.0e5, 1.0e-5);
         BOOST_CHECK_CLOSE(wi2.getWellInjMult().multiplier_gradient, 0.004e-5, 1.0e-5);
         for (const auto& conn : wi2.getConnections()) {
             BOOST_CHECK(!conn.activeInjMult());
@@ -1602,7 +1602,7 @@ TSTEP
 
 void check_injmult_equal(const InjMult& base, const InjMult& restarted)
 {
-    BOOST_CHECK_CLOSE(restarted.fracture_pressure, base.fracture_pressure, 1.0e-5);
+    BOOST_CHECK_CLOSE(restarted.fracture_pressure.getSI(), base.fracture_pressure.getSI(), 1.0e-5);
     BOOST_CHECK_CLOSE(restarted.multiplier_gradient, base.multiplier_gradient, 1.0e-5);
 }
 
@@ -1657,10 +1657,10 @@ BOOST_AUTO_TEST_CASE(RestartWINJMULTModeSwitch)
             // Connection (5,5,2) keeps its CREV data in the CIRR period.
             const auto& wi1 = restart_sched.getWell("WI1", 3);
             BOOST_CHECK(wi1.getInjMultMode() == Well::InjMultMode::CIRR);
-            BOOST_CHECK_CLOSE(wi1.getConnections()[0].injmult().fracture_pressure, 340.0e5, 1.0e-5);
-            BOOST_CHECK_CLOSE(wi1.getConnections()[1].injmult().fracture_pressure, 300.0e5, 1.0e-5);
+            BOOST_CHECK_CLOSE(wi1.getConnections()[0].injmult().fracture_pressure.getSI(), 340.0e5, 1.0e-5);
+            BOOST_CHECK_CLOSE(wi1.getConnections()[1].injmult().fracture_pressure.getSI(), 300.0e5, 1.0e-5);
             BOOST_CHECK(! wi1.getConnections()[2].activeInjMult());
-            BOOST_CHECK_CLOSE(wi1.getWellInjMult().fracture_pressure, 360.0e5, 1.0e-5);
+            BOOST_CHECK_CLOSE(wi1.getWellInjMult().fracture_pressure.getSI(), 360.0e5, 1.0e-5);
 
             BOOST_CHECK_EQUAL(rst_state.get_well("WI1").inj_mult_mode, (report_step == 2) ? 0 : 2);
         }
