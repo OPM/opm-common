@@ -511,6 +511,52 @@ RTEMPVD
     BOOST_CHECK_THROW(parser.parseString(deckString, parseContext, errors), OpmInputError);
 }
 
+BOOST_AUTO_TEST_CASE(PvtTablesRequireMixingFlags)
+{
+    const Parser parser;
+    ParseContext parseContext;
+    parseContext.update(ParseContext::PARSE_INVALID_KEYWORD_COMBINATION,
+                        InputErrorAction::THROW_EXCEPTION);
+
+    for (const auto& [keyword, flag, data] : {
+             std::tuple{"PVTO", "DISGAS", "0 1 1 1 /\n1 2 1.1 1 /\n/\n"},
+             std::tuple{"PVTG", "VAPOIL", "1 0.0001 1 1 /\n2 0.0002 0.5 1 /\n/\n"}})
+    {
+        BOOST_TEST_CONTEXT(keyword) {
+            const auto prefix = std::string{"RUNSPEC\nOIL\nGAS\nTABDIMS\n/\n"};
+            const auto table = std::string{"PROPS\n"} + keyword + '\n' + data;
+            const auto missingFlag = prefix + table;
+            const auto diagnostic = std::string{keyword} + " declared but " + flag + " is missing";
+
+            BOOST_CHECK_EXCEPTION(parser.parseString(missingFlag, parseContext), OpmInputError,
+                                  [&diagnostic](const OpmInputError& error) {
+                                      return std::string{error.what()}.find(diagnostic) != std::string::npos;
+                                  });
+            BOOST_CHECK_NO_THROW(parser.parseString(prefix + flag + '\n' + table, parseContext));
+
+            ParseContext relaxedContext = parseContext;
+            relaxedContext.update(ParseContext::PARSE_INVALID_KEYWORD_COMBINATION,
+                                  InputErrorAction::IGNORE);
+            BOOST_CHECK_NO_THROW(parser.parseString(missingFlag, relaxedContext));
+        }
+    }
+
+    BOOST_CHECK_NO_THROW(parser.parseString(R"(
+RUNSPEC
+OIL
+GAS
+TABDIMS
+/
+PROPS
+PVDO
+  1 1 1
+  2 0.9 1 /
+PVDG
+  1 1 1
+  2 0.5 1 /
+)", parseContext));
+}
+
 BOOST_AUTO_TEST_CASE( test_invalid_wtemplate_config ) {
     const std::string defDeckString = R"(
     START  -- 0
