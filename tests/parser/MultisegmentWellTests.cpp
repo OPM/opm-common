@@ -61,6 +61,8 @@
 #include <stdexcept>
 #include <string>
 
+#include <fmt/format.h>
+
 BOOST_AUTO_TEST_CASE(AICDWellTest)
 {
     const auto dir_z = Opm::Connection::Direction::Z;
@@ -2134,6 +2136,119 @@ WELSEGS
 
     const auto es    = ::Opm::EclipseState { deck };
     BOOST_CHECK_THROW(::Opm::Schedule(deck, es, std::make_shared<const ::Opm::Python>()), ::Opm::OpmInputError);
+}
+
+namespace {
+    // Three-segment main stem (branch 1) plus two further segments, 4 and
+    // 5, whose branch numbers and outlet segments are given by the caller.
+    // Each connection is explicitly attached to a single segment.
+    std::string branchStructureDeck(const int branch4, const int outlet4,
+                                    const int branch5, const int outlet5)
+    {
+        return thermalMSWGridPreamble + fmt::format(R"(
+WELSPECS
+ 'PROD01' 'P' 20 20 1* OIL /
+/
+COMPDAT
+ 'PROD01' 20 20 1 4 'OPEN' /
+/
+WELSEGS
+ 'PROD01' 2000.0 0.0 1* 'INC' 'HFA' /
+ 2 2 1 1 10.0 10.0 0.1 1.0e-5 /
+ 3 3 1 2 10.0 10.0 0.1 1.0e-5 /
+ 4 4 {} {} 10.0 10.0 0.1 1.0e-5 /
+ 5 5 {} {} 10.0 10.0 0.1 1.0e-5 /
+/
+COMPSEGS
+ 'PROD01' /
+ 20 20 1 1 0.0 10.0 1* 3* 2 /
+ 20 20 2 1 10.0 20.0 1* 3* 3 /
+ 20 20 3 {} 10.0 20.0 1* 3* 4 /
+ 20 20 4 {} 20.0 30.0 1* 3* 5 /
+/
+TSTEP
+ 1 /
+)", branch4, outlet4, branch5, outlet5, branch4, branch5);
+    }
+
+    ::Opm::Schedule makeBranchStructureSchedule(const std::string& deck_string,
+                                                const ::Opm::InputErrorAction action)
+    {
+        const auto deck = ::Opm::Parser{}.parseString(deck_string);
+        const auto es   = ::Opm::EclipseState { deck };
+
+        auto parseContext = ::Opm::ParseContext{};
+        parseContext.update(::Opm::ParseContext::SCHEDULE_WELSEGS_INVALID_BRANCH, action);
+
+        auto errors = ::Opm::ErrorGuard{};
+
+        return { deck, es, parseContext, errors,
+                 std::make_shared<const ::Opm::Python>() };
+    }
+
+    std::string scheduleErrorMessage(const std::string& deck_string)
+    {
+        const auto deck = ::Opm::Parser{}.parseString(deck_string);
+        const auto es   = ::Opm::EclipseState { deck };
+
+        try {
+            ::Opm::Schedule { deck, es, std::make_shared<const ::Opm::Python>() };
+        }
+        catch (const ::Opm::OpmInputError& e) {
+            return e.what();
+        }
+
+        return "";
+    }
+} // Anonymous namespace
+
+BOOST_AUTO_TEST_CASE(WELSEGS_Valid_Branch_Structure)
+{
+    // Branch numbers need not follow segment numbers.  Branch 3 (segment 4)
+    // has a lower segment number than branch 2 (segment 5).
+    const auto deck = ::Opm::Parser{}.parseString(branchStructureDeck(3, 2, 2, 3));
+    const auto es   = ::Opm::EclipseState { deck };
+    const auto sched = ::Opm::Schedule {
+        deck, es, std::make_shared<const ::Opm::Python>()
+    };
+
+    const auto& segments = sched[0].wells("PROD01").getSegments();
+    BOOST_CHECK_EQUAL(segments.size(), std::size_t{5});
+    BOOST_CHECK_EQUAL(segments.getFromSegmentNumber(4).branchNumber(), 3);
+    BOOST_CHECK_EQUAL(segments.getFromSegmentNumber(5).branchNumber(), 2);
+}
+
+BOOST_AUTO_TEST_CASE(WELSEGS_Branch_With_Multiple_Entry_Segments)
+{
+    // Segments 4 and 5 are both on branch 2, but are not connected to each
+    // other.  Their outlets, segments 2 and 3, are both on branch 1.
+    const auto deck_string = branchStructureDeck(2, 2, 2, 3);
+
+    const auto msg = scheduleErrorMessage(deck_string);
+    BOOST_CHECK_MESSAGE(msg.find("Invalid branch structure in WELSEGS for well PROD01") != std::string::npos, msg);
+    BOOST_CHECK_MESSAGE(msg.find("Branch 2 is joined to the rest of the well through 2 segments") != std::string::npos, msg);
+    BOOST_CHECK_MESSAGE(msg.find("Segment 4 (outlet segment 2 on branch 1)") != std::string::npos, msg);
+    BOOST_CHECK_MESSAGE(msg.find("Segment 5 (outlet segment 3 on branch 1)") != std::string::npos, msg);
+
+    BOOST_CHECK_THROW(makeBranchStructureSchedule(deck_string, ::Opm::InputErrorAction::THROW_EXCEPTION),
+                      ::Opm::OpmInputError);
+
+    const auto sched = makeBranchStructureSchedule(deck_string, ::Opm::InputErrorAction::IGNORE);
+    BOOST_CHECK_EQUAL(sched[0].wells("PROD01").getSegments().size(), std::size_t{5});
+}
+
+BOOST_AUTO_TEST_CASE(WELSEGS_Branch_With_Fork)
+{
+    // Segments 3 and 4 both have segment 2 as their outlet, and all three
+    // segments are on branch 1.
+    const auto deck_string = branchStructureDeck(1, 2, 2, 3);
+
+    const auto msg = scheduleErrorMessage(deck_string);
+    BOOST_CHECK_MESSAGE(msg.find("Invalid branch structure in WELSEGS for well PROD01") != std::string::npos, msg);
+    BOOST_CHECK_MESSAGE(msg.find("Segment 2 has 2 inlet segments on its own branch 1: 3, 4") != std::string::npos, msg);
+
+    const auto sched = makeBranchStructureSchedule(deck_string, ::Opm::InputErrorAction::IGNORE);
+    BOOST_CHECK_EQUAL(sched[0].wells("PROD01").getSegments().size(), std::size_t{5});
 }
 
 BOOST_AUTO_TEST_CASE(loadCOMPTRAJTESTSPE1_MSW) {

@@ -747,8 +747,14 @@ namespace {
         using IndexRange = std::pair<std::vector<int>::const_iterator,
                                      std::vector<int>::const_iterator>;
 
+        /// Build relation from a set of elements.
+        ///
+        /// \param[in] elements Element indices to include in the relation.
+        /// \param[in] minId Minimum valid bin ID.
+        /// \param[in] binId Bin ID of a single element.
+        /// \param[in] cmp Ordering of elements within a single bin.
         template <typename Cmp>
-        void build(const std::size_t              size,
+        void build(std::vector<int>               elements,
                    const int                      minId,
                    const std::function<int(int)>& binId,
                    Cmp&&                          cmp);
@@ -764,15 +770,16 @@ namespace {
 
         bool empty(const int binId) const
         {
-            this->verifyValid(binId);
+            if (! this->valid(binId)) {
+                // Bins outside the valid range have no elements.
+                return true;
+            }
 
             return this->start(binId) == this->start(binId + 1);
         }
 
         std::optional<int> last(const int binId) const
         {
-            this->verifyValid(binId);
-
             if (this->empty(binId)) {
                 return {};
             }
@@ -813,40 +820,32 @@ namespace {
     };
 
     template <typename Cmp>
-    void CSRIndexRelation::build(const std::size_t              size,
+    void CSRIndexRelation::build(std::vector<int>               elements,
                                  const int                      minId,
                                  const std::function<int(int)>& binId,
                                  Cmp&&                          cmp)
     {
-        if (size == std::size_t{0}) {
+        if (elements.empty()) {
             return;
         }
 
-        this->ix_.resize(size);
-        std::iota(this->ix_.begin(), this->ix_.end(), 0);
-        std::ranges::sort(this->ix_, std::forward<Cmp>(cmp));
+        this->ix_ = std::move(elements);
 
-        // Sort must respect binId(i1) <= binId(i2)
-        const auto inconsistentId =
-            std::ranges::adjacent_find(this->ix_,
-                                       [&binId](const int i1, const int i2)
-                                       { return binId(i1) > binId(i2); });
+        // Group elements by bin ID, and order elements within each bin
+        // according to 'cmp'.  Do not rely on 'cmp' alone for grouping
+        // since there is no general relation between, e.g., segment numbers
+        // and branch numbers.
+        std::ranges::sort(this->ix_,
+            [&binId, &cmp](const int i1, const int i2)
+        {
+            const auto b1 = binId(i1);
+            const auto b2 = binId(i2);
 
-        if (inconsistentId != this->ix_.end()) {
-            throw std::invalid_argument {
-                "Comparison operator does not honour bin consistency requirement"
-            };
-        }
+            return (b1 != b2) ? (b1 < b2) : cmp(i1, i2);
+        });
 
-        const auto binIdBounds =
-            std::minmax_element(this->ix_.begin(), this->ix_.end(),
-                                [&binId](const int i1, const int i2)
-                                { return binId(i1) < binId(i2); });
-
-        if (binIdBounds.first != this->ix_.end()) {
-            this->minId_ = std::min(binId(*binIdBounds.first), minId);
-            this->maxId_ = binId(*binIdBounds.second);
-        }
+        this->minId_ = std::min(binId(this->ix_.front()), minId);
+        this->maxId_ = binId(this->ix_.back());
 
         if (this->minId_ < minId) {
             // Not particularly likely, but nevertheless possible.
@@ -921,29 +920,6 @@ namespace {
         void write(::Opm::EclIO::OutputStream::RFT& rftFile) const override;
 
     private:
-        class OrderSegConns
-        {
-        public:
-            explicit OrderSegConns(const ::Opm::WellSegments&    wellSegs,
-                                   const ::Opm::WellConnections& wellConns)
-                : wellSegs_        { std::cref(wellSegs)  }
-                , wellConns_       { std::cref(wellConns) }
-                , segOrderedBefore_{ wellSegs }
-            {}
-
-            bool operator()(const int i1, const int i2) const;
-
-        private:
-            std::reference_wrapper<const ::Opm::WellSegments>    wellSegs_;
-            std::reference_wrapper<const ::Opm::WellConnections> wellConns_;
-            OrderSegments segOrderedBefore_;
-
-            int segIdx(const int connIdx) const;
-            int segNum(const int connIdx) const;
-            int brnNum(const int segIx) const;
-            double connDistance(const int connIdx) const;
-        };
-
         std::vector<int> segment_id_{};
         std::vector<int> branch_id_{};
 
@@ -965,6 +941,9 @@ namespace {
         int nextNeighbourConnection(ConnPos                       connPos,
                                     const ::Opm::WellSegments&    wellSegs,
                                     const ::Opm::WellConnections& wellConns) const;
+
+        static bool hasValidSegment(const ::Opm::Connection&   conn,
+                                    const ::Opm::WellSegments& wellSegs);
     };
 
     PLTRecordMSW::PLTRecordMSW(const std::size_t nconn)
@@ -1004,7 +983,7 @@ namespace {
     {
         PLTRecord::addConnection(usys, well, connPos, xcon);
 
-        if (! connPos->attachedToSegment()) {
+        if (! hasValidSegment(*connPos, well.getSegments())) {
             this->segment_id_.push_back(0);
             this->branch_id_.push_back(0);
             this->start_length_.push_back(0.0f);
@@ -1044,9 +1023,35 @@ namespace {
     {
         const auto minSegNum = 1;
 
-        this->segmentConns_.build(wellConns.size(), minSegNum,
+        // Connections not attached to a known segment do not participate
+        // in the segment-to-connection relation.
+        auto segConns = std::vector<int>{};
+        segConns.reserve(wellConns.size());
+        for (std::size_t connIx = 0; connIx < wellConns.size(); ++connIx) {
+            if (hasValidSegment(wellConns[connIx], wellSegs)) {
+                segConns.push_back(static_cast<int>(connIx));
+            }
+        }
+
+        // Within a single segment, order connections by distance along the
+        // tubing.  Use the connection index to break ties.
+        this->segmentConns_.build(std::move(segConns), minSegNum,
             [&wellConns](const int ix) { return wellConns[ix].segment(); },
-            OrderSegConns { wellSegs, wellConns });
+            [&wellConns](const int i1, const int i2)
+        {
+            const auto d1 = wellConns[i1].perf_range()->second;
+            const auto d2 = wellConns[i2].perf_range()->second;
+
+            return (d1 != d2) ? (d1 < d2) : (i1 < i2);
+        });
+    }
+
+    bool PLTRecordMSW::hasValidSegment(const ::Opm::Connection&   conn,
+                                       const ::Opm::WellSegments& wellSegs)
+    {
+        return conn.attachedToSegment()
+            && conn.perf_range().has_value()
+            && (wellSegs.segmentNumberToIndex(conn.segment()) >= 0);
     }
 
     int PLTRecordMSW::nextNeighbourConnection(ConnPos                       connPos,
@@ -1097,57 +1102,6 @@ namespace {
         }
 
         return getConnectionId(this->segmentConns_.last(out).value());
-    }
-
-    // -----------------------------------------------------------------------
-
-    // i1 < i2 if one of the following relations hold
-    //
-    // 1) i1's branch number is smaller than i2's branch number
-    // 2) i1's segment is ordered before i2's segment on the same branch
-    // 3) i1 is ordered before i2 on the same segment
-    bool PLTRecordMSW::OrderSegConns::operator()(const int i1, const int i2) const
-    {
-        const auto si1 = this->segIdx(i1);
-        const auto si2 = this->segIdx(i2);
-
-        const auto b1 = this->brnNum(si1);
-        const auto b2 = this->brnNum(si2);
-
-        if (b1 != b2) {
-            // i1 not on same branch as i2.  Order by branch number.
-            return b1 < b2;
-        }
-
-        if (si1 != si2) {
-            // i1 and i2 on same branch, but not on same segment.  Order by
-            // whether or not i1's segment is before i2's segment.
-            return this->segOrderedBefore_(si1, si2);
-        }
-
-        // If we're here i1 and i2 are on the same segment and,
-        // transitively, on the same branch.  Order by tubing distance.
-        return this->connDistance(i1) < this->connDistance(i2);
-    }
-
-    int PLTRecordMSW::OrderSegConns::segNum(const int connIdx) const
-    {
-        return this->wellConns_.get()[connIdx].segment();
-    }
-
-    int PLTRecordMSW::OrderSegConns::segIdx(const int connIdx) const
-    {
-        return this->wellSegs_.get().segmentNumberToIndex(this->segNum(connIdx));
-    }
-
-    int PLTRecordMSW::OrderSegConns::brnNum(const int segIx) const
-    {
-        return this->wellSegs_.get()[segIx].branchNumber();
-    }
-
-    double PLTRecordMSW::OrderSegConns::connDistance(const int connIdx) const
-    {
-        return this->wellConns_.get()[connIdx].perf_range()->second;
     }
 
     // -----------------------------------------------------------------------
@@ -1316,7 +1270,10 @@ namespace {
         auto branchSegments = CSRIndexRelation {};
         const auto minBranchID = 1;
 
-        branchSegments.build(wellSegs.size(), minBranchID,
+        auto allSegs = std::vector<int>(wellSegs.size());
+        std::iota(allSegs.begin(), allSegs.end(), 0);
+
+        branchSegments.build(std::move(allSegs), minBranchID,
             [&wellSegs](const int ix) { return wellSegs[ix].branchNumber(); },
             OrderSegments { wellSegs });
 

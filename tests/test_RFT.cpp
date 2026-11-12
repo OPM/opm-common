@@ -43,6 +43,7 @@
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQState.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellTestState.hpp>
 
 #include <opm/input/eclipse/Units/Units.hpp>
@@ -2911,9 +2912,9 @@ BOOST_AUTO_TEST_SUITE_END() // Using_Direct_Write
 BOOST_AUTO_TEST_SUITE(PLTData)
 
 namespace {
-    Opm::Deck pltDataSet()
+    std::string pltDataSetHead()
     {
-        return ::Opm::Parser{}.parseString(R"(RUNSPEC
+        return R"(RUNSPEC
 TITLE
   'BASE1' 'MSW' 'HFA'
 
@@ -2945,7 +2946,7 @@ WELLDIMS
  2 7 2 2 /
 
 WSEGDIMS
- 1 12 1 /
+ 1 12 3 /
 
 UNIFIN
 UNIFOUT
@@ -3191,7 +3192,39 @@ COMPDAT
  'P1' 3 6 3 3 'OPEN' 1* 389.4535 0.216 1* 0 1* 'Y' /
  'I1' 6 8 5 7 'OPEN' 1* 1*       0.216 1* 0 1* 'Z' /
 /
+)";
+    }
 
+    std::string pltDataSetTail()
+    {
+        return R"(
+WCONPROD
+ 'P1' 'OPEN' 'ORAT' 8000 4* 65 /
+/
+
+WCONINJE
+ 'I1' 'WATER' 'OPEN' 'RATE' 5000 1* 450 /
+/
+
+TSTEP
+ 1 /
+
+WRFTPLT
+ 'P1' 'YES' 'YES' 'NO' /
+ 'I1' 'YES' 'YES' 'NO' /
+/
+
+TSTEP
+ 2 3 5 10*10 20*20 30*30 /
+
+END
+
+)";
+    }
+
+    Opm::Deck pltDataSet()
+    {
+        return ::Opm::Parser{}.parseString(pltDataSetHead() + R"(
 WELSEGS
  'P1' 2620.17107 0 1* 'INC' 'HFA' /
   2  2 1  1  38.17432  3.32249 0.102 1e-05 /
@@ -3215,29 +3248,44 @@ COMPSEGS
  3 5 3 1 1278.13953 1824.3116  /
  3 6 3 1 1824.3116  2195.85641 /
 /
+)" + pltDataSetTail());
+    }
 
-WCONPROD
- 'P1' 'OPEN' 'ORAT' 8000 4* 65 /
+    // Multi-branch well P1 in which segment numbers do not increase with
+    // branch numbers.  The main stem (branch 1: segments 1, 8, 9) has no
+    // connections and is numbered above all segments having connections.
+    // Branch 2 (segments 5..7) emanates from segment 8 and branch 3
+    // (segments 2..4) emanates from segment 9.  Connection (3,6,4) is added
+    // after COMPSEGS and is therefore not attached to any segment.
+    Opm::Deck pltDataSetMultiBranch()
+    {
+        return ::Opm::Parser{}.parseString(pltDataSetHead() + R"(
+WELSEGS
+ 'P1' 2620.17107 0 1* 'INC' 'HFA' /
+  8  8 1  1 100.0 1.0 0.102 1e-05 /
+  9  9 1  8 100.0 1.0 0.102 1e-05 /
+  5  5 2  8 100.0 5.0 0.102 1e-05 /
+  6  6 2  5 100.0 5.0 0.102 1e-05 /
+  7  7 2  6 100.0 5.0 0.102 1e-05 /
+  2  2 3  9 100.0 5.0 0.102 1e-05 /
+  3  3 3  2 100.0 5.0 0.102 1e-05 /
+  4  4 3  3 100.0 5.0 0.102 1e-05 /
 /
 
-WCONINJE
- 'I1' 'WATER' 'OPEN' 'RATE' 5000 1* 450 /
+COMPSEGS
+ 'P1' /
+ 2 3 2 2 100.0 200.0 1* 3* 5 /
+ 2 3 3 2 200.0 300.0 1* 3* 6 /
+ 2 4 3 2 300.0 400.0 1* 3* 7 /
+ 3 4 3 3 200.0 300.0 1* 3* 2 /
+ 3 5 3 3 300.0 400.0 1* 3* 3 /
+ 3 6 3 3 400.0 500.0 1* 3* 4 /
 /
 
-TSTEP
- 1 /
-
-WRFTPLT
- 'P1' 'YES' 'YES' 'NO' /
- 'I1' 'YES' 'YES' 'NO' /
+COMPDAT
+ 'P1' 3 6 4 4 'OPEN' 1* 100.0 0.216 1* 0 1* 'Y' /
 /
-
-TSTEP
- 2 3 5 10*10 20*20 30*30 /
-
-END
-
-)");
+)" + pltDataSetTail());
     }
 
     std::vector<int> cellIndex(const ::Opm::EclipseGrid&             grid,
@@ -3555,6 +3603,89 @@ BOOST_AUTO_TEST_CASE(Multisegment_Well)
     BOOST_CHECK_CLOSE(xPLT.end(3, 4, 3), 1278.13953f, 1.0e-5f);
     BOOST_CHECK_CLOSE(xPLT.end(3, 5, 3), 1824.3116f , 1.0e-5f);
     BOOST_CHECK_CLOSE(xPLT.end(3, 6, 3), 2195.85641f, 1.0e-5f);
+}
+
+BOOST_AUTO_TEST_CASE(Multisegment_Well_Multiple_Branches)
+{
+    using RftDate = ::Opm::EclIO::ERft::RftDate;
+
+    const auto rset  = RSet { "TESTPLT" };
+    const auto model = Setup{ pltDataSetMultiBranch() };
+
+    const auto  reportStep = 1;
+    const auto& grid       = model.es.getInputGrid();
+
+    auto xw = wellSol(grid);
+    {
+        // Result for connection not attached to any segment.
+        auto& c = xw["P1"].connections.emplace_back();
+        c.index = grid.getGlobalIndex(3 - 1, 6 - 1, 4 - 1);
+        c.pressure = 50.0*::Opm::unit::barsa;
+    }
+
+    {
+        auto rftFile = ::Opm::EclIO::OutputStream::RFT {
+            rset, ::Opm::EclIO::OutputStream::Formatted  { false },
+            ::Opm::EclIO::OutputStream::RFT::OpenExisting{ false }
+        };
+
+        const auto elapsed = model.sched.seconds(reportStep);
+
+        BOOST_REQUIRE_NO_THROW(::Opm::RftIO::write(reportStep, elapsed, model.es.getUnits(),
+                                                   grid, model.sched, xw, rftFile));
+    }
+
+    const auto rft = ::Opm::EclIO::ERft {
+        ::Opm::EclIO::OutputStream::outputFileName(rset, "RFT")
+    };
+
+    const auto xPLT = PLTResultsMSW {
+        rft, "P1", RftDate{ 2000, 1, 2 }
+    };
+
+    const auto& conns = model.sched[reportStep].wells("P1").getConnections();
+    auto connId = [&conns](const int i, const int j, const int k)
+    {
+        return static_cast<int>(conns.getFromIJK(i - 1, j - 1, k - 1).sort_value()) + 1;
+    };
+
+    // Branch 2: segments 5, 6, 7.  First connection's neighbour search goes
+    // through main stem segment 8 (no connections), to top segment 1.
+    BOOST_CHECK_EQUAL(xPLT.segment(2, 3, 2), 5);
+    BOOST_CHECK_EQUAL(xPLT.segment(2, 3, 3), 6);
+    BOOST_CHECK_EQUAL(xPLT.segment(2, 4, 3), 7);
+
+    BOOST_CHECK_EQUAL(xPLT.branch(2, 3, 2), 2);
+    BOOST_CHECK_EQUAL(xPLT.branch(2, 3, 3), 2);
+    BOOST_CHECK_EQUAL(xPLT.branch(2, 4, 3), 2);
+
+    BOOST_CHECK_EQUAL(xPLT.next(2, 3, 2), 0);
+    BOOST_CHECK_EQUAL(xPLT.next(2, 3, 3), connId(2, 3, 2));
+    BOOST_CHECK_EQUAL(xPLT.next(2, 4, 3), connId(2, 3, 3));
+
+    // Branch 3: segments 2, 3, 4.  First connection's neighbour search goes
+    // through main stem segments 9 and 8 (no connections), to top segment 1.
+    BOOST_CHECK_EQUAL(xPLT.segment(3, 4, 3), 2);
+    BOOST_CHECK_EQUAL(xPLT.segment(3, 5, 3), 3);
+    BOOST_CHECK_EQUAL(xPLT.segment(3, 6, 3), 4);
+
+    BOOST_CHECK_EQUAL(xPLT.branch(3, 4, 3), 3);
+    BOOST_CHECK_EQUAL(xPLT.branch(3, 5, 3), 3);
+    BOOST_CHECK_EQUAL(xPLT.branch(3, 6, 3), 3);
+
+    BOOST_CHECK_EQUAL(xPLT.next(3, 4, 3), 0);
+    BOOST_CHECK_EQUAL(xPLT.next(3, 5, 3), connId(3, 4, 3));
+    BOOST_CHECK_EQUAL(xPLT.next(3, 6, 3), connId(3, 5, 3));
+
+    BOOST_CHECK_CLOSE(xPLT.start(3, 6, 3), 400.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xPLT.end  (3, 6, 3), 500.0f, 1.0e-5f);
+
+    // Connection not attached to any segment.
+    BOOST_CHECK_EQUAL(xPLT.segment(3, 6, 4), 0);
+    BOOST_CHECK_EQUAL(xPLT.branch (3, 6, 4), 0);
+    BOOST_CHECK_CLOSE(xPLT.start  (3, 6, 4), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xPLT.end    (3, 6, 4), 0.0f, 1.0e-5f);
+    BOOST_CHECK_CLOSE(xPLT.pressure(3, 6, 4), 50.0f, 1.0e-5f);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // PLTData

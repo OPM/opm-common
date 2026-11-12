@@ -620,6 +620,17 @@ namespace Opm {
         /// with the pressure drop model chosen for a particular MSW.
         const static std::string SCHEDULE_ICD_INCOMPATIBLE_PDROP_MODEL;
 
+        /// Invalid branch structure in WELSEGS.
+        ///
+        /// Each branch must form a single, unbranched chain of segments
+        /// which joins the rest of the well through exactly one segment.
+        /// Typical causes are two disjoint sets of segments sharing the
+        /// same branch number, or a segment having more than one inlet
+        /// segment on its own branch.  Such a structure is not supported
+        /// by the restart and RFT output, so this category throws and
+        /// terminates the run by default.
+        const static std::string SCHEDULE_WELSEGS_INVALID_BRANCH;
+
         /// Inconsistent network topology (BRANPROP, NODEPROP keywords).
         ///
         /// For instance a node without inlets which is not also a group, or
