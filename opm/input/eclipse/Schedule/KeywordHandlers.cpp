@@ -39,6 +39,7 @@
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
 
+#include <opm/input/eclipse/Parser/ParserKeywords/C.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/E.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/F.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/N.hpp>
@@ -441,6 +442,68 @@ void handleTUNINGDP(HandlerContext& handlerContext)
     handlerContext.state().events().addEvent(ScheduleEvents::TUNINGDP_CHANGE);
 }
 
+void handleCVCRIT(HandlerContext& handlerContext)
+{
+    using Kw = ParserKeywords::CVCRIT;
+
+    // Every item has a default, so the keyword starts from the defaults
+    // rather than from an earlier CVCRIT
+    auto cvcrit = Cvcrit{};
+    const auto& record = handlerContext.keyword.getRecord(0);
+
+    const auto set = [](const DeckItem& item, auto& value, auto get) {
+        if (!item.defaultApplied(0)) {
+            value = get(item);
+        }
+    };
+    const auto siDouble = [](const DeckItem& item) { return item.getSIDouble(0); };
+    const auto asDouble = [](const DeckItem& item) { return item.get<double>(0); };
+    const auto asInt = [](const DeckItem& item) { return item.get<int>(0); };
+
+    set(record.getItem<Kw::PRESSURE_CHANGE_TOLERANCE>(),
+        cvcrit.pressure_change_tolerance, siDouble);
+    set(record.getItem<Kw::MAX_NONLINEAR_ITERATIONS>(), cvcrit.max_nonlinear_iterations, asInt);
+    set(record.getItem<Kw::LINEAR_RESIDUAL_REDUCTION>(),
+        cvcrit.linear_residual_reduction, asDouble);
+    set(record.getItem<Kw::MAX_LINEAR_ITERATIONS>(), cvcrit.max_linear_iterations, asInt);
+    set(record.getItem<Kw::FUGACITY_ERROR_TOLERANCE>(), cvcrit.fugacity_error_tolerance, asDouble);
+    set(record.getItem<Kw::MIN_LINEAR_ITERATIONS>(), cvcrit.min_linear_iterations, asInt);
+    set(record.getItem<Kw::SPECIFIC_VOLUME_CHANGE_TOLERANCE>(),
+        cvcrit.specific_volume_change_tolerance, asDouble);
+    set(record.getItem<Kw::TEMPERATURE_CHANGE_TOLERANCE>(),
+        cvcrit.temperature_change_tolerance, siDouble);
+    set(record.getItem<Kw::MIN_NONLINEAR_ITERATIONS>(), cvcrit.min_nonlinear_iterations, asInt);
+    set(record.getItem<Kw::RESIDUAL_MAX_NORM_TOLERANCE>(),
+        cvcrit.residual_max_norm_tolerance, asDouble);
+    set(record.getItem<Kw::RESIDUAL_SUM_TOLERANCE>(), cvcrit.residual_sum_tolerance, asDouble);
+    set(record.getItem<Kw::MAX_MOLAR_DENSITY_CHANGE>(), cvcrit.max_molar_density_change, asDouble);
+    set(record.getItem<Kw::MAX_TEMPERATURE_CHANGE>(), cvcrit.max_temperature_change, siDouble);
+    set(record.getItem<Kw::MAX_PRESSURE_CHANGE>(), cvcrit.max_pressure_change, siDouble);
+    set(record.getItem<Kw::MSW_MAX_ITERATIONS>(), cvcrit.msw_max_iterations, asInt);
+    set(record.getItem<Kw::MSW_MOLAR_DENSITY_TOLERANCE>(),
+        cvcrit.msw_molar_density_tolerance, siDouble);
+    set(record.getItem<Kw::MSW_MOLAR_RATE_TOLERANCE>(), cvcrit.msw_molar_rate_tolerance, siDouble);
+    set(record.getItem<Kw::MSW_ENERGY_DENSITY_TOLERANCE>(),
+        cvcrit.msw_energy_density_tolerance, siDouble);
+    set(record.getItem<Kw::MSW_VELOCITY_TOLERANCE>(), cvcrit.msw_velocity_tolerance, siDouble);
+    set(record.getItem<Kw::MSW_MOLAR_RESIDUAL_TOLERANCE>(),
+        cvcrit.msw_molar_residual_tolerance, siDouble);
+    set(record.getItem<Kw::MSW_ENERGY_RESIDUAL_TOLERANCE>(),
+        cvcrit.msw_energy_residual_tolerance, siDouble);
+    set(record.getItem<Kw::MSW_MAX_PRESSURE_CHANGE>(), cvcrit.msw_max_pressure_change, siDouble);
+    set(record.getItem<Kw::MSW_MAX_SPECIFIC_VOLUME_CHANGE>(),
+        cvcrit.msw_max_specific_volume_change, asDouble);
+    set(record.getItem<Kw::MSW_MAX_TEMPERATURE_CHANGE>(),
+        cvcrit.msw_max_temperature_change, siDouble);
+    set(record.getItem<Kw::ADDITIONAL_RESIDUAL_MAX_NORM_TOLERANCE>(),
+        cvcrit.additional_residual_max_norm_tolerance, asDouble);
+    set(record.getItem<Kw::ADDITIONAL_RESIDUAL_SUM_TOLERANCE>(),
+        cvcrit.additional_residual_sum_tolerance, asDouble);
+
+    handlerContext.state().update_cvcrit(std::move(cvcrit));
+    handlerContext.state().events().addEvent(ScheduleEvents::CVCRIT_CHANGE);
+}
+
 void handleVFPINJ(HandlerContext& handlerContext)
 {
     auto table = VFPInjTable(handlerContext.keyword,
@@ -499,6 +562,7 @@ KeywordHandlers::KeywordHandlers()
         { "BCPROP",   &handleBCProp     },
         { "BCTRACER", &handleBCTracer   },
         { "BOX",      &handleGEOKeyword },
+        { "CVCRIT",   &handleCVCRIT     },
         { "ENDBOX"  , &handleGEOKeyword },
         { "EXIT",     &handleEXIT       },
         { "FBHPDEF",  &handleFBHPDEF    },

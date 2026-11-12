@@ -1204,6 +1204,39 @@ BOOST_AUTO_TEST_CASE(RestartAtFractionalSecond)
     }
 }
 
+BOOST_AUTO_TEST_CASE(SkiprestKeepsCvcrit)
+{
+    WorkArea work {};
+
+    // The only CVCRIT is before the restart date, so the restarted run sees
+    // it only if SKIPREST keeps the keyword.
+    const auto schedule = std::string { R"(CVCRIT
+  0.5 30 /
+
+TSTEP
+  4*1.0 /
+)" };
+
+    write_file("BASE.DATA", time_of_day_deck("", schedule));
+    write_restart_file("BASE", 2);
+    write_file("RESTART.DATA",
+               time_of_day_deck("RESTART\n  'BASE' 2 /\n", "SKIPREST\n\n" + schedule));
+
+    const auto& [sched, restart_sched, _] =
+        load_schedule_pair("BASE.DATA", "RESTART.DATA", "BASE.X0002", 2);
+    (void) _;
+
+    for (std::size_t report_step = 2; report_step < sched.size(); ++report_step) {
+        BOOST_TEST_CONTEXT("Report step " << report_step) {
+            const auto& cvcrit = restart_sched[report_step].cvcrit();
+            BOOST_REQUIRE(cvcrit.has_value());
+            BOOST_CHECK(cvcrit == sched[report_step].cvcrit());
+            BOOST_CHECK_CLOSE(cvcrit->pressure_change_tolerance, 0.5 * unit::barsa, 1e-8);
+            BOOST_CHECK_EQUAL(cvcrit->max_nonlinear_iterations.value_or(0), 30);
+        }
+    }
+}
+
 BOOST_AUTO_TEST_CASE(RestartActionLastRun)
 {
     WorkArea work {};
