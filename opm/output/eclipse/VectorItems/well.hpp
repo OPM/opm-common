@@ -106,7 +106,8 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
 
             WTestRemaining = 45,       // Remaining number of times well can be tested (WTEST(4)).
                                        //   0 => Unlimited number of tests
-                                       //  >0 => Well can be tested at most this many more times
+                                       //  >0 => One more than the number of tests left
+                                       //        (1 => No tests left)
 
             item48 = 47, // Unknown
 
