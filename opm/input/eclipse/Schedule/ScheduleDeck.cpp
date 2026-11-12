@@ -73,7 +73,7 @@ ScheduleDeck::ScheduleDeck(const time_point&          start_time,
                            const ScheduleRestartInfo& rst_info)
 {
     const auto skiprest_include = std::unordered_set<std::string> {
-        "VFPPROD", "VFPINJ", "RPTSCHED", "RPTRST", "TUNING", "MESSAGES",
+        "VFPPROD", "VFPINJ", "RPTSCHED", "RPTRST", "TUNING", "CVCRIT", "MESSAGES",
     };
 
     this->m_restart_time = rst_info.time;
