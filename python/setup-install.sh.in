@@ -5,13 +5,19 @@
 # run the installation through the setup.py macinery without going through
 # cmake.
 #
+# With a multi-config generator there is one script per configuration,
+# e.g. setup-install-Release.sh.
+#
 # The script in question is purely a convenience for Python development, it is
 # fully optional to use it, and it is not used by the main cmake based build
 # system.
 
-cd @PROJECT_BINARY_DIR@/python
+# Python tree of the configuration this script was generated for.
+OPM_PYTHON_DIR="@OPM_COMMON_PYTHON_BUILD_DIR@"
+
+cd "$OPM_PYTHON_DIR"
+source "$OPM_PYTHON_DIR/enable-python.sh"
 export PYTHONPPATH=@CMAKE_INSTALL_PREFIX@/@PYTHON_PREFIX@
-export LD_LIBRARY_PATH=@PROJECT_BINARY_DIR@/lib:@_setup_lib_dirs@:$LD_LIBRARY_PATH
 
 
 @Python3_EXECUTABLE@ setup.py build_ext --dry-run install --prefix=@DEST_PREFIX@@CMAKE_INSTALL_PREFIX@

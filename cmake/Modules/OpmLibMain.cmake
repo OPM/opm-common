@@ -124,7 +124,7 @@ list (APPEND ${project}_CONFIG_VARS ${${project}_CONFIG_VAR})
 # added in an ad-hoc manner to avoid putting dependencies to it in the module
 # requirement file. (it should be added if there is .h code that needs it)
 message (STATUS "Writing config file \"${PROJECT_BINARY_DIR}/config.h\"...")
-set(CONFIG_H "${PROJECT_BINARY_DIR}/config.h.tmp")
+set(CONFIG_H "${PROJECT_BINARY_DIR}/generated/include/config.h")
 configure_vars(
   TARGET
     ${${project}_TARGET}
@@ -140,7 +140,7 @@ configure_vars(
 # real changes. thus, we don't have to recompile if a reconfigure is run
 # due to some files being added, for instance
 execute_process (COMMAND
-  ${CMAKE_COMMAND} -E copy_if_different ${CONFIG_H} ${PROJECT_BINARY_DIR}/config.h
+  ${CMAKE_COMMAND} -E copy_if_different ${CONFIG_H} ${PROJECT_BINARY_DIR}/generated/include/config.h
 )
 
 # compile main library; pull in all required includes and libraries

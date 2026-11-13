@@ -4,7 +4,7 @@ import shutil
 import compileall
 import filecmp
 
-src_root = sys.argv[1]
+src_root = os.path.normpath(sys.argv[1])
 target_prefix = sys.argv[2]
 install = int(sys.argv[3])
 if install:
@@ -15,11 +15,9 @@ if install:
 if not os.path.isdir(src_root):
     sys.exit("No such directory: {}".format(src_root))
 
-
-
-path_offset = len(os.path.dirname(src_root))
+src_parent = os.path.dirname(src_root)
 for path,_ ,fnames in os.walk(src_root):
-    target_path = os.path.join(target_prefix, path[path_offset+1:])
+    target_path = os.path.join(target_prefix, os.path.relpath(path, src_parent))
     if not os.path.isdir(target_path):
         os.makedirs(target_path)
 
