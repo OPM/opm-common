@@ -2277,6 +2277,102 @@ BOOST_AUTO_TEST_CASE(CART_Deck_3x4x2) {
 
 namespace {
 
+// 3x2x2 block-centred grid with the given tops of the first layer and the thickness of
+// the cells, and possibly more keywords in the GRID section
+Opm::Deck createBlockCentredDeck(const std::string& tops, const std::string& dz, const std::string& extra,
+                                 const std::string& runspecKeywords = "")
+{
+    const std::string deckData =
+        "RUNSPEC\n"
+        + runspecKeywords +
+        "DIMENS\n"
+        " 3 2 2 /\n"
+        "GRID\n"
+        + extra +
+        "DX\n"
+        " 12*100 /\n"
+        "DY\n"
+        " 12*100 /\n"
+        "DZ\n"
+        + dz + " /\n"
+        "BOX\n"
+        " 1 3 1 2 1 1 /\n"
+        "TOPS\n"
+        + tops + " /\n"
+        "ENDBOX\n"
+        "PORO\n"
+        " 12*0.15 /\n"
+        "EDIT\n";
+
+    return Opm::Parser{}.parseString(deckData);
+}
+
+const std::string flat_tops = "6*2500";
+const std::string stepped_tops = "2500 2510 2520 2500 2510 2520";
+const std::string uniform_dz = "12*25";
+
+} // Anonymous namespace
+
+// The transmissibilities of grids given by DX, DY, DZ and TOPS are calculated with the
+// old (block-centred) calculation unless NEWTRAN is given.
+BOOST_AUTO_TEST_CASE(OLDTRAN_default_block_centred)
+{
+    BOOST_CHECK(Opm::EclipseGrid{createCARTDeckTest3x4x2()}.useOldTran());
+    BOOST_CHECK(Opm::EclipseGrid{createBlockCentredDeck(stepped_tops, uniform_dz, "")}.useOldTran());
+    BOOST_CHECK(Opm::EclipseGrid{createBlockCentredDeck(flat_tops, uniform_dz, "")}.useOldTran());
+    // the cells of a layer have the same top and bottom, or only the bottom differs
+    BOOST_CHECK(Opm::EclipseGrid{createBlockCentredDeck(flat_tops, "6*20 6*30", "")}.useOldTran());
+    BOOST_CHECK(Opm::EclipseGrid{createBlockCentredDeck(flat_tops, "20 25 20 20 25 20 6*30", "")}.useOldTran());
+}
+
+BOOST_AUTO_TEST_CASE(OLDTRAN_keywords)
+{
+    // OLDTRAN is the default for block-centred grids, so the keyword changes nothing
+    BOOST_CHECK(Opm::EclipseGrid{createBlockCentredDeck(stepped_tops, uniform_dz, "OLDTRAN\n")}.useOldTran());
+    BOOST_CHECK(Opm::EclipseGrid{createBlockCentredDeck(flat_tops, uniform_dz, "OLDTRAN\n")}.useOldTran());
+    // NEWTRAN switches it off
+    BOOST_CHECK(!Opm::EclipseGrid{createBlockCentredDeck(stepped_tops, uniform_dz, "NEWTRAN\n")}.useOldTran());
+    BOOST_CHECK(!Opm::EclipseGrid{createBlockCentredDeck(flat_tops, uniform_dz, "NEWTRAN\n")}.useOldTran());
+}
+
+// The thermal, diffusive and dispersive transmissibilities use the faces of the grid
+BOOST_AUTO_TEST_CASE(OLDTRAN_not_implemented_for_thermal_and_diffusion)
+{
+    for (const std::string keyword : {"THERMAL", "TEMP", "DIFFUSE"}) {
+        const auto runspec = keyword + "\n";
+        BOOST_CHECK(!Opm::EclipseGrid{createBlockCentredDeck(stepped_tops, uniform_dz, "", runspec)}.useOldTran());
+        BOOST_CHECK(!Opm::EclipseGrid{createBlockCentredDeck(stepped_tops, uniform_dz, "OLDTRAN\n", runspec)}.useOldTran());
+    }
+}
+
+// The keywords exclude each other, the parser checks this
+BOOST_AUTO_TEST_CASE(OLDTRAN_and_NEWTRAN_exclude_each_other)
+{
+    BOOST_CHECK_THROW(createBlockCentredDeck(stepped_tops, uniform_dz, "OLDTRAN\nNEWTRAN\n"), Opm::OpmInputError);
+    BOOST_CHECK_THROW(createBlockCentredDeck(stepped_tops, uniform_dz, "NEWTRAN\nOLDTRAN\n"), Opm::OpmInputError);
+}
+
+BOOST_AUTO_TEST_CASE(OLDTRAN_ignored_for_corner_point_grids)
+{
+    const char* deckData =
+        "RUNSPEC\n"
+        "DIMENS\n"
+        " 1 1 1 /\n"
+        "GRID\n"
+        "OLDTRAN\n"
+        "COORD\n"
+        " 0 0 0  0 0 10   100 0 0  100 0 10   0 100 0  0 100 10   100 100 0  100 100 10 /\n"
+        "ZCORN\n"
+        " 4*0 4*10 /\n"
+        "PORO\n"
+        " 0.15 /\n"
+        "EDIT\n";
+
+    BOOST_CHECK(!Opm::EclipseGrid{Opm::Parser{}.parseString(deckData)}.useOldTran());
+}
+
+namespace {
+
 Opm::Deck createCARTDeckDEPTHZ_2x3x2() {
     const char* deckData =
         "RUNSPEC\n"

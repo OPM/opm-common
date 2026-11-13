@@ -212,6 +212,18 @@ namespace Opm {
         PinchMode getPinchGapMode() const;
         double getPinchMaxEmptyGap() const;
         MinpvMode getMinpvMode() const;
+
+        /// Whether lateral neighbours are connected as block-centred cells,
+        /// as the keyword OLDTRAN does: cells given by DX, DY, DZ and
+        /// TOPS are connected to their Cartesian neighbours in the same layer
+        /// with the full face area, and not to the cells they overlap
+        /// vertically. This is the default for these grids, and
+        /// NEWTRAN switches it off. For cells that are not stepped, i.e.
+        /// neighbours in a layer have the same top and bottom depths, the
+        /// result is the same as with NEWTRAN. OLDTRAN is not supported for
+        /// other grid input, and it is not implemented for thermal, diffusion
+        /// and dispersion runs, which use NEWTRAN.
+        bool useOldTran() const noexcept;
         const std::vector<double>& getMinpvVector( ) const;
 
         /*
@@ -414,6 +426,7 @@ namespace Opm {
         double    m_pinchMaxEmptyGap;
         bool m_dualPorosity = false;
         bool m_dualPermeability = false;
+        bool m_oldTran = false;
         bool lgr_grid = false;
         mutable std::optional<std::vector<double>> active_volume;
 
