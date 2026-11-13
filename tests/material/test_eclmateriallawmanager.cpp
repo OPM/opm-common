@@ -611,10 +611,10 @@ inline Scalar computeLetCurve(const Scalar S, const Scalar L, const Scalar E, co
 
 template<class Scalar>
 struct Fixture {
-    enum { numPhases = 3 };
-    enum { waterPhaseIdx = 0 };
-    enum { oilPhaseIdx = 1 };
-    enum { gasPhaseIdx = 2 };
+    static constexpr int numPhases = 3;
+    static constexpr int waterPhaseIdx = 0;
+    static constexpr int oilPhaseIdx = 1;
+    static constexpr int gasPhaseIdx = 2;
     static constexpr bool enableHysteresis = true;
     static constexpr bool enableEndpointScaling = true;
     using MaterialTraits = Opm::ThreePhaseMaterialTraits<Scalar,
