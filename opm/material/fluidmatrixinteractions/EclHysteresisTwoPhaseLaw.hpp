@@ -333,8 +333,11 @@ public:
             // saturation (zero non-wetting saturation).
             const Scalar SwEnd = krwSwMax_(params.drainageParams(), Scalar(1));
             const Evaluation Krwd_end = EffectiveLaw::template twoPhaseSatKrw<Evaluation, Args...>(params.drainageParams(), Evaluation(SwEnd));
-            if (!(SwEnd > SwTab))
-                return Krwd_end;
+            if (!(SwEnd > SwTab)) {
+                // No interval to interpolate over: keep the imbibition table's
+                // (flat) extrapolation, which is continuous at the table end.
+                return EffectiveLaw::template twoPhaseSatKrw<Evaluation, Args...>(params.imbibitionParams(), Sw);
+            }
 
             const Evaluation Krwi_a = EffectiveLaw::template twoPhaseSatKrw<Evaluation, Args...>(params.imbibitionParams(), Evaluation(SwTab));
             // 1 at the table end, 0 at SwEnd (clamped to guard against Sw > SwEnd)
@@ -367,8 +370,11 @@ public:
             const Evaluation Krwd_end = EffectiveLaw::template twoPhaseSatKrw<Evaluation, Args...>(params.drainageParams(), Evaluation(SwEnd));
             const bool anchorAtTrapped = !(SwTab > 1.0 - params.Sncrt());
             const Scalar Sw_a = anchorAtTrapped ? 1.0 - params.Sncrt() : SwTab;
-            if (!(SwEnd > Sw_a))
-                return Krwd_end;
+            if (!(SwEnd > Sw_a)) {
+                // No interval to interpolate over: keep the imbibition table's
+                // (flat) extrapolation, which is continuous at the table end.
+                return EffectiveLaw::template twoPhaseSatKrw<Evaluation, Args...>(params.imbibitionParams(), Sw);
+            }
 
             Evaluation Krw_a = EffectiveLaw::template twoPhaseSatKrw<Evaluation, Args...>(params.imbibitionParams(), Evaluation(SwTab));
             if (anchorAtTrapped) {

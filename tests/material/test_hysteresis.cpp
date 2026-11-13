@@ -3067,6 +3067,16 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(GasWaterImbibitionOnlyKrEndpointScaling, Scalar, T
             // Compare absolutely as the expected value is zero for Sw <= 0.2.
             BOOST_CHECK_SMALL(Krw - kr[Fixture<Scalar>::waterPhaseIdx], Scalar(1e-5));
         }
+
+        // Just beyond the end of the tables, where the drainage and imbibition
+        // end saturations coincide, the water relperm must stay continuous
+        // (flat at the imbibition value), not jump to the drainage end value.
+        typename Fixture<Scalar>::FluidState fs;
+        fs.setSaturation(Fixture<Scalar>::waterPhaseIdx, Scalar(1.00001));
+        fs.setSaturation(Fixture<Scalar>::oilPhaseIdx, 0.0);
+        fs.setSaturation(Fixture<Scalar>::gasPhaseIdx, 0.0);
+        MaterialLaw::relativePermeabilities(kr, param, fs);
+        BOOST_CHECK_SMALL(kr[Fixture<Scalar>::waterPhaseIdx] - krwMax, Scalar(1e-4));
     };
 
     // No end-point scaling keywords: tabulated values.
