@@ -179,6 +179,17 @@ namespace Opm {
         }
 
         /*!
+         * \brief Set the coefficients of the Lorentz-Bray-Clark viscosity
+         *        correlation, for a fluid system that is configured without
+         *        a deck. From a deck, they come from the LBCCOEF keyword.
+         *        init() restores the defaults.
+         */
+        static void setLbcCoefficients(const std::array<Scalar, 5>& lbc)
+        {
+            lbc_coefficients_ = lbc;
+        }
+
+        /*!
          * \brief Initialize the fluid system using an ECL deck object
          */
         static void initFromState(const EclipseState& eclState, const Schedule& schedule)

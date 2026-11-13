@@ -75,6 +75,7 @@
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 
+#include <array>
 #include <stdexcept>
 #include <string_view>
 
@@ -477,4 +478,18 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(GenericFluidSystemInteractionCoefficients, Scalar,
     FluidSystem::setInteractionCoefficients({0.1, 0.2, 0.3});
     BOOST_CHECK_THROW(FluidSystem::setInteractionCoefficients({0.4, 0.5}), std::invalid_argument);
     BOOST_CHECK_EQUAL(FluidSystem::interactionCoefficient(2, 1), Scalar(0.3));
+}
+
+BOOST_AUTO_TEST_CASE_TEMPLATE(GenericFluidSystemLbcCoefficients, Scalar, ScalarTypes)
+{
+    // Without a deck, the viscosity coefficients are set directly; init()
+    // restores the defaults.
+    using FluidSystem = Opm::GenericOilGasWaterFluidSystem<Scalar, 2, false>;
+    FluidSystem::init();
+    const std::array<Scalar, 5> defaults = FluidSystem::lbcCoefficients();
+    const std::array<Scalar, 5> lbc{Scalar(0.1), Scalar(0.02), Scalar(0.06), Scalar(-0.04), Scalar(0.009)};
+    FluidSystem::setLbcCoefficients(lbc);
+    BOOST_CHECK(FluidSystem::lbcCoefficients() == lbc);
+    FluidSystem::init();
+    BOOST_CHECK(FluidSystem::lbcCoefficients() == defaults);
 }
