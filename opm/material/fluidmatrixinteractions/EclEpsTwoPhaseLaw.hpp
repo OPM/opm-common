@@ -544,6 +544,26 @@ private:
     }
 
     /*!
+     * \brief Pure vertical scaling by fr/fdisp in the interval where the
+     *        unscaled function is bounded by its value fdisp at the reference point.
+     *
+     * If fdisp is zero the unscaled function is zero throughout the interval
+     * (it is monotone), so there is nothing to scale and the ratio fr/fdisp
+     * must not be formed: 0*(0/0) would give NaN, e.g. when the reference
+     * relative permeability of the unchanged drainage curve is zero.
+     */
+    template <class Evaluation>
+    OPM_HOST_DEVICE static Evaluation scaleByRatio_(const Evaluation& unscaledKr,
+                                                    const Scalar fr,
+                                                    const Scalar fdisp)
+    {
+        if (!(fdisp > Scalar(0))) {
+            return unscaledKr;
+        }
+        return unscaledKr * (fr / fdisp);
+    }
+
+    /*!
      * \brief Scale the wetting phase relative permeability of a phase according to the given parameters
      */
     template <class Evaluation>
@@ -580,7 +600,7 @@ private:
 
         if (! (SwScaled > sr)) {
             // Pure vertical scaling in left interval ([SWL, SR])
-            return unscaledKrw * (fr / fdisp);
+            return scaleByRatio_(unscaledKrw, fr, fdisp);
         }
         else if (krMaxExceedsKrR_(fmax, fdisp)) {
             // s \in [sr, sm), sm > sr; normal case: Kr(Smax) > Kr(Sr).
@@ -662,7 +682,7 @@ private:
 
         if (! (SwScaled < sr)) {
             // Pure vertical scaling in right-hand interval ([SR, SWU])
-            return unscaledKrn * (fr / fdisp);
+            return scaleByRatio_(unscaledKrn, fr, fdisp);
         }
         else if (krMaxExceedsKrR_(fmax, fdisp)) {
             // s \in [SWL, SR), SWL < SR; normal case: Kr(Swl) > Kr(Sr).

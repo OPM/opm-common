@@ -3077,6 +3077,61 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(GasWaterImbibitionOnlyKrEndpointScaling, Scalar, T
     check("IKRWR\n 1*0.25 /\nIKRW\n 1*0.5 /\n", Scalar(0.5), Scalar(0.25));
 }
 
+// Three-point scaling where the tabulated water relperm is zero at the
+// reference point (Krw = 0 up to Sw = 0.8 = 1 - Sgcr). The ratio of the
+// scaled and unscaled reference values is then 0/0 for the unchanged drainage
+// curve (and x/0 for the imbibition curve), which must not produce NaN or
+// infinity. Left of the reference point the water relperm stays zero, right of
+// it it is linear between (0.8, IKRWR) and (1.0, IKRW).
+BOOST_AUTO_TEST_CASE_TEMPLATE(GasWaterZeroReferenceKrEndpointScaling, Scalar, Types)
+{
+    using MaterialLaw = typename Fixture<Scalar>::MaterialLaw;
+    using MaterialLawManager = typename Fixture<Scalar>::MaterialLawManager;
+    constexpr int numPhases = Fixture<Scalar>::numPhases;
+
+    std::string deckString = gasWaterImbibitionKrEndScaleDeck("IKRWR\n 1*0.1 /\nIKRW\n 1*0.5 /\n");
+    const std::string oldTable = "0.2 0.0 0.0\n    1.0 1.0 0.0 /";
+    const std::string newTable = "0.2 0.0 0.0\n    0.8 0.0 0.0\n    1.0 1.0 0.0 /";
+    for (auto pos = deckString.find(oldTable); pos != std::string::npos;
+         pos = deckString.find(oldTable, pos + newTable.size())) {
+        deckString.replace(pos, oldTable.size(), newTable);
+    }
+
+    Opm::Parser parser;
+    const auto deck = parser.parseString(deckString);
+    const Opm::EclipseState eclState(deck);
+    const std::size_t n = eclState.getInputGrid().getCartesianSize();
+
+    MaterialLawManager manager;
+    manager.initFromState(eclState);
+    manager.initParamsForElements(eclState, n, doOldLookup, doNothing);
+    auto& param = manager.materialLawParams(0);
+
+    std::array<Scalar,numPhases> kr = {0.0, 0.0, 0.0};
+    for (int i = 0; i <= 50; ++i) {
+        const Scalar Sg = Scalar(i) / 100;
+        const Scalar Sw = 1 - Sg;
+        typename Fixture<Scalar>::FluidState fs;
+        fs.setSaturation(Fixture<Scalar>::waterPhaseIdx, Sw);
+        fs.setSaturation(Fixture<Scalar>::oilPhaseIdx, 0.0);
+        fs.setSaturation(Fixture<Scalar>::gasPhaseIdx, Sg);
+
+        MaterialLaw::relativePermeabilities(kr, param, fs);
+        MaterialLaw::updateHysteresis(param, fs);
+
+        const Scalar krw = kr[Fixture<Scalar>::waterPhaseIdx];
+        BOOST_CHECK(std::isfinite(krw));
+        BOOST_CHECK(std::isfinite(kr[Fixture<Scalar>::gasPhaseIdx]));
+        if (std::abs(Sw - Scalar(0.8)) < Scalar(1e-4)) {
+            continue; // the reference point itself
+        }
+        const Scalar expected = Sw < Scalar(0.8)
+            ? Scalar(0.0)
+            : Scalar(0.1) + Scalar(0.4) * (Sw - Scalar(0.8)) / Scalar(0.2);
+        BOOST_CHECK_SMALL(krw - expected, Scalar(1e-5));
+    }
+}
+
 BOOST_AUTO_TEST_CASE_TEMPLATE(GasWaterThreePointKrEndpointScaling, Scalar, Types)
 {
     using MaterialLaw = typename Fixture<Scalar>::MaterialLaw;
