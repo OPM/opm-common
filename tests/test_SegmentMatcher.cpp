@@ -314,7 +314,6 @@ namespace {
             wname, "G", 0, insert, 1, 2, {},
             Opm::WellType { true, Opm::Phase::OIL }, // Oil producer
             Opm::Well::ProducerCMode::ORAT,
-            Opm::Connection::Order::INPUT,
             Opm::UnitSystem::newMETRIC(),
             0.0, true, true, 0,
             Opm::Well::GasInflowEquation::STD
@@ -331,11 +330,12 @@ namespace {
                                 const std::size_t  insert,
                                 const int          numSegments)
     {
+        using namespace std::string_literals;
+
         auto w = Opm::Well {
-            wname, "G", 0, insert, 1, 2, {},
+            wname, "G"s, 0, insert, 1, 2, std::optional<double>{},
             Opm::WellType { false, Opm::Phase::GAS }, // Gas injector
             Opm::Well::ProducerCMode::ORAT,
-            Opm::Connection::Order::INPUT,
             Opm::UnitSystem::newMETRIC(),
             0.0, true, true, 0,
             Opm::Well::GasInflowEquation::STD

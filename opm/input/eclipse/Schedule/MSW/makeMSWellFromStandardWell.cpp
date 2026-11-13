@@ -113,8 +113,14 @@ Well makeMultiSegmentWellPerConnection(const Well& input_well,
                            /*perf_range*/ std::make_pair(perf_start, perf_end));
         perf_start = perf_end;
     }
+
+    // Note: Explicit ordering argument doesn't matter here since we're
+    // creating a multi-segmented well.  Those wells always use segment
+    // based ordering for their connections.  Choose TRACK ordering just
+    // to satisfy the function signature.
     well.updateConnections(std::make_shared<WellConnections>(std::move(new_conns)),
-                           /*force*/ true);
+                           /* order = */ Connection::Order::TRACK,
+                           /* force = */ true);
 
     return well;
 }

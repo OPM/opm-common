@@ -80,7 +80,7 @@ BOOST_AUTO_TEST_CASE(AICDWellTest)
     ctf_props.Kh = 17.29;
     ctf_props.rw = 0.25;
 
-    Opm::WellConnections connection_set(Opm::Connection::Order::TRACK, 10,10);
+    Opm::WellConnections connection_set(10, 10);
     connection_set.add({ 19, 0, 0, grid.getGlobalIndex(19,0,0), 1, state, dir_z, kind, 0, depth, ctf_props, 0, true });
     connection_set.add({ 19, 0, 1, grid.getGlobalIndex(19,0,1), 1, state, dir_z, kind, 0, depth, ctf_props, 0, true });
     connection_set.add({ 19, 0, 2, grid.getGlobalIndex(19,0,2), 1, state, dir_z, kind, 0, depth, ctf_props, 0, true });
@@ -259,7 +259,7 @@ BOOST_AUTO_TEST_CASE(MultisegmentWellTest)
     ctf_props.Kh = 17.29;
     ctf_props.rw = 0.25;
 
-    Opm::WellConnections connection_set(Opm::Connection::Order::TRACK, 10,10);
+    Opm::WellConnections connection_set(10, 10);
     connection_set.add({ 19, 0, 0, grid.getGlobalIndex(19,0,0), 1, state, dir_z, kind, 0, depth, ctf_props, 0, true });
     connection_set.add({ 19, 0, 1, grid.getGlobalIndex(19,0,1), 1, state, dir_z, kind, 0, depth, ctf_props, 0, true });
     connection_set.add({ 19, 0, 2, grid.getGlobalIndex(19,0,2), 1, state, dir_z, kind, 0, depth, ctf_props, 0, true });
@@ -855,7 +855,7 @@ BOOST_AUTO_TEST_CASE(WrongDistanceCOMPSEGS)
     ctf_props.Kh = 17.29;
     ctf_props.rw = 0.25;
 
-    Opm::WellConnections connection_set(Opm::Connection::Order::TRACK, 10,10);
+    Opm::WellConnections connection_set(10, 10);
     connection_set.add({ 19, 0, 0, grid.getGlobalIndex(19,0,0), 1, state, dir_z, kind, 0, depth, ctf_props, 0, true });
     connection_set.add({ 19, 0, 1, grid.getGlobalIndex(19,0,1), 1, state, dir_z, kind, 0, depth, ctf_props, 0, true });
     connection_set.add({ 19, 0, 2, grid.getGlobalIndex(19,0,2), 1, state, dir_z, kind, 0, depth, ctf_props, 0, true });
@@ -939,7 +939,7 @@ BOOST_AUTO_TEST_CASE(NegativeDepthCOMPSEGS)
     ctf_props.Kh = 17.29;
     ctf_props.rw = 0.25;
 
-    Opm::WellConnections connection_set(Opm::Connection::Order::TRACK, 10,10);
+    Opm::WellConnections connection_set(10, 10);
     connection_set.add({ 19, 0, 0, grid.getGlobalIndex(19,0,0), 1, state, dir_z, kind, 0, depth, ctf_props, 0, true });
     connection_set.add({ 19, 0, 1, grid.getGlobalIndex(19,0,1), 1, state, dir_z, kind, 0, depth, ctf_props, 0, true });
     connection_set.add({ 19, 0, 2, grid.getGlobalIndex(19,0,2), 1, state, dir_z, kind, 0, depth, ctf_props, 0, true });
@@ -1022,7 +1022,7 @@ BOOST_AUTO_TEST_CASE(testwsegvalv)
     ctf_props.Kh = 17.29;
     ctf_props.rw = 0.25;
 
-    Opm::WellConnections connection_set(Opm::Connection::Order::TRACK, 10,10);
+    Opm::WellConnections connection_set(10, 10);
     connection_set.add({ 19, 0, 0, grid.getGlobalIndex(19,0,0), 1, state, dir_z, kind, 0, depth, ctf_props, 0, true });
     connection_set.add({ 19, 0, 1, grid.getGlobalIndex(19,0,1), 1, state, dir_z, kind, 0, depth, ctf_props, 0, true });
     connection_set.add({ 19, 0, 2, grid.getGlobalIndex(19,0,2), 1, state, dir_z, kind, 0, depth, ctf_props, 0, true });
