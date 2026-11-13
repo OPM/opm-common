@@ -25,11 +25,14 @@
 
 #include <opm/input/eclipse/EclipseState/Compositional/NormalizeMoleFractions.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/input/eclipse/EclipseState/Phase.hpp>
+#include <opm/input/eclipse/EclipseState/Runspec.hpp>
 
 #include <opm/input/eclipse/Schedule/Network/ExtNetwork.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleGrid.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleState.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleStatic.hpp>
+#include <opm/input/eclipse/Schedule/ScheduleTypes.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQActive.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>
 #include <opm/input/eclipse/Schedule/Well/NameOrder.hpp>
@@ -64,6 +67,7 @@
 #include <functional>
 #include <memory>
 #include <optional>
+#include <sstream>
 #include <string>
 #include <string_view>
 #include <unordered_map>
@@ -101,6 +105,34 @@ std::string trim_wgname(const DeckKeyword& keyword,
         parseContext.handleError(ParseContext::PARSE_WGNAME_SPACE, msg_fmt, location, errors);
     }
     return wgname;
+}
+
+void rejectInactiveInjectionPhase(const HandlerContext& handlerContext,
+                                  const Well&           well,
+                                  const bool            runCheck,
+                                  const InjectorType    newInjectorType)
+{
+    if (! runCheck || handlerContext.static_schedule()
+        .m_runspec.phases().active(well.getPreferredPhase()))
+    {
+        // Common case: Injection phase the same as previous, or new
+        // injection phase is active.  All good.
+        return;
+    }
+
+    // If we get here, the 'well' is being asked to inject an inactive
+    // phase.  That's an unconditional input error and should be rejected as
+    // such.
+
+    std::ostringstream phaseRep{};
+    phaseRep << well.getPreferredPhase();
+
+    throw OpmInputError {
+        fmt::format("{} is not active in the run and cannot be "
+                    "injected in {} injector {}.", phaseRep.str(),
+                    InjectorType2String(newInjectorType), well.name()),
+        handlerContext.keyword.location()
+    };
 }
 
 void updateOpenShutEvents(HandlerContext& handlerContext, const std::string& well_name){
@@ -286,6 +318,11 @@ void handleWCONINJE(HandlerContext& handlerContext)
                 update_well = true;
             }
 
+            rejectInactiveInjectionPhase(handlerContext, well2,
+                                         switching_from_producer ||
+                                         (previousInjectorType != injection->injectorType),
+                                         injection->injectorType);
+
             // The THP limit and VFP table (items 8 and 9) are re-specified
             // by every WCONINJE, whether or not any value changed.
             handlerContext.state().events().addEvent( ScheduleEvents::WELL_THP_UPDATE );
@@ -371,6 +408,11 @@ void handleWCONINJH(HandlerContext& handlerContext)
             if (well2.updateHasInjected()) {
                 update_well = true;
             }
+
+            rejectInactiveInjectionPhase(handlerContext, well2,
+                                         switching_from_producer ||
+                                         (previousInjectorType != injection->injectorType),
+                                         injection->injectorType);
 
             // The VFP table (item 7) is re-specified by every WCONINJH,
             // whether or not any value changed.
@@ -840,19 +882,25 @@ void handleWELSPECS(HandlerContext& handlerContext)
             handlerContext.addGroup(groupName);
         }
 
-        if (existingWells.empty()) {
-            // 'wellName' does not match any existing wells.  Create a
-            // new Well object for this well.
-            handlerContext.welspecsCreateNewWell(record,
-                                                 wellName,
-                                                 groupName);
+        try {
+            if (existingWells.empty()) {
+                // 'wellName' does not match any existing wells.  Create a
+                // new Well object for this well.
+                handlerContext.welspecsCreateNewWell(record,
+                                                     wellName,
+                                                     groupName);
+            }
+            else {
+                // 'wellName' matches one or more existing wells.  Assign
+                // new properties for those wells.
+                handlerContext.welspecsUpdateExistingWells(record,
+                                                           existingWells,
+                                                           groupName);
+            }
         }
-        else {
-            // 'wellName' matches one or more existing wells.  Assign
-            // new properties for those wells.
-            handlerContext.welspecsUpdateExistingWells(record,
-                                                       existingWells,
-                                                       groupName);
+        catch (const OpmInputError&) { throw; }
+        catch (const std::exception& e) {
+            throw OpmInputError { e, handlerContext.keyword.location() };
         }
     }
 

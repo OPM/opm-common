@@ -105,6 +105,7 @@ static std::string WELSPECS() {
 
 static Opm::Schedule createSchedule(const std::string& schedule) {
     const std::string input =
+        "RUNSPEC\nOIL\nGAS\nWATER\n"
         "START             -- 0 \n"
         "10 MAI 2007 / \n"
         "SCHEDULE\n"+ schedule;

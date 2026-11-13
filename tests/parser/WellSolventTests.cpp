@@ -49,6 +49,11 @@ namespace {
 Deck createDeckWithOutSolvent()
 {
     return Parser{}.parseString(R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 GRID
 PERMX
    1000*0.25/
@@ -76,6 +81,11 @@ END
 Deck createDeckWithGasInjector()
 {
     return Parser{}.parseString(R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 GRID
 PERMX
    1000*0.25/
@@ -106,6 +116,11 @@ END
 Deck createDeckWithDynamicWSOLVENT()
 {
     return Parser{}.parseString(R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 START             -- 0
 1 JAN 2000 /
 GRID
@@ -148,6 +163,11 @@ END
 Deck createDeckWithOilInjector()
 {
     return Parser{}.parseString(R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 GRID
 PERMX
    1000*0.25/
@@ -175,6 +195,11 @@ END
 Deck createDeckWithWaterInjector()
 {
     return Parser{}.parseString(R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 GRID
 PERMX
    1000*0.25/

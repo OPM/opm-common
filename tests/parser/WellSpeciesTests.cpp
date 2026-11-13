@@ -58,6 +58,11 @@ namespace {
 Deck createDeckWithOutSpecies()
 {
     return Parser{}.parseString(R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 GRID
 PERMX
    1000*0.25/
@@ -85,6 +90,11 @@ END
 Deck createDeckWithDynamicWSPECIES()
 {
     return Parser{}.parseString(R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 START             -- 0
 1 JAN 2000 /
 GRID
@@ -132,6 +142,11 @@ END
 Deck createDeckWithSpeciesInProducer()
 {
     return Parser{}.parseString(R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 START             -- 0
 1 JAN 2000 /
 GRID

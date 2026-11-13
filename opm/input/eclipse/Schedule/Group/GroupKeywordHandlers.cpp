@@ -22,9 +22,8 @@
 #include <opm/common/utility/OpmInputError.hpp>
 #include <opm/common/utility/String.hpp>
 
-#include <opm/input/eclipse/Deck/DeckKeyword.hpp>
-
-#include <opm/input/eclipse/Parser/ParseContext.hpp>
+#include <opm/input/eclipse/EclipseState/Phase.hpp>
+#include <opm/input/eclipse/EclipseState/Runspec.hpp>
 
 #include <opm/input/eclipse/Schedule/GasLiftOpt.hpp>
 #include <opm/input/eclipse/Schedule/Group/GConSale.hpp>
@@ -47,9 +46,14 @@
 
 #include "../HandlerContext.hpp"
 
+#include <opm/input/eclipse/Deck/DeckKeyword.hpp>
+
+#include <opm/input/eclipse/Parser/ParseContext.hpp>
+
 #include <opm/input/eclipse/Parser/ParserKeywords/G.hpp>
 
 #include <fmt/format.h>
+#include <fmt/ranges.h>
 
 #include <memory>
 #include <optional>
@@ -239,6 +243,20 @@ void handleGCONINJE(HandlerContext& handlerContext)
 
         const Group::InjectionCMode controlMode = Group::InjectionCModeFromString(record.getItem<GI::CONTROL_MODE>().getTrimmedString(0));
         const Phase phase = get_phase( record.getItem<GI::PHASE>().getTrimmedString(0));
+
+        if (! (group_names.empty() || handlerContext.static_schedule().m_runspec.phases().active(phase))) {
+            // Record matches at least one known group and the 'phase' is
+            // not active in the run.  This is an unconditional input error.
+            throw OpmInputError {
+                fmt::format("{} is not active in the run and cannot be "
+                            "used for injection controls in group{} {}",
+                            record.getItem<GI::PHASE>().getTrimmedString(0),
+                            (group_names.size() > 1) ? "s" : "",
+                            fmt::join(group_names, ", ")),
+                keyword.location()
+            };
+        }
+
         const auto surfaceInjectionRate = record.getItem<GI::SURFACE_TARGET>().get<UDAValue>(0);
         const auto reservoirInjectionRate = record.getItem<GI::RESV_TARGET>().get<UDAValue>(0);
         const auto reinj_target = record.getItem<GI::REINJ_TARGET>().get<UDAValue>(0);

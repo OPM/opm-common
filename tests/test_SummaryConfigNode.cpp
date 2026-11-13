@@ -737,6 +737,9 @@ Opm::SummaryConfig parseSummarySection(const std::string& summary_body)
 {
     const std::string deck_str = R"(
 RUNSPEC
+OIL
+GAS
+WATER
 TITLE
  LGR_SCHEMA_TEST /
 DIMENS

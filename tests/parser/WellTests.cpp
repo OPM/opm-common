@@ -74,6 +74,7 @@ namespace {
 
 BOOST_AUTO_TEST_CASE(WellCOMPDATtestTRACK) {
     const std::string input =
+                "RUNSPEC\nOIL\nGAS\nWATER\n"
                 "START             -- 0 \n"
                 "19 JUN 2007 / \n"
                 "GRID\n"
@@ -137,6 +138,11 @@ BOOST_AUTO_TEST_CASE(WellCOMPDATtestTRACK) {
 
 BOOST_AUTO_TEST_CASE(WellCOMPDATtestDEPTH) {
     const std::string input  = R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 START             -- 0
 19 JUN 2007 /
 GRID
@@ -202,6 +208,7 @@ DATES             -- 2
 
 BOOST_AUTO_TEST_CASE(WellCOMPDATtestDefaultTRACK) {
     const std::string input =
+                "RUNSPEC\nOIL\nGAS\nWATER\n"
                 "START             -- 0 \n"
                 "19 JUN 2007 / \n"
                 "GRID\n"
@@ -252,6 +259,7 @@ BOOST_AUTO_TEST_CASE(WellCOMPDATtestDefaultTRACK) {
 
 BOOST_AUTO_TEST_CASE(WellCOMPDATtestINPUT) {
     const std::string input =
+                "RUNSPEC\nOIL\nGAS\nWATER\n"
                 "START             -- 0 \n"
                 "19 JUN 2007 / \n"
                 "GRID\n"
@@ -958,6 +966,7 @@ BOOST_AUTO_TEST_CASE(ExtraAccessors) {
 
 BOOST_AUTO_TEST_CASE(WELOPEN) {
     const std::string input =
+                "RUNSPEC\nOIL\nGAS\nWATER\n"
                 "START             -- 0 \n"
                 "19 JUN 2007 / \n"
                 "GRID\n"
@@ -1118,6 +1127,11 @@ BOOST_AUTO_TEST_CASE(Producer_Control_Mode) {
 
 BOOST_AUTO_TEST_CASE(WPIMULT) {
     std::string input = R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 START             -- 0
 19 JUN 2007 /
 
@@ -1256,6 +1270,11 @@ WPIMULT
 
 BOOST_AUTO_TEST_CASE(FIRST_OPEN) {
     std::string input = R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 START             -- 0
 19 JUN 2007 /
 
@@ -1336,6 +1355,9 @@ WCONINJE
 
 BOOST_AUTO_TEST_CASE(WellPI) {
     const auto deck = Parser{}.parseString(R"(RUNSPEC
+OIL
+GAS
+WATER
 START
 7 OCT 2020 /
 
@@ -1466,6 +1488,9 @@ END
 
 BOOST_AUTO_TEST_CASE(Has_Same_Connections_Pointers) {
     const auto deck = Parser{}.parseString(R"(RUNSPEC
+OIL
+GAS
+WATER
 START
 7 OCT 2020 /
 
@@ -1526,6 +1551,9 @@ END
 
 BOOST_AUTO_TEST_CASE(REPERF) {
       const auto deck = Parser{}.parseString(R"(RUNSPEC
+OIL
+GAS
+WATER
 START
 7 OCT 2020 /
 
@@ -1634,6 +1662,9 @@ END
 
 BOOST_AUTO_TEST_CASE(Missing_RefDepth) {
       const auto deck = Parser{}.parseString(R"(RUNSPEC
+OIL
+GAS
+WATER
 START
 17 DEC 2021 /
 
