@@ -36,8 +36,8 @@
 
 namespace Opm {
 
-template <class Scalar, class IndexTraits, template<typename> typename Storage>
-void BlackOilFluidSystem<Scalar,IndexTraits, Storage>::
+template <class Scalar, class IndexTraits, template<typename> typename Storage, class PvtApproaches>
+void BlackOilFluidSystem<Scalar, IndexTraits, Storage, PvtApproaches>::
 initFromState(const EclipseState& eclState, const Schedule& schedule)
 {
     // COMPS selects compositional mode, which this fluid system cannot
