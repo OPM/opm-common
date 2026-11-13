@@ -1173,6 +1173,9 @@ namespace {
     // DZ = 10 m) used by the thermal MSW tests below.  Each test appends its
     // own SCHEDULE section to this string.
     const std::string thermalMSWGridPreamble = R"(RUNSPEC
+OIL
+WATER
+GAS
 DIMENS
   20 20 20 /
 GRID
@@ -1265,6 +1268,9 @@ BOOST_AUTO_TEST_CASE(MULTIPLE_WELSEGS) {
 BOOST_AUTO_TEST_CASE(Node_XY_ABS_Individual)
 {
     const auto deck = ::Opm::Parser{}.parseString(R"(RUNSPEC
+OIL
+GAS
+WATER
 DIMENS
   20 20 20 /
 
@@ -1350,6 +1356,11 @@ BOOST_AUTO_TEST_CASE(ThermalMSW_ScheduleIntegration)
     // defaulted are populated with the grid-block thickness in the penetration
     // direction.
     const auto deck = ::Opm::Parser{}.parseString(thermalMSWGridPreamble + R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 WELSPECS
  'PROD01' 'P' 20 20 1* OIL /
 /
@@ -1449,6 +1460,11 @@ WSEGHEAT
     // replace-all would run last and leave 0.01.
     {
         const auto order_deck = ::Opm::Parser{}.parseString(thermalMSWGridPreamble + R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 WELSPECS
  'PROD01' 'P' 20 20 1* OIL /
 /
@@ -1659,6 +1675,11 @@ BOOST_AUTO_TEST_CASE(WSEGHEAT_Validation)
     // regular (non-multisegment) well 'PROD02' used to check that WSEGHEAT
     // applied to a well without a segment structure is handled gracefully.
     const std::string base = thermalMSWGridPreamble + R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 WELSPECS
  'PROD01' 'P' 20 20 1* OIL /
  'PROD02' 'P' 10 10 1* OIL /
@@ -1861,6 +1882,9 @@ COMPSEGS
 BOOST_AUTO_TEST_CASE(Node_XY_ABS_Range)
 {
     const auto deck = ::Opm::Parser{}.parseString(R"(RUNSPEC
+OIL
+GAS
+WATER
 DIMENS
   20 20 20 /
 
@@ -1933,6 +1957,9 @@ COMPSEGS
 BOOST_AUTO_TEST_CASE(Node_XY_INC_Individual)
 {
     const auto deck = ::Opm::Parser{}.parseString(R"(RUNSPEC
+OIL
+GAS
+WATER
 DIMENS
   20 20 20 /
 
@@ -2015,6 +2042,9 @@ COMPSEGS
 BOOST_AUTO_TEST_CASE(Node_XY_INC_Range)
 {
     const auto deck = ::Opm::Parser{}.parseString(R"(RUNSPEC
+OIL
+GAS
+WATER
 DIMENS
   20 20 20 /
 
@@ -2087,6 +2117,9 @@ COMPSEGS
 BOOST_AUTO_TEST_CASE(MissingCOMPSEGS)
 {
     const auto deck = ::Opm::Parser{}.parseString(R"(RUNSPEC
+OIL
+GAS
+WATER
 DIMENS
   20 20 20 /
 

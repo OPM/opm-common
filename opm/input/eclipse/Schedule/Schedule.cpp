@@ -32,8 +32,10 @@
 
 #include <opm/input/eclipse/Parser/InputErrorAction.hpp>
 
-#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquifers.hpp>
+#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/input/eclipse/EclipseState/Phase.hpp>
+#include <opm/input/eclipse/EclipseState/Runspec.hpp>
 #include <opm/input/eclipse/EclipseState/TracerConfig.hpp>
 
 #include <opm/input/eclipse/Python/Python.hpp>
@@ -1157,20 +1159,53 @@ Defaulted grid coordinates is not allowed for COMPDAT as part of ACTIONX)"
         // We change from eclipse's 1 - n, to a 0 - n-1 solution
         int headI = record.getItem<ParserKeywords::WELSPECS::HEAD_I>().get< int >(0) - 1;
         int headJ = record.getItem<ParserKeywords::WELSPECS::HEAD_J>().get< int >(0) - 1;
-        Phase preferredPhase;
+
+        const auto preferredPhase =
+            [&wellName,
+             phaseStr = record.getItem<ParserKeywords::WELSPECS::PHASE>().getTrimmedString(0),
+             &phases = this->m_static.m_runspec.phases()]() -> Phase
         {
-            const std::string phaseStr = record.getItem<ParserKeywords::WELSPECS::PHASE>().getTrimmedString(0);
-            if (phaseStr == "LIQ") {
-                // We need a workaround in case the preferred phase is "LIQ",
-                // which is not proper phase and will cause the get_phase()
-                // function to throw. In that case we choose to treat it as OIL.
-                preferredPhase = Phase::OIL;
-                OpmLog::warning("LIQ_PREFERRED_PHASE",
-                                "LIQ preferred phase not supported for well " + wellName + ", using OIL instead");
-            } else {
-                preferredPhase = get_phase(phaseStr);
+            // We need a workaround in case the preferred phase is "LIQ",
+            // which is not recognised as a proper phase in 'Phase.hpp' and
+            // will cause the get_phase() function to throw an exception.
+            // In that case we choose to treat it as OIL if active in the
+            // run or WATER otherwise.  If neither OIL nor WATER are active
+            // in the run, we terminate.
+            if (phaseStr != "LIQ") {
+                return get_phase(phaseStr);
             }
+
+            // If we get here, phaseStr == "LIQ".  Apply workaround.
+
+            if (phases.active(Phase::OIL)) {
+                OpmLog::warning("LIQ_PREFERRED_PHASE",
+                                fmt::format("Preferred phase 'LIQ' is not supported "
+                                            "for well {}, using OIL instead.", wellName));
+                return Phase::OIL;
+            }
+            else if (phases.active(Phase::WATER)) {
+                OpmLog::warning("LIQ_PREFERRED_PHASE",
+                                fmt::format("Preferred phase 'LIQ' is not supported "
+                                            "for well {}, using WATER instead.", wellName));
+                return Phase::WATER;
+            }
+            else {
+                throw std::invalid_argument {
+                    fmt::format("Neither OIL nor WATER are active phases. "
+                                "Cannot use preferred phase 'LIQ' for well {}.", wellName)
+                };
+            }
+        }();
+
+        if (! this->m_static.m_runspec.phases().active(preferredPhase)) {
+            throw std::invalid_argument {
+                fmt::format("{} is not active in the run and cannot "
+                            "be used as the preferred phase for well {}.",
+                            record.getItem<ParserKeywords::WELSPECS::PHASE>().getTrimmedString(0),
+                            wellName)
+            };
         }
+
         const auto& refDepthItem = record.getItem<ParserKeywords::WELSPECS::REF_DEPTH>();
         std::optional<double> ref_depth;
         if (refDepthItem.hasValue( 0 ))

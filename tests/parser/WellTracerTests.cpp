@@ -52,6 +52,11 @@ namespace {
 Deck createDeckWithOutTracer()
 {
     return Parser{}.parseString(R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 GRID
 PERMX
    1000*0.25/
@@ -79,6 +84,11 @@ END
 Deck createDeckWithDynamicWTRACER()
 {
     return Parser{}.parseString(R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 START             -- 0
 1 JAN 2000 /
 GRID
@@ -126,6 +136,11 @@ END
 Deck createDeckWithTracerInProducer()
 {
     return Parser{}.parseString(R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 START             -- 0
 1 JAN 2000 /
 GRID

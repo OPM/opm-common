@@ -130,6 +130,11 @@ BOOST_AUTO_TEST_CASE(GroupDoesNotHaveWell) {
 
 BOOST_AUTO_TEST_CASE(createDeckWithGEFAC) {
     const std::string input = R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 START             -- 0
 19 JUN 2007 /
 GRID
@@ -173,6 +178,11 @@ BOOST_AUTO_TEST_CASE(createDeckWithWGRUPCONandWCONPROD) {
        GRUPCON (well guide rates for group control)
        WCONPROD (conrol data for production wells) with GRUP control mode */
     const std::string input = R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 START             -- 0
 19 JUN 2007 /
 GRID
@@ -944,6 +954,11 @@ GECON
 
 BOOST_AUTO_TEST_CASE(GCONINJE_MULTIPLE_PHASES) {
     const std::string input = R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 START             -- 0
 31 AUG 1993 /
 SCHEDULE
@@ -1015,6 +1030,11 @@ GCONINJE
 
 BOOST_AUTO_TEST_CASE(GCONINJE_RESV_SETS_TOPUP_PHASE) {
     const std::string input = R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 START             -- 0
 31 AUG 1993 /
 SCHEDULE
@@ -1035,6 +1055,11 @@ GCONINJE
 
 BOOST_AUTO_TEST_CASE(GCONINJE_VREP_SETS_TOPUP_PHASE) {
     const std::string input = R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 START             -- 0
 31 AUG 1993 /
 SCHEDULE
@@ -1055,6 +1080,11 @@ GCONINJE
 
 BOOST_AUTO_TEST_CASE(GCONINJE_REIN_DOES_NOT_SET_TOPUP_PHASE) {
     const std::string input = R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 START             -- 0
 31 AUG 1993 /
 SCHEDULE
@@ -1080,6 +1110,11 @@ BOOST_AUTO_TEST_CASE(GCONSALE_PRESERVES_EXISTING_GCONINJE_GAS_CONTROL) {
     // handleGCONSALE must only ensure a GAS injection control exists, not overwrite an
     // existing one with a default (cmode=NONE, surface_max_rate=0, fraction=0).
     const std::string input = R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 START             -- 0
 31 AUG 1993 /
 SCHEDULE
@@ -1119,6 +1154,11 @@ BOOST_AUTO_TEST_CASE(GCONSALE_REQUIRES_REIN_GAS_INJECTION_CONTROL) {
 
     // REIN + GCONSALE on the same group: valid, no error.
     const std::string valid = R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 START
 31 AUG 1993 /
 SCHEDULE
@@ -1136,6 +1176,11 @@ GCONSALE
     // NONE + GCONSALE on the same group: valid (NONE is not a competing control, and
     // GCONSALE itself leaves the group with a default NONE control).
     const std::string none_ok = R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 START
 31 AUG 1993 /
 SCHEDULE
@@ -1171,6 +1216,11 @@ GCONSALE
 
     // RATE (non-REIN) GAS control + GCONSALE on the same group: invalid.
     const std::string invalid = R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 START
 31 AUG 1993 /
 SCHEDULE
@@ -1191,6 +1241,11 @@ GCONSALE
     // A non-REIN GAS control on a *subordinate* group (no GCONSALE on it) is fine:
     // GCONSALE is on the FIELD, and the subordinate group only distributes injection.
     const std::string subordinate = R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 START
 31 AUG 1993 /
 SCHEDULE
@@ -1209,6 +1264,11 @@ GCONINJE
     // A negative sales target switches sales control off: no safeguard even with a
     // non-REIN GAS control on the group.
     const std::string sales_off = R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 START
 31 AUG 1993 /
 SCHEDULE
@@ -1226,6 +1286,11 @@ GCONSALE
 
 BOOST_AUTO_TEST_CASE(GCONINJE_MULTIPLE_TOPUP_PHASES_RETURNS_NULLOPT) {
     const std::string input = R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 START             -- 0
 31 AUG 1993 /
 SCHEDULE
@@ -1246,6 +1311,11 @@ GCONINJE
 
 BOOST_AUTO_TEST_CASE(GCONINJE_GUIDERATE) {
     const std::string input = R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 START             -- 0
 31 AUG 1993 /
 SCHEDULE
@@ -1333,6 +1403,11 @@ GCONINJE
 
 BOOST_AUTO_TEST_CASE(GCONINJE_GCONPROD) {
     const std::string input = R"(
+RUNSPEC
+OIL
+GAS
+WATER
+
 START             -- 0
 31 AUG 1993 /
 SCHEDULE

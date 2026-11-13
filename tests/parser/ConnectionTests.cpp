@@ -465,6 +465,9 @@ BOOST_AUTO_TEST_CASE(loadCOMPDATTESTSPE9) {
 
 BOOST_AUTO_TEST_CASE(ApplyWellPI) {
     const auto deck = Opm::Parser{}.parseString(R"(RUNSPEC
+OIL
+GAS
+WATER
 DIMENS
 10 10 3 /
 
@@ -616,6 +619,9 @@ END
 
 BOOST_AUTO_TEST_CASE(Completion_From_Global_Connection_Index) {
     const auto deck = Opm::Parser{}.parseString(R"(RUNSPEC
+OIL
+GAS
+WATER
 START
 7 OCT 2020 /
 
