@@ -145,7 +145,12 @@ applySwatinit(unsigned elemIdx,
     }
 
     auto& elemScaledEpsInfo = params_.oilWaterScaledEpsInfoDrainage[elemIdx];
-    if (Sw <= elemScaledEpsInfo.Swl)
+    // Saturations within this tolerance of the connate saturation are treated
+    // as connate, to be robust against roundoff, e.g., in connate saturations
+    // derived as one minus the maximum gas saturation.
+    constexpr Scalar connateTolerance = 1.0e-6;
+    const bool atConnate = Sw <= elemScaledEpsInfo.Swl + connateTolerance;
+    if (atConnate)
         Sw = elemScaledEpsInfo.Swl;
 
     // Two-phase gas/water runs have no oil/water curve: scale the gas/water
@@ -184,8 +189,11 @@ applySwatinit(unsigned elemIdx,
         return {Sw, /*newSwatInit*/ true};
     }
 
-    // Sufficiently positive value, continue with max. capillary pressure (PCW) scaling to honor SWATINIT value
-    const Scalar newMaxPcow = maxPc * (pcow/pcowAtSw);
+    // Scaled maximum capillary pressure honouring SWATINIT.  Optionally keep
+    // the unscaled maximum at connate saturation if honouring SWATINIT would
+    // require a larger maximum capillary pressure.
+    const bool suppressScaleUp = atConnate && !swatinitScaleUpAtConnate_ && (pcow > pcowAtSw);
+    const Scalar newMaxPcow = suppressScaleUp ? maxPc : maxPc * (pcow/pcowAtSw);
 
     // Limit max. capillary pressure with PPCWMAX
     bool newSwatInit = false;
