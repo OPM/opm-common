@@ -36,8 +36,11 @@
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 
+#include <opm/input/eclipse/Schedule/MSW/Segment.hpp>
+#include <opm/input/eclipse/Schedule/MSW/WellSegments.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
+#include <opm/input/eclipse/Schedule/Well/Well.hpp>
 
 #include <opm/common/utility/TimeService.hpp>
 
@@ -45,6 +48,9 @@
 
 #include <opm/input/eclipse/Deck/Deck.hpp>
 
+#include <opm/input/eclipse/Parser/ErrorGuard.hpp>
+#include <opm/input/eclipse/Parser/InputErrorAction.hpp>
+#include <opm/input/eclipse/Parser/ParseContext.hpp>
 #include <opm/input/eclipse/Parser/Parser.hpp>
 
 #include <cmath>
@@ -1148,3 +1154,174 @@ BOOST_AUTO_TEST_CASE(MSW_RST)
 }
 
 BOOST_AUTO_TEST_SUITE_END()     // Aggregate_MSW
+
+// =====================================================================
+
+BOOST_AUTO_TEST_SUITE(Invalid_Branch_Structure)
+
+namespace {
+
+// Well PROD01 with a three-segment main stem (branch 1) plus two further
+// segments, 4 and 5, whose branch numbers and outlet segments are given by
+// the caller.
+std::string branchStructureDeck(const int branch4, const int outlet4,
+                                const int branch5, const int outlet5)
+{
+    const auto b4 = std::to_string(branch4), o4 = std::to_string(outlet4);
+    const auto b5 = std::to_string(branch5), o5 = std::to_string(outlet5);
+
+    return R"(RUNSPEC
+DIMENS
+  20 20 20 /
+OIL
+WATER
+GAS
+METRIC
+START
+ 1 'JAN' 2000 /
+WELLDIMS
+ 2 10 3 2 /
+WSEGDIMS
+ 1 10 3 /
+GRID
+DXV
+  20*100 /
+DYV
+  20*100 /
+DZV
+  20*10 /
+DEPTHZ
+  441*2000.0 /
+PORO
+    8000*0.1 /
+PERMX
+    8000*1 /
+PERMY
+    8000*0.1 /
+PERMZ
+    8000*0.01 /
+SCHEDULE
+WELSPECS
+ 'PROD01' 'P' 20 20 1* OIL /
+/
+COMPDAT
+ 'PROD01' 20 20 1 4 'OPEN' /
+/
+WELSEGS
+ 'PROD01' 2000.0 0.0 1* 'INC' 'HFA' /
+ 2 2 1 1 10.0 10.0 0.1 1.0e-5 /
+ 3 3 1 2 10.0 10.0 0.1 1.0e-5 /
+ 4 4 )" + b4 + " " + o4 + R"( 10.0 10.0 0.1 1.0e-5 /
+ 5 5 )" + b5 + " " + o5 + R"( 10.0 10.0 0.1 1.0e-5 /
+/
+COMPSEGS
+ 'PROD01' /
+ 20 20 1 1 0.0 10.0 1* 3* 2 /
+ 20 20 2 1 10.0 20.0 1* 3* 3 /
+ 20 20 3 )" + b4 + R"( 10.0 20.0 1* 3* 4 /
+ 20 20 4 )" + b5 + R"( 20.0 30.0 1* 3* 5 /
+/
+WCONPROD
+ 'PROD01' 'OPEN' 'ORAT' 100.0 4* 10.0 /
+/
+TSTEP
+ 2*1 /
+END
+)";
+}
+
+// Generate restart file MSW arrays (ISEG, RSEG, ILBS, ILBR) at report step
+// 1 for a schedule loaded with SCHEDULE_WELSEGS_INVALID_BRANCH = IGNORE, and
+// check that the segment structure is recovered from those arrays in the
+// same way as when restarting a simulation.
+void checkRestartSegments(const std::string& deck_string)
+{
+    const auto deck = Opm::Parser{}.parseString(deck_string);
+    const auto es   = Opm::EclipseState { deck };
+    const auto grid = Opm::EclipseGrid  { deck };
+
+    auto parseContext = Opm::ParseContext{};
+    parseContext.update(Opm::ParseContext::SCHEDULE_WELSEGS_INVALID_BRANCH,
+                        Opm::InputErrorAction::IGNORE);
+    auto errors = Opm::ErrorGuard{};
+
+    const auto sched = Opm::Schedule {
+        deck, es, parseContext, errors, std::make_shared<Opm::Python>()
+    };
+
+    const auto smry = Opm::SummaryState {
+        Opm::TimeService::now(), es.runspec().udqParams().undefinedValue()
+    };
+
+    const auto rptStep = std::size_t {1};
+    const auto ih = Opm::RestartIO::Helpers::
+        createInteHead(es, grid, sched, 86'400.0, rptStep, rptStep + 1, rptStep);
+
+    auto amswd = Opm::RestartIO::Helpers::AggregateMSWData {ih};
+    BOOST_REQUIRE_NO_THROW(amswd.captureDeclaredMSWData(sched, rptStep, ih, grid,
+                                                        smry, Opm::data::Wells{}));
+
+    const auto& segments = sched[rptStep].wells("PROD01").getSegments();
+    const auto  nseg     = static_cast<int>(segments.size());
+
+    const auto nisegz = static_cast<std::size_t>(ih[VI::intehead::NISEGZ]);
+    const auto nrsegz = static_cast<std::size_t>(ih[VI::intehead::NRSEGZ]);
+    const auto& iseg = amswd.getISeg();
+    const auto& rseg = amswd.getRSeg();
+
+    // Segment ordering (ISEG item 1 of the first 'nseg' segment windows) is
+    // a permutation of the segment numbers in which every segment comes
+    // after all of its inflow segments.
+    auto position = std::vector<int>(nseg + 1, -1);
+    for (auto i = 0; i < nseg; ++i) {
+        const auto segNum = iseg[i*nisegz + VI::ISeg::SegNo];
+        BOOST_REQUIRE_MESSAGE((segNum >= 1) && (segNum <= nseg),
+                              "Invalid segment number " << segNum << " in ISEG ordering");
+        BOOST_CHECK_MESSAGE(position[segNum] < 0,
+                            "Segment " << segNum << " repeated in ISEG ordering");
+        position[segNum] = i;
+    }
+
+    for (const auto& segment : segments) {
+        const auto segNum = segment.segmentNumber();
+
+        const auto rstSeg = Opm::RestartIO::RstSegment {
+            es.getUnits(), segNum,
+            iseg.data() + (segNum - 1)*nisegz,
+            rseg.data() + (segNum - 1)*nrsegz
+        };
+
+        BOOST_CHECK_EQUAL(rstSeg.outlet_segment, segment.outletSegment());
+        BOOST_CHECK_EQUAL(rstSeg.branch, segment.branchNumber());
+
+        if (const auto outlet = segment.outletSegment(); outlet > 0) {
+            BOOST_CHECK_MESSAGE(position[segNum] < position[outlet],
+                                "Segment " << segNum << " must be ordered "
+                                "before its outlet segment " << outlet);
+        }
+    }
+}
+
+} // Anonymous namespace
+
+BOOST_AUTO_TEST_CASE(Valid_Structure)
+{
+    // Branch numbers need not follow segment numbers.
+    checkRestartSegments(branchStructureDeck(3, 2, 2, 3));
+}
+
+BOOST_AUTO_TEST_CASE(Branch_With_Multiple_Entry_Segments)
+{
+    // Segments 4 and 5 are both on branch 2, but are not connected to each
+    // other.
+    checkRestartSegments(branchStructureDeck(2, 2, 2, 3));
+}
+
+BOOST_AUTO_TEST_CASE(Branch_With_Fork)
+{
+    // Segments 3 and 4 both have segment 2 as their outlet, and all three
+    // segments are on branch 1.
+    checkRestartSegments(branchStructureDeck(1, 2, 2, 3));
+}
+
+BOOST_AUTO_TEST_SUITE_END()     // Invalid_Branch_Structure

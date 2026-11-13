@@ -49,6 +49,7 @@
 
 #include <opm/input/eclipse/Schedule/Action/State.hpp>
 #include <opm/input/eclipse/Schedule/MSW/SegmentMatcher.hpp>
+#include <opm/input/eclipse/Schedule/MSW/WellSegments.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleState.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
@@ -69,6 +70,9 @@
 
 #include <opm/input/eclipse/Deck/Deck.hpp>
 
+#include <opm/input/eclipse/Parser/ErrorGuard.hpp>
+#include <opm/input/eclipse/Parser/InputErrorAction.hpp>
+#include <opm/input/eclipse/Parser/ParseContext.hpp>
 #include <opm/input/eclipse/Parser/Parser.hpp>
 
 #include <algorithm>
@@ -1451,9 +1455,27 @@ namespace {
             es.getIOConfig().setBaseName(caseName);
         }
 
+        CaseIO(const Deck& deck, const std::string& caseName,
+               const ParseContext& parseContext)
+            : es     { deck }
+            , sched  { makeSchedule(deck, es, parseContext) }
+            , sumcfg { deck, sched, es.fieldProps(), es.aquifer() }
+        {
+            es.getIOConfig().setBaseName(caseName);
+        }
+
         EclipseState  es{};
         Schedule      sched{};
         SummaryConfig sumcfg{};
+
+    private:
+        static Schedule makeSchedule(const Deck&         deck,
+                                     const EclipseState& es,
+                                     const ParseContext& parseContext)
+        {
+            auto errors = ErrorGuard{};
+            return { deck, es, parseContext, errors, std::make_shared<Python>() };
+        }
     };
 
     std::pair<data::Wells, SummaryState> dynamicStateFieldWells()
@@ -1615,4 +1637,173 @@ END
 
     BOOST_CHECK_EQUAL(rstWells.back().name, "W2");
     BOOST_CHECK_EQUAL(rstWells.back().group, "FIELD");
+}
+
+// ---------------------------------------------------------------------
+
+namespace {
+    // Multisegment well PROD01 with a three-segment main stem (branch 1)
+    // plus two further segments, 4 and 5, whose branch numbers and outlet
+    // segments are given by the caller.  If 'restart' is true, the run is
+    // restarted from report step 1 of case MSW-BRANCH.
+    std::string mswBranchStructureDeck(const int  branch4, const int outlet4,
+                                       const int  branch5, const int outlet5,
+                                       const bool restart)
+    {
+        const auto b4 = std::to_string(branch4), o4 = std::to_string(outlet4);
+        const auto b5 = std::to_string(branch5), o5 = std::to_string(outlet5);
+
+        return std::string { R"(RUNSPEC
+OIL
+WATER
+DIMENS
+ 1 1 4 /
+WELLDIMS
+ 1 4 1 1 /
+WSEGDIMS
+ 1 10 3 /
+START
+ 1 JAN 2000 /
+UNIFIN
+UNIFOUT
+GRID
+DXV
+ 100.0 /
+DYV
+ 100.0 /
+DZV
+ 4*10.0 /
+DEPTHZ
+ 4*2000.0 /
+EQUALS
+  PORO  0.1 /
+  PERMX 1 /
+  PERMY 1 /
+  PERMZ 0.1 /
+/
+)" } + (restart ? R"(SOLUTION
+RESTART
+ 'MSW-BRANCH' 1 /
+)" : "") + R"(SCHEDULE
+)" + (restart ? "SKIPREST\n" : "") + R"(RPTRST
+ BASIC=2 /
+WELSPECS
+ 'PROD01' 'FIELD' 1 1 1* 'OIL' /
+/
+COMPDAT
+ 'PROD01' 1 1 1 4 'OPEN' /
+/
+WELSEGS
+ 'PROD01' 2000.0 0.0 1* 'INC' 'HFA' /
+ 2 2 1 1 10.0 10.0 0.1 1.0e-5 /
+ 3 3 1 2 10.0 10.0 0.1 1.0e-5 /
+ 4 4 )" + b4 + " " + o4 + R"( 10.0 10.0 0.1 1.0e-5 /
+ 5 5 )" + b5 + " " + o5 + R"( 10.0 10.0 0.1 1.0e-5 /
+/
+COMPSEGS
+ 'PROD01' /
+ 1 1 1 1 0.0 10.0 1* 3* 2 /
+ 1 1 2 1 10.0 20.0 1* 3* 3 /
+ 1 1 3 )" + b4 + R"( 10.0 20.0 1* 3* 4 /
+ 1 1 4 )" + b5 + R"( 20.0 30.0 1* 3* 5 /
+/
+WCONPROD
+ 'PROD01' 'OPEN' 'ORAT' 100.0 4* 10.0 /
+/
+DATES
+ 1 FEB 2000 /
+/
+DATES
+ 1 MAR 2000 /
+/
+END
+)";
+    }
+
+    // Write a restart file at report step 1 for a model loaded with
+    // SCHEDULE_WELSEGS_INVALID_BRANCH = IGNORE, restart from that file, and
+    // check that the restarted model has the same segment structure.
+    void checkMSWRestartRoundTrip(const int branch4, const int outlet4,
+                                  const int branch5, const int outlet5)
+    {
+        auto parseContext = ParseContext{};
+        parseContext.update(ParseContext::SCHEDULE_WELSEGS_INVALID_BRANCH,
+                            InputErrorAction::IGNORE);
+
+        const auto cse = CaseIO {
+            Parser{}.parseString(mswBranchStructureDeck(branch4, outlet4,
+                                                        branch5, outlet5, false)),
+            "MSW-BRANCH", parseContext
+        };
+
+        WorkArea test_area { "msw_branch_structure_restart" };
+
+        {
+            auto writer = EclipseIO {
+                cse.es, cse.es.getInputGrid(), cse.sched, cse.sumcfg
+            };
+
+            auto xr = data::Solution{};
+            xr.insert("PRESSURE", UnitSystem::measure::pressure,
+                      std::vector<double>(4, 200.0*unit::barsa),
+                      data::TargetType::RESTART_SOLUTION);
+            xr.insert("SWAT", UnitSystem::measure::identity,
+                      std::vector<double>(4, 0.25),
+                      data::TargetType::RESTART_SOLUTION);
+
+            BOOST_REQUIRE_NO_THROW(writer.writeTimeStep(Action::State{},
+                                                        WellTestState{},
+                                                        SummaryState{TimeService::now(), 0.0},
+                                                        UDQState{},
+                                                        /* report_step = */   1,
+                                                        /* isSubstep = */     false,
+                                                        /* seconds_elapsed */ 31 * unit::day,
+                                                        RestartValue { xr, data::Wells{}, {}, {} }));
+        }
+
+        const auto rstDeck = Parser{}.parseString
+            (mswBranchStructureDeck(branch4, outlet4, branch5, outlet5, true));
+        const auto rstES = EclipseState { rstDeck };
+
+        auto rstView = std::make_shared<EclIO::RestartFileView>
+            (std::make_shared<EclIO::ERst>("MSW-BRANCH.UNRST"), 1);
+
+        auto rstState = RestartIO::RstState::load(std::move(rstView),
+                                                  rstES.runspec(), Parser{});
+
+        const auto rstSched = Schedule {
+            rstDeck, rstES, std::make_shared<Python>(),
+            /* lowActionParsingStrictness = */ false,
+            /* slave_mode = */ false, /* keepKeywords = */ true,
+            /* output_interval = */ {}, &rstState
+        };
+
+        const auto& segments    = cse.sched[1].wells("PROD01").getSegments();
+        const auto& rstSegments = rstSched[1].wells("PROD01").getSegments();
+
+        BOOST_REQUIRE_EQUAL(rstSegments.size(), segments.size());
+
+        for (const auto& segment : segments) {
+            const auto& rstSegment = rstSegments.getFromSegmentNumber(segment.segmentNumber());
+
+            BOOST_CHECK_EQUAL(rstSegment.outletSegment(), segment.outletSegment());
+            BOOST_CHECK_EQUAL(rstSegment.branchNumber(), segment.branchNumber());
+            BOOST_CHECK_CLOSE(rstSegment.totalLength(), segment.totalLength(), 1.0e-5);
+            BOOST_CHECK_CLOSE(rstSegment.depth(), segment.depth(), 1.0e-5);
+        }
+    }
+} // Anonymous namespace
+
+BOOST_AUTO_TEST_CASE(MSW_Branch_With_Multiple_Entry_Segments)
+{
+    // Segments 4 and 5 are both on branch 2, but are not connected to each
+    // other.
+    checkMSWRestartRoundTrip(2, 2, 2, 3);
+}
+
+BOOST_AUTO_TEST_CASE(MSW_Branch_With_Fork)
+{
+    // Segments 3 and 4 both have segment 2 as their outlet, and all three
+    // segments are on branch 1.
+    checkMSWRestartRoundTrip(1, 2, 2, 3);
 }

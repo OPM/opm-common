@@ -663,12 +663,14 @@ namespace Opm {
                 } else { // there is already a candidate, chosing the one with the same branch number with last_branch_number
                     const int old_target_segment_index_branch = m_segments[target_segment_index].branchNumber();
                     const int new_target_segment_index_branch = m_segments[i_index].branchNumber();
-                    if (new_target_segment_index_branch == last_branch_number) {
-                        if (old_target_segment_index_branch != last_branch_number) {
-                            target_segment_index= i_index;
-                        } else {
-                            throw std::logic_error("two segments in the same branch share the same outlet segment !!\n");
-                        }
+                    if ((new_target_segment_index_branch == last_branch_number) &&
+                        (old_target_segment_index_branch != last_branch_number))
+                    {
+                        // If both candidates are on the last branch, then
+                        // that branch forks.  Keep the first candidate in
+                        // that case.  The fork is diagnosed, with context,
+                        // in checkBranchStructure().
+                        target_segment_index= i_index;
                     }
                 }
             }
@@ -798,6 +800,103 @@ namespace Opm {
         }
 
         return segments;
+    }
+
+    void WellSegments::checkBranchStructure(std::string_view       well_name,
+                                            const KeywordLocation& location,
+                                            const ParseContext&    parseContext,
+                                            ErrorGuard&            errors) const
+    {
+        // Branch -> segments in that branch whose outlet is not on the same
+        // branch (or which have no outlet, i.e., the top segment).
+        auto branchEntries = std::map<int, std::vector<int>>{};
+
+        // Segment -> inlet segments on the same branch as that segment.
+        auto sameBranchInlets = std::map<int, std::vector<int>>{};
+
+        for (const auto& segment : this->m_segments) {
+            const auto branch = segment.branchNumber();
+            const auto outlet = segment.outletSegment();
+            const auto outletIx = (outlet > 0)
+                ? this->segmentNumberToIndex(outlet) : -1;
+
+            if ((outletIx < 0) ||
+                (this->m_segments[outletIx].branchNumber() != branch))
+            {
+                branchEntries[branch].push_back(segment.segmentNumber());
+            }
+            else {
+                sameBranchInlets[outlet].push_back(segment.segmentNumber());
+            }
+        }
+
+        auto describeEntry = [this](const int segNum)
+        {
+            const auto outlet = this->getFromSegmentNumber(segNum).outletSegment();
+            const auto outletIx = this->segmentNumberToIndex(outlet);
+
+            if ((outlet <= 0) || (outletIx < 0)) {
+                return fmt::format("{} (top segment)", segNum);
+            }
+
+            return fmt::format("{} (outlet segment {} on branch {})", segNum,
+                               outlet, this->m_segments[outletIx].branchNumber());
+        };
+
+        auto problems = std::string{};
+
+        for (auto& [branch, entries] : branchEntries) {
+            if (entries.size() <= 1) {
+                continue;
+            }
+
+            std::ranges::sort(entries);
+
+            problems += fmt::format("\n  * Branch {} is joined to the rest of "
+                                    "the well through {} segments:",
+                                    branch, entries.size());
+
+            for (const auto& segNum : entries) {
+                problems += fmt::format("\n      - Segment {}", describeEntry(segNum));
+            }
+        }
+
+        for (auto& [outlet, inlets] : sameBranchInlets) {
+            if (inlets.size() <= 1) {
+                continue;
+            }
+
+            std::ranges::sort(inlets);
+
+            auto inletList = std::to_string(inlets.front());
+            for (std::size_t i = 1; i < inlets.size(); ++i) {
+                inletList += fmt::format(", {}", inlets[i]);
+            }
+
+            problems += fmt::format("\n  * Segment {} has {} inlet segments "
+                                    "on its own branch {}: {}", outlet,
+                                    inlets.size(),
+                                    this->getFromSegmentNumber(outlet).branchNumber(),
+                                    inletList);
+        }
+
+        if (problems.empty()) {
+            return;
+        }
+
+        const auto msg_fmt = fmt::format(R"(Problem with keyword {{keyword}}
+In {{file}} line {{line}}
+Invalid branch structure in WELSEGS for well {}:{}
+Each branch must be a single, unbranched chain of segments with exactly one
+segment whose outlet segment is on a different branch.  Segments starting
+a new chain, e.g., a new lateral or device, must be given a new branch number.
+This check is controlled by SCHEDULE_WELSEGS_INVALID_BRANCH.  If relaxed,
+the simulation is unaffected, but branch data in restart files may be
+misinterpreted by applications other than OPM Flow.)",
+                                         well_name, problems);
+
+        parseContext.handleError(ParseContext::SCHEDULE_WELSEGS_INVALID_BRANCH,
+                                 msg_fmt, location, errors);
     }
 
     bool WellSegments::updateWSEGAICD(std::string_view                            well_name,

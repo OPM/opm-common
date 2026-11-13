@@ -110,6 +110,25 @@ namespace Opm {
         std::vector<Segment> branchSegments(int branch) const;
         std::set<int> branches() const;
 
+        /// Validate that each branch forms a single, unbranched chain of
+        /// segments.
+        ///
+        /// Diagnoses branches which join the rest of the well through more
+        /// than one segment (e.g., two disjoint segment sequences sharing a
+        /// branch number), and segments which have more than one inlet
+        /// segment on their own branch.  Problems are reported through the
+        /// ParseContext category
+        /// ParseContext::SCHEDULE_WELSEGS_INVALID_BRANCH.
+        ///
+        /// \param[in] well_name Name of well owning this segment set.
+        /// \param[in] location Input location of WELSEGS keyword.
+        /// \param[in] parseContext Error handling controls.
+        /// \param[in,out] errors Collection of input errors.
+        void checkBranchStructure(std::string_view       well_name,
+                                  const KeywordLocation& location,
+                                  const ParseContext&    parseContext,
+                                  ErrorGuard&            errors) const;
+
         // it returns true if there is no error encountered during the update
 
         bool updateWSEGAICD(std::string_view                            well_name,

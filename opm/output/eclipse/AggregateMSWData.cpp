@@ -45,7 +45,6 @@
 #include <cstring>
 #include <deque>
 #include <functional>
-#include <iostream>
 #include <limits>
 #include <optional>
 #include <queue>
@@ -54,8 +53,6 @@
 #include <string_view>
 #include <utility>
 #include <vector>
-
-#include <fmt/format.h>
 
 // #####################################################################
 // Class Opm::RestartIO::Helpers::AggregateMSWData
@@ -132,54 +129,58 @@ namespace {
     segmentOrder(const Opm::WellSegments& segSet,
                  const std::size_t        segIndex)
     {
+        // Order the segments of the branch starting at 'segIndex', and of
+        // all branches kicking off from it, such that every segment comes
+        // after all of its inflow segments.  Branches kicking off from the
+        // current branch come first, in order of discovery from "heel" to
+        // "toe", followed by the current branch's own segments from "toe"
+        // to "heel".
         std::vector<std::size_t> ordSegNumber;
-        std::vector<std::size_t> segIndCB;
+        auto appendOrder = [&segSet, &ordSegNumber](const std::size_t start)
+        {
+            const auto nSOrd = segmentOrder(segSet, start);
+            ordSegNumber.insert(ordSegNumber.end(), nSOrd.begin(), nSOrd.end());
+        };
+
         // Store "heel" segment since that will not always be at the end of the list
-        segIndCB.push_back(segIndex);
-        std::size_t newSInd = segIndex;
-        const auto& origBranchNo = segSet[segIndex].branchNumber();
+        std::vector<std::size_t> segIndCB { segIndex };
+        const auto origBranchNo = segSet[segIndex].branchNumber();
+
         // loop down branch to find all segments in branch and number from "toe" to "heel"
-        while (newSInd < segSet.size()) {
-            bool endOrigBranch = true;
-            const auto& iSInd = inflowSegmentsIndex(segSet, newSInd);
-            for (const auto& isi : iSInd )  {
-                const auto& inflowBranch = segSet[isi].branchNumber();
-                if (origBranchNo == inflowBranch) {
-                    endOrigBranch = false;
+        auto newSInd = segIndex;
+        while (true) {
+            auto sameBranchInflow = std::vector<std::size_t>{};
+            for (const auto& ind : inflowSegmentsIndex(segSet, newSInd)) {
+                if (segSet[ind].branchNumber() == origBranchNo) {
+                    sameBranchInflow.push_back(ind);
+                }
+                else {
+                    // Inflow segment belongs to a different branch.  Order
+                    // that branch first.
+                    appendOrder(ind);
                 }
             }
-            if (iSInd.size() > 0) {
-                for (const auto& ind : iSInd) {
-                    auto inflowBranch = segSet[ind].branchNumber();
-                    if (origBranchNo == inflowBranch) {
-                        // if inflow segment belongs to same branch add contribution
-                        segIndCB.insert(segIndCB.begin(), ind);
-                        // search recursively down this branch to find more inflow branches
-                        newSInd = ind;
-                    }
-                    else {
-                        // if inflow segment belongs to different branch, start new search
-                        const auto& nSOrd = segmentOrder(segSet, ind);
-                        // copy the segments already found and indexed into the total ordered segment vector
-                        for (std::size_t indOS = 0; indOS < nSOrd.size(); indOS++) {
-                            ordSegNumber.push_back(nSOrd[indOS]);
-                        }
-                        if (endOrigBranch) {
-                            newSInd = segSet.size();
-                        }
-                        // increment the local branch sequence number counter
-                    }
-                }
+
+            if (sameBranchInflow.empty()) {
+                // Reached "toe" of current branch.
+                break;
             }
-            if (endOrigBranch || (iSInd.size()==0)) {
-                // have come to toe of current branch - store segment indicies of current branch
-                for (std::size_t indOS = 0; indOS < segIndCB.size(); indOS++) {
-                    ordSegNumber.push_back(segIndCB[indOS]);
-                }
-                // set new index to exit while loop
-                newSInd = segSet.size();
+
+            // The current branch continues through its first inflow segment
+            // on the same branch.  Additional inflow segments on the same
+            // branch, i.e., a fork in the branch, are possible only if the
+            // input's branch structure is invalid.  Order those as if they
+            // started separate branches.
+            for (std::size_t i = 1; i < sameBranchInflow.size(); ++i) {
+                appendOrder(sameBranchInflow[i]);
             }
+
+            newSInd = sameBranchInflow.front();
+            segIndCB.insert(segIndCB.begin(), newSInd);
         }
+
+        ordSegNumber.insert(ordSegNumber.end(), segIndCB.begin(), segIndCB.end());
+
         return ordSegNumber;
     }
 
@@ -357,34 +358,24 @@ namespace {
             ? sumIFB : 0;
     }
 
-    int inflowSegmentCurBranch(const std::string&       wname,
-                               const Opm::WellSegments& segSet,
+    int inflowSegmentCurBranch(const Opm::WellSegments& segSet,
                                const std::size_t        segIndex)
     {
         const auto branch    = segSet[segIndex].branchNumber();
         const auto segNumber = segSet[segIndex].segmentNumber();
 
-        int inFlowSegInd = -1;
+        // Note: If the branch forks at 'segIndex', which is possible only
+        // if the input's branch structure is invalid, then there are
+        // multiple inflow segments on the same branch.  Report the first.
         for (std::size_t ind = 0; ind < segSet.size(); ind++) {
-            const auto& i_segNum = segSet[ind].segmentNumber();
             const auto& i_branch = segSet[ind].branchNumber();
             const auto& i_outFlowSeg = segSet[ind].outletSegment();
             if ((branch == i_branch) && (segNumber == i_outFlowSeg)) {
-                if (inFlowSegInd == -1) {
-                    inFlowSegInd = segSet.segmentNumberToIndex(i_segNum);
-                }
-                else {
-                    std::cout << "Non-unique inflow segment in same branch, Well: " << wname << std::endl;
-                    std::cout <<  "Segment number: " << segNumber << std::endl;
-                    std::cout <<  "Branch number: " << branch << std::endl;
-                    std::cout <<  "Inflow segment number 1: " << segSet[inFlowSegInd].segmentNumber() << std::endl;
-                    std::cout <<  "Inflow segment number 2: " << segSet[ind].segmentNumber() << std::endl;
-                    throw std::invalid_argument("Non-unique inflow segment in same branch, Well " + wname);
-                }
+                return static_cast<int>(ind);
             }
         }
 
-        return (inFlowSegInd == -1) ? 0 : inFlowSegInd;
+        return 0;
     }
 
     template <typename MSWOp>
@@ -501,7 +492,7 @@ namespace {
                     auto iS = (segNumber-1)*noElmSeg;
                     iSeg[ind*noElmSeg + Ix::SegNo] = welSegSet[orderedSegmentNo[ind]].segmentNumber();
                     iSeg[iS + Ix::OutSeg]         = segment.outletSegment();
-                    iSeg[iS + Ix::InSegCurBranch] = (inflowSegmentCurBranch(well.name(), welSegSet, ind) == 0) ? 0 : welSegSet[inflowSegmentCurBranch(well.name(), welSegSet, ind)].segmentNumber();
+                    iSeg[iS + Ix::InSegCurBranch] = (inflowSegmentCurBranch(welSegSet, ind) == 0) ? 0 : welSegSet[inflowSegmentCurBranch(welSegSet, ind)].segmentNumber();
                     iSeg[iS + Ix::BranchNo]       = segment.branchNumber();
                     iSeg[iS + 4] = noInFlowBranches(welSegSet, ind);
                     iSeg[iS + 5] = sumNoInFlowBranches(welSegSet, ind);
@@ -1104,13 +1095,18 @@ namespace {
             /// based on their associate branch number.
             ///
             /// \return Child segment grouping.  The \c .first group
-            /// contains child segments associated to branches different to
-            /// that of the current segment.  This collection is empty if
-            /// there are no child segments on other branches.  The \c
-            /// .second group is the single child segment on the same branch
-            /// as the current segment.  This will be \c nullopt if there is
-            /// no such child segment, thus signifiying the end of the
-            /// current branch.
+            /// contains child segments which start new branches, i.e.,
+            /// those associated to branches different to that of the
+            /// current segment.  This collection is empty if there are no
+            /// child segments on other branches.  The \c .second group is
+            /// the child segment which continues the current branch.  This
+            /// will be \c nullopt if there is no child segment on the same
+            /// branch as the current segment, thus signifiying the end of
+            /// the current branch.  If there are multiple child segments
+            /// on the current branch, which happens only if the input's
+            /// branch structure is invalid, then the first of these
+            /// continues the current branch and the others are included in
+            /// the \c .first group.
             std::pair<std::vector<int>, std::optional<int>>
             characteriseChildSegments() const;
 
@@ -1212,26 +1208,20 @@ namespace {
                 };
             }
             else {
-                if (const auto numSameBranch = std::distance(sameBranchPos, children.end());
-                    numSameBranch != std::vector<int>::difference_type{1})
-                {
-                    throw std::invalid_argument {
-                        fmt::format("Segment {} of well {} has {} "
-                                    "inlet segments on branch {}",
-                                    this->currentSegment().segmentNumber(),
-                                    this->well_, numSameBranch,
-                                    this->currentSegment().branchNumber())
-                    };
-                }
-
                 // Common case: The segment at *sameBranchPos continues the
                 // current branch.  All other child segments start new
                 // branches.
-                return {
-                    std::piecewise_construct,
-                    std::forward_as_tuple(children.begin(), sameBranchPos),
-                    std::forward_as_tuple(*sameBranchPos)
-                };
+                //
+                // If there are multiple child segments on the current
+                // branch, i.e., a fork in the branch which is possible only
+                // if the input's branch structure is invalid, then the
+                // first such child continues the current branch while the
+                // others are treated as if they started new branches.
+                auto newBranchChildren = std::vector<int>(children.begin(), sameBranchPos);
+                newBranchChildren.insert(newBranchChildren.end(),
+                                         std::next(sameBranchPos), children.end());
+
+                return { std::move(newBranchChildren), *sameBranchPos };
             }
         }
 
@@ -1381,27 +1371,31 @@ captureDeclaredMSWData(const Schedule&          sched,
                 currBranch[Ix::NumBranchSegments] += 1;
             })
             .setNewBranchCallback([&ilbr, &ilbs, insertIndex = 0]
-                                  (std::string_view wellName,
+                                  (std::string_view /* wellName */,
                                    const int        newBranchId,
                                    const int        kickOffSegment,
                                    const int        outletSegment) mutable
             {
-                ilbs[insertIndex] = kickOffSegment;
-
                 auto newBranch = ilbr[newBranchId];
+
+                if (newBranch[Ix::NumBranchSegments] > 0) {
+                    // Branch already created.  This happens only if the
+                    // input's branch structure is invalid, i.e., if the
+                    // branch does not form a single chain of segments.
+                    // Attribute the new segments to the existing branch
+                    // and do not create a new kick-off point.  The ILBS and
+                    // ILBR arrays are then only approximate, but these are
+                    // not used when restarting a simulation.
+                    return;
+                }
+
+                ilbs[insertIndex] = kickOffSegment;
 
                 // Add one to the kick-off discovery offset to account for
                 // branch 1 which is not in ILBS.
                 newBranch[Ix::OutletSegment]          = outletSegment;
                 newBranch[Ix::FirstSegment]           = kickOffSegment;
                 newBranch[Ix::KickOffDiscoveryOffset] = insertIndex + 1;
-
-                if (newBranch[Ix::NumBranchSegments] > 0) {
-                    throw std::invalid_argument {
-                        fmt::format("Looped branch {} for well {} "
-                                    "is not supported", newBranchId, wellName)
-                    };
-                }
 
                 ++insertIndex;
             })

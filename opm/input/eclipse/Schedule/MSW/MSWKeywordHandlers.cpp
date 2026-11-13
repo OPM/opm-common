@@ -97,6 +97,11 @@ void handleWELSEGS(HandlerContext& handlerContext)
     if (handlerContext.state().wells.has(wname)) {
         auto well = handlerContext.state().wells.get(wname);
         if (well.handleWELSEGS(handlerContext.keyword)) {
+            well.getSegments().checkBranchStructure(wname,
+                                                    handlerContext.keyword.location(),
+                                                    handlerContext.parseContext,
+                                                    handlerContext.errors);
+
             handlerContext.state().wells.update( std::move(well) );
             handlerContext.record_well_structure_change();
         }
