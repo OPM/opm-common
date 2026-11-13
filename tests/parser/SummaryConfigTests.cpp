@@ -2034,6 +2034,637 @@ END
     BOOST_CHECK_MESSAGE(!smry.hasSummaryKey("GPR:G1"), R"(SummaryConfig must NOT have "GPR:G1" key)");
 }
 
+BOOST_AUTO_TEST_CASE(Summary_FLUXALL_NamedObjects) {
+    // FLUXALL reads its list off the deck's own expressions. Most of what it
+    // finds is a bare keyword, which it expands over every object the keyword
+    // can apply to, but block, connection, segment and node quantities have
+    // no such expansion: there is no reading of BPR that covers every cell in
+    // the model and is of any use to anybody.
+    //
+    // What there is, is the expression itself. This ACTIONX names a cell, a
+    // connection, a segment and a node outright, and those four namings are
+    // the only record anywhere of which vectors the run will want.
+    const auto deck = ::Opm::Parser{}.parseString(R"(RUNSPEC
+START
+  21 SEP 2020 12:34:56 /
+
+DIMENS
+  10 10 3 /
+
+NETWORK
+  3 2 /
+
+WELLDIMS
+  2 10 2 2 /
+
+WSEGDIMS
+  1 10 10 /
+
+ACTDIMS
+  4 40 20 20 /
+
+GRID
+
+DXV
+  10*100.0
+/
+
+DYV
+  10*100.0
+/
+
+DZV
+  5 3 2
+/
+
+DEPTHZ
+  121*2000.0
+/
+
+PORO
+  300*0.15
+/
+
+PERMX
+  300*100.0
+/
+
+COPY
+  PERMX PERMY /
+  PERMX PERMZ /
+/
+
+SUMMARY
+
+FLUXALL
+
+SCHEDULE
+
+GRUPTREE
+  'B1' 'PLAT-A' /
+/
+
+WELSPECS
+  'PROD01' 'B1' 1 1 1* 'OIL' /
+/
+
+COMPDAT
+  'PROD01' 1 1 1 3 'OPEN' 1* 1* 0.5 /
+/
+
+WELSEGS
+  'PROD01' 2000 2000 1* ABS /
+  2 2 1 1 2100 2000 0.2 1.0E-4 /
+  3 3 1 2 2200 2000 0.2 1.0E-4 /
+/
+
+COMPSEGS
+  'PROD01' /
+  1 1 1 1 0 100 /
+  1 1 2 1 100 200 /
+  1 1 3 1 200 300 /
+/
+
+BRANPROP
+--  Downtree  Uptree   #VFP    ALQ
+    B1        PLAT-A   5       1* /
+/
+
+NODEPROP
+--  Node_name  Press  autoChoke?  addGasLift?  Group_name
+     PLAT-A    21.0   NO          NO           1*  /
+     B1        1*     NO          NO           1*  /
+/
+
+ACTIONX
+  ACT1 10 1 /
+  BPR 5 5 2 > 100 AND /
+  COPR 'PROD01' 1 1 2 < -1.0 AND /
+  SPR 'PROD01' 3 > 1.0 AND /
+  GPR 'B1' > 1.0 /
+/
+
+WELOPEN
+  'PROD01' 'SHUT' /
+/
+
+ENDACTIO
+
+TSTEP
+  10 /
+END
+)");
+
+    ErrorGuard errors;
+    const auto parseContext = ParseContext{};
+    const auto state = EclipseState (deck);
+    const auto schedule = Schedule (deck, state, parseContext, errors, std::make_shared<const Python>());
+    const auto smry = SummaryConfig(deck, schedule, state.fieldProps(), state.aquifer(), parseContext, errors);
+
+    // Cell (5,5,2) of a 10x10x3 grid, counted from one.
+    BOOST_CHECK_MESSAGE(smry.hasSummaryKey("BPR:145"),
+                        R"(FLUXALL must configure "BPR" for the cell the condition names)");
+
+    // Cell (1,1,2), which PROD01 perforates.
+    BOOST_CHECK_MESSAGE(smry.hasSummaryKey("COPR:PROD01:101"),
+                        R"(FLUXALL must configure "COPR" for the connection the condition names)");
+
+    BOOST_CHECK_MESSAGE(smry.hasSummaryKey("SPR:PROD01:3"),
+                        R"(FLUXALL must configure "SPR" for the segment the condition names)");
+
+    BOOST_CHECK_MESSAGE(smry.hasSummaryKey("GPR:B1"),
+                        R"(FLUXALL must configure "GPR" for the node the condition names)");
+
+    // And no more than that. Nothing asked for the other cells, the other
+    // connections, the other segments, or the platform node, and answering a
+    // question nobody put would mean answering it for every cell in the grid.
+    BOOST_CHECK_MESSAGE(!smry.hasSummaryKey("BPR:1"),
+                        R"(FLUXALL must not configure "BPR" for a cell nothing names)");
+
+    BOOST_CHECK_MESSAGE(!smry.hasSummaryKey("COPR:PROD01:1"),
+                        R"(FLUXALL must not configure "COPR" for a connection nothing names)");
+
+    BOOST_CHECK_MESSAGE(!smry.hasSummaryKey("SPR:PROD01:1"),
+                        R"(FLUXALL must not configure "SPR" for a segment nothing names)");
+
+    BOOST_CHECK_MESSAGE(!smry.hasSummaryKey("GPR:PLAT-A"),
+                        R"(FLUXALL must not configure "GPR" for a node nothing names)");
+
+    // The well level keywords, meanwhile, do expand, and FLUXALL asks for the
+    // rates and cumulatives a reduced run needs whether the deck mentions
+    // them or not.
+    BOOST_CHECK_MESSAGE(smry.hasSummaryKey("WOPR:PROD01"),
+                        R"(FLUXALL must configure "WOPR" for every well)");
+}
+
+BOOST_AUTO_TEST_CASE(Summary_FLUXALL_UserDefinedQuantities) {
+    // A reduced run recomputes a user defined quantity from its own
+    // definition, so at first sight the parent need not report one. It can
+    // only recompute a UDQ whose inputs it still has, though, and the two
+    // routes into this deck's UDQs are both easy to lose: WUFOUR is named by
+    // an ACTIONX condition, and WUTWICE is named by WUFOUR's definition --
+    // which is precisely the reference UDQDefine::required_summary() drops,
+    // on the grounds that the run computes it.
+    const auto deck = ::Opm::Parser{}.parseString(R"(RUNSPEC
+START
+  21 SEP 2020 12:34:56 /
+
+DIMENS
+  10 10 3 /
+
+WELLDIMS
+  2 10 2 2 /
+
+UDQDIMS
+  10 2 0 10 10 10 0 10 /
+
+ACTDIMS
+  4 40 20 20 /
+
+GRID
+
+DXV
+  10*100.0
+/
+
+DYV
+  10*100.0
+/
+
+DZV
+  5 3 2
+/
+
+DEPTHZ
+  121*2000.0
+/
+
+PORO
+  300*0.15
+/
+
+PERMX
+  300*100.0
+/
+
+COPY
+  PERMX PERMY /
+  PERMX PERMZ /
+/
+
+SUMMARY
+
+FLUXALL
+
+SCHEDULE
+
+WELSPECS
+  'PROD01' 'G1' 1 1 1* 'OIL' /
+/
+
+COMPDAT
+  'PROD01' 1 1 1 3 'OPEN' 1* 1* 0.5 /
+/
+
+UDQ
+  DEFINE WUTWICE WBHP * 2 /
+  UNITS  WUTWICE BARSA /
+  DEFINE WUFOUR WUTWICE * 2 /
+  UNITS  WUFOUR BARSA /
+/
+
+ACTIONX
+  ACT1 10 1 /
+  WUFOUR 'PROD01' > 0.0 /
+/
+
+WELOPEN
+  'PROD01' 'SHUT' /
+/
+
+ENDACTIO
+
+TSTEP
+  10 /
+END
+)");
+
+    ErrorGuard errors;
+    const auto parseContext = ParseContext{};
+    const auto state = EclipseState (deck);
+    const auto schedule = Schedule (deck, state, parseContext, errors, std::make_shared<const Python>());
+    const auto smry = SummaryConfig(deck, schedule, state.fieldProps(), state.aquifer(), parseContext, errors);
+
+    BOOST_CHECK_MESSAGE(smry.hasSummaryKey("WUFOUR:PROD01"),
+                        R"(FLUXALL must report a UDQ an ACTIONX compares against)");
+
+    BOOST_CHECK_MESSAGE(smry.hasSummaryKey("WUTWICE:PROD01"),
+                        R"(FLUXALL must report a UDQ another UDQ is defined in terms of)");
+
+    // And what the chain bottoms out in, which is what made the UDQs worth
+    // reporting in the first place.
+    BOOST_CHECK_MESSAGE(smry.hasSummaryKey("WBHP:PROD01"),
+                        R"(FLUXALL must report the summary vector at the foot of the chain)");
+}
+
+BOOST_AUTO_TEST_CASE(Summary_FLUXALL_UserDefinedQuantities_NamedObjects) {
+    // Well and group level UDQs expand over the objects they apply to, the
+    // same as any other keyword. Block, connection and segment level ones
+    // cannot: there is no reading of a block UDQ that covers every cell in
+    // the model.
+    //
+    // What there is, is the statement that brought the quantity into
+    // existence. A UDQ ASSIGN reads no summary vector, but its selector says
+    // which objects the quantity exists for, and for these three categories
+    // nothing else in the deck records that. The ACTIONX below refers to all
+    // three by bare name, so the selectors are the only way to know which
+    // vectors it will want.
+    const auto deck = ::Opm::Parser{}.parseString(R"(RUNSPEC
+START
+  21 SEP 2020 12:34:56 /
+
+DIMENS
+  10 10 3 /
+
+WELLDIMS
+  2 10 2 2 /
+
+WSEGDIMS
+  1 10 10 /
+
+UDQDIMS
+  10 2 0 10 10 10 0 10 /
+
+ACTDIMS
+  4 40 20 20 /
+
+GRID
+
+DXV
+  10*100.0
+/
+
+DYV
+  10*100.0
+/
+
+DZV
+  5 3 2
+/
+
+DEPTHZ
+  121*2000.0
+/
+
+PORO
+  300*0.15
+/
+
+PERMX
+  300*100.0
+/
+
+COPY
+  PERMX PERMY /
+  PERMX PERMZ /
+/
+
+SUMMARY
+
+FLUXALL
+
+SCHEDULE
+
+WELSPECS
+  'PROD01' 'G1' 1 1 1* 'OIL' /
+/
+
+COMPDAT
+  'PROD01' 1 1 1 3 'OPEN' 1* 1* 0.5 /
+/
+
+WELSEGS
+  'PROD01' 2000 2000 1* ABS /
+  2 2 1 1 2100 2000 0.2 1.0E-4 /
+  3 3 1 2 2200 2000 0.2 1.0E-4 /
+  4 4 1 3 2300 2000 0.2 1.0E-4 /
+/
+
+COMPSEGS
+  'PROD01' /
+  1 1 1 1 0 100 /
+  1 1 2 1 100 200 /
+  1 1 3 1 200 300 /
+/
+
+UDQ
+  ASSIGN BUFOO 5 5 2 1.0 /
+  UNITS  BUFOO BARSA /
+  ASSIGN CUFOO 'PROD01' 1 1 2 1.0 /
+  UNITS  CUFOO BARSA /
+  ASSIGN SUFOO 'PROD01' 3 1.0 /
+  UNITS  SUFOO BARSA /
+  DEFINE FUBAR SUFOO 'PROD01' 2 /
+  UNITS  FUBAR BARSA /
+  DEFINE FUNOUNIT SUFOO 'PROD01' 3 /
+/
+
+ACTIONX
+  ACT1 10 1 /
+  BUFOO > 0.0 AND /
+  CUFOO > 0.0 AND /
+  SUFOO > 0.0 AND /
+  SUFOO 'PROD01' 1 > 0.0 AND /
+  FUBAR > 0.0 AND /
+  FUNOUNIT > 0.0 /
+/
+
+WELOPEN
+  'PROD01' 'SHUT' /
+/
+
+ENDACTIO
+
+TSTEP
+  10 /
+END
+)");
+
+    ErrorGuard errors;
+    const auto parseContext = ParseContext{};
+    const auto state = EclipseState (deck);
+    const auto schedule = Schedule (deck, state, parseContext, errors, std::make_shared<const Python>());
+    const auto smry = SummaryConfig(deck, schedule, state.fieldProps(), state.aquifer(), parseContext, errors);
+
+    // Cell (5,5,2) of a 10x10x3 grid, counted from one.
+    BOOST_CHECK_MESSAGE(smry.hasSummaryKey("BUFOO:145"),
+                        R"(FLUXALL must report a block UDQ for the cell it is assigned to)");
+
+    // Cell (1,1,2), which PROD01 perforates.
+    BOOST_CHECK_MESSAGE(smry.hasSummaryKey("CUFOO:PROD01:101"),
+                        R"(FLUXALL must report a connection UDQ for the connection it is assigned to)");
+
+    BOOST_CHECK_MESSAGE(smry.hasSummaryKey("SUFOO:PROD01:3"),
+                        R"(FLUXALL must report a segment UDQ for the segment it is assigned to)");
+
+    // The other two ways in, neither of which the assignment covers. FUBAR is
+    // defined in terms of segment 2, and the ACTIONX names segment 1 outright
+    // -- the form a real deck is most likely to use, and the one that reaches
+    // a segment nothing else in the deck mentions.
+    BOOST_CHECK_MESSAGE(smry.hasSummaryKey("SUFOO:PROD01:2"),
+                        R"(FLUXALL must report a segment UDQ another UDQ is defined in terms of)");
+
+    BOOST_CHECK_MESSAGE(smry.hasSummaryKey("SUFOO:PROD01:1"),
+                        R"(FLUXALL must report a segment UDQ an ACTIONX condition names in full)");
+
+    // A UDQ with no UNITS entry is reported like any other. The summary
+    // writer has always emitted an empty unit string for one of those, and a
+    // deck naming this quantity in its SUMMARY section outright would get the
+    // vector too, so withholding it here would be a rule of our own making.
+    BOOST_CHECK_MESSAGE(smry.hasSummaryKey("FUNOUNIT"),
+                        R"(FLUXALL must report a UDQ that has no unit)");
+
+    // And nowhere else. Segment 4 exists and is never named, so it stays out.
+    BOOST_CHECK_MESSAGE(!smry.hasSummaryKey("BUFOO:1"),
+                        R"(FLUXALL must not report a block UDQ for a cell it is not assigned to)");
+
+    BOOST_CHECK_MESSAGE(!smry.hasSummaryKey("SUFOO:PROD01:4"),
+                        R"(FLUXALL must not report a segment UDQ nothing names)");
+}
+
+BOOST_AUTO_TEST_CASE(Summary_FLUXALL_ObjectLookup) {
+    // Objects that exist only in some sense: a FIELD group, a well as a
+    // network node, a connection an ACTIONX opens, segment numbers with gaps,
+    // a region set other than FIPNUM, and an action that is later redefined.
+    const auto deck = ::Opm::Parser{}.parseString(R"(RUNSPEC
+START
+  21 SEP 2020 12:34:56 /
+
+DIMENS
+  10 10 3 /
+
+NETWORK
+  3 2 /
+
+WELLDIMS
+  2 10 2 2 /
+
+WSEGDIMS
+  1 10 10 /
+
+UDQDIMS
+  10 2 0 10 10 10 0 10 /
+
+ACTDIMS
+  4 40 20 20 /
+
+GRID
+
+DXV
+  10*100.0
+/
+
+DYV
+  10*100.0
+/
+
+DZV
+  5 3 2
+/
+
+DEPTHZ
+  121*2000.0
+/
+
+PORO
+  300*0.15
+/
+
+PERMX
+  300*100.0
+/
+
+COPY
+  PERMX PERMY /
+  PERMX PERMZ /
+/
+
+REGIONS
+
+FIPNUM
+  300*1 /
+
+FIPXYZ
+  150*1 150*2 /
+
+SUMMARY
+
+FLUXALL
+
+SCHEDULE
+
+GRUPTREE
+  'B1' 'PLAT-A' /
+/
+
+WELSPECS
+  'PROD01' 'B1' 1 1 1* 'OIL' /
+/
+
+COMPDAT
+  'PROD01' 1 1 1 3 'OPEN' 1* 1* 0.5 /
+/
+
+WELSEGS
+  'PROD01' 2000 2000 1* ABS /
+  10 10 1 1 2100 2000 0.2 1.0E-4 /
+/
+
+COMPSEGS
+  'PROD01' /
+  1 1 1 1 0 100 /
+  1 1 2 1 100 200 /
+  1 1 3 1 200 300 /
+/
+
+BRANPROP
+--  Downtree  Uptree   #VFP    ALQ
+    B1        PLAT-A   5       1* /
+/
+
+NODEPROP
+--  Node_name  Press  autoChoke?  addGasLift?  Group_name
+     PLAT-A    21.0   NO          NO           1*  /
+     B1        1*     NO          NO           1*  /
+/
+
+UDQ
+  DEFINE FURPR RPR 1 /
+  UNITS  FURPR BARSA /
+/
+
+ACTIONX
+  ACT1 10 1 /
+  BPR 5 5 2 > 100 /
+/
+
+WELOPEN
+  'PROD01' 'SHUT' /
+/
+
+ENDACTIO
+
+ACTIONX
+  ACT2 10 1 /
+  GOPR 'FIELD' > 1.0 AND /
+  GPR 'PROD01' > 1.0 AND /
+  SPR 'PROD01' 10 > 1.0 AND /
+  SPR 'PROD01' 2 > 1.0 AND /
+  COPR 'PROD01' 2 2 2 > 0.0 /
+/
+
+COMPDAT
+  'PROD01' 2 2 2 2 'OPEN' 1* 1* 0.5 /
+/
+
+ENDACTIO
+
+TSTEP
+  10 /
+
+ACTIONX
+  ACT1 10 1 /
+  BPR 6 6 2 > 100 /
+/
+
+WELOPEN
+  'PROD01' 'SHUT' /
+/
+
+ENDACTIO
+
+TSTEP
+  10 /
+END
+)");
+
+    ErrorGuard errors;
+    const auto parseContext = ParseContext{};
+    const auto state = EclipseState (deck);
+    const auto schedule = Schedule (deck, state, parseContext, errors, std::make_shared<const Python>());
+    const auto smry = SummaryConfig(deck, schedule, state.fieldProps(), state.aquifer(), parseContext, errors);
+
+    // Cells (5,5,2) and (6,6,2): both versions of ACT1.
+    BOOST_CHECK_MESSAGE(smry.hasSummaryKey("BPR:145"),
+                        R"(FLUXALL must configure "BPR" for the first definition of an action)");
+
+    BOOST_CHECK_MESSAGE(smry.hasSummaryKey("BPR:156"),
+                        R"(FLUXALL must configure "BPR" for the redefinition of an action)");
+
+    BOOST_CHECK_MESSAGE(smry.hasSummaryKey("GOPR:FIELD"),
+                        R"(FLUXALL must configure "GOPR" for the FIELD group)");
+
+    BOOST_CHECK_MESSAGE(smry.hasSummaryKey("GPR:PROD01"),
+                        R"(FLUXALL must configure "GPR" for a well in a network group)");
+
+    BOOST_CHECK_MESSAGE(smry.hasSummaryKey("SPR:PROD01:10"),
+                        R"(FLUXALL must configure "SPR" by segment number)");
+
+    BOOST_CHECK_MESSAGE(!smry.hasSummaryKey("SPR:PROD01:2"),
+                        R"(FLUXALL must not configure "SPR" for a segment that does not exist)");
+
+    // Cell (2,2,2), connected by the action.
+    BOOST_CHECK_MESSAGE(smry.hasSummaryKey("COPR:PROD01:112"),
+                        R"(FLUXALL must configure "COPR" for a connection an action opens)");
+
+    // An unsuffixed RPR in a UDQ reads every region set.
+    BOOST_CHECK_MESSAGE(smry.hasSummaryKey("RPR:1"),
+                        R"(FLUXALL must configure "RPR" for FIPNUM)");
+
+    BOOST_CHECK_MESSAGE(smry.hasSummaryKey("RPR__XYZ:1") && smry.hasSummaryKey("RPR__XYZ:2"),
+                        R"(FLUXALL must configure "RPR__XYZ" for region set FIPXYZ)");
+}
+
 BOOST_AUTO_TEST_CASE(ProcessingInstructions) {
     const std::string deck_string = R"(
 RPTONLY

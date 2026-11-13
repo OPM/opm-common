@@ -20,6 +20,7 @@
 #ifndef UDQ_DEFINE_HPP
 #define UDQ_DEFINE_HPP
 
+#include <opm/input/eclipse/Schedule/RequisiteSummaryVector.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQContext.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQEnums.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQFunctionTable.hpp>
@@ -91,6 +92,18 @@ public:
     UDQVarType var_type() const;
     std::set<UDQTokenType> func_tokens() const;
     void required_summary(std::unordered_set<std::string>& summary_keys) const;
+
+    /// Export the summary vectors this definition names in full.
+    ///
+    /// \param[in,out] vectors Summary vectors named in full.  On exit also
+    /// contains any such vector named by this definition.
+    void requisiteSummaryVectors(RequisiteSummaryVectors& vectors) const;
+
+    /// Export the user defined quantities this definition refers to.
+    ///
+    /// \param[in,out] udqs Names of user defined quantities.  On exit also
+    /// contains those this definition refers to.
+    void requiredUDQs(std::unordered_set<std::string>& udqs) const;
     void update_status(UDQUpdate update_status, std::size_t report_step);
     std::pair<UDQUpdate, std::size_t> status() const;
     const std::vector<Opm::UDQToken>& tokens() const;

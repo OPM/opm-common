@@ -107,3 +107,12 @@ void Opm::Action::AST::required_summary(std::unordered_set<std::string>& require
 
     this->condition->required_summary(required_summary);
 }
+
+void Opm::Action::AST::requisiteSummaryVectors(RequisiteSummaryVectors& vectors) const
+{
+    if ((this->condition == nullptr) || this->condition->empty()) {
+        return;
+    }
+
+    this->condition->requisiteSummaryVectors(vectors);
+}

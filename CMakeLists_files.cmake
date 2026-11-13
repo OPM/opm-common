@@ -1235,6 +1235,7 @@ list(APPEND PUBLIC_HEADER_FILES
   opm/input/eclipse/Schedule/ResCoup/ReservoirCouplingKeywordHandlers.hpp
   opm/input/eclipse/Schedule/ResCoup/Slaves.hpp
   opm/input/eclipse/Schedule/ResCoup/WriteCouplingFile.hpp
+  opm/input/eclipse/Schedule/RequisiteSummaryVector.hpp
   opm/input/eclipse/Schedule/RptschedKeywordNormalisation.hpp
   opm/input/eclipse/Schedule/Schedule.hpp
   opm/input/eclipse/Schedule/ScheduleBlock.hpp
