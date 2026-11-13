@@ -733,6 +733,8 @@ private:
     void processMULTREGP(const Deck& deck);
     void scanGRIDSection(const GRIDSection& grid_section);
     void scanGridKeywords(const DeckView& keywords);
+    void applyDPGRID(const GRIDSection& grid_section);
+    void applyDualPorosityScalars(const GRIDSection& grid_section);
 
     /// An LGR's properties seeded from its father's, for lgrBlockValues().
     FieldProps(const FieldProps& father, const EclipseGridLGR& lgr);
@@ -866,6 +868,11 @@ private:
     std::unordered_map<std::string,Fieldprops::TranCalculator> tran;
 
     bool depth_edited_ = false;
+
+    /// The GRID section has DPGRID on a dual-porosity grid: a fracture cell the
+    /// deck leaves unset takes the value of its matrix cell as each property is
+    /// read, so later edits of the fracture cells act on that value.
+    bool dpgrid_ = false;
 
     /// \brief A map of multiplier keywords found in the EDIT/SCHEDULE section
     ///
