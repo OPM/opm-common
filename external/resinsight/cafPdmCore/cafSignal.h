@@ -40,7 +40,6 @@
 #include <functional>
 #include <list>
 #include <map>
-#include <string>
 #include <type_traits>
 
 namespace external 
@@ -125,7 +124,8 @@ public:
     template <typename ClassType>
     void connect( ClassType* observer, void ( ClassType::*method )( const SignalEmitter*, Args... args ) )
     {
-        MemberCallback lambda = [=]( const SignalEmitter* emitter, Args... args ) {
+        MemberCallback lambda = [=]( const SignalEmitter* emitter, Args... args )
+        {
             // Call method
             ( observer->*method )( emitter, args... );
         };
@@ -183,8 +183,8 @@ public:
     size_t observerCount() const { return m_observerCallbacks.size(); }
 
 private:
-    Signal()                    = delete;
-    Signal( const Signal& rhs ) = delete;
+    Signal()                               = delete;
+    Signal( const Signal& rhs )            = delete;
     Signal& operator=( const Signal& rhs ) = delete;
 
 private:

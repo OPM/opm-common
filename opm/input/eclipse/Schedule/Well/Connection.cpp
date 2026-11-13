@@ -202,6 +202,17 @@ namespace Opm
         result.m_econ_limits = std::make_unique<ConnectionEconLimits>(
             ConnectionEconLimits::serializationTestObject());
 
+        const auto contribution = IntervalContribution {
+            .interval = { .branch = 2, .top = 12.0, .bottom = 13.0 },
+            .kind = CTFKind::Defaulted,
+            .ctf = CTFProperties::serializationTestObject(),
+            .direction = Direction::X,
+            .strongest_crossing_cf = 0.456,
+        };
+
+        result.m_interval_contributions = { contribution, contribution };
+        result.m_interval_contributions.back().interval.branch = 3;
+
         return result;
     }
 
@@ -428,6 +439,128 @@ namespace Opm
         this->ctf_properties_.static_dfac_corr_coeff = c;
     }
 
+    namespace {
+
+        /// Combine the CTF properties of all perforation intervals in one
+        /// cell.
+        ///
+        /// Mirrors the export-side combination rules ResInsight applies when
+        /// it writes COMPDAT for a multi-lateral well (OPM/ResInsight#7049).
+        Connection::CTFProperties
+        combineContributionCTFs(const std::vector<Connection::IntervalContribution>& contributions)
+        {
+            if (contributions.size() == 1) {
+                return contributions.front().ctf;
+            }
+
+            auto combined = Connection::CTFProperties{};
+
+            // Transmissibility, Kh and perforated length are additive.
+            auto cf_total = 0.0;
+            for (const auto& contribution : contributions) {
+                const auto& ctf = contribution.ctf;
+
+                combined.CF += ctf.CF;
+                combined.Kh += ctf.Kh;
+                combined.connection_length += ctf.connection_length;
+
+                cf_total += ctf.CF;
+            }
+
+            // Wellbore radius, skin and D-factor are CF-weighted averages.
+            // Fall back to an unweighted average if not possible.
+            const auto weighted = cf_total > 0.0;
+            for (const auto& contribution : contributions) {
+                const auto& ctf = contribution.ctf;
+                const auto weight = weighted ? ctf.CF : 1.0;
+
+                combined.rw += weight * ctf.rw;
+                combined.skin_factor += weight * ctf.skin_factor;
+                combined.d_factor += weight * ctf.d_factor;
+            }
+
+            const auto num_contributions = static_cast<double>(contributions.size());
+            const auto norm = weighted ? cf_total : num_contributions;
+
+            combined.rw /= norm;
+            combined.skin_factor /= norm;
+
+            // The D-factor is also divided by the number of contributions.
+            combined.d_factor /= norm * num_contributions;
+
+            // Radii are taken as is. Effective permeability is set to that
+            // of the strongest crossing by combineIntervalContributions().
+            combined.Ke = contributions.front().ctf.Ke;
+            combined.r0 = contributions.front().ctf.r0;
+            combined.re = contributions.front().ctf.re;
+
+            // peaceman_denom and static_dfac_corr_coeff are not set for
+            // trajectory-based connections and are left at zero.
+
+            return combined;
+        }
+
+    } // Anonymous namespace
+
+    void Connection::addIntervalContribution(const IntervalContribution& contribution)
+    {
+        auto& contributions = this->m_interval_contributions;
+
+        assert(std::ranges::find(contributions, contribution.interval,
+                                 &IntervalContribution::interval) == contributions.end());
+
+        // Keeping the contributions ordered makes their combination
+        // independent of the order of the COMPTRAJ records.
+        contributions.insert(std::ranges::upper_bound(contributions, contribution.interval, {},
+                                                      &IntervalContribution::interval),
+                             contribution);
+
+        this->combineIntervalContributions();
+    }
+
+    void Connection::removeIntervalContribution(const PerforationInterval& interval)
+    {
+        const auto removed =
+            std::erase_if(this->m_interval_contributions,
+                          [&interval](const IntervalContribution& c)
+                          { return c.interval == interval; });
+
+        if (removed > 0) {
+            this->combineIntervalContributions();
+        }
+    }
+
+    void Connection::combineIntervalContributions()
+    {
+        const auto& contributions = this->m_interval_contributions;
+
+        if (contributions.empty()) {
+            return;
+        }
+
+        this->ctf_properties_ = combineContributionCTFs(contributions);
+
+        // Strict comparison keeps the first crossing on ties, as in
+        // ResInsight. Contributions are stored in interval order.
+        const auto strongest = std::ranges::max_element(
+            contributions, {}, &IntervalContribution::strongest_crossing_cf);
+        this->direction = strongest->direction;
+        this->ctf_properties_.Ke = strongest->ctf.Ke;
+
+        // The transmissibility factor only counts as calculated if no part
+        // of it was given in the input.
+        this->m_ctfkind = std::ranges::all_of(contributions,
+                                              [](const IntervalContribution& c)
+                                              { return c.kind == CTFKind::Defaulted; })
+            ? CTFKind::Defaulted
+            : CTFKind::DeckValue;
+    }
+
+    bool Connection::fromTrajectory() const
+    {
+        return !this->m_interval_contributions.empty();
+    }
+
     std::string Connection::str() const
     {
         std::stringstream ss;
@@ -484,6 +617,7 @@ namespace Opm
             && (this->ctf_properties_ == that.ctf_properties_)
             && (this->m_filter_cake == that.m_filter_cake)
             && (this->m_econ_limits == that.m_econ_limits)
+            && (this->m_interval_contributions == that.m_interval_contributions)
             ;
     }
 

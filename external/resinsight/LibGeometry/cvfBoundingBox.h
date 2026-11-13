@@ -42,60 +42,62 @@
 #include "../LibCore/cvfString.h"
 
 namespace external {
-namespace cvf {
-
-
-//==================================================================================================
-//
-// Axis aligned bounding box
-//
-//==================================================================================================
-class BoundingBox
+namespace cvf
 {
-public:
-    BoundingBox();
-    BoundingBox(const Vec3f& min, const Vec3f& max);
-    BoundingBox(const Vec3d& min, const Vec3d& max);
-    BoundingBox(const BoundingBox& other);
 
-    BoundingBox& operator=(const BoundingBox& rhs);
 
-    void reset();
+    //==================================================================================================
+    //
+    // Axis aligned bounding box
+    //
+    //==================================================================================================
+    class BoundingBox
+    {
+    public:
+        BoundingBox();
+        BoundingBox(const Vec3f& min, const Vec3f& max);
+        BoundingBox(const Vec3d& min, const Vec3d& max);
+        BoundingBox(const BoundingBox& other);
 
-    bool isValid() const;
+        BoundingBox& operator=(const BoundingBox& rhs);
 
-    void add(const Vec3f& vertex);
-    void add(const Vec3d& vertex);
-    void add(const Vec3fArray& vertices);
-    void add(const Vec3dArray& vertices);
-    void add(const BoundingBox& bb);
-    void addValid(const BoundingBox& bb);
+        void reset();
 
-    const Vec3d& min() const;
-    const Vec3d& max() const;
+        bool isValid() const;
 
-    Vec3d       center() const;
-    Vec3d       extent() const;
-    double      radius() const;
+        void add(const Vec3f& vertex);
+        void add(const Vec3d& vertex);
+        void add(const Vec3fArray& vertices);
+        void add(const Vec3dArray& vertices);
+        void add(const BoundingBox& bb);
+        void addValid(const BoundingBox& bb);
 
-    bool        contains(const Vec3d& point) const;
-    bool        intersects(const BoundingBox& box) const;
+        const Vec3d& min() const;
+        const Vec3d& max() const;
 
-    void        cornerVertices(Vec3d corners[8]) const;
+        Vec3d       center() const;
+        Vec3d       extent() const;
+        double      radius() const;
 
-    void                expand(double amount);
-    void                transform(const Mat4d& matrix);
-    const BoundingBox   getTransformed(const Mat4d& matrix) const;
+        bool        contains(const Vec3d& point) const;
+        bool        intersects(const BoundingBox& box) const;
 
-    void cutBelow(double depth);
-    void cutAbove(double depth);
+        void        cornerVertices(Vec3d corners[8]) const;
 
-    String              debugString() const;
+        void                expand(double amount);
+        void                expandPercent(double percentXY, double percentZ);
+        void                transform(const Mat4d& matrix);
+        const BoundingBox   getTransformed(const Mat4d& matrix) const;
 
-private:
-    Vec3d m_min;
-    Vec3d m_max;
-};
+        void cutBelow(double depth);
+        void cutAbove(double depth);
+
+        String              debugString() const;
+
+    private:
+        Vec3d m_min;
+        Vec3d m_max;
+    };
 
 }
 } //namespace external
