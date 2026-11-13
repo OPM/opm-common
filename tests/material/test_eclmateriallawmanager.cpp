@@ -1046,7 +1046,10 @@ Scalar waterPc(const typename Fixture<Scalar>::MaterialLawManager& mgr,
     std::array<Scalar, F::numPhases> pc{};
     F::MaterialLaw::capillaryPressures(pc, mgr.materialLawParams(elemIdx), fs);
 
-    const auto nonWetting = gasWater ? F::gasPhaseIdx : F::oilPhaseIdx;
+    const auto nonWetting = gasWater
+        ? static_cast<std::size_t>(F::gasPhaseIdx)
+        : static_cast<std::size_t>(F::oilPhaseIdx);
+
     return pc[nonWetting] - pc[F::waterPhaseIdx];
 }
 
