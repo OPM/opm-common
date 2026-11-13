@@ -25,15 +25,17 @@
 /*!
  * \file
  *
- * \brief The isothermal flash's iteration can diverge on deeply
- *        supercritical feeds (an equimolar N2/methane mixture at 100 bar
- *        and 400 K, with the standard N2/C1 interaction coefficient, is the
- *        recorded case): the composition iterates leave [0, 1] far enough
- *        that the cubic-EoS mixing parameters become non-finite. Before the
- *        finite guard this hit an assert() — process ABORT in debug builds
- *        and SILENT propagation of non-finite values in release builds. The
- *        guard turns both into a catchable NumericalProblem, which is the
- *        failure mode every caller of the flash already handles.
+ * \brief Non-finite cubic-EoS mixing parameters are reported as a
+ *        catchable NumericalProblem, the failure mode every caller of the
+ *        flash already handles, instead of an assert() (an abort in debug
+ *        builds, silent non-finite values in release builds).
+ *
+ * The recorded case is an equimolar N2/methane mixture at 100 bar and 400 K,
+ * with the standard N2/C1 interaction coefficient. Its cubic has one physical
+ * root. Measured against the collapsed liquid root, the stability test drives
+ * the composition iterates out of [0, 1] until the mixing parameters are no
+ * longer finite; measured against the physical root, the mixture is a single
+ * gas phase.
  */
 #include "config.h"
 
@@ -55,6 +57,7 @@
 
 #include <opm/input/eclipse/EclipseState/Compositional/CompositionalConfig.hpp>
 
+#include <limits>
 #include <stdexcept>
 #include <string_view>
 
@@ -217,27 +220,30 @@ FluidState makeState(const Scalar p, const Scalar t)
 
 } // anonymous namespace
 
-// the recorded divergence case must report as a catchable exception —
-// never as an abort (debug) or a silent non-finite state (release).
-// Probed via the pure "newton" method: in "ssi+newton" the switch-back
-// catches this exception internally and finishes with successive
-// substitution (see test_ptflash_ssi_newton_fallback.cpp).
-BOOST_AUTO_TEST_CASE(NewtonDivergenceThrowsCatchable)
+// A phase composition with a non-finite mole fraction gives non-finite
+// mixing parameters, which are reported as a catchable NumericalProblem.
+BOOST_AUTO_TEST_CASE(NonFiniteMixingParametersThrowCatchable)
 {
     auto fs = makeState(100e5, 400.0);
-    BOOST_CHECK_THROW(
-        PtFlash::solve(fs, PTFlashMethod::Newton, 1e-8, EOSType::PR),
-        Opm::NumericalProblem);
+    fs.setMoleFraction(FluidSystem::gasPhaseIdx, 0, std::numeric_limits<Scalar>::quiet_NaN());
+    fs.setMoleFraction(FluidSystem::gasPhaseIdx, 1, 0.5);
+    FluidSystem::ParameterCache<Evaluation> paramCache(EOSType::PR);
+    BOOST_CHECK_THROW(paramCache.updatePhase(fs, FluidSystem::gasPhaseIdx), Opm::NumericalProblem);
 }
 
-// the default method's honest failure mode on the same state is unchanged
-// (successive substitution reports its own non-convergence as a throw)
-BOOST_AUTO_TEST_CASE(SsiStillFailsLoudlyNotFatally)
+// The recorded case flashes to a single gas phase with every method.
+BOOST_AUTO_TEST_CASE(RecordedCaseIsSinglePhaseGas)
 {
-    auto fs = makeState(100e5, 400.0);
-    BOOST_CHECK_THROW(
-        PtFlash::solve(fs, PTFlashMethod::Ssi, 1e-8, EOSType::PR),
-        std::runtime_error);
+    for (const auto method :
+         {PTFlashMethod::Ssi, PTFlashMethod::Newton, PTFlashMethod::SsiNewton}) {
+        BOOST_TEST_CONTEXT("method " << Opm::ptFlashMethodToString(method)) {
+            auto fs = makeState(100e5, 400.0);
+            bool singlePhase = false;
+            BOOST_CHECK_NO_THROW(singlePhase = PtFlash::solve(fs, method, 1e-8, EOSType::PR));
+            BOOST_CHECK(singlePhase);
+            BOOST_CHECK_SMALL(Opm::getValue(fs.L()), 1e-12);
+        }
+    }
 }
 
 // an ordinary state keeps flashing under both methods — the guard costs
