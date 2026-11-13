@@ -214,10 +214,10 @@ public:
                 }
                 dataPtr_ = data_.data();
             } else if (numElem < size_) {
-                // when shrinking, remove the values after numElem so that the space
-                // is ready to use in the potentional future resize
+                // Keep the std::array elements alive for later assignment and
+                // automatic destruction, but release resources via assignment.
                 for (auto ii = numElem; ii < size_; ++ii) {
-                    smallBuf_[ii].~ValueType();
+                    smallBuf_[ii] = ValueType{};
                 }
             }
         } else {
