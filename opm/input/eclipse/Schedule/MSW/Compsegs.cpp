@@ -541,7 +541,8 @@ connection does not exist, likely having been ignored due to zero permeability
                              const Opm::ScheduleGrid&    grid,
                              const Opm::KeywordLocation& location,
                              const Opm::ParseContext&    parseContext,
-                             Opm::ErrorGuard&            errors)
+                             Opm::ErrorGuard&            errors,
+                             std::vector<std::pair<std::size_t, int>>* links = nullptr)
     {
         auto new_connection_set = input_connections; // Intentional copy.
 
@@ -573,6 +574,11 @@ connection does not exist, likely having been ignored due to zero permeability
                 // was defaulted (see penetrationThickness).
                 const double thermal_length = compseg.m_thermal_length
                     .value_or(penetrationThickness(cell.dimensions, connection.dir()));
+
+                if (links != nullptr) {
+                    links->emplace_back(connection.global_index(),
+                                        compseg.segment_number);
+                }
 
                 connection.updateSegment(compseg.segment_number,
                                          cdepth,
@@ -636,7 +642,8 @@ namespace Opm::Compsegs {
                     const WellSegments&    input_segments,
                     const ScheduleGrid&    grid,
                     const ParseContext&    parseContext,
-                    ErrorGuard&            errors)
+                    ErrorGuard&            errors,
+                    std::vector<std::pair<std::size_t, int>>* links)
     {
         const auto well_name = compsegs.getRecord(0)
             .getItem<ParserKeywords::COMPSEGS::WELL>()
@@ -647,7 +654,8 @@ namespace Opm::Compsegs {
                                         grid, parseContext, errors);
 
         return process_compsegs_records(well_name, compsegs_vector, input_connections,
-                                        grid, compsegs.location(), parseContext, errors);
+                                        grid, compsegs.location(), parseContext, errors,
+                                        links);
     }
 
     WellConnections
