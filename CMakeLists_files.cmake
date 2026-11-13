@@ -920,6 +920,7 @@ list(APPEND PROGRAM_SOURCE_FILES
   examples/co2brinepvt.cpp
   examples/hysteresis.cpp
   examples/plot_ms_wells.cpp
+  examples/opmflash.cpp
 )
 
 list(APPEND PUBLIC_HEADER_FILES

@@ -260,6 +260,13 @@ macro(opm-common_tests_hook)
         ${Python3_EXECUTABLE} -m unittest discover
     )
  endif()
+
+  # isothermal -> isenthalpic round trips through the opmflash program, which
+  # is built with the examples only
+  if(TARGET opmflash)
+    add_test(NAME opmflash_selftest COMMAND opmflash --selftest)
+    add_dependencies(test-suite opmflash)
+  endif()
 endmacro()
 
 macro(opm-common_targets_hook)
