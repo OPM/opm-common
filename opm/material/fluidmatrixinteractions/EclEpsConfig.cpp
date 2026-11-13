@@ -70,13 +70,21 @@ void EclEpsConfig::initFromState(const EclipseState& eclState,
     }
 
     const auto& fp = eclState.fieldProps();
+    // The configuration is shared between the drainage and the imbibition curves
+    // (hysteresis), so scaling must be enabled if either the drainage (KRW, ...)
+    // or the imbibition (IKRW, ...) keyword is present. Otherwise a deck that
+    // only specifies the imbibition end points (e.g. IKRW and IKRWR) would have
+    // those silently ignored. If only the imbibition keyword is present, the
+    // drainage scaling is an identity, as its scaled points are the unscaled ones.
     auto hasKR = [&fp, &prefix, &suffix](const std::string& scaling)
     {
-        return fp.has_double(prefix + "KR" + scaling + suffix);
+        return fp.has_double(prefix + "KR" + scaling + suffix)
+            || fp.has_double("I" + prefix + "KR" + scaling + suffix);
     };
     auto hasPC = [&fp, &prefix](const std::string& scaling)
     {
-        return fp.has_double(prefix + "PC" + scaling);
+        return fp.has_double(prefix + "PC" + scaling)
+            || fp.has_double("I" + prefix + "PC" + scaling);
     };
 
     // check if we are supposed to scale the Y axis of the capillary pressure

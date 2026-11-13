@@ -28,9 +28,28 @@
 #define OPM_ECL_HYSTERESIS_TWO_PHASE_LAW_HPP
 #include <opm/common/TimingMacros.hpp>
 #include "EclHysteresisTwoPhaseLawParams.hpp"
+#include <limits>
 #include <stdexcept>
+#include <type_traits>
+#include <utility>
 
 namespace Opm {
+
+namespace EclHysteresisDetail {
+
+//! True if the effective-law parameters carry end-point scaling information
+//! (config() and scaled/unscaled scaling points), as the EclEpsTwoPhaseLaw
+//! parameters do. Plain laws such as Brooks-Corey do not.
+template <class P, class = void>
+struct HasEpsPoints : std::false_type {};
+
+template <class P>
+struct HasEpsPoints<P, std::void_t<decltype(std::declval<const P&>().config().enableSatScaling()),
+                                   decltype(std::declval<const P&>().scaledPoints().saturationKrwPoints()[2]),
+                                   decltype(std::declval<const P&>().unscaledPoints().saturationKrwPoints()[2])>>
+    : std::true_type {};
+
+} // namespace EclHysteresisDetail
 
 /*!
  * \ingroup FluidMatrixInteractions
@@ -142,6 +161,29 @@ public:
                            const FluidState& /* fs */)
     {
         throw std::invalid_argument("The pcnw(fs) method is not yet implemented");
+    }
+
+    /*!
+     * \brief The largest wetting-phase saturation of an end-point scaled
+     *        two-phase law, i.e. the last of its wetting-phase relperm saturation
+     *        scaling points (the saturation at zero non-wetting saturation for the
+     *        drainage curve, and the end of the table for the imbibition curve).
+     *
+     * Laws without end-point scaling information (e.g. Brooks-Corey) return
+     * \c defaultValue.
+     */
+    template <class EffLawParams>
+    static Scalar krwSwMax_(const EffLawParams& effParams, const Scalar defaultValue)
+    {
+        if constexpr (EclHysteresisDetail::HasEpsPoints<EffLawParams>::value) {
+            const auto& points = effParams.config().enableSatScaling()
+                ? effParams.scaledPoints()
+                : effParams.unscaledPoints();
+            return points.saturationKrwPoints()[2];
+        }
+        else {
+            return defaultValue;
+        }
     }
 
     template <class Evaluation, class ...Args>
@@ -277,8 +319,31 @@ public:
             return EffectiveLaw::template twoPhaseSatKrw<Evaluation, Args...>(params.drainageParams(), Sw);
 
         // use imbibition curve for wetting phase
-        if (params.config().krHysteresisModel() == 1 || params.config().krHysteresisModel() == 3)
-            return EffectiveLaw::template twoPhaseSatKrw<Evaluation, Args...>(params.imbibitionParams(), Sw);
+        if (params.config().krHysteresisModel() == 1 || params.config().krHysteresisModel() == 3) {
+            // Within the imbibition table, use it as is.
+            // Without end-point information on the imbibition table, use it as is.
+            const Scalar SwTab = krwSwMax_(params.imbibitionParams(), std::numeric_limits<Scalar>::max());
+            if (Sw <= SwTab)
+                return EffectiveLaw::template twoPhaseSatKrw<Evaluation, Args...>(params.imbibitionParams(), Sw);
+
+            // The imbibition table generally ends at Sg = Sncri, so reading it
+            // beyond that would give a flat extrapolation. Instead interpolate
+            // linearly in saturation between the imbibition value at the table end
+            // and the drainage end point, i.e. the value at the largest wetting
+            // saturation (zero non-wetting saturation).
+            const Scalar SwEnd = krwSwMax_(params.drainageParams(), Scalar(1));
+            const Evaluation Krwd_end = EffectiveLaw::template twoPhaseSatKrw<Evaluation, Args...>(params.drainageParams(), Evaluation(SwEnd));
+            if (!(SwEnd > SwTab)) {
+                // No interval to interpolate over: keep the imbibition table's
+                // (flat) extrapolation, which is continuous at the table end.
+                return EffectiveLaw::template twoPhaseSatKrw<Evaluation, Args...>(params.imbibitionParams(), Sw);
+            }
+
+            const Evaluation Krwi_a = EffectiveLaw::template twoPhaseSatKrw<Evaluation, Args...>(params.imbibitionParams(), Evaluation(SwTab));
+            // 1 at the table end, 0 at SwEnd (clamped to guard against Sw > SwEnd)
+            const Evaluation t = max(Evaluation(0.0), (SwEnd - Sw) / (SwEnd - SwTab));
+            return Krwd_end + t * (Krwi_a - Krwd_end);
+        }
 
         if (Sw <= params.krnSwMdc()) {
             return EffectiveLaw::template twoPhaseSatKrw<Evaluation, Args...>(params.drainageParams(), Sw);
@@ -287,7 +352,40 @@ public:
         assert(params.config().krHysteresisModel() == 4);
 
         if ( (1.0-Sw-params.Sncrt()) < 0.0) {
-            return EffectiveLaw::template twoPhaseSatKrw<Evaluation, Args...>(params.imbibitionParams(), Sw);
+            // The gas saturation is below the trapped gas saturation (e.g. due to
+            // pressurisation or dissolution of trapped gas). Within the imbibition
+            // table, use it as is.
+            // Without end-point information on the imbibition table, use it as is.
+            const Scalar SwTab = krwSwMax_(params.imbibitionParams(), std::numeric_limits<Scalar>::max());
+            if (Sw <= SwTab)
+                return EffectiveLaw::template twoPhaseSatKrw<Evaluation, Args...>(params.imbibitionParams(), Sw);
+
+            // Beyond the end of the imbibition table (generally at Sg = Sncri) the
+            // table would give a flat extrapolation. Instead interpolate linearly
+            // in saturation to the drainage end point (the value at the largest
+            // wetting saturation, i.e. zero non-wetting saturation), from the
+            // Killough value at Sg = Sncrt (continuity) if the table ends above
+            // Sncrt, otherwise from the table end.
+            const Scalar SwEnd = krwSwMax_(params.drainageParams(), Scalar(1));
+            const Evaluation Krwd_end = EffectiveLaw::template twoPhaseSatKrw<Evaluation, Args...>(params.drainageParams(), Evaluation(SwEnd));
+            const bool anchorAtTrapped = !(SwTab > 1.0 - params.Sncrt());
+            const Scalar Sw_a = anchorAtTrapped ? 1.0 - params.Sncrt() : SwTab;
+            if (!(SwEnd > Sw_a)) {
+                // No interval to interpolate over: keep the imbibition table's
+                // (flat) extrapolation, which is continuous at the table end.
+                return EffectiveLaw::template twoPhaseSatKrw<Evaluation, Args...>(params.imbibitionParams(), Sw);
+            }
+
+            Evaluation Krw_a = EffectiveLaw::template twoPhaseSatKrw<Evaluation, Args...>(params.imbibitionParams(), Evaluation(SwTab));
+            if (anchorAtTrapped) {
+                const Evaluation Krwd_t = params.config().enableWettingPhaseKilloughFix()
+                    ? EffectiveLaw::template twoPhaseSatKrw<Evaluation, Args...>(params.drainageParams(), Evaluation(Sw_a))
+                    : Evaluation(params.KrwdHy());
+                Krw_a = Krwd_t + params.krwWght(Krwd_t) * (params.Krwi_snrmax() - params.Krwi_snmax());
+            }
+            // 1 at Sw_a, 0 at SwEnd (clamped to guard against Sw > SwEnd)
+            const Evaluation t = max(Evaluation(0.0), (SwEnd - Sw) / (SwEnd - Sw_a));
+            return Krwd_end + t * (Krw_a - Krwd_end);
         }
         Evaluation Snorm = params.Sncri()+(1.0-Sw-params.Sncrt())*(params.Snmaxd()-params.Sncri())/(params.Snhy()-params.Sncrt());
         Evaluation Krwi_snorm = EffectiveLaw::template twoPhaseSatKrw<Evaluation, Args...>(params.imbibitionParams(), 1 - Snorm);

@@ -2958,6 +2958,190 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(GasWaterKrEndpointScaling, Scalar, Types)
     }
 }
 
+// Gas-water hysteresis deck (relperm hysteresis model 1, i.e. the water
+// relperm always follows the imbibition curve) with ENDSCALE. The vertical
+// end-point scaling keywords are injected through 'scaling' so that the same
+// deck can be used with and without them. Saturation scaling is a no-op as the
+// tables' end points are used as they are. The critical gas saturation of 0.2
+// puts the three-point (KRWR) water relperm point at Sw = 0.8.
+static std::string gasWaterImbibitionKrEndScaleDeck(const std::string& scaling)
+{
+    return R"(
+    RUNSPEC
+    DIMENS
+       1 1 1 /
+    TABDIMS
+     2 /
+    WATER
+    GAS
+    ENDSCALE
+    /
+    GRID
+    DX
+       1*1000 /
+    DY
+       1*1000 /
+    DZ
+       1*50 /
+    TOPS
+       1*0 /
+    PORO
+      1*0.15 /
+    EHYSTR
+      0.1 1 0.1 1* BOTH /
+    SATOPTS
+      HYSTER /
+    PROPS
+    SGFN
+    0.0 0.0 0.0
+    0.2 0.0 0.0
+    0.8 1.0 0.0 /
+    0.0 0.0 0.0
+    0.2 0.0 0.0
+    0.8 1.0 0.0 /
+    SWFN
+    0.2 0.0 0.0
+    1.0 1.0 0.0 /
+    0.2 0.0 0.0
+    1.0 1.0 0.0 /
+)" + scaling + R"(
+    REGIONS
+    SATNUM
+    1*1 /
+    IMBNUM
+    1*2 / )";
+}
+
+// The imbibition-only end-point keywords (IKRW, IKRWR) must be honoured even
+// if the corresponding drainage keywords (KRW, KRWR) are absent. Previously
+// EclEpsConfig only looked for the drainage keywords, so the imbibition
+// scaling was silently ignored.
+BOOST_AUTO_TEST_CASE_TEMPLATE(GasWaterImbibitionOnlyKrEndpointScaling, Scalar, Types)
+{
+    using MaterialLaw = typename Fixture<Scalar>::MaterialLaw;
+    using MaterialLawManager = typename Fixture<Scalar>::MaterialLawManager;
+    constexpr int numPhases = Fixture<Scalar>::numPhases;
+
+    // krwMax is the expected water relperm at Sw = 1, krwr the expected one at
+    // the three-point scaling point Sw = 0.8 (negative if not scaled).
+    const auto check = [](const std::string& scaling, const Scalar krwMax, const Scalar krwr)
+    {
+        Opm::Parser parser;
+        const auto deck = parser.parseString(gasWaterImbibitionKrEndScaleDeck(scaling));
+        const Opm::EclipseState eclState(deck);
+
+        const std::size_t n = eclState.getInputGrid().getCartesianSize();
+
+        MaterialLawManager manager;
+        manager.initFromState(eclState);
+        manager.initParamsForElements(eclState, n, doOldLookup, doNothing);
+        auto& param = manager.materialLawParams(0);
+
+        std::array<Scalar,numPhases> kr = {0.0, 0.0, 0.0};
+        // Drain to Sg = 0.5 and imbibe back to Sg = 0.
+        std::vector<int> sgPercent;
+        for (int i = 0; i <= 50; ++i) {
+            sgPercent.push_back(i);
+        }
+        for (int i = 49; i >= 0; --i) {
+            sgPercent.push_back(i);
+        }
+        for (const int i : sgPercent) {
+            const Scalar Sg = Scalar(i) / 100;
+            const Scalar Sw = 1 - Sg;
+            typename Fixture<Scalar>::FluidState fs;
+            fs.setSaturation(Fixture<Scalar>::waterPhaseIdx, Sw);
+            fs.setSaturation(Fixture<Scalar>::oilPhaseIdx, 0.0);
+            fs.setSaturation(Fixture<Scalar>::gasPhaseIdx, Sg);
+
+            MaterialLaw::relativePermeabilities(kr, param, fs);
+            MaterialLaw::updateHysteresis(param, fs);
+
+            Scalar Krw = linearScaledRelperm(Sw, Scalar(0.2), Scalar(1.0), krwMax);
+            if (krwr >= 0) {
+                // Piecewise linear: (0.2, 0) - (0.8, krwr) - (1.0, krwMax)
+                Krw = (Sw <= Scalar(0.8))
+                    ? linearScaledRelperm(Sw, Scalar(0.2), Scalar(0.8), krwr)
+                    : krwr + (krwMax - krwr) * (Sw - Scalar(0.8)) / Scalar(0.2);
+            }
+            // Compare absolutely as the expected value is zero for Sw <= 0.2.
+            BOOST_CHECK_SMALL(Krw - kr[Fixture<Scalar>::waterPhaseIdx], Scalar(1e-5));
+        }
+
+        // Just beyond the end of the tables, where the drainage and imbibition
+        // end saturations coincide, the water relperm must stay continuous
+        // (flat at the imbibition value), not jump to the drainage end value.
+        typename Fixture<Scalar>::FluidState fs;
+        fs.setSaturation(Fixture<Scalar>::waterPhaseIdx, Scalar(1.00001));
+        fs.setSaturation(Fixture<Scalar>::oilPhaseIdx, 0.0);
+        fs.setSaturation(Fixture<Scalar>::gasPhaseIdx, 0.0);
+        MaterialLaw::relativePermeabilities(kr, param, fs);
+        BOOST_CHECK_SMALL(kr[Fixture<Scalar>::waterPhaseIdx] - krwMax, Scalar(1e-4));
+    };
+
+    // No end-point scaling keywords: tabulated values.
+    check("", Scalar(1.0), Scalar(-1));
+    // Imbibition-only maximum (IKRW).
+    check("IKRW\n 1*0.5 /\n", Scalar(0.5), Scalar(-1));
+    // Imbibition-only three-point scaling (IKRWR below IKRW).
+    check("IKRWR\n 1*0.25 /\nIKRW\n 1*0.5 /\n", Scalar(0.5), Scalar(0.25));
+}
+
+// Three-point scaling where the tabulated water relperm is zero at the
+// reference point (Krw = 0 up to Sw = 0.8 = 1 - Sgcr). The ratio of the
+// scaled and unscaled reference values is then 0/0 for the unchanged drainage
+// curve (and x/0 for the imbibition curve), which must not produce NaN or
+// infinity. Left of the reference point the water relperm stays zero, right of
+// it it is linear between (0.8, IKRWR) and (1.0, IKRW).
+BOOST_AUTO_TEST_CASE_TEMPLATE(GasWaterZeroReferenceKrEndpointScaling, Scalar, Types)
+{
+    using MaterialLaw = typename Fixture<Scalar>::MaterialLaw;
+    using MaterialLawManager = typename Fixture<Scalar>::MaterialLawManager;
+    constexpr int numPhases = Fixture<Scalar>::numPhases;
+
+    std::string deckString = gasWaterImbibitionKrEndScaleDeck("IKRWR\n 1*0.1 /\nIKRW\n 1*0.5 /\n");
+    const std::string oldTable = "0.2 0.0 0.0\n    1.0 1.0 0.0 /";
+    const std::string newTable = "0.2 0.0 0.0\n    0.8 0.0 0.0\n    1.0 1.0 0.0 /";
+    for (auto pos = deckString.find(oldTable); pos != std::string::npos;
+         pos = deckString.find(oldTable, pos + newTable.size())) {
+        deckString.replace(pos, oldTable.size(), newTable);
+    }
+
+    Opm::Parser parser;
+    const auto deck = parser.parseString(deckString);
+    const Opm::EclipseState eclState(deck);
+    const std::size_t n = eclState.getInputGrid().getCartesianSize();
+
+    MaterialLawManager manager;
+    manager.initFromState(eclState);
+    manager.initParamsForElements(eclState, n, doOldLookup, doNothing);
+    auto& param = manager.materialLawParams(0);
+
+    std::array<Scalar,numPhases> kr = {0.0, 0.0, 0.0};
+    for (int i = 0; i <= 50; ++i) {
+        const Scalar Sg = Scalar(i) / 100;
+        const Scalar Sw = 1 - Sg;
+        typename Fixture<Scalar>::FluidState fs;
+        fs.setSaturation(Fixture<Scalar>::waterPhaseIdx, Sw);
+        fs.setSaturation(Fixture<Scalar>::oilPhaseIdx, 0.0);
+        fs.setSaturation(Fixture<Scalar>::gasPhaseIdx, Sg);
+
+        MaterialLaw::relativePermeabilities(kr, param, fs);
+        MaterialLaw::updateHysteresis(param, fs);
+
+        const Scalar krw = kr[Fixture<Scalar>::waterPhaseIdx];
+        BOOST_CHECK(std::isfinite(krw));
+        BOOST_CHECK(std::isfinite(kr[Fixture<Scalar>::gasPhaseIdx]));
+        if (std::abs(Sw - Scalar(0.8)) < Scalar(1e-4)) {
+            continue; // the reference point itself
+        }
+        const Scalar expected = Sw < Scalar(0.8)
+            ? Scalar(0.0)
+            : Scalar(0.1) + Scalar(0.4) * (Sw - Scalar(0.8)) / Scalar(0.2);
+        BOOST_CHECK_SMALL(krw - expected, Scalar(1e-5));
+    }
+}
+
 BOOST_AUTO_TEST_CASE_TEMPLATE(GasWaterThreePointKrEndpointScaling, Scalar, Types)
 {
     using MaterialLaw = typename Fixture<Scalar>::MaterialLaw;
