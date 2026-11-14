@@ -648,4 +648,56 @@ BOOST_AUTO_TEST_CASE(SinglePhaseUsesStableRoot)
     }
 }
 
+// departurePhaseEnthalpy keeps the state's value type: its value is that of
+// the model-switch phaseEnthalpy, and its derivatives in temperature and in a
+// phase mole fraction match central differences of that value.
+BOOST_AUTO_TEST_CASE(DeparturePhaseEnthalpyCarriesDerivatives)
+{
+    using Eval = Opm::DenseAd::Evaluation<double, 2>;
+    constexpr double T = Opm::FlashTest::f1Temperature;
+    const auto cpTable = Opm::FlashTest::f1CpTable();
+
+    FlashCase<numComponentsF1> testCase{"derivative probe", f1Pressure, T, f1Z};
+    const auto outcome = runFlash<FluidSystemF1, EvaluationF1>(testCase);
+    BOOST_REQUIRE(!outcome.summary.single_phase);
+
+    for (const unsigned phaseIdx : {static_cast<unsigned>(FluidSystemF1::oilPhaseIdx),
+                                    static_cast<unsigned>(FluidSystemF1::gasPhaseIdx)}) {
+        BOOST_TEST_CONTEXT("phase " << phaseIdx) {
+            const auto w = phaseComposition<FluidSystemF1>(outcome.state, phaseIdx);
+
+            // the model-switch value at temperature t, with w_0 = w0
+            const auto valueAt = [&](const double t, const double w0) {
+                Opm::CompositionalFluidState<double, FluidSystemF1> fs;
+                fs.setTemperature(t);
+                fs.setPressure(FluidSystemF1::oilPhaseIdx, f1Pressure);
+                fs.setPressure(FluidSystemF1::gasPhaseIdx, f1Pressure);
+                fs.setMoleFraction(phaseIdx, 0, w0);
+                fs.setMoleFraction(phaseIdx, 1, w[1]);
+                return EnthalpyF1::phaseEnthalpy(fs, phaseIdx, cpTable, EOSType::PR,
+                                                 Opm::EnthalpyModel::eos_departure);
+            };
+
+            // temperature in slot 0, w_0 in slot 1
+            Opm::CompositionalFluidState<Eval, FluidSystemF1> fs;
+            fs.setTemperature(Eval::createVariable(T, 0));
+            fs.setPressure(FluidSystemF1::oilPhaseIdx, Eval(f1Pressure));
+            fs.setPressure(FluidSystemF1::gasPhaseIdx, Eval(f1Pressure));
+            fs.setMoleFraction(phaseIdx, 0, Eval::createVariable(w[0], 1));
+            fs.setMoleFraction(phaseIdx, 1, Eval(w[1]));
+            const Eval h = EnthalpyF1::departurePhaseEnthalpy(fs, phaseIdx, cpTable, EOSType::PR);
+
+            constexpr double dT = 1e-2; // [K]
+            constexpr double dw = 1e-5;
+            BOOST_CHECK_SMALL(h.value() - valueAt(T, w[0]), 1e-4); // [J/mol]
+            BOOST_CHECK_CLOSE(h.derivative(0),
+                              (valueAt(T + dT, w[0]) - valueAt(T - dT, w[0])) / (2.*dT),
+                              1e-4); // [%]
+            BOOST_CHECK_CLOSE(h.derivative(1),
+                              (valueAt(T, w[0] + dw) - valueAt(T, w[0] - dw)) / (2.*dw),
+                              1e-4); // [%]
+        }
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END() // DepartureModel
