@@ -35,6 +35,7 @@
 #include <opm/input/eclipse/Deck/DeckSection.hpp>
 #include <opm/input/eclipse/Deck/value_status.hpp>
 
+#include <array>
 #include <cstddef>
 #include <limits>
 #include <map>
@@ -318,6 +319,71 @@ keyword_info<T> global_kw_info(const std::string& name, bool allow_unsupported =
 
 bool is_oper_keyword(const std::string& name);
 } // end namespace keywords
+
+/// Set of cells targeted by a single array operation.
+///
+/// Wraps a list of cell indices--typically from a Cartesian input box or
+/// from a region--together with enough context to describe the selection
+/// in diagnostic messages.  Non-owning: the underlying index list must
+/// outlive the selection.
+class CellSelection
+{
+public:
+    /// Selection of all cells in a Cartesian input box.
+    ///
+    /// \param[in] box Cartesian input box.
+    ///
+    /// \param[in] global Whether to use the box's list of global (i.e.,
+    /// including inactive) cells instead of the list of active cells.
+    static CellSelection fromBox(const Box& box, const bool global = false)
+    {
+        auto sel = CellSelection { global ? box.global_index_list() : box.index_list() };
+
+        sel.is_box_ = true;
+        sel.global_ = global;
+        sel.bounds_ = { box.I1(), box.I2(), box.J1(), box.J2(), box.K1(), box.K2() };
+
+        return sel;
+    }
+
+    /// Selection of all cells in a particular region.
+    ///
+    /// \param[in] cells Cells in the region.
+    /// \param[in] regionSet Region set name (e.g., FLUXNUM).
+    /// \param[in] regionId Region ID within \p regionSet.
+    static CellSelection fromRegion(const std::vector<Box::cell_index>& cells,
+                                    std::string                         regionSet,
+                                    const int                           regionId)
+    {
+        auto sel = CellSelection { cells };
+
+        sel.region_set_ = std::move(regionSet);
+        sel.region_id_ = regionId;
+
+        return sel;
+    }
+
+    const std::vector<Box::cell_index>& cells() const { return *this->cells_; }
+    std::size_t size() const { return this->cells_->size(); }
+
+    /// Human readable description of the selection for diagnostics.
+    ///
+    /// Examples: "the input box (1-10, 1-10, 1-6)" and "region 3 of
+    /// region set FLUXNUM".
+    std::string description() const;
+
+private:
+    explicit CellSelection(const std::vector<Box::cell_index>& cells)
+        : cells_ { &cells }
+    {}
+
+    const std::vector<Box::cell_index>* cells_{nullptr};
+    bool is_box_{false};
+    bool global_{false};
+    std::array<int, 6> bounds_{};
+    std::string region_set_{};
+    int region_id_{-1};
+};
 
 } // end namespace Fieldprops
 
@@ -770,16 +836,19 @@ private:
     }
 
     template <typename T>
-    void operate(const DeckRecord& record,
+    void operate(const DeckKeyword& keyword,
+                 const DeckRecord& record,
                  Fieldprops::FieldData<T>& target_data,
                  const Fieldprops::FieldData<T>& src_data,
-                 const std::vector<Box::cell_index>& index_list,
+                 const std::string& src_kw,
+                 const Fieldprops::CellSelection& selection,
                  const bool global = false);
 
-    void operate_int_target(const DeckRecord& record,
+    void operate_int_target(const DeckKeyword& keyword,
+                            const DeckRecord& record,
                             Fieldprops::FieldData<int>& target_data,
                             const std::string& src_kw,
-                            const std::vector<Box::cell_index>& index_list,
+                            const Fieldprops::CellSelection& selection,
                             const bool global = false);
 
     template <typename T>

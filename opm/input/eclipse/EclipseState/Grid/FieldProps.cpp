@@ -301,6 +301,21 @@ global_kw_info(const std::string& name, bool)
 
 }} // namespace Fieldprops::keywords
 
+std::string Opm::Fieldprops::CellSelection::description() const
+{
+    if (this->is_box_) {
+        // Box bounds are zero-based internally, but one-based in the input.
+        return fmt::format("the input box ({}-{}, {}-{}, {}-{}){}",
+                           this->bounds_[0] + 1, this->bounds_[1] + 1,
+                           this->bounds_[2] + 1, this->bounds_[3] + 1,
+                           this->bounds_[4] + 1, this->bounds_[5] + 1,
+                           this->global_ ? " including inactive cells" : "");
+    }
+
+    return fmt::format("region {} of region set {}",
+                       this->region_id_, this->region_set_);
+}
+
 namespace {
 
 // The EQUALREG, MULTREG, COPYREG, ... keywords are used to manipulate
@@ -345,21 +360,44 @@ std::string default_region_keyword(const Deck& deck)
     return "FLUXNUM";
 }
 
-void reject_undefined_operation(const KeywordLocation& loc,
-                                const std::size_t      numUnInit,
-                                const std::size_t      numElements,
-                                std::string_view       operation,
-                                std::string_view       arrayName)
+// Context for diagnostics from a single array operation.
+struct OperationInfo
 {
-    const auto* plural = (numElements > 1) ? "s" : "";
+    std::string_view keyword;      // e.g., MINVALUE
+    std::string_view array;        // target array name
+    KeywordLocation  location;
+};
 
+void reject_undefined_operation(const OperationInfo&              info,
+                                std::string_view                  role,
+                                std::string_view                  arrayName,
+                                const std::size_t                 numUnInit,
+                                const Fieldprops::CellSelection&  selection)
+{
     throw OpmInputError {
-        fmt::format
-        (R"({0} operation on array {1} would
-generate an undefined result in {2} out of {3} block{4}.)",
-         operation, arrayName, numUnInit, numElements, plural),
-        loc
+        fmt::format("{} {} does not have an original value in {}/{} "
+                    "active cells of {}. {} cannot be applied.",
+                    role, arrayName, numUnInit, selection.size(),
+                    selection.description(), info.keyword),
+        info.location
     };
+}
+
+// Verify that all selected elements of an array have defined values.
+void require_defined(const OperationInfo&              info,
+                     std::string_view                  role,
+                     std::string_view                  arrayName,
+                     const std::vector<value::status>& value_status,
+                     const Fieldprops::CellSelection&  selection)
+{
+    const auto numUnInit = static_cast<std::size_t>
+        (std::count_if(selection.cells().begin(), selection.cells().end(),
+                       [&value_status](const Box::cell_index& cell)
+                       { return ! value::has_value(value_status[cell.active_index]); }));
+
+    if (numUnInit > 0) {
+        reject_undefined_operation(info, role, arrayName, numUnInit, selection);
+    }
 }
 
 template <typename T>
@@ -471,128 +509,33 @@ void multiply_deck(const Fieldprops::keywords::keyword_info<T>& kw_info,
 }
 
 template <typename T>
-void assign_scalar(std::vector<T>&                     data,
-                   std::vector<value::status>&         value_status,
-                   const T                             value,
-                   const std::vector<Box::cell_index>& index_list)
+void assign_scalar(std::vector<T>&                  data,
+                   std::vector<value::status>&      value_status,
+                   const T                          value,
+                   const Fieldprops::CellSelection& selection)
 {
-    for (const auto& cell_index : index_list) {
+    for (const auto& cell_index : selection.cells()) {
         data[cell_index.active_index] = value;
         value_status[cell_index.active_index] = value::status::deck_value;
     }
 }
 
-template <typename T>
-void multiply_scalar(const KeywordLocation&              loc,
-                     std::string_view                    arrayName,
-                     std::vector<T>&                     data,
-                     std::vector<value::status>&         value_status,
-                     const T                             value,
-                     const std::vector<Box::cell_index>& index_list)
+/// Apply transformation to all selected elements of an array.
+///
+/// Fails, without modifying the array, unless all selected elements have
+/// defined values.
+template <typename T, typename Transform>
+void update_defined(const OperationInfo&             info,
+                    std::vector<T>&                  data,
+                    const std::vector<value::status>& value_status,
+                    const Fieldprops::CellSelection& selection,
+                    Transform&&                      transform)
 {
-    auto unInit = 0;
+    require_defined(info, "Array", info.array, value_status, selection);
 
-    for (const auto& cell_index : index_list) {
-        const auto ix = cell_index.active_index;
-
-        if (value::has_value(value_status[ix])) {
-            data[ix] *= value;
-        }
-        else {
-            ++unInit;
-        }
-    }
-
-    if (unInit > 0) {
-        reject_undefined_operation(loc, unInit,
-                                   index_list.size(),
-                                   "Multiplication", arrayName);
-    }
-}
-
-template <typename T>
-void add_scalar(const KeywordLocation&              loc,
-                std::string_view                    arrayName,
-                std::vector<T>&                     data,
-                std::vector<value::status>&         value_status,
-                const T                             value,
-                const std::vector<Box::cell_index>& index_list)
-{
-    auto unInit = 0;
-
-    for (const auto& cell_index : index_list) {
-        const auto ix = cell_index.active_index;
-
-        if (value::has_value(value_status[ix])) {
-            data[ix] += value;
-        }
-        else {
-            ++unInit;
-        }
-    }
-
-    if (unInit > 0) {
-        reject_undefined_operation(loc, unInit,
-                                   index_list.size(),
-                                   "Addition", arrayName);
-    }
-}
-
-template <typename T>
-void min_value(const KeywordLocation&              loc,
-               std::string_view                    arrayName,
-               std::vector<T>&                     data,
-               std::vector<value::status>&         value_status,
-               const T                             value,
-               const std::vector<Box::cell_index>& index_list)
-{
-    auto unInit = 0;
-
-    for (const auto& cell_index : index_list) {
-        const auto ix = cell_index.active_index;
-
-        if (value::has_value(value_status[ix])) {
-            data[ix] = std::max(data[ix], value);
-        }
-        else {
-            ++unInit;
-        }
-    }
-
-    if (unInit > 0) {
-        reject_undefined_operation(loc, unInit,
-                                   index_list.size(),
-                                   "Minimum threshold",
-                                   arrayName);
-    }
-}
-
-template <typename T>
-void max_value(const KeywordLocation&              loc,
-               std::string_view                    arrayName,
-               std::vector<T>&                     data,
-               std::vector<value::status>&         value_status,
-               const T                             value,
-               const std::vector<Box::cell_index>& index_list)
-{
-    auto unInit = 0;
-
-    for (const auto& cell_index : index_list) {
-        const auto ix = cell_index.active_index;
-
-        if (value::has_value(value_status[ix])) {
-            data[ix] = std::min(data[ix], value);
-        }
-        else {
-            ++unInit;
-        }
-    }
-
-    if (unInit > 0) {
-        reject_undefined_operation(loc, unInit,
-                                   index_list.size(),
-                                   "Maximum threshold",
-                                   arrayName);
+    for (const auto& cell_index : selection.cells()) {
+        auto& x = data[cell_index.active_index];
+        x = transform(x);
     }
 }
 
@@ -616,33 +559,36 @@ void update_global_from_local(Fieldprops::FieldData<T>& data,
 }
 
 template <typename T>
-void apply(const Fieldprops::ScalarOperation   op,
-           const KeywordLocation&              loc,
-           std::string_view                    arrayName,
-           std::vector<T>&                     data,
-           std::vector<value::status>&         value_status,
-           const T                             scalar_value,
-           const std::vector<Box::cell_index>& index_list)
+void apply(const Fieldprops::ScalarOperation    op,
+           const OperationInfo&                 info,
+           std::vector<T>&                      data,
+           std::vector<value::status>&          value_status,
+           const T                              scalar_value,
+           const Fieldprops::CellSelection&     selection)
 {
     switch (op) {
     case Fieldprops::ScalarOperation::EQUAL:
-        assign_scalar(data, value_status, scalar_value, index_list);
+        assign_scalar(data, value_status, scalar_value, selection);
         return;
 
     case Fieldprops::ScalarOperation::MUL:
-        multiply_scalar(loc, arrayName, data, value_status, scalar_value, index_list);
+        update_defined(info, data, value_status, selection,
+                       [scalar_value](const T x) { return x * scalar_value; });
         return;
 
     case Fieldprops::ScalarOperation::ADD:
-        add_scalar(loc, arrayName, data, value_status, scalar_value, index_list);
+        update_defined(info, data, value_status, selection,
+                       [scalar_value](const T x) { return x + scalar_value; });
         return;
 
     case Fieldprops::ScalarOperation::MIN:
-        min_value(loc, arrayName, data, value_status, scalar_value, index_list);
+        update_defined(info, data, value_status, selection,
+                       [scalar_value](const T x) { return std::max(x, scalar_value); });
         return;
 
     case Fieldprops::ScalarOperation::MAX:
-        max_value(loc, arrayName, data, value_status, scalar_value, index_list);
+        update_defined(info, data, value_status, selection,
+                       [scalar_value](const T x) { return std::min(x, scalar_value); });
         return;
     }
 
@@ -1623,11 +1569,13 @@ void FieldProps::handle_double_keyword(const Section section,
 }
 
 template <typename T>
-void FieldProps::operate(const DeckRecord&                   record,
-                         Fieldprops::FieldData<T>&           target_data,
-                         const Fieldprops::FieldData<T>&     src_data,
-                         const std::vector<Box::cell_index>& index_list,
-                         const bool                          global)
+void FieldProps::operate(const DeckKeyword&                keyword,
+                         const DeckRecord&                 record,
+                         Fieldprops::FieldData<T>&         target_data,
+                         const Fieldprops::FieldData<T>&   src_data,
+                         const std::string&                src_kw,
+                         const Fieldprops::CellSelection&  selection,
+                         const bool                        global)
 {
     // Shared backend for OPERATE and OPERATER; both define
     // TARGET_ARRAY/OPERATION/PARAM1/PARAM2 identically.
@@ -1660,42 +1608,35 @@ void FieldProps::operate(const DeckRecord&                   record,
     auto& to_data = global? *target_data.global_data : target_data.data;
     auto& to_status = global? *target_data.global_value_status : target_data.value_status;
     const auto& from_data = global? *src_data.global_data : src_data.data;
-    auto& from_status = global? *src_data.global_value_status : src_data.value_status;
+    const auto& from_status = global? *src_data.global_value_status : src_data.value_status;
 
-    for (const auto& cell_index : index_list) {
+    // Verify all inputs before modifying anything.
+    const auto opLabel = fmt::format("{} {}", keyword.name(), func_name);
+    const auto info = OperationInfo { opLabel, target_array, keyword.location() };
+    require_defined(info, "Source array", src_kw, from_status, selection);
+    if (check_target) {
+        require_defined(info, "Target array", target_array, to_status, selection);
+    }
+
+    for (const auto& cell_index : selection.cells()) {
         // This is the global index if global is true and global storage is used.
         const auto ix = cell_index.active_index;
 
-        if (value::has_value(from_status[ix])) {
-            if (!check_target || value::has_value(to_status[ix])) {
-                // Convert the data to input units and apply the operation.
-                const auto val = func(dstDim.convertSiToRaw(to_data[ix]),
-                                      srcDim.convertSiToRaw(from_data[ix]));
-                // Convert back the data to internal SI units.
-                to_data[ix] = dstDim.convertRawToSi(val);
-                to_status[ix] = from_status[ix];
-            }
-            else {
-                throw std::invalid_argument {
-                    "Tried to use unset property value "
-                    "in OPERATE/OPERATER keyword"
-                };
-            }
-        }
-        else {
-            throw std::invalid_argument {
-                "Tried to use unset property value in "
-                "OPERATE/OPERATER keyword"
-            };
-        }
+        // Convert the data to input units and apply the operation.
+        const auto val = func(dstDim.convertSiToRaw(to_data[ix]),
+                              srcDim.convertSiToRaw(from_data[ix]));
+        // Convert back the data to internal SI units.
+        to_data[ix] = dstDim.convertRawToSi(val);
+        to_status[ix] = from_status[ix];
     }
 }
 
-void FieldProps::operate_int_target(const DeckRecord&                   record,
-                                    Fieldprops::FieldData<int>&           target_data,
-                                    const std::string&                    src_kw,
-                                    const std::vector<Box::cell_index>&   index_list,
-                                    const bool                            global)
+void FieldProps::operate_int_target(const DeckKeyword&                keyword,
+                                    const DeckRecord&                 record,
+                                    Fieldprops::FieldData<int>&       target_data,
+                                    const std::string&                src_kw,
+                                    const Fieldprops::CellSelection&  selection,
+                                    const bool                        global)
 {
     // Shared backend for OPERATE and OPERATER; both define
     // OPERATION/PARAM1/PARAM2 identically.
@@ -1710,25 +1651,21 @@ void FieldProps::operate_int_target(const DeckRecord&                   record,
     auto& to_status = global ? *target_data.global_value_status
                              : target_data.value_status;
 
+    const auto target_array = record.getItem<Kw::TARGET_ARRAY>().getTrimmedString(0);
+    const auto opLabel = fmt::format("{} {}", keyword.name(), func_name);
+    const auto info = OperationInfo { opLabel, target_array, keyword.location() };
+
     auto apply = [&](const auto& from_data, const auto& from_status,
                      const auto  srcDim)
     {
-        for (const auto& cell_index : index_list) {
+        // Verify all inputs before modifying anything.
+        require_defined(info, "Source array", src_kw, from_status, selection);
+        if (check_target) {
+            require_defined(info, "Target array", target_array, to_status, selection);
+        }
+
+        for (const auto& cell_index : selection.cells()) {
             const auto ix = cell_index.active_index;
-
-            if (!value::has_value(from_status[ix])) {
-                throw std::invalid_argument {
-                    "Tried to use unset property value in "
-                    "OPERATE/OPERATER keyword"
-                };
-            }
-
-            if (check_target && !value::has_value(to_status[ix])) {
-                throw std::invalid_argument {
-                    "Tried to use unset property value "
-                    "in OPERATE/OPERATER keyword"
-                };
-            }
 
             const auto tgt_raw = static_cast<double>(to_data[ix]);
             const auto src_raw = srcDim.convertSiToRaw(from_data[ix]);
@@ -1812,13 +1749,15 @@ void FieldProps::handle_operateR(const Section section,
             continue;
         }
 
+        const auto selection = Fieldprops::CellSelection::fromRegion(index_list, reg_name, region_value);
+
         if (FieldProps::supported<double>(target_kw) ||
             Fieldprops::keywords::is_work(target_kw))
         {
             auto& field_data = this->init_get<double>(target_kw);
 
             const auto& src_data = this->init_get<double>(src_kw);
-            FieldProps::operate(record, field_data, src_data, index_list);
+            FieldProps::operate(keyword, record, field_data, src_data, src_kw, selection);
 
             if ((section == Section::EDIT) && (target_kw == "DEPTH")) {
                 this->depth_edited_ = true;
@@ -1850,7 +1789,7 @@ Note that this might cause problems for PINCH option 4 or 5 being ALL.)", target
         if (FieldProps::supported<int>(target_kw)) {
             auto& field_data = this->init_get<int>(target_kw);
 
-            this->operate_int_target(record, field_data, src_kw, index_list);
+            this->operate_int_target(keyword, record, field_data, src_kw, selection);
 
             if (field_data.global_data) {
                 if (!all_active) {
@@ -1923,9 +1862,9 @@ void FieldProps::handle_region_operation(const Section section,
             const auto scalar_value =
                 this->getSIValue(operation, target_kw, record.getItem(1).get<double>(0));
 
-            apply(operation, keyword.location(), target_kw,
-                  field_data.data, field_data.value_status,
-                  scalar_value, index_list);
+            apply(operation, OperationInfo { keyword.name(), target_kw, keyword.location() },
+                  field_data.data, field_data.value_status, scalar_value,
+                  Fieldprops::CellSelection::fromRegion(index_list, reg_name, region_value));
 
             if ((section == Section::EDIT) && (target_kw == "DEPTH")) {
                 this->depth_edited_ = true;
@@ -1966,9 +1905,9 @@ Note that this might cause problems for PINCH option 4 or 5 being ALL.)", target
             const auto scalar_value =
                 static_cast<int>(record.getItem(1).get<double>(0));
 
-            apply(operation, keyword.location(), target_kw,
-                  field_data.data, field_data.value_status,
-                  scalar_value, index_list);
+            apply(operation, OperationInfo { keyword.name(), target_kw, keyword.location() },
+                  field_data.data, field_data.value_status, scalar_value,
+                  Fieldprops::CellSelection::fromRegion(index_list, reg_name, region_value));
 
             continue;
         }
@@ -2013,7 +1952,8 @@ void FieldProps::handle_OPERATE(const Section section,
             auto& field_data = this->init_get<double>(target_kw);
             const auto& src_data = this->init_get<double>(src_kw);
 
-            FieldProps::operate(record, field_data, src_data, box.index_list());
+            FieldProps::operate(keyword, record, field_data, src_data, src_kw,
+                                Fieldprops::CellSelection::fromBox(box));
 
             if ((section == Section::EDIT) && (target_kw == "DEPTH")) {
                 this->depth_edited_ = true;
@@ -2027,8 +1967,8 @@ void FieldProps::handle_OPERATE(const Section section,
                     };
                 }
 
-                FieldProps::operate(record, field_data, src_data,
-                                    box.global_index_list(), true);
+                FieldProps::operate(keyword, record, field_data, src_data, src_kw,
+                                    Fieldprops::CellSelection::fromBox(box, true), true);
             }
             continue;
         }
@@ -2036,7 +1976,8 @@ void FieldProps::handle_OPERATE(const Section section,
         if (FieldProps::supported<int>(target_kw)) {
             auto& field_data = this->init_get<int>(target_kw);
 
-            this->operate_int_target(record, field_data, src_kw, box.index_list());
+            this->operate_int_target(keyword, record, field_data, src_kw,
+                                     Fieldprops::CellSelection::fromBox(box));
 
             if (field_data.global_data) {
                 update_global_from_local(field_data, box.index_list());
@@ -2145,19 +2086,18 @@ void FieldProps::handle_operation(const Section      section,
             auto& field_data = this->init_get<double>
                 (unique_name, kw_info, /* multiplier_in_edit =*/ editSect && kw_info.multiplier);
 
-            apply(operation, keyword.location(), target_kw,
-                  field_data.data, field_data.value_status,
-                  scalar_value, box.index_list());
+            apply(operation, OperationInfo { keyword.name(), target_kw, keyword.location() },
+                  field_data.data, field_data.value_status, scalar_value,
+                  Fieldprops::CellSelection::fromBox(box));
 
             if (editSect && (target_kw == "DEPTH")) {
                 this->depth_edited_ = true;
             }
 
             if (field_data.global_data) {
-                apply(operation, keyword.location(), target_kw,
-                      *field_data.global_data,
-                      *field_data.global_value_status,
-                      scalar_value, box.global_index_list());
+                apply(operation, OperationInfo { keyword.name(), target_kw, keyword.location() },
+                      *field_data.global_data, *field_data.global_value_status,
+                      scalar_value, Fieldprops::CellSelection::fromBox(box, true));
             }
 
             continue;
@@ -2177,10 +2117,9 @@ void FieldProps::handle_operation(const Section      section,
 
             auto& field_data = this->init_get<int>(target_kw);
 
-            apply(operation, keyword.location(), target_kw,
-                  field_data.data,
-                  field_data.value_status,
-                  scalar_value, box.index_list());
+            apply(operation, OperationInfo { keyword.name(), target_kw, keyword.location() },
+                  field_data.data, field_data.value_status, scalar_value,
+                  Fieldprops::CellSelection::fromBox(box));
 
             continue;
         }
