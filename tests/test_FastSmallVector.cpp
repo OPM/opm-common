@@ -27,6 +27,9 @@
 
 #include <opm/material/common/FastSmallVector.hpp>
 
+#include <memory>
+#include <string>
+#include <vector>
 
 BOOST_AUTO_TEST_SUITE (FastSmallVectorTests)
 
@@ -116,6 +119,57 @@ BOOST_AUTO_TEST_CASE (BasicOperations)
         }
     }
 
+}
+
+BOOST_AUTO_TEST_CASE (InlineShrinkAndReuse)
+{
+    // Long strings exercise owned heap storage rather than short-string storage.
+    const std::string text(256, 'x');
+    Opm::FastSmallVector<std::string, 3> strings(3, text);
+    strings.resize(1);
+    BOOST_REQUIRE_EQUAL(strings.size(), 1u);
+    BOOST_CHECK_EQUAL(strings[0], text);
+
+    strings.resize(3);
+    BOOST_CHECK(strings[1].empty());
+    BOOST_CHECK(strings[2].empty());
+    strings[1] = text;
+    strings[2] = text;
+    strings.resize(0);
+    strings.push_back(text);
+    strings.push_back(text);
+    BOOST_REQUIRE_EQUAL(strings.size(), 2u);
+    BOOST_CHECK_EQUAL(strings[0], text);
+    BOOST_CHECK_EQUAL(strings[1], text);
+
+    Opm::FastSmallVector<std::vector<int>, 2> vectors(2, std::vector<int>(128, 42));
+    vectors.resize(0);
+    vectors.resize(2);
+    BOOST_CHECK(vectors[0].empty());
+    BOOST_CHECK(vectors[1].empty());
+    vectors[0].push_back(7);
+    BOOST_CHECK_EQUAL(vectors[0].front(), 7);
+    vectors.resize(1); // Destruction must also be safe without regrowing.
+}
+
+BOOST_AUTO_TEST_CASE (InlineShrinkReleasesOwnership)
+{
+    Opm::FastSmallVector<std::shared_ptr<int>, 2> values;
+    values.push_back(std::make_shared<int>(1));
+    values.push_back(std::make_shared<int>(2));
+    const std::weak_ptr<int> first = values[0];
+    const std::weak_ptr<int> second = values[1];
+
+    values.resize(1);
+    BOOST_CHECK(!first.expired());
+    BOOST_CHECK(second.expired());
+    BOOST_CHECK_EQUAL(*values[0], 1);
+
+    values.resize(0);
+    BOOST_CHECK(first.expired());
+    values.resize(2);
+    BOOST_CHECK(!values[0]);
+    BOOST_CHECK(!values[1]);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
