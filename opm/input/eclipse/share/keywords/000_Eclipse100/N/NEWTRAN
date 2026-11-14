@@ -2,5 +2,6 @@
   "name": "NEWTRAN",
   "sections": [
     "GRID"
-  ]
+  ],
+  "prohibits": ["OLDTRAN"]
 }
