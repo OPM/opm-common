@@ -73,6 +73,7 @@
 #include <opm/material/components/C1.hpp>
 #include <opm/material/components/C10.hpp>
 #include <opm/material/components/H2.hpp>
+#include <opm/material/components/SimpleH2.hpp>
 
 #include <opm/material/common/UniformTabulated2DFunction.hpp>
 
@@ -166,6 +167,30 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(All, Scalar, Types)
     // ensure that all components are API-compliant
     testAllComponents<Scalar, Scalar>();
     testAllComponents<Scalar, Evaluation>();
+}
+
+// gasHeatCapacity() is the temperature derivative of gasEnthalpy().
+template <class Component, class Scalar>
+void checkGasHeatCapacityIsEnthalpyDerivative()
+{
+    using Evaluation = Opm::DenseAd::Evaluation<Scalar, 1>;
+
+    const Scalar p = 1.0e5;
+    for (const Scalar T : {250.0, 300.0, 400.0, 600.0}) {
+        BOOST_TEST_CONTEXT(Component::name() << " at T = " << T) {
+            const auto h = Component::gasEnthalpy(Evaluation::createVariable(T, 0), Evaluation(p));
+            BOOST_CHECK_CLOSE(Component::gasHeatCapacity(T, p), h.derivative(0), 1e-3); // [%]
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE_TEMPLATE(GasHeatCapacityIsEnthalpyDerivative, Scalar, Types)
+{
+    checkGasHeatCapacityIsEnthalpyDerivative<Opm::Air<Scalar>, Scalar>();
+    checkGasHeatCapacityIsEnthalpyDerivative<Opm::N2<Scalar>, Scalar>();
+    checkGasHeatCapacityIsEnthalpyDerivative<Opm::SimpleCO2<Scalar>, Scalar>();
+    checkGasHeatCapacityIsEnthalpyDerivative<Opm::SimpleH2<Scalar>, Scalar>();
+    checkGasHeatCapacityIsEnthalpyDerivative<Opm::SimpleH2O<Scalar>, Scalar>();
 }
 
 BOOST_AUTO_TEST_CASE_TEMPLATE(SimpleH2O, Scalar, Types)
