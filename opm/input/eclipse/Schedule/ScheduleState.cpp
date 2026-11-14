@@ -377,6 +377,7 @@ bool ScheduleState::operator==(const ScheduleState& other) const {
         && this->target_wellpi == other.target_wellpi
         && this->m_tuning == other.m_tuning
         && this->m_tuning_dp == other.m_tuning_dp
+        && this->m_cvcrit == other.m_cvcrit
         && this->m_end_time == other.m_end_time
         && this->m_events == other.m_events
         && this->m_wellgroup_events == other.m_wellgroup_events
@@ -439,6 +440,7 @@ ScheduleState ScheduleState::serializationTestObject() {
     ts.groups = map_member<std::string, Group>::serializationTestObject();
     ts.m_events = Events::serializationTestObject();
     ts.m_nupcol = Nupcol::serializationTestObject();
+    ts.m_cvcrit = Cvcrit::serializationTestObject();
     ts.m_lgr_active = {{"LGR1", false}, {"LGR2", true}};
     ts.m_message_limits = MessageLimits::serializationTestObject();
     ts.m_whistctl_mode = Well::ProducerCMode::THP;
@@ -517,6 +519,16 @@ const TuningDp& ScheduleState::tuning_dp() const {
 
 TuningDp& ScheduleState::tuning_dp() {
     return this->m_tuning_dp;
+}
+// ---------
+
+// ---- CVCRIT ----
+void ScheduleState::update_cvcrit(Cvcrit cvcrit) {
+    this->m_cvcrit = std::move(cvcrit);
+}
+
+const std::optional<Cvcrit>& ScheduleState::cvcrit() const {
+    return this->m_cvcrit;
 }
 // ---------
 

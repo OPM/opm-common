@@ -20,6 +20,7 @@
 #include <opm/input/eclipse/Schedule/Tuning.hpp>
 
 #include <opm/input/eclipse/Units/Units.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/C.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/T.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
 
@@ -265,5 +266,73 @@ bool TuningDp::operator==(const TuningDp& other) const
            this->TRGDDS == other.TRGDDS &&
            this->TRGDDRS == other.TRGDDRS &&
            this->TRGDDRV == other.TRGDDRV;
+}
+
+// ////
+// CVCRIT
+// ////
+using CVCRIT = ParserKeywords::CVCRIT;
+// The defaults are given in METRIC units, whatever the deck's unit system.
+Cvcrit::Cvcrit()
+    : pressure_change_tolerance(CVCRIT::PRESSURE_CHANGE_TOLERANCE::defaultValue * Metric::Pressure)
+    , linear_residual_reduction(CVCRIT::LINEAR_RESIDUAL_REDUCTION::defaultValue)
+    , fugacity_error_tolerance(CVCRIT::FUGACITY_ERROR_TOLERANCE::defaultValue)
+    , temperature_change_tolerance(CVCRIT::TEMPERATURE_CHANGE_TOLERANCE::defaultValue
+                                   * Metric::AbsoluteTemperature)
+    , residual_max_norm_tolerance(CVCRIT::RESIDUAL_MAX_NORM_TOLERANCE::defaultValue)
+    , residual_sum_tolerance(CVCRIT::RESIDUAL_SUM_TOLERANCE::defaultValue)
+    , msw_max_iterations(CVCRIT::MSW_MAX_ITERATIONS::defaultValue)
+    , msw_molar_density_tolerance(CVCRIT::MSW_MOLAR_DENSITY_TOLERANCE::defaultValue
+                                  * Metric::Moles / Metric::ReservoirVolume)
+    , msw_molar_rate_tolerance(CVCRIT::MSW_MOLAR_RATE_TOLERANCE::defaultValue
+                               * Metric::Moles / Metric::Time)
+    , msw_energy_density_tolerance(CVCRIT::MSW_ENERGY_DENSITY_TOLERANCE::defaultValue
+                                   * Metric::Energy / Metric::ReservoirVolume)
+    , msw_velocity_tolerance(CVCRIT::MSW_VELOCITY_TOLERANCE::defaultValue
+                             * Metric::Length / Metric::RunTime)
+    , msw_molar_residual_tolerance(CVCRIT::MSW_MOLAR_RESIDUAL_TOLERANCE::defaultValue
+                                   * Metric::Moles / Metric::Time)
+    , msw_energy_residual_tolerance(CVCRIT::MSW_ENERGY_RESIDUAL_TOLERANCE::defaultValue
+                                    * Metric::Energy / Metric::Time)
+    , msw_max_pressure_change(CVCRIT::MSW_MAX_PRESSURE_CHANGE::defaultValue * Metric::Pressure)
+    , msw_max_specific_volume_change(CVCRIT::MSW_MAX_SPECIFIC_VOLUME_CHANGE::defaultValue)
+    , msw_max_temperature_change(CVCRIT::MSW_MAX_TEMPERATURE_CHANGE::defaultValue
+                                 * Metric::AbsoluteTemperature)
+    , additional_residual_max_norm_tolerance(CVCRIT::ADDITIONAL_RESIDUAL_MAX_NORM_TOLERANCE::defaultValue)
+    , additional_residual_sum_tolerance(CVCRIT::ADDITIONAL_RESIDUAL_SUM_TOLERANCE::defaultValue)
+{
+}
+
+Cvcrit Cvcrit::serializationTestObject()
+{
+    Cvcrit result;
+    result.pressure_change_tolerance = 1.0;
+    result.max_nonlinear_iterations = 2;
+    result.linear_residual_reduction = 3.0;
+    result.max_linear_iterations = 4;
+    result.fugacity_error_tolerance = 5.0;
+    result.min_linear_iterations = 6;
+    result.specific_volume_change_tolerance = 7.0;
+    result.temperature_change_tolerance = 8.0;
+    result.min_nonlinear_iterations = 9;
+    result.residual_max_norm_tolerance = 11.0;
+    result.residual_sum_tolerance = 12.0;
+    result.max_molar_density_change = 13.0;
+    result.max_temperature_change = 14.0;
+    result.max_pressure_change = 15.0;
+    result.msw_max_iterations = 23;
+    result.msw_molar_density_tolerance = 24.0;
+    result.msw_molar_rate_tolerance = 25.0;
+    result.msw_energy_density_tolerance = 26.0;
+    result.msw_velocity_tolerance = 27.0;
+    result.msw_molar_residual_tolerance = 31.0;
+    result.msw_energy_residual_tolerance = 32.0;
+    result.msw_max_pressure_change = 37.0;
+    result.msw_max_specific_volume_change = 38.0;
+    result.msw_max_temperature_change = 39.0;
+    result.additional_residual_max_norm_tolerance = 41.0;
+    result.additional_residual_sum_tolerance = 42.0;
+
+    return result;
 }
 }

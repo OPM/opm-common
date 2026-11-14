@@ -478,6 +478,10 @@ namespace Opm {
         TuningDp& tuning_dp();
         const TuningDp& tuning_dp() const;
 
+        // ---- CVCRIT ----
+        void update_cvcrit(Cvcrit cvcrit);
+        const std::optional<Cvcrit>& cvcrit() const;
+
         void init_nupcol(Nupcol nupcol);
         void update_nupcol(int nupcol);
         int nupcol() const;
@@ -735,6 +739,7 @@ namespace Opm {
             serializer(m_save_step);
             serializer(m_tuning);
             serializer(m_tuning_dp);
+            serializer(m_cvcrit);
             serializer(m_nupcol);
             serializer(m_events);
             serializer(m_wellgroup_events);
@@ -760,6 +765,7 @@ namespace Opm {
 
         Tuning m_tuning{};
         TuningDp m_tuning_dp{};
+        std::optional<Cvcrit> m_cvcrit{};
         Nupcol m_nupcol{};
         Events m_events{};
         WellGroupEvents m_wellgroup_events{};

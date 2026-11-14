@@ -232,6 +232,80 @@ namespace Opm {
         }
     };
 
+    /// Convergence criteria and iteration limits from the CVCRIT keyword,
+    /// in SI units.
+    ///
+    /// Every item has a default, so an item defaulted in the deck takes
+    /// that default rather than its value from an earlier CVCRIT.  The
+    /// items whose default depends on the solution method have no value
+    /// until the deck sets them.  Items for SAMG, Appleyard chopping and
+    /// the extra linear residual checks are not stored.
+    struct Cvcrit {
+        Cvcrit();
+
+        static Cvcrit serializationTestObject();
+
+        double pressure_change_tolerance;                        // Item 1
+        std::optional<int> max_nonlinear_iterations;             // Item 2
+        double linear_residual_reduction;                        // Item 3
+        std::optional<int> max_linear_iterations;                // Item 4
+        double fugacity_error_tolerance;                         // Item 5
+        std::optional<int> min_linear_iterations;                // Item 6
+        std::optional<double> specific_volume_change_tolerance;  // Item 7
+        double temperature_change_tolerance;                     // Item 8
+        std::optional<int> min_nonlinear_iterations;             // Item 9
+        double residual_max_norm_tolerance;                      // Item 11
+        double residual_sum_tolerance;                           // Item 12
+        std::optional<double> max_molar_density_change;          // Item 13, no unit conversion
+        std::optional<double> max_temperature_change;            // Item 14
+        std::optional<double> max_pressure_change;               // Item 15
+        int msw_max_iterations;                                  // Item 23
+        double msw_molar_density_tolerance;                      // Item 24
+        double msw_molar_rate_tolerance;                         // Item 25
+        double msw_energy_density_tolerance;                     // Item 26
+        double msw_velocity_tolerance;                           // Item 27
+        double msw_molar_residual_tolerance;                     // Item 31
+        double msw_energy_residual_tolerance;                    // Item 32
+        double msw_max_pressure_change;                          // Item 37
+        double msw_max_specific_volume_change;                   // Item 38
+        double msw_max_temperature_change;                       // Item 39
+        double additional_residual_max_norm_tolerance;           // Item 41
+        double additional_residual_sum_tolerance;                // Item 42
+
+        bool operator==(const Cvcrit&) const = default;
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(pressure_change_tolerance);
+            serializer(max_nonlinear_iterations);
+            serializer(linear_residual_reduction);
+            serializer(max_linear_iterations);
+            serializer(fugacity_error_tolerance);
+            serializer(min_linear_iterations);
+            serializer(specific_volume_change_tolerance);
+            serializer(temperature_change_tolerance);
+            serializer(min_nonlinear_iterations);
+            serializer(residual_max_norm_tolerance);
+            serializer(residual_sum_tolerance);
+            serializer(max_molar_density_change);
+            serializer(max_temperature_change);
+            serializer(max_pressure_change);
+            serializer(msw_max_iterations);
+            serializer(msw_molar_density_tolerance);
+            serializer(msw_molar_rate_tolerance);
+            serializer(msw_energy_density_tolerance);
+            serializer(msw_velocity_tolerance);
+            serializer(msw_molar_residual_tolerance);
+            serializer(msw_energy_residual_tolerance);
+            serializer(msw_max_pressure_change);
+            serializer(msw_max_specific_volume_change);
+            serializer(msw_max_temperature_change);
+            serializer(additional_residual_max_norm_tolerance);
+            serializer(additional_residual_sum_tolerance);
+        }
+    };
+
 } //namespace Opm
 
 #endif
