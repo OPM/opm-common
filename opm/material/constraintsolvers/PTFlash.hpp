@@ -97,13 +97,16 @@ public:
     /*!
      * \brief Calculates the fluid state from the global mole fractions of the components and the phase pressures
      *
+     * \p li_factor multiplies the Li critical temperature that labels a
+     * single-phase mixture (FACTLI).
      */
     template <class FluidState>
     static bool solve(FluidState& fluid_state,
                       PTFlashMethod twoPhaseMethod,
                       Scalar flash_tolerance,
                       const EOSType& eos_type,
-                      int verbosity = 0)
+                      int verbosity = 0,
+                      Scalar li_factor = 1.0)
     {
         using ScalarFluidState = CompositionalFluidState<Scalar, FluidSystem>;
         // Solve on a value-only copy; derivatives are reconstructed on the
@@ -124,7 +127,8 @@ public:
         scalar_state.setTemperature(Opm::getValue(fluid_state.temperature(0)));
 
         const auto [is_single_phase, newton_jacobian]
-            = flashScalar_(scalar_state, twoPhaseMethod, flash_tolerance, eos_type, verbosity);
+            = flashScalar_(scalar_state, twoPhaseMethod, flash_tolerance, eos_type, verbosity,
+                           li_factor);
 
         // Transfer the converged values before reconstructing their derivatives.
         for (int compIdx=0; compIdx<numComponents; ++compIdx){
@@ -172,7 +176,8 @@ public:
      * -# a finite negative-flash liquid fraction is labelled single-phase;
      * -# a rejected split, or coincident phases from a warm start, triggers a
      *    new stability test from Wilson estimates and at most one retry; and
-     * -# for a single-phase mixture, the phase label.
+     * -# for a single-phase mixture, the phase label, liquid below the Li
+     *    critical temperature times \p li_factor.
      *
      * The state also receives the fugacity coefficients of the phase
      * compositions it returns, which are the feed for a single phase.
@@ -184,10 +189,12 @@ public:
                                    PTFlashMethod twoPhaseMethod,
                                    const Scalar flash_tolerance,
                                    const EOSType& eos_type,
-                                   const int verbosity = 0)
+                                   const int verbosity = 0,
+                                   const Scalar li_factor = 1.0)
     {
         const bool is_single_phase
-            = flashScalar_(fluid_state, twoPhaseMethod, flash_tolerance, eos_type, verbosity)
+            = flashScalar_(fluid_state, twoPhaseMethod, flash_tolerance, eos_type, verbosity,
+                           li_factor)
                   .single_phase;
         // The solve leaves those of its last evaluation, which need not be the result.
         using ParamCache =
@@ -203,6 +210,26 @@ public:
             }
         }
         return is_single_phase;
+    }
+
+    /*!
+     * \brief Li's pseudo-critical temperature of a mixture, the critical
+     *        temperatures weighted by the critical volume fractions.
+     */
+    template <class Vector>
+    static typename Vector::value_type li_critical_temperature(const Vector& z)
+    {
+        typename Vector::value_type sumVz = 0.0;
+        for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+            sumVz += FluidSystem::criticalVolume(compIdx) * z[compIdx];
+        }
+        typename Vector::value_type Tc_est = 0.0;
+        for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+            const auto& V_crit = FluidSystem::criticalVolume(compIdx);
+            const auto& T_crit = FluidSystem::criticalTemperature(compIdx);
+            Tc_est += V_crit * T_crit * z[compIdx] / sumVz;
+        }
+        return Tc_est;
     }
 
 protected:
@@ -233,7 +260,8 @@ protected:
                                           PTFlashMethod twoPhaseMethod,
                                           const Scalar flash_tolerance,
                                           const EOSType& eos_type,
-                                          const int verbosity)
+                                          const int verbosity,
+                                          const Scalar li_factor = 1.0)
     {
         std::optional<NewtonJacobian> newton_jacobian;
         // States without a physical two-phase fraction require stability
@@ -357,7 +385,7 @@ protected:
             }
             if (!is_negative_flash) {
                 // Cell is one-phase. Use Li's phase labeling method to see if it's liquid or vapor
-                L_scalar = li_single_phase_label_(fluid_state, z_scalar, verbosity);
+                L_scalar = li_single_phase_label_(fluid_state, z_scalar, li_factor, verbosity);
             }
         }
         fluid_state.setLvalue(L_scalar);
@@ -365,28 +393,13 @@ protected:
     }
 
     template <class Vector, class FlashFluidState>
-    static typename Vector::field_type li_single_phase_label_(const FlashFluidState& fluid_state, const Vector& z, int verbosity)
+    static typename Vector::field_type li_single_phase_label_(const FlashFluidState& fluid_state,
+                                                              const Vector& z,
+                                                              const Scalar li_factor,
+                                                              int verbosity)
     {
-        // Calculate intermediate sum
-        typename Vector::field_type sumVz = 0.0;
-        for (int compIdx=0; compIdx<numComponents; ++compIdx){
-            // Get component information
-            const auto& V_crit = FluidSystem::criticalVolume(compIdx);
-
-            // Sum calculation
-            sumVz += (V_crit * z[compIdx]);
-        }
-
         // Calculate approximate (pseudo) critical temperature using Li's method
-        typename Vector::field_type Tc_est = 0.0;
-        for (int compIdx=0; compIdx<numComponents; ++compIdx){
-            // Get component information
-            const auto& V_crit = FluidSystem::criticalVolume(compIdx);
-            const auto& T_crit = FluidSystem::criticalTemperature(compIdx);
-
-            // Sum calculation
-            Tc_est += (V_crit * T_crit * z[compIdx] / sumVz);
-        }
+        const typename Vector::field_type Tc_est = li_factor * li_critical_temperature(z);
 
         // Get temperature
         const auto& T = fluid_state.temperature(0);
