@@ -1405,7 +1405,7 @@ bool parseState( ParserState& parserState, const Parser& parser, ErrorGuard& err
 
     if (! ignore.empty()) {
         if (!parserState.check_section_keywords(has_edit, has_regions, has_summary)) {
-            throw std::runtime_error("Parsing individual sections not possible when section keywords in root input file");
+            throw std::runtime_error("Parsing individual sections only possible when section keywords are in root input file.");
         }
     }
 
