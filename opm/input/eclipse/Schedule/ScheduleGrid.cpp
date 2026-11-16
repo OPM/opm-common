@@ -23,6 +23,7 @@
 #include <opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquifers.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
+#include <opm/input/eclipse/EclipseState/Runspec.hpp>
 
 #include <opm/input/eclipse/Schedule/CompletedCells.hpp>
 
@@ -81,12 +82,14 @@ Opm::ScheduleGrid::ScheduleGrid(const EclipseGrid&           ecl_grid,
                                 const FieldPropsManager&     fpm,
                                 CompletedCells&              completed_cells,
                                 std::vector<CompletedCells>& completed_cells_lgr,
-                                const std::unordered_map<std::string, std::size_t>& label_to_index_)
-    : grid           { &ecl_grid }
-    , fp             { &fpm }
-    , cells          { std::ref(completed_cells) }
-    , cells_lgr      { std::ref(completed_cells_lgr) }
-    , label_to_index { std::cref(label_to_index_) }
+                                const std::unordered_map<std::string, std::size_t>& label_to_index_,
+                                const Runspec&               runspec)
+    : grid                { &ecl_grid }
+    , fp                  { &fpm }
+    , scale_fracture_perm { runspec.porosityModel().fracturePermeabilityScalingActive() }
+    , cells               { std::ref(completed_cells) }
+    , cells_lgr           { std::ref(completed_cells_lgr) }
+    , label_to_index      { std::cref(label_to_index_) }
 {}
 
 void Opm::ScheduleGrid::include_numerical_aquifers(const NumericalAquifers& num_aquifers)
@@ -258,6 +261,21 @@ void Opm::ScheduleGrid::populate_props_from_main_grid_cell(CompletedCells::Cell&
     props.active_index = active_index;
 
     populate(*this->fp, active_index, props);
+
+    this->apply_fracture_perm_scaling(cell);
+}
+
+void Opm::ScheduleGrid::apply_fracture_perm_scaling(CompletedCells::Cell& cell) const
+{
+    if (! (this->scale_fracture_perm && this->grid->isFractureCell(cell.global_index))) {
+        return;
+    }
+
+    auto& props = *cell.props;
+
+    props.permx *= props.poro;
+    props.permy *= props.poro;
+    props.permz *= props.poro;
 }
 
 void Opm::ScheduleGrid::
@@ -268,7 +286,10 @@ populate_props_from_num_aquifer(const NumericalAquiferCell& numAquCell,
 
     props.active_index = this->grid->getActiveIndex(cell.global_index);
 
-    // Isotropic permeability tensor in numerical aquifer cells.
+    // Isotropic permeability tensor in numerical aquifer cells. Note that the
+    // dual-continuum fracture-permeability scaling deliberately does NOT apply here:
+    // an aquifer cell's properties come from the aquifer definition rather than from
+    // the grid's property arrays, so there is no deck permeability to scale.
     props.permx = props.permy = props.permz = numAquCell.permeability;
 
     props.poro = numAquCell.porosity;

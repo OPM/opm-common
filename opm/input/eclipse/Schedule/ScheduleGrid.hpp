@@ -32,6 +32,7 @@ namespace Opm {
 
 class EclipseGrid;
 class FieldPropsManager;
+class Runspec;
 class NumericalAquifers;
 struct NumericalAquiferCell;
 
@@ -115,11 +116,16 @@ public:
     ///
     /// \param[in] label_to_index_ Translation table from LGR names to LGR
     /// indices.  Empty if there are no LGRs.
+    ///
+    /// \param[in] runspec Run specification: in a dual-continuum run whose
+    /// porosity model scales the fracture permeability, fracture cells
+    /// report their permeability scaled by their porosity.
     ScheduleGrid(const EclipseGrid&           ecl_grid,
                  const FieldPropsManager&     fpm,
                  CompletedCells&              completed_cells,
                  std::vector<CompletedCells>& completed_cells_lgr,
-                 const std::unordered_map<std::string, std::size_t>& label_to_index_);
+                 const std::unordered_map<std::string, std::size_t>& label_to_index_,
+                 const Runspec&               runspec);
 
     /// Make collection aware of numerical aquifers
     ///
@@ -194,6 +200,13 @@ private:
     /// Property container.
     const FieldPropsManager* fp{nullptr};
 
+    /// Whether dual-porosity fracture cells report their permeability
+    /// scaled by the fracture porosity (EclipseGrid::isFractureCell
+    /// identifies the cells; the run's PorosityModel, reached through
+    /// Runspec::porosityModel(), decides the behaviour at the
+    /// construction site).
+    bool scale_fracture_perm{false};
+
     /// Collection of intersected cells in main grid.
     ///
     /// Reference to a mutable object that must outlive the ScheduleGrid.
@@ -250,6 +263,19 @@ private:
     /// \param[in,out] cell Intersected cell object.  This function will
     /// populate its Cell::Props sub-object.
     void populate_props_from_main_grid_cell(CompletedCells::Cell& cell) const;
+
+    /// Scale a dual-porosity fracture cell's permeability by its porosity.
+    ///
+    /// The effective permeability of a fracture cell is the deck value
+    /// scaled by the fracture porosity, so connection factors computed
+    /// from the cell properties match the scaled fracture system.  No
+    /// effect unless scaling was requested at construction and the cell is
+    /// a fracture cell (EclipseGrid::isFractureCell); matrix cells keep
+    /// their deck values.
+    ///
+    /// \param[in,out] cell Intersected cell object with an already
+    /// populated Cell::Props sub-object.
+    void apply_fracture_perm_scaling(CompletedCells::Cell& cell) const;
 
     /// Populate intersected cell property data for cell in main grid.
     ///
