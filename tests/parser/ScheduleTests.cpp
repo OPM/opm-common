@@ -9413,4 +9413,19 @@ WCONPROD
 /
 ENDACTIO
 )"), { "NEW1" });
+
+    // Matching wells added to a well list in the block and opened through it.
+    checkInactive(inactiveWellsAtEnd(R"(
+ACTIONX
+  'A' 1 /
+  WOPR 'NEW1' < 1 /
+/
+WLIST
+  '*NEW' 'NEW' '?' /
+/
+WELOPEN
+  '*NEW' 'OPEN' /
+/
+ENDACTIO
+)"), { "NEW2" });
 }

@@ -159,18 +159,29 @@ namespace {
 
     // Add the well name patterns of those records in an ACTIONX block
     // which may open a well.  A well added to a well list in the block may
-    // be opened through that list.
+    // be opened through that list.  In either, '?' denotes the wells
+    // matching the action's conditions.
     void addActionWellopenPatterns(const Opm::Action::ActionX&      action,
                                    const Opm::DeckKeyword&          keyword,
                                    std::unordered_set<std::string>& patterns)
     {
         namespace PK = Opm::ParserKeywords;
 
+        const auto addPattern = [&action, &patterns](const std::string& pattern)
+        {
+            if (pattern == "?") {
+                addConditionWellPatterns(action, patterns);
+            }
+            else {
+                patterns.insert(pattern);
+            }
+        };
+
         if (keyword.is<PK::WLIST>()) {
             for (const auto& record : keyword) {
                 const auto& wells = record.getItem<PK::WLIST::WELLS>();
-                for (auto i = 0*wells.data_size(); i < wells.data_size(); ++i) {
-                    patterns.insert(wells.getTrimmedString(i));
+                for (const auto& well : wells.getData<std::string>()) {
+                    addPattern(Opm::trim_copy(well));
                 }
             }
 
@@ -185,13 +196,7 @@ namespace {
         }
 
         for (const auto& record : keyword) {
-            const auto& pattern = record.getItem("WELL").getTrimmedString(0);
-            if (pattern == "?") {
-                addConditionWellPatterns(action, patterns);
-            }
-            else {
-                patterns.insert(pattern);
-            }
+            addPattern(record.getItem("WELL").getTrimmedString(0));
         }
     }
 
