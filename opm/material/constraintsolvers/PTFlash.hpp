@@ -42,6 +42,7 @@
 #include <opm/material/eos/CubicEOS.hpp>
 
 #include <opm/input/eclipse/EclipseState/Compositional/CompositionalConfig.hpp>
+#include <opm/input/eclipse/Units/Units.hpp>
 
 #include <opm/common/ErrorMacros.hpp>
 #include <opm/common/Exceptions.hpp>
@@ -87,11 +88,16 @@ class PTFlash
     using EOSType = CompositionalConfig::EOSType;
 
     // Tangent-plane distance below which a trial phase does not split off.
-    static constexpr Scalar stabilityTolerance = 1e-5;
+    // Close to a critical point an unstable feed lowers it by as little as
+    // 1e-7 well inside the two-phase region.
+    static constexpr Scalar stabilityTolerance = 1e-8;
     // Successive substitution has converged, or has collapsed onto the
     // trivial solution with all equilibrium ratios at one.
     static constexpr Scalar substitutionTolerance = 1e-10;
     static constexpr Scalar trivialSolutionTolerance = 1e-5;
+    // Plain substitution steps of the two-phase split between two
+    // extrapolations, see successiveSubstitutionComposition_().
+    static constexpr int substitutionAccelerationInterval = 5;
 
 public:
     /*!
@@ -356,12 +362,124 @@ protected:
                 fluid_state.setMoleFraction(oilPhaseIdx, compIdx, z_scalar[compIdx]);
             }
             if (!is_negative_flash) {
-                // Cell is one-phase. Use Li's phase labeling method to see if it's liquid or vapor
-                L_scalar = li_single_phase_label_(fluid_state, z_scalar, verbosity);
+                // A feed whose cubic has a liquid and a vapour root is labelled
+                // by the root with the lower Gibbs energy. A single root larger
+                // than the pseudo-critical volume of the feed is a vapour; a
+                // smaller one is labelled by Li's correlation.
+                const auto [stable_phase_idx, has_two_roots, molar_volume]
+                    = feedStableRoot_(fluid_state, z_scalar, eos_type);
+                if (has_two_roots) {
+                    L_scalar = stable_phase_idx == static_cast<int>(oilPhaseIdx) ? 1.0 : 0.0;
+                    if (verbosity >= 1) {
+                        OpmLog::debug(fmt::format("Cell is single-phase, labelled by its stable "
+                                                  "cubic root (L = {})", L_scalar));
+                    }
+                }
+                else {
+                    const Scalar critical_volume = pseudoCriticalVolume_(z_scalar);
+                    if (molar_volume > critical_volume) {
+                        L_scalar = 0.0;
+                        if (verbosity >= 1) {
+                            OpmLog::debug(fmt::format("Cell is single-phase, vapor (L = 0.0): its cubic "
+                                                      "root is larger than the pseudo-critical volume "
+                                                      "({} > {} m3/mol)", molar_volume, critical_volume));
+                        }
+                    }
+                    else {
+                        L_scalar = li_single_phase_label_(fluid_state, z_scalar, verbosity);
+                    }
+                }
             }
         }
         fluid_state.setLvalue(L_scalar);
         return {is_single_phase, newton_jacobian};
+    }
+
+    //! The stable cubic root of a feed, see feedStableRoot_().
+    struct FeedRoot
+    {
+        int phase_idx; //!< phase index of the stable root
+        bool has_two_roots; //!< whether the cubic has a separate liquid and vapour root
+        Scalar molar_volume; //!< molar volume of the stable root [m^3/mol]
+    };
+
+    /*!
+     * \brief The cubic root of the feed with the lower Gibbs energy.
+     *
+     * The feed composition is evaluated on the root of each phase label: the
+     * smallest root for oil, the largest for gas. Where the cubic has a
+     * physical liquid and vapour root, the one with the lower
+     * \f$\sum_i z_i \ln\varphi_i\f$ is the stable state of the feed. Where
+     * the smallest root is negative, the liquid volume is floored, and the
+     * fugacity coefficients on it are clamped to their maximum, so it is never
+     * the stable one. With a single root both labels give the same root.
+     *
+     * \return the phase index of the stable root, whether the cubic has a
+     *         separate liquid and vapour root, and the molar volume of the
+     *         stable root
+     */
+    template <class FlashFluidState, class ComponentVector>
+    static FeedRoot feedStableRoot_(const FlashFluidState& fluid_state,
+                                    const ComponentVector& z,
+                                    const EOSType& eos_type)
+    {
+        using FlashEval = typename FlashFluidState::ValueType;
+        using CubicEOS = typename Opm::CubicEOS<Scalar, FluidSystem>;
+        using ParamCache = typename FluidSystem::template ParameterCache<FlashEval>;
+
+        constexpr int oil = static_cast<int>(oilPhaseIdx);
+        constexpr int gas = static_cast<int>(gasPhaseIdx);
+        FlashFluidState feed_state = fluid_state;
+        for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+            feed_state.setMoleFraction(oil, compIdx, z[compIdx]);
+            feed_state.setMoleFraction(gas, compIdx, z[compIdx]);
+        }
+        ParamCache oil_cache(eos_type);
+        ParamCache gas_cache(eos_type);
+        oil_cache.updatePhase(feed_state, oil);
+        gas_cache.updatePhase(feed_state, gas);
+
+        // A separate liquid root is far smaller than the vapour root; a single
+        // root gives two equal volumes up to rounding.
+        const Scalar liquid_volume = Opm::getValue(oil_cache.molarVolume(oil));
+        const Scalar vapour_volume = Opm::getValue(gas_cache.molarVolume(gas));
+        if (!(liquid_volume < (1.0 - 1e-6) * vapour_volume)) {
+            return {oil, false, vapour_volume};
+        }
+
+        const auto sum_z_ln_phi = [&](const ParamCache& cache, const int phase_idx) {
+            Scalar sum = 0.0;
+            for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+                if (!(Opm::getValue(z[compIdx]) > 0.)) {
+                    continue;
+                }
+                const auto phi = CubicEOS::computeFugacityCoefficient(
+                    feed_state, cache, phase_idx, compIdx);
+                sum += Opm::getValue(z[compIdx]) * std::log(Opm::getValue(phi));
+            }
+            return sum;
+        };
+        const bool vapour_is_stable = sum_z_ln_phi(gas_cache, gas) < sum_z_ln_phi(oil_cache, oil);
+        return {vapour_is_stable ? gas : oil, true, vapour_is_stable ? vapour_volume : liquid_volume};
+    }
+
+    /*!
+     * \brief The pseudo-critical molar volume of the feed by Kay's rule,
+     *        \f$\sum_i z_i V_{c,i}\f$ [m^3/mol].
+     *
+     * A single cubic root larger than it is less dense than the critical
+     * state of the feed: a vapour, also below Li's temperature.
+     */
+    template <class ComponentVector>
+    static Scalar pseudoCriticalVolume_(const ComponentVector& z)
+    {
+        Scalar critical_volume = 0.0;
+        for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+            // The fluid systems give the critical volume in m^3/kmol.
+            critical_volume += Opm::getValue(z[compIdx])
+                * FluidSystem::criticalVolume(compIdx) / prefix::kilo;
+        }
+        return critical_volume;
     }
 
     template <class Vector, class FlashFluidState>
@@ -442,7 +560,10 @@ protected:
         ComponentVector vapour_trial_k = K;
         ComponentVector liquid_trial_k = K;
 
-        // Grow a vapour-like trial from a liquid reference state.
+        // Both trials are measured against the feed on its stable root.
+        const int reference_phase_idx = feedStableRoot_(fluid_state, z, eos_type).phase_idx;
+
+        // Grow a vapour-like trial phase.
         if (verbosity == 3 || verbosity == 4) {
             OpmLog::debug("Stability test for vapor phase:");
         }
@@ -453,12 +574,13 @@ protected:
                         vapour_trial_sum,
                         z,
                         /*is_vapour_trial=*/true,
+                        reference_phase_idx,
                         eos_type,
                         verbosity);
         const bool vapour_trial_finds_no_instability
             = (vapour_trial_sum < (1.0 + stabilityTolerance)) || vapour_trial_is_trivial;
 
-        // Grow a liquid-like trial from a vapour reference state.
+        // Grow a liquid-like trial phase.
         if (verbosity == 3 || verbosity == 4) {
             OpmLog::debug("Stability test for liquid phase:");
         }
@@ -469,6 +591,7 @@ protected:
                         liquid_trial_sum,
                         z,
                         /*is_vapour_trial=*/false,
+                        reference_phase_idx,
                         eos_type,
                         verbosity);
         const bool liquid_trial_finds_no_instability
@@ -536,6 +659,8 @@ protected:
      * \param[out] trial_sum The mole number sum \f$S\f$ of the trial phase.
      * \param z The mixture composition.
      * \param is_vapour_trial Whether to grow a vapour-like or liquid-like trial.
+     * \param reference_phase_idx The phase index of the feed's stable root,
+     *        which supplies the reference fugacities.
      * \param eos_type The equation of state.
      * \param verbosity Level of debug logging.
      */
@@ -547,6 +672,7 @@ protected:
                                 typename FlashFluidState::ValueType& trial_sum,
                                 const ComponentVector& z,
                                 bool is_vapour_trial,
+                                const int reference_phase_idx,
                                 const EOSType& eos_type,
                                 int verbosity)
     {
@@ -555,16 +681,12 @@ protected:
         using ParamCache = typename FluidSystem::template ParameterCache<FlashEval>;
 
         // The trial composition is evaluated on its candidate phase root. The
-        // feed composition supplies the reference fugacities on the opposite
-        // root: liquid for a vapour-like trial, and vapour for a liquid-like one.
-        // This opposite-root choice is an implementation convention, not a
-        // consequence of the tangent-plane equations.
+        // feed composition supplies the reference fugacities on its stable
+        // root, the state whose tangent plane the trial is measured against.
         FlashFluidState trial_state = fluid_state;
         FlashFluidState reference_state = fluid_state;
         const int trial_phase_idx
             = is_vapour_trial ? static_cast<int>(gasPhaseIdx) : static_cast<int>(oilPhaseIdx);
-        const int reference_phase_idx
-            = is_vapour_trial ? static_cast<int>(oilPhaseIdx) : static_cast<int>(gasPhaseIdx);
 
         // An absent component has no fugacity ratio. Setting its undefined K
         // to one excludes it from both convergence measures below.
@@ -731,6 +853,14 @@ protected:
                 OpmLog::debug("Calculate composition using Successive Substitution.");
             }
             converged = successiveSubstitutionComposition_(K_scalar, L_scalar, fluid_state_scalar, z_scalar, false, flash_tolerance, eos_type, verbosity);
+            break;
+
+        case PTFlashMethod::SsiAccelerated:
+            if (verbosity >= 1) {
+                OpmLog::debug("Calculate composition using extrapolated Successive Substitution.");
+            }
+            converged = successiveSubstitutionComposition_(K_scalar, L_scalar, fluid_state_scalar, z_scalar, false, flash_tolerance, eos_type, verbosity,
+                                                           /*extrapolate=*/true);
             break;
 
         case PTFlashMethod::SsiNewton:
@@ -1475,6 +1605,94 @@ protected:
     } //end updateDerivativesSinglePhase
 
     /*!
+     * \brief The Gibbs energy of a two-phase split, per mole of feed and
+     *        divided by RT, up to a constant,
+     *
+     * \f[ L \sum_i x_i \ln(x_i \varphi_i^{L})
+     *     + (1 - L) \sum_i y_i \ln(y_i \varphi_i^{V}), \f]
+     *
+     * from the compositions and fugacity coefficients in the fluid state.
+     * Absent components do not contribute.
+     */
+    template <class FlashFluidState, class ComponentVector>
+    static typename ComponentVector::field_type
+    splitGibbsEnergy_(const FlashFluidState& fluid_state,
+                      const typename ComponentVector::field_type& L,
+                      const ComponentVector& z)
+    {
+        typename ComponentVector::field_type gibbs = 0.;
+        for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+            if (!(Opm::getValue(z[compIdx]) > 0.)) {
+                continue;
+            }
+            const auto x = fluid_state.moleFraction(oilPhaseIdx, compIdx);
+            const auto y = fluid_state.moleFraction(gasPhaseIdx, compIdx);
+            gibbs += L * x * log(x * fluid_state.fugacityCoefficient(oilPhaseIdx, compIdx))
+                + (1. - L) * y * log(y * fluid_state.fugacityCoefficient(gasPhaseIdx, compIdx));
+        }
+        return gibbs;
+    }
+
+    /*!
+     * \brief The sum of the steps that successive substitution has still to
+     *        take, from its last three steps (newest first).
+     *
+     * Near convergence the steps follow the linear recurrence of the two
+     * dominant eigenvalues of the iteration,
+     * \f$ s_{n+1} + b_1 s_n + b_2 s_{n-1} = 0 \f$, with \f$b_1, b_2\f$ fitted
+     * to the last three steps by least squares. Summing the recurrence gives
+     *
+     * \f[ \sum_{m \ge 1} s_{n+m}
+     *     = -\frac{(b_1 + b_2)\, s_n + b_2\, s_{n-1}}{1 + b_1 + b_2}. \f]
+     *
+     * Where the two older steps are parallel, one eigenvalue
+     * \f$\lambda = s_n \cdot s_n / s_{n-1} \cdot s_n\f$ is used:
+     * \f$ \lambda s_n / (1 - \lambda) \f$.
+     *
+     * \return false where neither gives a finite sum of a contracting
+     *         iteration
+     */
+    template <class ComponentVector>
+    static bool extrapolateSubstitution_(const std::array<ComponentVector, 3>& steps,
+                                         ComponentVector& extrapolation)
+    {
+        using FieldType = typename ComponentVector::field_type;
+        const auto& [newest, middle, oldest] = steps;
+        const FieldType mm = middle * middle;
+        const FieldType mo = middle * oldest;
+        const FieldType oo = oldest * oldest;
+        const FieldType determinant = mm * oo - mo * mo;
+        bool found = false;
+        if (determinant > 1e-10 * mm * oo) {
+            const FieldType b1 = (-(middle * newest) * oo + mo * (oldest * newest)) / determinant;
+            const FieldType b2 = (-mm * (oldest * newest) + mo * (middle * newest)) / determinant;
+            const FieldType denominator = 1. + b1 + b2;
+            if (denominator > 1e-12) {
+                for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+                    extrapolation[compIdx]
+                        = -((b1 + b2) * newest[compIdx] + b2 * middle[compIdx]) / denominator;
+                }
+                found = true;
+            }
+        }
+        if (!found) {
+            const FieldType eigenvalue = (newest * newest) / (middle * newest);
+            if (!(eigenvalue > 0. && eigenvalue < 1.)) {
+                return false;
+            }
+            for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+                extrapolation[compIdx] = newest[compIdx] * eigenvalue / (1. - eigenvalue);
+            }
+        }
+        for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+            if (!std::isfinite(Opm::getValue(extrapolation[compIdx]))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /*!
      * \brief Successive substitution for the two-phase compositions.
      *
      * Each step recomputes the compositions from the current ratios, then
@@ -1483,8 +1701,19 @@ protected:
      * \f[ K_i \leftarrow K_i \frac{f_i^{L}}{f_i^{V}}, \f]
      *
      * until \f$\| f^{L} / f^{V} - 1 \|\f$ is below tolerance. As a
-     * conditioner for Newton it takes a few steps; on its own it may take
-     * many.
+     * conditioner for Newton it takes a few steps.
+     *
+     * The steps in \f$\ln K\f$ shrink by a nearly constant factor, which tends
+     * to one near a critical point, where the two phases become alike: there
+     * plain substitution needs thousands of steps. With \p extrapolate
+     * (PTFlashMethod::SsiAccelerated), every substitutionAccelerationInterval
+     * steps the remaining steps are summed (general dominant eigenvalue
+     * method): the last three steps give
+     * the two dominant eigenvalues of the iteration, and their geometric
+     * series extrapolates \f$\ln K\f$. Substitution never increases the Gibbs
+     * energy of the split, see splitGibbsEnergy_(). The extrapolated ratios
+     * are kept only if they lower it below its value at the last evaluated
+     * ratios; otherwise the iteration continues from the plain step.
      */
     template <class FlashFluidState, class ComponentVector>
     static bool successiveSubstitutionComposition_(ComponentVector& K,
@@ -1494,10 +1723,13 @@ protected:
                                                    const bool run_newton_afterwards,
                                                    const Scalar flash_tolerance,
                                                    const EOSType& eos_type,
-                                                   const int verbosity)
+                                                   const int verbosity,
+                                                   const bool extrapolate = false)
     {
-        // Limit conditioning passes before Newton; standalone substitution runs longer.
-        const int max_iterations = run_newton_afterwards ? 5 : 100;
+        // Limit conditioning passes before Newton; standalone substitution runs
+        // longer. With the extrapolation, the limit only stops a split that
+        // does not converge.
+        const int max_iterations = run_newton_afterwards ? 5 : (extrapolate ? 1000 : 100);
 
         // Print initial guess
         if (verbosity >= 1) {
@@ -1523,6 +1755,16 @@ protected:
                 K[compIdx] = 1.;
             }
         }
+        // The last three plain steps in ln K, newest first, and the plain
+        // point to return to when an extrapolation does not lower the Gibbs
+        // energy.
+        using FieldType = typename ComponentVector::field_type;
+        std::array<ComponentVector, 3> steps{};
+        int plain_steps = 0;
+        bool extrapolated = false;
+        ComponentVector plain_K = K;
+        FieldType plain_L = L;
+        FieldType gibbs_before = 0.;
         for (int iteration = 0; iteration < max_iterations; ++iteration) {
             // Compute (normalized) liquid and vapor mole fractions
             computeLiquidVapor_(fluid_state, L, K, z);
@@ -1568,6 +1810,19 @@ protected:
                                           precision));
             }
 
+            const bool split_is_interior = L > 0. && L < 1.;
+            const FieldType gibbs = extrapolate && split_is_interior ? splitGibbsEnergy_(fluid_state, L, z) : FieldType{0.};
+            if (extrapolated) {
+                extrapolated = false;
+                if (!(split_is_interior && gibbs < gibbs_before)) {
+                    // Continue from the plain step instead.
+                    K = plain_K;
+                    L = plain_L;
+                    plain_steps = 0;
+                    continue;
+                }
+            }
+
             // Check convergence
             if (fugacity_residual.two_norm() < flash_tolerance) {
                 // Print info
@@ -1596,12 +1851,38 @@ protected:
             //  If convergence is not met, K is updated in a successive substitution manner
             else {
                 // Update K
+                ComponentVector step(0.);
                 for (int compIdx=0; compIdx<numComponents; ++compIdx){
+                    if (extrapolate) {
+                        step[compIdx] = log(fugacity_ratio[compIdx]);
+                    }
                     K[compIdx] *= fugacity_ratio[compIdx];
                 }
 
                 // Solve Rachford-Rice to get L from updated K
                 L = RachfordRice::solve(K, z, 0);
+
+                steps = {step, steps[0], steps[1]};
+                ++plain_steps;
+                ComponentVector extrapolation;
+                if (extrapolate && split_is_interior && plain_steps >= substitutionAccelerationInterval
+                    && extrapolateSubstitution_(steps, extrapolation)) {
+                    plain_K = K;
+                    plain_L = L;
+                    gibbs_before = gibbs;
+                    for (int compIdx=0; compIdx<numComponents; ++compIdx){
+                        K[compIdx] *= exp(extrapolation[compIdx]);
+                    }
+                    try {
+                        L = RachfordRice::solve(K, z, 0);
+                        extrapolated = true;
+                    }
+                    catch (const NumericalProblem&) {
+                        K = plain_K;
+                        L = plain_L;
+                    }
+                    plain_steps = 0;
+                }
             }
         }
         // did not get converged. check whether we will do more newton later afterward
