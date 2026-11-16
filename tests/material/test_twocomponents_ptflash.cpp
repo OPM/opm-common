@@ -199,12 +199,8 @@ BOOST_AUTO_TEST_CASE(SinglePhaseLiquidF1)
 }
 
 // Low pressure / high temperature -> single-phase vapor (L = 0).
-// The single-phase L label comes from Li's correlation (PTFlash
-// li_single_phase_label_): liquid iff T < Tc_est = sum(Vc_i*Tc_i*z_i)/sum(Vc_i*z_i),
-// independent of pressure. For the equimolar C1/nC10 feed Tc_est = 558.24 K,
-// e.g. this fixture at 1 bar / 500 K is physically gaseous but still returns
-// the liquid label (L = 1). 600 K sits above the Li threshold and is
-// unambiguously vapor at 1 bar.
+// 600 K is above Li's temperature Tc_est = sum(Vc_i*Tc_i*z_i)/sum(Vc_i*z_i)
+// = 558.24 K of the equimolar C1/nC10 feed, and unambiguously vapor at 1 bar.
 BOOST_AUTO_TEST_CASE(SinglePhaseVaporF1)
 {
     FlashCase<numComponentsF1> testCase{"single-phase vapor F1", 1e5, 600., f1Z};
@@ -212,6 +208,121 @@ BOOST_AUTO_TEST_CASE(SinglePhaseVaporF1)
 
     const auto outcome = runFlash<FluidSystemF1, EvaluationF1>(testCase);
     checkExpectedPhase(testCase, outcome.summary);
+}
+
+// A lean feed (10 % C1) at 1 bar and 500 K has two cubic roots, and the vapour
+// root has the lower Gibbs energy: the mixture is a vapour, and the liquid
+// root is not the stable one.
+BOOST_AUTO_TEST_CASE(LeanFeedStableRootIsVapourF1)
+{
+    constexpr std::array<double, 2> leanZ = {0.1, 0.9};
+    auto fs = Opm::FlashTest::makeInitialState<FluidSystemF1, EvaluationF1>(1e5, 500., leanZ);
+    for (int compIdx = 0; compIdx < numComponentsF1; ++compIdx) {
+        fs.setMoleFraction(FluidSystemF1::oilPhaseIdx, compIdx, leanZ[compIdx]);
+        fs.setMoleFraction(FluidSystemF1::gasPhaseIdx, compIdx, leanZ[compIdx]);
+    }
+
+    using ParamCache = typename FluidSystemF1::template ParameterCache<EvaluationF1>;
+    ParamCache paramCache(EOSType::PR);
+    std::array<double, 2> molarVolume{};
+    std::array<double, 2> sumZLnPhi{};
+    for (const auto phaseIdx : {FluidSystemF1::oilPhaseIdx, FluidSystemF1::gasPhaseIdx}) {
+        paramCache.updatePhase(fs, phaseIdx);
+        const unsigned rootIdx = phaseIdx == FluidSystemF1::oilPhaseIdx ? 0 : 1;
+        molarVolume[rootIdx] = Opm::getValue(paramCache.molarVolume(phaseIdx));
+        for (int compIdx = 0; compIdx < numComponentsF1; ++compIdx) {
+            sumZLnPhi[rootIdx] += leanZ[compIdx] * std::log(Opm::getValue(
+                FluidSystemF1::fugacityCoefficient(fs, paramCache, phaseIdx, compIdx)));
+        }
+    }
+
+    BOOST_TEST_MESSAGE("lean feed, 1 bar, 500 K: sum z ln(phi) = " << sumZLnPhi[0]
+                       << " on the liquid root, " << sumZLnPhi[1] << " on the vapour root");
+    BOOST_CHECK_LT(molarVolume[0], 0.5 * molarVolume[1]); // two distinct roots
+    BOOST_CHECK_LT(sumZLnPhi[1], sumZLnPhi[0] - 1.);
+}
+
+// The lean feed at 1 bar is a vapour from about 447 K, while its cubic keeps a
+// liquid root up to about 549 K. The flash has to classify it as a single-phase
+// vapour there, with every method.
+BOOST_AUTO_TEST_CASE(LeanVapourIsSinglePhaseF1)
+{
+    constexpr std::array<double, 2> leanZ = {0.1, 0.9};
+    for (const auto method : {Opm::PTFlashMethod::Ssi, Opm::PTFlashMethod::Newton,
+                              Opm::PTFlashMethod::SsiNewton}) {
+        for (const double T : {450., 500., 540.}) {
+            FlashCase<numComponentsF1> testCase{"lean vapour F1", 1e5, T, leanZ};
+            testCase.method = method;
+            testCase.expected = ExpectedPhase::single_vapor;
+            BOOST_TEST_CONTEXT("T = " << T << " K, method " << Opm::ptFlashMethodToString(method)) {
+                FlashResult<numComponentsF1> result{};
+                BOOST_CHECK_NO_THROW(
+                    (result = runFlash<FluidSystemF1, EvaluationF1>(testCase).summary));
+                checkExpectedPhase(testCase, result);
+            }
+        }
+    }
+}
+
+// The equimolar feed at 1 bar is a gas below Li's temperature too: its cubic
+// has a single root, about a hundred times the pseudo-critical volume
+// sum(z_i*Vc_i) of the feed. The flash labels it vapour with every method.
+BOOST_AUTO_TEST_CASE(SingleRootGasIsVapourF1)
+{
+    for (const auto method : {Opm::PTFlashMethod::Ssi, Opm::PTFlashMethod::Newton,
+                              Opm::PTFlashMethod::SsiNewton}) {
+        for (const double T : {450., 500., 540.}) {
+            FlashCase<numComponentsF1> testCase{"single-root gas F1", 1e5, T, f1Z};
+            testCase.method = method;
+            testCase.expected = ExpectedPhase::single_vapor;
+            BOOST_TEST_CONTEXT("T = " << T << " K, method " << Opm::ptFlashMethodToString(method)) {
+                FlashResult<numComponentsF1> result{};
+                BOOST_CHECK_NO_THROW(
+                    (result = runFlash<FluidSystemF1, EvaluationF1>(testCase).summary));
+                checkExpectedPhase(testCase, result);
+            }
+        }
+    }
+}
+
+// Nearly pure n-decane at 1 bar and 300 K is a liquid. Its cubic also has a
+// vapour root, but the liquid root is the stable one, and the label stays
+// liquid with every method.
+BOOST_AUTO_TEST_CASE(StableLiquidKeepsLiquidLabelF1)
+{
+    constexpr std::array<double, 2> decaneZ = {0.001, 0.999};
+    for (const auto method : {Opm::PTFlashMethod::Ssi, Opm::PTFlashMethod::Newton,
+                              Opm::PTFlashMethod::SsiNewton}) {
+        FlashCase<numComponentsF1> testCase{"nearly pure n-decane F1", 1e5, 300., decaneZ};
+        testCase.method = method;
+        testCase.expected = ExpectedPhase::single_liquid;
+        BOOST_TEST_CONTEXT("method " << Opm::ptFlashMethodToString(method)) {
+            FlashResult<numComponentsF1> result{};
+            BOOST_CHECK_NO_THROW(
+                (result = runFlash<FluidSystemF1, EvaluationF1>(testCase).summary));
+            checkExpectedPhase(testCase, result);
+        }
+    }
+}
+
+// Near its critical point a methane-rich feed splits into two phases that
+// differ little: at 395 bar and 320 K the vapour-like trial phase grows to a
+// mole-number sum of only 1 + 6e-6, but the split, about half liquid, has
+// the lower Gibbs energy. Successive substitution alone does not converge
+// the split this close to the critical point; the Newton methods do.
+BOOST_AUTO_TEST_CASE(NearCriticalFeedSplitsF1)
+{
+    constexpr std::array<double, 2> methaneRichZ = {0.9, 0.1};
+    for (const auto method : {Opm::PTFlashMethod::Newton, Opm::PTFlashMethod::SsiNewton}) {
+        FlashCase<numComponentsF1> testCase{"near-critical feed F1", 395e5, 320., methaneRichZ};
+        testCase.method = method;
+        testCase.expected = ExpectedPhase::two_phase;
+        BOOST_TEST_CONTEXT("method " << Opm::ptFlashMethodToString(method)) {
+            const auto outcome = runFlash<FluidSystemF1, EvaluationF1>(testCase);
+            checkExpectedPhase(testCase, outcome.summary);
+            checkTwoPhaseInvariants<FluidSystemF1>(outcome.state, testCase.z, testCase.eos_type);
+        }
+    }
 }
 
 // Two-phase split invariants: normalization, mass balance, equal fugacity
