@@ -106,6 +106,23 @@ namespace {
         return kw == "RESTART";
     }
 
+    // Double the braces in deck text which becomes part of a message that
+    // is later formatted with a keyword location.
+    std::string escapeFormatBraces(std::string_view text)
+    {
+        auto escaped = std::string{};
+        escaped.reserve(text.size());
+
+        for (const auto c : text) {
+            escaped += c;
+            if ((c == '{') || (c == '}')) {
+                escaped += c;
+            }
+        }
+
+        return escaped;
+    }
+
     std::optional<Opm::Ecl::SectionType>
     sectionKeyword(const std::string& kw)
     {
@@ -729,7 +746,7 @@ void ParserState::handleRandomText(const std::string_view& keywordString) const
     else {
         errorKey = ParseContext::PARSE_RANDOM_TEXT;
         msg = fmt::format("String {} not formatted as valid keyword\n"
-                          "In {{file}} line {{line}}.", keywordString);
+                          "In {{file}} line {{line}}.", escapeFormatBraces(keywordString));
     }
 
     parseContext.handleError(errorKey, msg, location, errors);

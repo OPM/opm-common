@@ -764,7 +764,7 @@ void handleNEFAC(HandlerContext& handlerContext)
     if (!ext_network.active())
         return;
     if (ext_network.is_standard_network()) {
-        const std::string& msg = "NEFAC has no effect for a standard network: file {filename} line {lineno}";
+        const std::string& msg = "NEFAC has no effect for a standard network: file {file} line {line}";
         OpmLog::warning(handlerContext.keyword.location().format(msg));
         return;
     }

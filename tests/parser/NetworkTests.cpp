@@ -557,6 +557,32 @@ GRUPNET
     BOOST_CHECK(p == network.roots()[0]);
 }
 
+BOOST_AUTO_TEST_CASE(StandardNetwork_NEFAC_Ignored)
+{
+    // NEFAC applies to extended networks only.  For a standard network it
+    // is ignored with a warning.
+    const std::string input = R"(
+
+SCHEDULE
+
+GRUPTREE
+'M5S'    'PLAT-A'  /
+'B1'     'M5S'  /
+/
+
+GRUPNET
+'PLAT-A'     21.000  5* /
+'M5S'  1*    3  1*        'NO'  2* /
+'B1'  1*     5  1*        'NO'  2* /
+/
+
+NEFAC
+'M5S'  0.9 /
+/)";
+
+    BOOST_CHECK_NO_THROW(make_schedule(input));
+}
+
 BOOST_AUTO_TEST_SUITE_END()     // Basic_Functionality
 
 // ===========================================================================

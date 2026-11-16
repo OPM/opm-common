@@ -52,6 +52,7 @@
 #include <cstdlib>
 #include <memory>
 #include <stdexcept>
+#include <string_view>
 #include <tuple>
 
 using namespace Opm;
@@ -97,6 +98,33 @@ BOOST_AUTO_TEST_CASE(TestUnkownKeyword) {
     parseContext.update(ParseContext::PARSE_UNKNOWN_KEYWORD , InputErrorAction::IGNORE );
     parseContext.update(ParseContext::PARSE_RANDOM_TEXT , InputErrorAction::IGNORE );
     BOOST_CHECK_NO_THROW( parser.parseString( deck2 , parseContext , errors) );
+}
+
+BOOST_AUTO_TEST_CASE(TestRandomTextWithBraces)
+{
+    // Braces in the offending text must not be taken as format syntax.
+    const char* deck =
+        "{x}\n"
+        "DIMENS\n"
+        "  10 10 10 /\n"
+        "\n";
+
+    ErrorGuard errors;
+    ParseContext parseContext;
+    parseContext.update(ParseContext::PARSE_RANDOM_TEXT, InputErrorAction::THROW_EXCEPTION);
+
+    Parser parser(false);
+    parser.addKeyword<ParserKeywords::DIMENS>();
+
+    try {
+        parser.parseString(deck, parseContext, errors);
+        BOOST_FAIL("Random text must raise an input error");
+    }
+    catch (const OpmInputError& e) {
+        BOOST_CHECK_MESSAGE(std::string_view { e.what() }
+                            .find("String {x} not formatted as valid keyword") != std::string_view::npos,
+                            e.what());
+    }
 }
 
 
