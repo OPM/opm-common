@@ -2267,3 +2267,225 @@ END
         BOOST_CHECK_EQUAL(inj_mult.multiplier_gradient, 1.0e-8); // 0.001 / barsa to 1 / Pa
     }
 }
+
+namespace {
+
+Schedule makeWINJMULTConnectionUDASchedule(const std::string& schedule_section)
+{
+    const auto deck_str = std::string { R"(
+RUNSPEC
+DIMENS
+ 3 3 3 /
+WELLDIMS
+ 1 3 1 1 /
+UDQDIMS
+ 50 25 0 50 50 0 0 50 0 20 /
+UDADIMS
+ 10 1* 10 /
+START
+ 21 'MAY' 2007 /
+GRID
+DX
+ 27*100 /
+DY
+ 27*100 /
+DZ
+ 27*20 /
+TOPS
+ 9*2000 /
+PORO
+    27*0.2 /
+PERMX
+    27*100 /
+PERMY
+    27*100 /
+PERMZ
+    27*10 /
+SCHEDULE
+WELSPECS
+ 'INJ01' 'FIELD' 1 1 2000 'WATER' /
+/
+COMPDAT
+ 'INJ01' 1 1 1 3 'OPEN' 0 1* 0.241 /
+/
+WCONINJE
+ 'INJ01' 'WATER' 'OPEN' 'RATE' 1000 1* 400 /
+/
+UDQ
+ DEFINE 'WUFP1' 350.0 /
+ UNITS 'WUFP1' BARSA /
+ DEFINE 'WUFP2' 360.0 /
+ UNITS 'WUFP2' BARSA /
+/
+)" } + schedule_section;
+
+    const auto deck = Parser{}.parseString(deck_str);
+    const auto es = EclipseState { deck };
+    return { deck, es, std::make_shared<Python>() };
+}
+
+std::vector<UDQActive::InputRecord>
+winjmultUDAs(const Schedule& sched, const std::size_t report_step)
+{
+    auto records = std::vector<UDQActive::InputRecord>{};
+    for (const auto& record : sched[report_step].udq_active.get().iuap()) {
+        if (UDQ::keyword(record.control) == UDAKeyword::WINJMULT) {
+            records.push_back(record);
+        }
+    }
+    return records;
+}
+
+void checkConnUDA(const UDQActive::InputRecord& record,
+                  const std::string&            udq,
+                  const int                     k)
+{
+    BOOST_CHECK(record.control == UDAControl::WINJMULT_CONN_FRACTURE_PRESSURE);
+    BOOST_CHECK_EQUAL(record.udq, udq);
+    BOOST_CHECK_EQUAL(record.wgname, "INJ01");
+    BOOST_REQUIRE(record.conn_ijk.has_value());
+    BOOST_CHECK_EQUAL((*record.conn_ijk)[0], 0);
+    BOOST_CHECK_EQUAL((*record.conn_ijk)[1], 0);
+    BOOST_CHECK_EQUAL((*record.conn_ijk)[2], k);
+}
+
+} // Anonymous namespace
+
+BOOST_AUTO_TEST_CASE(WINJMULT_UDA_CREV_Numeric_Then_UDA_Connection)
+{
+    const auto sched = makeWINJMULTConnectionUDASchedule(R"(
+WINJMULT
+ 'INJ01' 300.0   0.001 'CREV' 1 1 1 /
+ 'INJ01' 'WUFP1' 0.001 'CREV' 1 1 2 /
+/
+)");
+
+    const auto& conns = sched.getWell("INJ01", 0).getConnections();
+    BOOST_CHECK(conns[0].injmult().fracture_pressure.is<double>());
+    BOOST_CHECK(conns[1].injmult().fracture_pressure.is<std::string>());
+    BOOST_CHECK(!conns[2].activeInjMult());
+
+    const auto udas = winjmultUDAs(sched, 0);
+    BOOST_REQUIRE_EQUAL(udas.size(), std::size_t{1});
+    checkConnUDA(udas[0], "WUFP1", 1);
+}
+
+BOOST_AUTO_TEST_CASE(WINJMULT_UDA_WREV_Then_CREV)
+{
+    const auto sched = makeWINJMULTConnectionUDASchedule(R"(
+WINJMULT
+ 'INJ01' 300.0 0.001 'WREV' /
+/
+TSTEP
+ 1 /
+WINJMULT
+ 'INJ01' 'WUFP1' 0.001 'CREV' /
+/
+)");
+
+    BOOST_CHECK(winjmultUDAs(sched, 0).empty());
+
+    const auto udas = winjmultUDAs(sched, 1);
+    BOOST_REQUIRE_EQUAL(udas.size(), std::size_t{3});
+    for (auto k = 0; k < 3; ++k) {
+        checkConnUDA(udas[k], "WUFP1", k);
+    }
+
+    const auto& iuad = sched[1].udq_active.get().iuad();
+    BOOST_REQUIRE_EQUAL(iuad.size(), std::size_t{1});
+    BOOST_CHECK_EQUAL(iuad[0].use_count, std::size_t{3});
+    BOOST_CHECK_EQUAL(iuad[0].uda_code, 200'023);
+}
+
+BOOST_AUTO_TEST_CASE(WINJMULT_UDA_CREV_Then_WREV)
+{
+    const auto sched = makeWINJMULTConnectionUDASchedule(R"(
+WINJMULT
+ 'INJ01' 'WUFP1' 0.001 'CREV' 1 1 3 /
+/
+TSTEP
+ 1 /
+WINJMULT
+ 'INJ01' 'WUFP2' 0.001 'WREV' /
+/
+)");
+
+    {
+        const auto udas = winjmultUDAs(sched, 0);
+        BOOST_REQUIRE_EQUAL(udas.size(), std::size_t{1});
+        checkConnUDA(udas[0], "WUFP1", 2);
+    }
+
+    {
+        // Connection level data is retained in WREV mode, so its UDA is
+        // still recorded for restart purposes.
+        const auto udas = winjmultUDAs(sched, 1);
+        BOOST_REQUIRE_EQUAL(udas.size(), std::size_t{2});
+        checkConnUDA(udas[0], "WUFP1", 2);
+        BOOST_CHECK(udas[1].control == UDAControl::WINJMULT_FRACTURE_PRESSURE);
+        BOOST_CHECK_EQUAL(udas[1].udq, "WUFP2");
+        BOOST_CHECK(!udas[1].conn_ijk.has_value());
+
+        const auto& iuad = sched[1].udq_active.get().iuad();
+        BOOST_REQUIRE_EQUAL(iuad.size(), std::size_t{2});
+        BOOST_CHECK_EQUAL(iuad[0].uda_code, 200'023);
+        BOOST_CHECK_EQUAL(iuad[1].uda_code, 200'022);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(WINJMULT_UDA_CREV_Partial_Numeric_Override)
+{
+    const auto sched = makeWINJMULTConnectionUDASchedule(R"(
+WINJMULT
+ 'INJ01' 'WUFP1' 0.001 'CREV' /
+/
+TSTEP
+ 1 /
+WINJMULT
+ 'INJ01' 300.0 0.001 'CREV' 1 1 1 /
+/
+TSTEP
+ 1 /
+WINJMULT
+ 'INJ01' 300.0 0.001 'CREV' /
+/
+)");
+
+    BOOST_CHECK_EQUAL(winjmultUDAs(sched, 0).size(), std::size_t{3});
+
+    {
+        // Connections (1,1,2) and (1,1,3) still use WUFP1.
+        const auto udas = winjmultUDAs(sched, 1);
+        BOOST_REQUIRE_EQUAL(udas.size(), std::size_t{2});
+        checkConnUDA(udas[0], "WUFP1", 1);
+        checkConnUDA(udas[1], "WUFP1", 2);
+    }
+
+    BOOST_CHECK(winjmultUDAs(sched, 2).empty());
+}
+
+BOOST_AUTO_TEST_CASE(WINJMULT_UDA_CIRR_Different_UDQs_Per_Connection)
+{
+    const auto sched = makeWINJMULTConnectionUDASchedule(R"(
+WINJMULT
+ 'INJ01' 'WUFP1' 0.001 'CIRR' 1 1 1 /
+ 'INJ01' 'WUFP2' 0.002 'CIRR' 1 1 2 /
+ 'INJ01' 'WUFP1' 0.003 'CIRR' 1 1 3 /
+/
+)");
+
+    const auto udas = winjmultUDAs(sched, 0);
+    BOOST_REQUIRE_EQUAL(udas.size(), std::size_t{3});
+
+    // iuap() groups records by UDQ.
+    checkConnUDA(udas[0], "WUFP1", 0);
+    checkConnUDA(udas[1], "WUFP1", 2);
+    checkConnUDA(udas[2], "WUFP2", 1);
+
+    const auto& iuad = sched[0].udq_active.get().iuad();
+    BOOST_REQUIRE_EQUAL(iuad.size(), std::size_t{2});
+    BOOST_CHECK_EQUAL(iuad[0].udq, "WUFP1");
+    BOOST_CHECK_EQUAL(iuad[0].use_count, std::size_t{2});
+    BOOST_CHECK_EQUAL(iuad[1].udq, "WUFP2");
+    BOOST_CHECK_EQUAL(iuad[1].use_count, std::size_t{1});
+}

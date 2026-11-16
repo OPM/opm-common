@@ -138,6 +138,24 @@ namespace {
         }
     }
 
+    template <typename RstUDARecord>
+    void loadRstWellConnUDAs(const RstUDARecord&                     record,
+                             const std::vector<int>&                 wgIndex,
+                             const Opm::UDAValue&                    uda,
+                             const std::vector<std::string>&         wellNames,
+                             std::vector<Opm::UDQActive::RstRecord>& udaRecords)
+    {
+        // IUAP entries are [well, I, J, K], all one-based.
+        const auto* localWgIndex = &wgIndex[record.wg_offset + 0];
+
+        for (auto i = 0*record.use_count; i < record.use_count; ++i) {
+            const auto* entry = &localWgIndex[i*record.num_wg_elems + 0];
+
+            auto& rec = udaRecords.emplace_back(record.control, uda, wellNames[entry[0] - 1]);
+            rec.conn_ijk = std::array { entry[1] - 1, entry[2] - 1, entry[3] - 1 };
+        }
+    }
+
     template <typename RstUDARecord, typename WGIndexOp>
     void loadGroupRstUDA(const RstUDARecord&     record,
                          const std::vector<int>& wgIndex,
@@ -244,11 +262,13 @@ Opm::UDQActive::InputRecord::InputRecord()
 Opm::UDQActive::InputRecord::InputRecord(const std::size_t  input_index_arg,
                                          const std::string& udq_arg,
                                          const std::string& wgname_arg,
-                                         const UDAControl   control_arg)
+                                         const UDAControl   control_arg,
+                                         const std::optional<std::array<int, 3>>& conn_ijk_arg)
     : input_index { input_index_arg }
     , udq         { udq_arg }
     , wgname      { wgname_arg }
     , control     { control_arg }
+    , conn_ijk    { conn_ijk_arg }
 {}
 
 bool Opm::UDQActive::InputRecord::operator==(const InputRecord& other) const
@@ -257,6 +277,7 @@ bool Opm::UDQActive::InputRecord::operator==(const InputRecord& other) const
         && (this->udq == other.udq)
         && (this->wgname == other.wgname)
         && (this->control == other.control)
+        && (this->conn_ijk == other.conn_ijk)
         ;
 }
 
@@ -266,7 +287,11 @@ Opm::UDQActive Opm::UDQActive::serializationTestObject()
 {
     UDQActive result;
 
-    result.input_data = {{1, "test1", "test2", UDAControl::WCONPROD_ORAT}};
+    result.input_data = {
+        {1, "test1", "test2", UDAControl::WCONPROD_ORAT},
+        {2, "test3", "test2", UDAControl::WINJMULT_CONN_FRACTURE_PRESSURE,
+         std::array {1, 2, 3}},
+    };
     result.output_data = {{"test1", 1, "test2", UDAControl::WCONPROD_ORAT}};
 
     return result;
@@ -294,7 +319,10 @@ Opm::UDQActive::load_rst(const UnitSystem&               units,
             units.uda_dim(record.control)
         };
 
-        if (UDQ::well_control(record.control)) {
+        if (UDQ::connection_control(record.control)) {
+            loadRstWellConnUDAs(record, wgIndex, uda, well_names, udaRecords);
+        }
+        else if (UDQ::well_control(record.control)) {
             loadRstWellUDAs(record, wgIndex, uda, well_names, udaRecords);
         }
         else if (UDQ::is_group_production_control(record.control)) {
@@ -344,7 +372,8 @@ Opm::UDQActive::operator bool() const
 int Opm::UDQActive::update(const UDQConfig&   udq_config,
                            const UDAValue&    uda,
                            const std::string& wgname,
-                           const UDAControl   control)
+                           const UDAControl   control,
+                           const std::optional<std::array<int, 3>>& conn_ijk)
 {
     // Alternative 0
     if (!uda.is_defined()) {
@@ -371,7 +400,10 @@ int Opm::UDQActive::update(const UDQConfig&   udq_config,
     for (auto record = this->input_data.begin();
          record != this->input_data.end(); ++record)
     {
-        if ((record->wgname != wgname) || (record->control != control)) {
+        if ((record->wgname != wgname) ||
+            (record->control != control) ||
+            (record->conn_ijk != conn_ijk))
+        {
             continue;
         }
 
@@ -396,7 +428,7 @@ int Opm::UDQActive::update(const UDQConfig&   udq_config,
     if (isString) {
         const auto udq_index = udq_config[quantity].index.insert_index;
 
-        this->input_data.emplace_back(udq_index, quantity, wgname, control);
+        this->input_data.emplace_back(udq_index, quantity, wgname, control, conn_ijk);
         this->output_data.clear();
 
         return 1;

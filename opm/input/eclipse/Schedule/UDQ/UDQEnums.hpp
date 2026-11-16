@@ -190,6 +190,7 @@ enum class UDAControl
     WELTARG_LIFT,
     //
     WINJMULT_FRACTURE_PRESSURE,
+    WINJMULT_CONN_FRACTURE_PRESSURE,
 };
 
 enum class UDAKeyword
@@ -257,6 +258,10 @@ namespace UDQ {
     bool leadingSpace(UDQTokenType token_type);
     bool group_control(UDAControl control);
     bool well_control(UDAControl control);
+
+    /// Whether or not \p control applies to individual well connections
+    /// (as opposed to the well as a whole).
+    bool connection_control(UDAControl control);
     bool is_well_injection_control(UDAControl control, const bool isInjector);
     bool is_well_production_control(UDAControl control, const bool isProducer);
     bool is_group_injection_control(UDAControl control);

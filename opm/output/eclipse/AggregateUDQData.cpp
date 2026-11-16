@@ -495,6 +495,13 @@ namespace {
                 numIuap = VI::Value::IuapElems::GrpProd;
                 break;
 
+            case Opm::UDAKeyword::WINJMULT:
+                // Well or well connection level UDA.
+                numIuap = Opm::UDQ::connection_control(iuad_record.control)
+                    ? VI::Value::IuapElems::WellConn
+                    : VI::Value::IuapElems::Well;
+                break;
+
             default:
                 // Well level UDA.
                 numIuap = VI::Value::IuapElems::Well;
@@ -673,6 +680,19 @@ namespace {
             wgIndex.push_back(sched.wells(wname).seqIndex() + 1);
         }
 
+        void wellConnUDA(const Opm::ScheduleState&                udaSched,
+                         const Opm::UDQActive::InputRecord&       udaRecord,
+                         std::vector<int>&                        wgIndex)
+        {
+            // Well connection level control (OPM extension).  IUAP is
+            // [ID, I, J, K], all one-based.
+            const auto& ijk = udaRecord.conn_ijk.value();
+            wgIndex.insert(wgIndex.end(), {
+                    static_cast<int>(udaSched.wells(udaRecord.wgname).seqIndex() + 1),
+                    ijk[0] + 1, ijk[1] + 1, ijk[2] + 1
+                });
+        }
+
         void groupProductionUDA(const Opm::ScheduleState& sched,
                                 const std::string&        gname,
                                 std::vector<int>&         wgIndex)
@@ -734,8 +754,16 @@ namespace {
                 case Opm::UDAKeyword::WCONPROD:
                 case Opm::UDAKeyword::WCONINJE:
                 case Opm::UDAKeyword::WELTARG:
-                case Opm::UDAKeyword::WINJMULT:
                     wellUDA(sched, udaRecord.wgname, wgIndex);
+                    break;
+
+                case Opm::UDAKeyword::WINJMULT:
+                    if (Opm::UDQ::connection_control(udaRecord.control)) {
+                        wellConnUDA(sched, udaRecord, wgIndex);
+                    }
+                    else {
+                        wellUDA(sched, udaRecord.wgname, wgIndex);
+                    }
                     break;
 
                 case Opm::UDAKeyword::GCONPROD:

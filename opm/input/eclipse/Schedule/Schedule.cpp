@@ -2753,12 +2753,12 @@ namespace {
             const auto& udq_config = this->snapshots.back().udq();
             auto udq_active = this->snapshots.back().udq_active();
 
-            for (const auto& [control, value, wgname, ig_phase] : uda_records) {
+            for (const auto& [control, value, wgname, ig_phase, conn_ijk] : uda_records) {
                 if (UDQ::well_control(control)) {
                     auto& well = this->snapshots.back().wells.get(wgname);
 
-                    if (control == UDAControl::WINJMULT_FRACTURE_PRESSURE) {
-                        well.updateWINJMULTUDA(udq_config, udq_active, value);
+                    if (UDQ::keyword(control) == UDAKeyword::WINJMULT) {
+                        well.updateWINJMULTUDA(udq_config, udq_active, value, conn_ijk);
                         continue;
                     }
 
