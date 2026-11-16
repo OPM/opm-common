@@ -28,6 +28,8 @@
 #define OPM_ECL_HYSTERESIS_TWO_PHASE_LAW_HPP
 #include <opm/common/TimingMacros.hpp>
 #include "EclHysteresisTwoPhaseLawParams.hpp"
+#include <algorithm>
+#include <cmath>
 #include <limits>
 #include <stdexcept>
 #include <type_traits>
@@ -184,6 +186,44 @@ public:
         else {
             return defaultValue;
         }
+    }
+
+    /*!
+     * \brief The bounding imbibition curve of the wetting phase, extended beyond the
+     *        end of the imbibition table.
+     *
+     * Beyond the table end (generally at Sg = Sncri) the curve interpolates linearly
+     * in saturation to the drainage end point instead of the flat extrapolation.
+     */
+    template <class Evaluation, class ...Args>
+    static Evaluation krwImbibitionExtended_(const Params& params, const Evaluation& Sw)
+    {
+        Evaluation Krwi = EffectiveLaw::template twoPhaseSatKrw<Evaluation, Args...>(params.imbibitionParams(), Sw);
+        const Scalar SwTab = krwSwMax_(params.imbibitionParams(), std::numeric_limits<Scalar>::max());
+        const Scalar SwEnd = krwSwMax_(params.drainageParams(), Scalar(1));
+        if (Sw > SwTab && SwEnd > SwTab) {
+            const Evaluation KrwdEnd = EffectiveLaw::template twoPhaseSatKrw<Evaluation, Args...>(params.drainageParams(), Evaluation(SwEnd));
+            const Evaluation KrwiTab = EffectiveLaw::template twoPhaseSatKrw<Evaluation, Args...>(params.imbibitionParams(), Evaluation(SwTab));
+            const Evaluation t = max(Evaluation(0.0), (SwEnd - Sw) / (SwEnd - SwTab));
+            Krwi = KrwdEnd + t * (KrwiTab - KrwdEnd);
+        }
+        return Krwi;
+    }
+
+    /*!
+     * \brief The Killough wetting-phase Krw at the trapped saturation, Sg = Sncrt.
+     *
+     * This is Krwi_snr limited to lie between the drainage and the (extended)
+     * imbibition curves, as the scanning curve is. Using the same value as anchor
+     * for the continuations below the trapped saturation keeps Krw continuous
+     * there also when the tables are not proportional.
+     */
+    static Scalar krwTrappedAnchor_(const Params& params)
+    {
+        const Scalar SwT = 1.0 - params.Sncrt();
+        const Scalar Krwd = EffectiveLaw::template twoPhaseSatKrw<Scalar>(params.drainageParams(), SwT);
+        const Scalar Krwi = krwImbibitionExtended_<Scalar>(params, SwT);
+        return std::min(std::max(params.krwiAtTrapped(), std::min(Krwd, Krwi)), std::max(Krwd, Krwi));
     }
 
     template <class Evaluation, class ...Args>
@@ -351,14 +391,36 @@ public:
         // Killough hysteresis for the wetting phase
         assert(params.config().krHysteresisModel() == 4);
 
+        if (params.Snhy() <= params.Sncrd()) {
+            // The maximum non-wetting saturation has not exceeded the drainage
+            // critical saturation, so nothing is trapped (Sncrt == Sncrd) and
+            // there is no scanning curve to follow: stay on the drainage curve.
+            // Otherwise the branch below would switch to the imbibition table
+            // right at the reversal and give a jump in Krw.
+            return EffectiveLaw::template twoPhaseSatKrw<Evaluation, Args...>(params.drainageParams(), Sw);
+        }
+
         if ( (1.0-Sw-params.Sncrt()) < 0.0) {
             // The gas saturation is below the trapped gas saturation (e.g. due to
             // pressurisation or dissolution of trapped gas). Within the imbibition
             // table, use it as is.
             // Without end-point information on the imbibition table, use it as is.
             const Scalar SwTab = krwSwMax_(params.imbibitionParams(), std::numeric_limits<Scalar>::max());
-            if (Sw <= SwTab)
-                return EffectiveLaw::template twoPhaseSatKrw<Evaluation, Args...>(params.imbibitionParams(), Sw);
+            if (Sw <= SwTab) {
+                Evaluation Krwi = EffectiveLaw::template twoPhaseSatKrw<Evaluation, Args...>(params.imbibitionParams(), Sw);
+                const Scalar SwT = 1.0 - params.Sncrt();
+                if (SwT < SwTab && SwTab < std::numeric_limits<Scalar>::max()) {
+                    // The scanning curve ends at Krwi_snr at Sg = Sncrt, which in
+                    // general differs from the imbibition table value there. Add
+                    // the difference, fading linearly to zero at the table end,
+                    // to avoid a jump in Krw at the trapped gas saturation.
+                    const Scalar KrwiT = EffectiveLaw::template twoPhaseSatKrw<Scalar>(params.imbibitionParams(), SwT);
+                    const Scalar delta = krwTrappedAnchor_(params) - KrwiT;
+                    const Evaluation t = max(Evaluation(0.0), (SwTab - Sw) / (SwTab - SwT));
+                    Krwi += t * delta;
+                }
+                return Krwi;
+            }
 
             // Beyond the end of the imbibition table (generally at Sg = Sncri) the
             // table would give a flat extrapolation. Instead interpolate linearly
@@ -381,7 +443,7 @@ public:
                 // The Killough value at Sg = Sncrt does not depend on the drainage
                 // value (it cancels), and this form stays finite if the imbibition
                 // water relperm is zero (Krwi_snrmax == Krwi_snmax).
-                Krw_a = Evaluation(params.krwiAtTrapped());
+                Krw_a = Evaluation(krwTrappedAnchor_(params));
             }
             // 1 at Sw_a, 0 at SwEnd (clamped to guard against Sw > SwEnd)
             const Evaluation t = max(Evaluation(0.0), (SwEnd - Sw) / (SwEnd - Sw_a));
@@ -389,8 +451,31 @@ public:
         }
         Evaluation Snorm = params.Sncri()+(1.0-Sw-params.Sncrt())*(params.Snmaxd()-params.Sncri())/(params.Snhy()-params.Sncrt());
         Evaluation Krwi_snorm = EffectiveLaw::template twoPhaseSatKrw<Evaluation, Args...>(params.imbibitionParams(), 1 - Snorm);
-        Evaluation Krwd = params.config().enableWettingPhaseKilloughFix()? EffectiveLaw::template twoPhaseSatKrw<Evaluation, Args...>(params.drainageParams(), Sw) : params.KrwdHy();
-        return Krwd + params.krwWght(Krwd) * (Krwi_snorm - params.Krwi_snmax());
+        const Evaluation Krwd = params.config().enableWettingPhaseKilloughFix()
+            ? EffectiveLaw::template twoPhaseSatKrw<Evaluation, Args...>(params.drainageParams(), Sw)
+            : Evaluation(params.KrwdHy());
+
+        // Fraction c of the way from the reversal (0) to the trapped saturation (1).
+        // It is the normalised increase of the imbibition water relperm, which
+        // is undefined if that is flat (e.g. IKRW = 0 gives Krwi_snrmax ==
+        // Krwi_snmax == 0); then use the saturation instead.
+        const Scalar dKrwi = params.Krwi_snrmax() - params.Krwi_snmax();
+        const Scalar dKrwiRef = std::max(std::abs(params.Krwi_snrmax()), std::abs(params.Krwi_snmax()));
+        Evaluation c;
+        if (std::abs(dKrwi) > krEqualityTolerance<Scalar> * dKrwiRef) {
+            c = (Krwi_snorm - params.Krwi_snmax()) / dKrwi;
+        }
+        else {
+            const Scalar dSn = params.Snmaxd() - params.Sncri();
+            c = (dSn > Scalar(0)) ? (params.Snmaxd() - Snorm) / dSn : Evaluation(1.0);
+        }
+        const Evaluation Krw = Krwd + (params.krwiAtTrapped() - Krwd) * c;
+
+        // The scanning curve lies between the bounding drainage and imbibition
+        // curves at the same water saturation.
+        const Evaluation KrwdSw = EffectiveLaw::template twoPhaseSatKrw<Evaluation, Args...>(params.drainageParams(), Sw);
+        const Evaluation KrwiSw = krwImbibitionExtended_<Evaluation, Args...>(params, Sw);
+        return min(max(Krw, min(KrwdSw, KrwiSw)), max(KrwdSw, KrwiSw));
     }
 
     /*!

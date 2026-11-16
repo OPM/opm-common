@@ -512,21 +512,20 @@ public:
      * \brief The Killough wetting phase relative permeability at the trapped
      *        non-wetting saturation, independent of the current drainage value.
      *
-     * This is what Krwd + krwWght(Krwd) * (Krwi_snrmax - Krwi_snmax) evaluates to
-     * when Sw = 1 - Sncrt, without dividing by (Krwi_snrmax - Krwi_snmax) which
-     * vanishes e.g. if the imbibition water relperm is zero.
+     * This is the end value of the Killough scanning curve at Sw = 1 - Sncrt.
      */
     Scalar krwiAtTrapped() const
     {
         // a = 1 (deltaKrw)^a Formulation according to KILLOUGH 1976
         Scalar deltaKrw = Krwi_snrmax() - Krwd_sncri();
-        return Krwd_sncrt() + deltaKrw * (Sncrt() / max(saturationEpsilon_, Sncri()));
-    }
-
-    template <class Evaluation>
-    Evaluation krwWght(const Evaluation& Krwd) const
-    {
-        return (krwiAtTrapped() - Krwd) / ( Krwi_snrmax() - Krwi_snmax());
+        // Measure the saturations from the drainage critical saturation so that
+        // the correction vanishes when Sncrt -> Sncrd (reversal just above the
+        // critical saturation); identical to Sncrt/Sncri for Sncrd = 0.
+        const Scalar den = Sncri() - Sncrd();
+        const Scalar ratio = (den > saturationEpsilon_)
+            ? (Sncrt() - Sncrd()) / den
+            : Sncrt() / max(saturationEpsilon_, Sncri());
+        return Krwd_sncrt() + deltaKrw * ratio;
     }
 
     Scalar krwdMax() const

@@ -233,6 +233,22 @@ public:
     template <class Evaluation>
     static Evaluation twoPhaseSatKrwInv(const Params& params, const Evaluation& krwScaled)
     {
+        if (params.config().enableKrwScaling() && params.config().enableThreePointKrwScaling()) {
+            // Special case of the three-point scaling, Kr(Smax) == Kr(Sr): the
+            // scaled function is linear in saturation between (sr,fr) and (sm,fm)
+            // while the unscaled value is constant there, so it can only be
+            // inverted in saturation (see unscaledToScaledKrw_).
+            const auto fdisp = params.unscaledPoints().krwr();
+            const auto fmax  = params.unscaledPoints().maxKrw();
+            const auto fr    = params.scaledPoints().krwr();
+            const auto fm    = params.scaledPoints().maxKrw();
+            const auto sm    = params.scaledPoints().saturationKrwPoints()[2];
+            const auto sr    = std::min(params.scaledPoints().saturationKrwPoints()[1], sm);
+            if (!(fr == fdisp && fm == fmax) && !krMaxExceedsKrR_(fmax, fdisp) &&
+                sr < sm && fm > fr && krwScaled > fr) {
+                return sr + (krwScaled - fr) / (fm - fr) * (sm - sr);
+            }
+        }
         const Evaluation krwUnscaled = scaledToUnscaledKrw_(params, krwScaled);
         const Evaluation SwUnscaled = EffLaw::twoPhaseSatKrwInv(params.effectiveLawParams(), krwUnscaled);
         return unscaledToScaledSatKrw(params, SwUnscaled);
@@ -258,6 +274,19 @@ public:
     template <class Evaluation>
     static Evaluation twoPhaseSatKrnInv(const Params& params, const Evaluation& krnScaled)
     {
+        if (params.config().enableKrnScaling() && params.config().enableThreePointKrnScaling()) {
+            // Kr(Smax) == Kr(Sr) special case, see twoPhaseSatKrwInv(): invert in saturation.
+            const auto fdisp = params.unscaledPoints().krnr();
+            const auto fmax  = params.unscaledPoints().maxKrn();
+            const auto fr    = params.scaledPoints().krnr();
+            const auto fm    = params.scaledPoints().maxKrn();
+            const auto sl    = params.scaledPoints().saturationKrnPoints()[0];
+            const auto sr    = std::max(params.scaledPoints().saturationKrnPoints()[1], sl);
+            if (!(fr == fdisp && fm == fmax) && !krMaxExceedsKrR_(fmax, fdisp) &&
+                sr > sl && fm > fr && krnScaled > fr) {
+                return sr - (krnScaled - fr) / (fm - fr) * (sr - sl);
+            }
+        }
         const Evaluation krnUnscaled = scaledToUnscaledKrn_(params, krnScaled);
         const Evaluation SwUnscaled = EffLaw::twoPhaseSatKrnInv(params.effectiveLawParams(), krnUnscaled);
         return unscaledToScaledSatKrn(params, SwUnscaled);
@@ -548,10 +577,23 @@ private:
                                                            const Scalar fr,
                                                            const Scalar fm)
     {
-        if (scaledKr <= fr) {
+        // Upper segment: needs fm > fr only (also valid if fr == 0, fdisp == 0 or
+        // fmax == fdisp; in the last case the unscaled value is constant = fdisp).
+        if (scaledKr > fr) {
+            if (fm > fr) {
+                return fdisp + (scaledKr - fr) / (fm - fr) * (fmax - fdisp);
+            }
+            // fm == fr: the scaled function is flat above the reference point, so
+            // values above it are not attained. Return the reference value.
+            return Evaluation(fdisp);
+        }
+        // Lower segment: the ratio fr/fdisp is only defined for positive values.
+        // If either is zero the forward map is the identity (fdisp == 0) or maps
+        // everything to zero (fr == 0), so the inverse is the identity as well.
+        if (fr > 0 && fdisp > 0) {
             return scaledKr * (fdisp / fr);
         }
-        return fdisp + (scaledKr - fr) / (fm - fr) * (fmax - fdisp);
+        return scaledKr;
     }
 
     /*!
@@ -659,9 +701,12 @@ private:
             const auto fmax  = params.unscaledPoints().maxKrw();
             const auto fr    = params.scaledPoints().krwr();
             const auto fm    = params.scaledPoints().maxKrw();
-            // Only the normal case (see unscaledToScaledKrw_) is invertible in
-            // terms of the function value.
-            if (fr > 0 && fdisp > 0 && fm > fr && krMaxExceedsKrR_(fmax, fdisp)) {
+            // The map is piecewise linear in terms of the function value (see
+            // unscaledToScaledKrw_) and invertible if fm > fr, also for zero or
+            // equal reference values. If fm == fr the scaled function is flat
+            // above the reference point, but the part below it is still
+            // invertible.
+            if (fm >= fr) {
                 return threePointInverseKr_(scaledKrw, fdisp, fmax, fr, fm);
             }
         }
@@ -758,7 +803,8 @@ private:
             const auto fmax  = params.unscaledPoints().maxKrn();
             const auto fr    = params.scaledPoints().krnr();
             const auto fm    = params.scaledPoints().maxKrn();
-            if (fr > 0 && fdisp > 0 && fm > fr && krMaxExceedsKrR_(fmax, fdisp)) {
+            // see scaledToUnscaledKrw_ for fm == fr
+            if (fm >= fr) {
                 return threePointInverseKr_(scaledKrn, fdisp, fmax, fr, fm);
             }
         }

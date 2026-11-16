@@ -3256,6 +3256,215 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(GasWaterKilloughZeroImbibitionKrw, Scalar, Types)
     const auto kr = gasWaterRelpermPath<Scalar>(deckString, sgPath);
     BOOST_CHECK(std::isfinite(kr.back()[0]));
     BOOST_CHECK_GE(kr.back()[0], Scalar(0.0));
+
+    // gradual return through the Killough scanning curve (above the trapped
+    // saturation): Krwi_snrmax - Krwi_snmax = 0 must not give NaN either
+    std::vector<Scalar> sgPath2;
+    for (int i = 0; i <= 60; ++i) {
+        sgPath2.push_back(Scalar(i) / 100);
+    }
+    for (int i = 59; i >= 0; --i) {
+        sgPath2.push_back(Scalar(i) / 100);
+    }
+    const auto kr2 = gasWaterRelpermPath<Scalar>(deckString, sgPath2);
+    for (std::size_t i = 61; i < kr2.size(); ++i) {
+        BOOST_CHECK(std::isfinite(kr2[i][0]));
+        BOOST_CHECK_GE(kr2[i][0], Scalar(-1e-6));
+        // never above the drainage value (Sw - 0.2) / 0.8
+        BOOST_CHECK_LE(kr2[i][0], (Scalar(0.8) - sgPath2[i]) / Scalar(0.8) + Scalar(1e-5));
+    }
+}
+
+// Model 4 with a drainage critical gas saturation Sgcr = 0.1: if the maximum gas
+// saturation stays below Sgcr nothing is trapped, so after a reversal Krw must
+// stay on the drainage curve instead of switching to the (lower) imbibition table.
+BOOST_AUTO_TEST_CASE_TEMPLATE(GasWaterKilloughReversalBelowCriticalGas, Scalar, Types)
+{
+    const std::string sgfn = "0.0 0.0 0.0\n    0.1 0.0 0.0\n    0.8 1.0 0.0 /";
+    const std::string swfnDrain = "0.2 0.0 0.0\n    1.0 1.0 0.0 /";
+    const std::string swfnImb = "0.2 0.0 0.0\n    1.0 0.5 0.0 /";
+    const auto deckString = gasWaterHysteresisDeck("0.1 4 1* 1* BOTH RETR DRAIN 1* 4* 1 1 /",
+                                                   sgfn, sgfn, swfnDrain, swfnImb);
+    for (const Scalar sgMax : {0.05, 0.08}) {
+        std::vector<Scalar> sgPath;
+        const int n = static_cast<int>(std::round(sgMax * 100));
+        for (int i = 0; i <= n; ++i) {
+            sgPath.push_back(Scalar(i) / 100);
+        }
+        for (int i = n - 1; i >= 0; --i) {
+            sgPath.push_back(Scalar(i) / 100);
+        }
+        const auto kr = gasWaterRelpermPath<Scalar>(deckString, sgPath);
+        for (int i = 0; i < n; ++i) {
+            // the point on the way back equals the one on the way up
+            BOOST_CHECK_SMALL(kr[n + 1 + (n - 1 - i)][0] - kr[i][0], Scalar(1e-5));
+            // and equals the drainage curve (Sw - 0.2) / 0.8
+            BOOST_CHECK_SMALL(kr[i][0] - (Scalar(0.8) - sgPath[i]) / Scalar(0.8), Scalar(1e-4));
+        }
+    }
+}
+
+// Model 4 with full-range imbibition tables whose Krw is half the drainage Krw:
+// the scanning curve ends at Krwi_snr at the trapped gas saturation, which
+// differs from the imbibition table value there. Krw must not jump when the gas
+// saturation passes the trapped value, and must end at the imbibition table's
+// end point (0.5 at Sg = 0).
+BOOST_AUTO_TEST_CASE_TEMPLATE(GasWaterKilloughNoJumpAtTrappedSaturation, Scalar, Types)
+{
+    const std::string sgfn = "0.0 0.0 0.0\n    0.8 1.0 0.0 /";
+    const std::string sgfnImb = "0.3 0.0 0.0\n    0.8 1.0 0.0 /";
+    const std::string swfnDrain = "0.2 0.0 0.0\n    1.0 1.0 0.0 /";
+    const std::string swfnImb = "0.2 0.0 0.0\n    1.0 0.5 0.0 /";
+    const auto deckString = gasWaterHysteresisDeck("0.1 4 1* 1* BOTH RETR DRAIN 1* 4* 1 1 /",
+                                                   sgfn, sgfnImb, swfnDrain, swfnImb);
+    std::vector<Scalar> sgPath;
+    for (int i = 0; i <= 400; ++i) {
+        sgPath.push_back(Scalar(i) / 1000);
+    }
+    for (int i = 399; i >= 0; --i) {
+        sgPath.push_back(Scalar(i) / 1000);
+    }
+    const auto kr = gasWaterRelpermPath<Scalar>(deckString, sgPath);
+    // the steps are 0.001 in Sg, so the slope of Krw is at most ~0.002 per step
+    for (std::size_t i = 402; i < kr.size(); ++i) {
+        BOOST_CHECK_LT(std::abs(kr[i][0] - kr[i - 1][0]), Scalar(0.01));
+    }
+    BOOST_CHECK_SMALL(kr.back()[0] - Scalar(0.5), Scalar(1e-4));
+}
+
+// Model 4 with Sgcr = 0.1 and a reversal at a gas saturation just above it
+// (Sg = 0.11): the trapped saturation is then only just below the maximum, so
+// the end value of the scanning curve must approach the drainage value there
+// instead of keeping a finite offset (Sncrt/Sncri with Sncrd > 0). Krw must not
+// jump right after the reversal.
+BOOST_AUTO_TEST_CASE_TEMPLATE(GasWaterKilloughReversalJustAboveCriticalGas, Scalar, Types)
+{
+    const std::string sgfnDrain = "0.0 0.0 0.0\n    0.1 0.0 0.0\n    0.8 1.0 0.0 /";
+    const std::string sgfnImb = "0.3 0.0 0.0\n    0.8 1.0 0.0 /";
+    const std::string swfnDrain = "0.2 0.0 0.0\n    1.0 1.0 0.0 /";
+    const std::string swfnImb = "0.2 0.0 0.0\n    0.7 0.1 0.0 /";
+    const auto deckString = gasWaterHysteresisDeck("0.1 4 1* 1* BOTH RETR DRAIN 1* 4* 1 1 /",
+                                                   sgfnDrain, sgfnImb, swfnDrain, swfnImb);
+    std::vector<Scalar> sgPath;
+    for (int i = 0; i <= 110; ++i) {
+        sgPath.push_back(Scalar(i) / 1000);
+    }
+    for (int i = 109; i >= 0; --i) {
+        sgPath.push_back(Scalar(i) / 1000);
+    }
+    const auto kr = gasWaterRelpermPath<Scalar>(deckString, sgPath);
+    // The offset at the trapped saturation scales with the excursion above Sgcr
+    // (0.01 here); with the former Sncrt/Sncri factor the first step after the
+    // reversal jumped by ~0.19, now by ~0.02.
+    for (std::size_t i = 111; i < kr.size(); ++i) {
+        BOOST_CHECK_LT(std::abs(kr[i][0] - kr[i - 1][0]), Scalar(0.05));
+    }
+}
+
+// Model 4 (item 13 = 1): above the trapped gas saturation the wetting-phase
+// scanning curve lies between the bounding drainage and imbibition curves at the
+// same water saturation, e.g. it stays on the drainage curve if the imbibition
+// Krw equals the drainage Krw (the end value Krwi_snr would otherwise pull it
+// above drainage).
+BOOST_AUTO_TEST_CASE_TEMPLATE(GasWaterKilloughScanningCurveBounded, Scalar, Types)
+{
+    const std::string sgfnDrain = "0.0 0.0 0.0\n    0.8 1.0 0.0 /";
+    const std::string sgfnImb = "0.3 0.0 0.0\n    0.8 1.0 0.0 /";
+    const std::string swfnDrain = "0.2 0.0 0.0\n    0.6 0.25 0.0\n    1.0 1.0 0.0 /";
+    for (const Scalar factor : {1.0, 0.5, 1.2}) {
+        const std::string swfnImb = "0.2 0.0 0.0\n    0.6 " + std::to_string(0.25 * factor) +
+                                    " 0.0\n    1.0 " + std::to_string(factor) + " 0.0 /";
+        const auto deckString = gasWaterHysteresisDeck("0.1 4 1* 1* BOTH RETR DRAIN 1* 4* 1 1 /",
+                                                       sgfnDrain, sgfnImb, swfnDrain, swfnImb);
+        std::vector<Scalar> sgPath;
+        for (int i = 0; i <= 600; ++i) {
+            sgPath.push_back(Scalar(i) / 1000);
+        }
+        for (int i = 599; i >= 0; --i) {
+            sgPath.push_back(Scalar(i) / 1000);
+        }
+        const auto kr = gasWaterRelpermPath<Scalar>(deckString, sgPath);
+        for (std::size_t i = 601; i < kr.size(); ++i) {
+            const Scalar sg = sgPath[i];
+            if (sg < Scalar(0.3)) {
+                continue; // (Sncrt is about 0.26 here)
+            }
+            const Scalar sw = 1 - sg;
+            const Scalar d = sw <= Scalar(0.6) ? (sw - 0.2) / 0.4 * 0.25
+                                               : 0.25 + (sw - 0.6) / 0.4 * 0.75;
+            const Scalar im = factor * d;
+            const Scalar tol = Scalar(2e-4); // tabulated curves are interpolated linearly
+            BOOST_CHECK_LE(kr[i][0], std::max(d, im) + tol);
+            BOOST_CHECK_GE(kr[i][0], std::min(d, im) - tol);
+        }
+    }
+}
+
+// Model 4 with the imbibition Krw table ending at Sw = 0.7 (Krw = 0.5), above the
+// drainage Krw at the reversal (Sg = 0.1, Sw = 0.9). The imbibition curve
+// beyond its table end goes to the drainage end point; the flat extrapolation of
+// the table must not be used to bound the scanning curve (it would clip Krw at
+// 0.5 and give a jump at the trapped gas saturation).
+BOOST_AUTO_TEST_CASE_TEMPLATE(GasWaterKilloughScanningBoundBeyondTableEnd, Scalar, Types)
+{
+    const std::string sgfnDrain = "0.0 0.0 0.0\n    0.8 1.0 0.0 /";
+    const std::string sgfnImb = "0.3 0.0 0.0\n    0.8 1.0 0.0 /";
+    const std::string swfnDrain = "0.2 0.0 0.0\n    0.9 0.3 0.0\n    1.0 1.0 0.0 /";
+    const std::string swfnImb = "0.2 0.0 0.0\n    0.7 0.5 0.0 /";
+    const auto deckString = gasWaterHysteresisDeck("0.1 4 1* 1* BOTH RETR DRAIN 1* 4* 1 1 /",
+                                                   sgfnDrain, sgfnImb, swfnDrain, swfnImb);
+    std::vector<Scalar> sgPath;
+    for (int i = 0; i <= 100; ++i) {
+        sgPath.push_back(Scalar(i) / 1000);
+    }
+    for (int i = 99; i >= 0; --i) {
+        sgPath.push_back(Scalar(i) / 1000);
+    }
+    const auto kr = gasWaterRelpermPath<Scalar>(deckString, sgPath);
+    for (std::size_t i = 101; i < kr.size(); ++i) {
+        // the steepest slope is the drainage slope near Sg = 0, 7 per unit
+        BOOST_CHECK_LT(std::abs(kr[i][0] - kr[i - 1][0]), Scalar(0.02));
+    }
+    BOOST_CHECK_SMALL(kr.back()[0] - Scalar(1.0), Scalar(1e-4));
+}
+
+// The scanning curve is bounded between the drainage and the imbibition curves.
+// The continuations below the trapped saturation must start from the same bounded
+// value, otherwise Krw jumps at the trapped saturation when the tables are not
+// proportional (Krwi_snr outside the band).
+BOOST_AUTO_TEST_CASE_TEMPLATE(GasWaterKilloughTrappedAnchorConsistentWithBound, Scalar, Types)
+{
+    const std::string sgfnDrain = "0.0 0.0 0.0\n    0.8 1.0 0.0 /";
+    const std::string sgfnImb = "0.3 0.0 0.0\n    0.8 1.0 0.0 /";
+    const std::string swfnDrain = "0.2 0.0 0.0\n    0.9 0.3 0.0\n    1.0 1.0 0.0 /";
+    const std::vector<std::string> swfnImbs = {
+        "0.2 0.0 0.0\n    0.7 0.9 0.0 /",
+        "0.2 0.0 0.0\n    0.7 0.05 0.0 /",
+        "0.2 0.0 0.0\n    0.5 0.8 0.0\n    0.7 0.9 0.0 /",
+        "0.2 0.0 0.0\n    0.5 0.01 0.0\n    0.7 0.02 0.0 /",
+        "0.2 0.0 0.0\n    0.9 0.9 0.0\n    1.0 1.0 0.0 /"};
+    for (const auto& swfnImb : swfnImbs) {
+        const auto deckString = gasWaterHysteresisDeck("0.1 4 1* 1* BOTH RETR DRAIN 1* 4* 1 1 /",
+                                                       sgfnDrain, sgfnImb, swfnDrain, swfnImb);
+        for (const int sgMax : {50, 100, 200}) {
+            std::vector<Scalar> sgPath;
+            for (int i = 0; i <= sgMax; ++i) {
+                sgPath.push_back(Scalar(i) / 1000);
+            }
+            for (int i = sgMax - 1; i >= 0; --i) {
+                sgPath.push_back(Scalar(i) / 1000);
+            }
+            const auto kr = gasWaterRelpermPath<Scalar>(deckString, sgPath);
+            // No jump: the step changes smoothly. The first steps after the
+            // reversal are excluded (they follow the steep imbibition table).
+            for (std::size_t i = sgMax + 12; i < kr.size(); ++i) {
+                const Scalar step = kr[i][0] - kr[i - 1][0];
+                const Scalar prev = kr[i - 1][0] - kr[i - 2][0];
+                BOOST_CHECK_MESSAGE(std::abs(step - prev) < Scalar(0.02),
+                                    "Krw step change, imbibition table size " << swfnImb.size() << ", max Sg (x1000) " << sgMax << " sg " << sgPath[i] << " steps " << prev << " -> " << step);
+            }
+        }
+    }
 }
 
 // Carlson (model 0): the scanning curve is shifted using the inverse of the
@@ -3287,6 +3496,37 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(GasWaterCarlsonImbibitionThreePointKrg, Scalar, Ty
     BOOST_CHECK_LE(kr[51][1], krgReversal + Scalar(1e-5));
     BOOST_CHECK_GT(kr[52][1], Scalar(0.3));
     BOOST_CHECK_LE(kr[52][1], kr[51][1] + Scalar(1e-5));
+}
+
+// Carlson with the gas reference point at the maximum (Swcr = 0.2, so
+// Krg(Sr) == Krg(Smax) of the unscaled curve). The scaled curve is then linear
+// in saturation between the reference point and the maximum, so the inverse
+// must be taken in saturation; otherwise the scanning-curve shift is wrong and
+// Krg jumps at the reversal.
+BOOST_AUTO_TEST_CASE_TEMPLATE(GasWaterCarlsonImbibitionDegenerateReferenceKrg, Scalar, Types)
+{
+    // Krg is flat (0.9) between Sg = 0.7 and 0.8, and Swcr = 0.3 puts the
+    // reference point at Sg = 0.7: Krg(Sr) == Krg(Smax) in the unscaled curve.
+    const std::string sgfn = "0.0 0.0 0.0\n    0.2 0.0 0.0\n    0.7 0.9 0.0\n    0.8 0.9 0.0 /";
+    const std::string swfn = "0.3 0.0 0.0\n    1.0 1.0 0.0 /";
+    const auto deckString = gasWaterHysteresisDeck("0.1 0 0.1 1* BOTH /", sgfn, sgfn, swfn, swfn,
+                                                   "IKRGR\n 1*0.6 /\n");
+    // drain to Sg = 0.6 (Krg = 0.72, above the scaled reference value 0.6), reverse
+    std::vector<Scalar> sgPath;
+    for (int i = 0; i <= 60; ++i) {
+        sgPath.push_back(Scalar(i) / 100);
+    }
+    sgPath.push_back(Scalar(0.59));
+    sgPath.push_back(Scalar(0.58));
+    const auto kr = gasWaterRelpermPath<Scalar>(deckString, sgPath);
+    const Scalar krgReversal = kr[60][1];
+    BOOST_CHECK_CLOSE(krgReversal, Scalar(0.72), Scalar(1e-2));
+    BOOST_CHECK(std::isfinite(kr[61][1]));
+    BOOST_CHECK(std::isfinite(kr[62][1]));
+    // no jump right after the reversal (the slope is at most ~0.02 per step)
+    BOOST_CHECK_GT(kr[61][1], krgReversal - Scalar(0.1));
+    BOOST_CHECK_LE(kr[61][1], krgReversal + Scalar(1e-5));
+    BOOST_CHECK_GT(kr[62][1], kr[61][1] - Scalar(0.1));
 }
 
 // Three-point scaling where the tabulated water relperm is zero at the
