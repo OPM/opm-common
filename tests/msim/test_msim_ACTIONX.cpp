@@ -651,6 +651,29 @@ BOOST_AUTO_TEST_CASE(MSIM_PYACTION_INSERT_KEYWORD) {
     }
 }
 
+BOOST_AUTO_TEST_CASE(MSIM_PYACTION_INSERT_MATCHED_WELLS) {
+    test_data td("msim/MSIM_PYACTION_INSERT_MATCHED_WELLS.DATA");
+    msim sim(td.state, td.schedule);
+
+    {
+        WorkArea work_area("test_msim");
+        EclipseIO io(td.state, td.state.getInputGrid(), sim.schedule, td.summary_config);
+        {
+            const auto& w1 = sim.schedule.getWell("P1", 1);
+            BOOST_CHECK(w1.getStatus() == Well::Status::OPEN );
+        }
+
+        sim.run(io, false);
+
+        {
+            const auto& w1_2 = sim.schedule.getWell("P1", 2); // P1 was closed through '?'
+            const auto& w2_2 = sim.schedule.getWell("P2", 2); // P2 is not in matched_wells, so '?' must not close it
+            BOOST_CHECK(w1_2.getStatus() ==  Well::Status::SHUT);
+            BOOST_CHECK(w2_2.getStatus() ==  Well::Status::OPEN);
+        }
+    }
+}
+
 BOOST_AUTO_TEST_CASE(PYTHON_WELL_CLOSE_EXAMPLE) {
     for (const auto& deck : {
             "msim/MSIM_PYACTION.DATA",
