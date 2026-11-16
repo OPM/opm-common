@@ -9233,3 +9233,184 @@ BOOST_AUTO_TEST_CASE(DualPorosityMatrixConnectionFactorUnaffected) {
     BOOST_CHECK_CLOSE(conn_scaled.CF(), conn_unscaled.CF(), 1.0e-10);
     BOOST_CHECK_CLOSE(conn_scaled.Kh(), conn_unscaled.Kh(), 1.0e-10);
 }
+
+namespace {
+
+std::vector<std::string> inactiveWellsAtEnd(const std::string& actions)
+{
+    const auto deck = Parser{}.parseString(std::string { R"(
+RUNSPEC
+DIMENS
+  10 10 1 /
+OIL
+WATER
+GRID
+DXV
+  10*100 /
+DYV
+  10*100 /
+DZV
+  10 /
+DEPTHZ
+  121*2000 /
+EQUALS
+  PERMX 100 /
+  PERMY 100 /
+  PERMZ 10 /
+  PORO 0.3 /
+/
+SCHEDULE
+WELSPECS
+  'P1'   'G1' 1 1 1* 'OIL' /
+  'NEW1' 'G1' 5 5 1* 'OIL' /
+  'NEW2' 'G1' 9 9 1* 'OIL' /
+/
+COMPDAT
+  'P1'   1 1 1 1 'OPEN' /
+  'NEW1' 5 5 1 1 'OPEN' /
+  'NEW2' 9 9 1 1 'OPEN' /
+/
+WCONPROD
+  'P1' 'OPEN' 'ORAT' 100 4* 50 /
+/
+)" } + actions + R"(
+TSTEP
+  2*10 /
+)");
+
+    EclipseGrid grid(deck);
+    const TableManager table(deck);
+    const FieldPropsManager fp(deck, Phases{true, true, false}, grid, table);
+    const Runspec runspec(deck);
+
+    return Schedule { deck, grid, fp, NumericalAquifers{}, runspec,
+                      std::make_shared<Python>() }.getInactiveWellNamesAtEnd();
+}
+
+void checkInactive(const std::vector<std::string>& actual,
+                   const std::vector<std::string>& expected)
+{
+    BOOST_CHECK_EQUAL_COLLECTIONS(actual.begin(), actual.end(),
+                                  expected.begin(), expected.end());
+}
+
+} // Anonymous namespace
+
+BOOST_AUTO_TEST_CASE(InactiveWells_ActionX_WellNamePatterns)
+{
+    checkInactive(inactiveWellsAtEnd(""), { "NEW1", "NEW2" });
+
+    checkInactive(inactiveWellsAtEnd(R"(
+ACTIONX
+  'A' 1 /
+  FOPR < 50 /
+/
+WCONPROD
+  'NEW1' 'OPEN' 'ORAT' 100 4* 50 /
+/
+ENDACTIO
+)"), { "NEW2" });
+
+    // Leading backslash escapes the '*', so this matches names ending in '2'.
+    checkInactive(inactiveWellsAtEnd(R"(
+ACTIONX
+  'A' 1 /
+  FOPR < 50 /
+/
+WELOPEN
+  '\*2' 'OPEN' /
+/
+ENDACTIO
+)"), { "NEW1" });
+}
+
+BOOST_AUTO_TEST_CASE(InactiveWells_ActionX_WellList)
+{
+    checkInactive(inactiveWellsAtEnd(R"(
+WLIST
+  '*NEW' 'NEW' 'NEW1' /
+/
+ACTIONX
+  'A' 1 /
+  FOPR < 50 /
+/
+WCONPROD
+  '*NEW' 'OPEN' 'ORAT' 100 4* 50 /
+/
+ENDACTIO
+)"), { "NEW2" });
+
+    // List membership at a later report step counts too.
+    checkInactive(inactiveWellsAtEnd(R"(
+ACTIONX
+  'A' 1 /
+  FOPR < 50 /
+/
+WCONPROD
+  '*NEW' 'OPEN' 'ORAT' 100 4* 50 /
+/
+ENDACTIO
+TSTEP
+  10 /
+WLIST
+  '*NEW' 'NEW' 'NEW2' /
+/
+)"), { "NEW1" });
+
+    // List defined inside the ACTIONX block.
+    checkInactive(inactiveWellsAtEnd(R"(
+ACTIONX
+  'A' 1 /
+  FOPR < 50 /
+/
+WLIST
+  '*NEW' 'NEW' 'NEW2' /
+/
+WCONPROD
+  '*NEW' 'OPEN' 'ORAT' 100 4* 50 /
+/
+ENDACTIO
+)"), { "NEW1" });
+}
+
+BOOST_AUTO_TEST_CASE(InactiveWells_ActionX_MatchingWells)
+{
+    // '?' denotes the wells matching the condition's well pattern.
+    checkInactive(inactiveWellsAtEnd(R"(
+ACTIONX
+  'A' 1 /
+  WOPR 'NEW1' < 1 /
+/
+WCONPROD
+  '?' 'OPEN' 'ORAT' 100 4* 50 /
+/
+ENDACTIO
+)"), { "NEW2" });
+
+    checkInactive(inactiveWellsAtEnd(R"(
+ACTIONX
+  'A' 1 /
+  FOPR < 50 AND /
+  WWCT 'P*' < 0.5 /
+/
+WELOPEN
+  '?' 'OPEN' /
+/
+ENDACTIO
+)"), { "NEW1", "NEW2" });
+
+    // The condition's well pattern may itself be a well list.
+    checkInactive(inactiveWellsAtEnd(R"(
+WLIST
+  '*NEW' 'NEW' 'NEW2' /
+/
+ACTIONX
+  'A' 1 /
+  WOPR '*NEW' < 1 /
+/
+WCONPROD
+  '?' 'OPEN' 'ORAT' 100 4* 50 /
+/
+ENDACTIO
+)"), { "NEW1" });
+}

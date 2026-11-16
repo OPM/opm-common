@@ -22,6 +22,7 @@
 
 #include <opm/io/eclipse/rst/state.hpp>
 
+#include <opm/output/eclipse/VectorItems/action.hpp>
 #include <opm/output/eclipse/VectorItems/group.hpp>
 
 #include <opm/common/OpmLog/LogUtil.hpp>
@@ -29,7 +30,6 @@
 #include <opm/common/utility/OpmInputError.hpp>
 #include <opm/common/utility/String.hpp>
 #include <opm/common/utility/numeric/cmp.hpp>
-#include <opm/common/utility/shmatch.hpp>
 
 #include <opm/input/eclipse/Parser/InputErrorAction.hpp>
 
@@ -135,12 +135,97 @@
 
 namespace {
 
-    bool name_match_any(const std::unordered_set<std::string>& patterns,
-                        const std::string& name)
+    // Add the well name patterns of the well level quantities in an
+    // action's conditions.  These are the wells which the '?' pattern may
+    // denote when the action triggers.
+    void addConditionWellPatterns(const Opm::Action::ActionX&      action,
+                                  std::unordered_set<std::string>& patterns)
     {
-        return std::ranges::any_of(patterns,
-                                   [&name](const auto& pattern)
-                                   { return Opm::shmatch(pattern, name); });
+        using QType = Opm::RestartIO::Helpers::VectorItems::IACN::Value::QuantityType;
+
+        for (const auto& condition : action.conditions()) {
+            for (const auto* quantity : { &condition.lhs, &condition.rhs }) {
+                if (quantity->quantity().empty() ||
+                    (quantity->int_type() != QType::Well))
+                {
+                    continue;
+                }
+
+                const auto& args = quantity->args();
+                patterns.insert(args.empty() ? std::string { "*" } : args.front());
+            }
+        }
+    }
+
+    // Add the well name patterns of those records in an ACTIONX block
+    // which may open a well.  A well added to a well list in the block may
+    // be opened through that list.
+    void addActionWellopenPatterns(const Opm::Action::ActionX&      action,
+                                   const Opm::DeckKeyword&          keyword,
+                                   std::unordered_set<std::string>& patterns)
+    {
+        namespace PK = Opm::ParserKeywords;
+
+        if (keyword.is<PK::WLIST>()) {
+            for (const auto& record : keyword) {
+                const auto& wells = record.getItem<PK::WLIST::WELLS>();
+                for (auto i = 0*wells.data_size(); i < wells.data_size(); ++i) {
+                    patterns.insert(wells.getTrimmedString(i));
+                }
+            }
+
+            return;
+        }
+
+        if (! (keyword.is<PK::WELOPEN>()  || keyword.is<PK::WCONHIST>() ||
+               keyword.is<PK::WCONPROD>() || keyword.is<PK::WCONINJH>() ||
+               keyword.is<PK::WCONINJE>()))
+        {
+            return;
+        }
+
+        for (const auto& record : keyword) {
+            const auto& pattern = record.getItem("WELL").getTrimmedString(0);
+            if (pattern == "?") {
+                addConditionWellPatterns(action, patterns);
+            }
+            else {
+                patterns.insert(pattern);
+            }
+        }
+    }
+
+    // Wells matching any of the patterns, interpreted as in the keyword
+    // handlers: a leading '*' names well lists and a leading backslash
+    // escapes the first character.  Well list membership may change over
+    // time, so a list pattern matches the members at any report step.
+    std::unordered_set<std::string>
+    matchingWells(const std::unordered_set<std::string>& patterns,
+                  const std::vector<Opm::ScheduleState>& snapshots)
+    {
+        auto wells = std::unordered_set<std::string>{};
+        const auto insert = [&wells](const std::vector<std::string>& names)
+        { wells.insert(names.begin(), names.end()); };
+
+        const auto matcher = Opm::WellMatcher { &snapshots.back().well_order() };
+
+        for (const auto& pattern : patterns) {
+            if ((pattern.size() < 2) || (pattern.front() != '*')) {
+                insert(matcher.wells(pattern));
+                continue;
+            }
+
+            // Consecutive report steps typically share the same lists.
+            const Opm::WListManager* prev = nullptr;
+            for (const auto& state : snapshots) {
+                if (const auto& wlm = state.wlist_manager(); &wlm != prev) {
+                    insert(wlm.wells(pattern));
+                    prev = &wlm;
+                }
+            }
+        }
+
+        return wells;
     }
 }
 
@@ -776,6 +861,8 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                             action.addKeyword(action_keyword);
                             this->prefetchPossibleFutureConnections(grid, action_keyword, parseContext, errors);
                             this->store_wgnames(action_keyword);
+                            addActionWellopenPatterns(action, action_keyword,
+                                                      this->potential_wellopen_patterns);
                         }
                         else {
                             std::string msg_fmt = fmt::format("The keyword {} is not supported in the ACTIONX block", action_keyword.name());
@@ -910,16 +997,6 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
                 const auto& gname = record.getItem<ParserKeywords::WELSPECS::GROUP>().get<std::string>(0);
                 this->action_wgnames.add_well(wname);
                 this->action_wgnames.add_group(gname);
-            }
-        } else if (keyword.is<ParserKeywords::WELOPEN>()  ||
-                   keyword.is<ParserKeywords::WCONHIST>() ||
-                   keyword.is<ParserKeywords::WCONPROD>() ||
-                   keyword.is<ParserKeywords::WCONINJH>() ||
-                   keyword.is<ParserKeywords::WCONINJE>()) {      // Add any other keywords that can open a well..
-
-            for (const auto& record : keyword) {
-                const std::string& wname_pattern = record.getItem("WELL").getTrimmedString(0);
-                this->potential_wellopen_patterns.insert(wname_pattern);
             }
         }
     }
@@ -1468,10 +1545,11 @@ Defaulted grid coordinates is not allowed for COMPDAT as part of ACTIONX)"
         std::vector<Well> wells;
         const auto lastStep = this->snapshots.size() - 1;
         const auto& well_order = this->snapshots[lastStep].well_order();
+        const auto opened = matchingWells(this->potential_wellopen_patterns, this->snapshots);
 
         for (const auto& wname : well_order) {
             const auto& well = this->snapshots[lastStep].wells.get(wname);
-            if (well.hasProduced() || well.hasInjected() || name_match_any(this->potential_wellopen_patterns, wname))
+            if (well.hasProduced() || well.hasInjected() || opened.contains(wname))
                 wells.push_back(well);
         }
 
@@ -1482,10 +1560,11 @@ Defaulted grid coordinates is not allowed for COMPDAT as part of ACTIONX)"
         std::vector<std::string> well_names;
         const auto lastStep = this->snapshots.size() - 1;
         const auto& well_order = this->snapshots[lastStep].well_order();
+        const auto opened = matchingWells(this->potential_wellopen_patterns, this->snapshots);
 
         for (const auto& wname : well_order) {
             const auto& well = this->snapshots[lastStep].wells.get(wname);
-            if (well.hasProduced() || well.hasInjected() || name_match_any(this->potential_wellopen_patterns, wname))
+            if (well.hasProduced() || well.hasInjected() || opened.contains(wname))
                 continue;
             well_names.push_back(wname);
         }
@@ -2824,8 +2903,13 @@ namespace {
 
         if (!rst_state.actions.empty()) {
             auto actions = this->snapshots.back().actions();
-            for (const auto& rst_action : rst_state.actions)
-                actions.add( Action::ActionX(rst_action) );
+            for (const auto& rst_action : rst_state.actions) {
+                const auto action = Action::ActionX(rst_action);
+                for (const auto& keyword : action) {
+                    addActionWellopenPatterns(action, keyword, this->potential_wellopen_patterns);
+                }
+                actions.add(action);
+            }
             this->snapshots.back().actions.update( std::move(actions) );
         }
 
