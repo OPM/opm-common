@@ -71,6 +71,14 @@ struct RstConnection
     double pressure;
     double resv_rate;
     double r0;
+
+    /// WINJMULT data for CREV/CIRR wells.  SI units.  Zero if not set.
+    double inj_mult_gradient{0.0};
+    double inj_mult_frac_press{0.0};
+
+    /// Injectivity multiplier (retained maximum for CIRR).  Zero if the
+    /// well has no WINJMULT.
+    double inj_mult{0.0};
 };
 
 }} // namespace Opm::RestartIO

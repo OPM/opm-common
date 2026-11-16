@@ -28,6 +28,7 @@
 
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
+#include <opm/input/eclipse/Schedule/Well/WINJMULT.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
 
@@ -373,6 +374,31 @@ namespace {
             // ROCKTAB) is imparted through a dimensionless multiplier.
             sConn[Ix::ConnTrans] /= xconn.compact_mult;
         }
+
+        template <class SConnArray>
+        void injMultContrib(const Opm::Well&         well,
+                            const Opm::Connection&   conn,
+                            const Opm::UnitSystem&   units,
+                            SConnArray&              sConn)
+        {
+            using M  = ::Opm::UnitSystem::measure;
+            using Ix = ::Opm::RestartIO::Helpers::VectorItems::SConn::index;
+            using IMM = ::Opm::Well::InjMultMode;
+
+            const auto mode = well.getInjMultMode();
+            if (((mode != IMM::CREV) && (mode != IMM::CIRR)) || !conn.activeInjMult()) {
+                return;
+            }
+
+            const auto& injmult = conn.injmult();
+
+            // Gradient has units of 1/pressure.
+            sConn[Ix::InjMultGradient] = static_cast<float>
+                (injmult.multiplier_gradient / units.from_si(M::pressure, 1.0));
+
+            sConn[Ix::InjMultFracPress] = static_cast<float>
+                (units.from_si(M::pressure, injmult.fracture_pressure));
+        }
     } // SConn
 
     namespace XConn {
@@ -452,6 +478,21 @@ namespace {
             // Pad the connection array with tracer values
             std::fill(xConn.begin() + Ix::TracerOffset, xConn.end(), 0);
         }
+
+        template <class XConnArray>
+        void injMultContrib(const Opm::Well&             well,
+                            const Opm::data::Connection* dynConnRes,
+                            XConnArray&                  xConn)
+        {
+            using Ix = ::Opm::RestartIO::Helpers::VectorItems::XConn::index;
+
+            if (well.getInjMultMode() == Opm::Well::InjMultMode::NONE) {
+                return;
+            }
+
+            const auto mult = (dynConnRes != nullptr) ? dynConnRes->inj_mult : 1.0;
+            xConn[Ix::InjMult] = xConn[Ix::InjMultMax] = mult;
+        }
     } // XConn
 } // Anonymous
 
@@ -472,7 +513,7 @@ captureDeclaredConnData(const Schedule&     sched,
                         const SummaryState& summary_state,
                         const std::size_t   sim_step)
 {
-    wellConnectionLoop(sched, sim_step, grid, xw, [&units = sched.getUnits(), &summary_state, &grid, this]
+    wellConnectionLoop(sched, sim_step, grid, xw, [&units = sched.getUnits(), &summary_state, &grid, &sched, sim_step, this]
         (const std::string&      wellName,
          const std::size_t       wellID,
          const bool              is_producer,
@@ -494,9 +535,13 @@ captureDeclaredConnData(const Schedule&     sched,
             SConn::dynamicContrib(*dynConnRes, units, sc);
         }
 
+        const auto& well = sched[sim_step].wells(wellName);
+        SConn::injMultContrib(well, conn, units, sc);
+
         auto xc = this->xConn_(wellID, connID);
         XConn::dynamicContrib(wellName, is_producer,
                               global_index, summary_state, xc);
+        XConn::injMultContrib(well, dynConnRes, xc);
     });
 }
 
@@ -509,7 +554,7 @@ captureDeclaredConnDataLGR(const Schedule&     sched,
                            const std::size_t   sim_step,
                            const std::string&  lgr_tag)
 {
-    wellConnectionLoop(sched, sim_step, grid, xw, lgr_tag, [&units = sched.getUnits(), &summary_state, &grid, this]
+    wellConnectionLoop(sched, sim_step, grid, xw, lgr_tag, [&units = sched.getUnits(), &summary_state, &grid, &sched, sim_step, this]
         (const std::string&      wellName,
          const std::size_t       wellID,
          const bool              is_producer,
@@ -531,8 +576,12 @@ captureDeclaredConnDataLGR(const Schedule&     sched,
             SConn::dynamicContrib(*dynConnRes, units, sc);
         }
 
+        const auto& well = sched[sim_step].wells(wellName);
+        SConn::injMultContrib(well, conn, units, sc);
+
         auto xc = this->xConn_(wellID, connID);
         XConn::dynamicContrib(wellName, is_producer,
                               global_index, summary_state, xc);
+        XConn::injMultContrib(well, dynConnRes, xc);
     });
 }

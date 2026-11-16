@@ -155,4 +155,14 @@ Opm::RestartIO::RstConnection::RstConnection(const UnitSystem& unit_system,
     if (static_cast<std::size_t>(nsconz) > VI::SConn::CFInDeck) {
         this->cf_kind = from_float(scon[VI::SConn::CFInDeck]);
     }
+
+    if (static_cast<std::size_t>(nsconz) > VI::SConn::InjMultFracPress) {
+        // Gradient has units of 1/pressure.
+        this->inj_mult_gradient = scon[VI::SConn::InjMultGradient]
+            / unit_system.to_si(M::pressure, 1.0);
+        this->inj_mult_frac_press = unit_system
+            .to_si(M::pressure, scon[VI::SConn::InjMultFracPress]);
+    }
+
+    this->inj_mult = xcon[VI::XConn::InjMultMax];
 }
