@@ -187,16 +187,16 @@
         "doc": "Inserts the given keywords into the Schedule at the given report step.\n\n:param keywords: A Python list of strings, contianing the keywords.\n:type keyword_list: list\n:param step: The report step.\n:type step: int"
     },
     "Schedule_insert_keywords_data_step_unit_system": {
-        "signature": "opm.io.schedule.Schedule.insert_keywords(data: str, step: int, unit_system: UnitSystem) -> None",
-        "doc": "Inserts the given keywords into the Schedule at the given report step using the given unit system.\n\n:param data: The deck string to be inserted into the Schedule.\n:type data: str\n:param step: The report step.\n:type step: int\n:param unit_system: The unit system.\n:type unit_system: UnitSystem"
+        "signature": "opm.io.schedule.Schedule.insert_keywords(data: str, step: int, unit_system: UnitSystem, matched_wells: list = []) -> None",
+        "doc": "Inserts the given keywords into the Schedule at the given report step using the given unit system.\n\n:param data: The deck string to be inserted into the Schedule.\n:type data: str\n:param step: The report step.\n:type step: int\n:param unit_system: The unit system.\n:type unit_system: UnitSystem\n:param matched_wells: The wells that matched the condition like keyword '?'.\n:type matched_wells: list"
     },
     "Schedule_insert_keywords_data_step": {
-        "signature": "opm.io.schedule.Schedule.insert_keywords(data: str, step: int) -> None",
-        "doc": "Inserts the given keywords into the Schedule at the given report step using the unit system of the Schedule.\n\n:param data: The deck string to be inserted into the Schedule.\n:type data: str\n:param step: The report step.\n:type step: int"
+        "signature": "opm.io.schedule.Schedule.insert_keywords(data: str, step: int, matched_wells: list = []) -> None",
+        "doc": "Inserts the given keywords into the Schedule at the given report step using the unit system of the Schedule.\n\n:param data: The deck string to be inserted into the Schedule.\n:type data: str\n:param step: The report step.\n:type step: int\n:param matched_wells: The wells that matched the condition like keyword '?'.\n:type matched_wells: list"
     },
     "Schedule_insert_keywords_data": {
-        "signature": "opm.io.schedule.Schedule.insert_keywords(data: str) -> None",
-        "doc": "Inserts the given keywords into the Schedule at the current report step using the unit system of the Schedule.\n\n:param data: The deck string to be inserted into the Schedule.\n:type data: str"
+        "signature": "opm.io.schedule.Schedule.insert_keywords(data: str, matched_wells: list = []) -> None",
+        "doc": "Inserts the given keywords into the Schedule at the current report step using the unit system of the Schedule.\n\n:param data: The deck string to be inserted into the Schedule.\n:type data: str\n:param matched_wells: The wells that matched the condition like keyword '?'.\n:type matched_wells: list"
     },
     "Schedule_contains": {
         "signature": "opm.io.schedule.Schedule.__contains__(well_name: str) -> bool",
