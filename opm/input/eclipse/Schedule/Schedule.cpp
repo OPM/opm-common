@@ -1876,7 +1876,7 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
             };
         }
 
-        // Add matched wells 
+        // Add matched wells
         std::vector<std::string> well_names;
         for (const auto& wname : matching_wells) {
             if (this->hasWell(wname, reportStep)) {
