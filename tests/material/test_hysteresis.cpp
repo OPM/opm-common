@@ -3667,8 +3667,13 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(HysteresisRollbackRoundtrip2pGasOil, Scalar, Types
 namespace {
 
 std::string wagHysterDeck(double C, double alpha, double fraction,
-                          double threshold, double modParam)
+                          double threshold, double modParam,
+                          double sgcr = 0.0)
 {
+    // Optional critical gas saturation, with krg linear from Sgcr to Sgu = 0.8.
+    const std::string sgcrRow = (sgcr > 0.0)
+        ? "  " + std::to_string(sgcr) + "  0.0  " + std::to_string(1.0 - sgcr/0.8) + "  0.0\n"
+        : std::string{};
     return std::string { R"(
 RUNSPEC
 DIMENS
@@ -3697,7 +3702,7 @@ SWOF
   1.0  1.0  0.0  0.0 /
 SGOF
   0.0  0.0  1.0  0.0
-  0.8  1.0  0.0  0.0 /
+)" + sgcrRow + R"(  0.8  1.0  0.0  0.0 /
 EHYSTR
   1* 0 1* )" } + std::to_string(modParam) + R"( KR /
 WAGHYSTR
@@ -3968,6 +3973,62 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(WagGasArrival, Scalar, Types)
         for (int i = 30; i <= 40; i += 5) {
             const double sg = i / 100.0;
             BOOST_CHECK_SMALL(cell.step(0.25, sg) - (0.8*(wagK(sg) - wagK(0.25)) + wagK(0.25)), tol);
+        }
+    }
+}
+
+// Gas barely exceeding the critical saturation before imbibition. The Land
+// constant of the imbibition curve through the reversal point then suffers from
+// cancellation, which must not give a NaN gas relperm or hysteresis state. Such
+// a NaN state is hidden on drainage curves, but resurfaces on later imbibition.
+BOOST_AUTO_TEST_CASE_TEMPLATE(WagTinyFreeGasAtReversal, Scalar, Types)
+{
+    const double sgcr = 0.05;
+    const double tol = wagTol<Scalar>();
+    const auto checkFiniteState = [](const auto& gasOil) {
+        const auto state = gasOil.captureState();
+        for (const double v : { state.cTransf, state.SncrtWAG, state.krnImbStart,
+                                state.krnImbStartNxt, state.krnSwImbStart,
+                                state.krnDrainStart, state.krnDrainStartNxt }) {
+            BOOST_CHECK(std::isfinite(v));
+        }
+        BOOST_CHECK_GT(state.cTransf, 0.0);
+    };
+
+    for (const double excess : { 1.0e-9, 1.0e-8, 3.0e-8, 1.0e-7, 1.0e-6 }) {
+        BOOST_TEST_CONTEXT("excess = " << excess) {
+            WagCell<Scalar> cell(wagHysterDeck(3.0, 1.0, 0.1, 0.001, 0.1, sgcr));
+
+            // Two-phase drainage to just above the critical saturation, and imbibition.
+            for (int i = 0; i <= 5; ++i) {
+                BOOST_CHECK_SMALL(double(cell.step(cell.swco, i / 100.0)), tol);
+            }
+            const double sgRev = sgcr + excess;
+            BOOST_CHECK_SMALL(double(cell.step(cell.swco, sgRev)), tol);
+            for (int i = 1; i <= 10; ++i) {
+                const double sg = sgRev - i * 0.005;
+                const Scalar krg = cell.step(cell.swco, sg);
+                BOOST_CHECK(std::isfinite(krg));
+                BOOST_CHECK_SMALL(double(krg), tol);
+            }
+            BOOST_CHECK_EQUAL(cell.gasOil().nState(), 1);
+            checkFiniteState(cell.gasOil());
+
+            // Water arrives and a three-phase drainage-imbibition cycle follows.
+            const Scalar sw = 0.4;
+            for (int i = 0; i <= 30; i += 2) {
+                const Scalar krg = cell.step(sw, i / 100.0);
+                BOOST_CHECK(std::isfinite(krg));
+                BOOST_CHECK_GE(krg, 0.0);
+            }
+            BOOST_CHECK_EQUAL(cell.gasOil().nState(), 2);
+            BOOST_CHECK_GT(double(cell.krg(sw, 0.30)), 0.0);
+            for (int i = 29; i >= 0; --i) {
+                const Scalar krg = cell.step(sw, i / 100.0);
+                BOOST_CHECK(std::isfinite(krg));
+                BOOST_CHECK_GE(krg, 0.0);
+            }
+            checkFiniteState(cell.gasOil());
         }
     }
 }

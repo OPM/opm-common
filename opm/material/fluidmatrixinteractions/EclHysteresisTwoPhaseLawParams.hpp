@@ -987,7 +987,12 @@ private:
                 aTransf_ += config().modParamTrapped() * (Snmaxd_ - Snhy());
             }
             if (snRev > SncrtWAG_) {
-                cTransf_ = 1.0 / (SncrtWAG_ - baseWAG_ + saturationEpsilon_) - aTransf_ / (snRev - baseWAG_);
+                const Scalar C = 1.0 / (SncrtWAG_ - baseWAG_ + saturationEpsilon_) - aTransf_ / (snRev - baseWAG_);
+                // For a vanishing free gas saturation at the reversal point, the two
+                // terms cancel and round-off may give a non-positive constant, for
+                // which the free gas saturation in computeSwf() is undefined (NaN).
+                // The shape of the curve is immaterial then, so use Land's parameter.
+                cTransf_ = (C > 0.0 && std::isfinite(C)) ? C : Scalar(wagConfig().wagLandsParam());
             }
         }
 
