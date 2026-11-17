@@ -54,6 +54,7 @@
 #include <cassert>
 #include <algorithm>
 #include <cstddef>
+#include <initializer_list>
 #include <stdexcept>
 #include <type_traits>
 #include <utility>
@@ -73,6 +74,10 @@ namespace detail
      *   \c EclHysteresisTwoPhaseLawParams \f$\to\f$ \c EclEpsTwoPhaseLawParams
      *   \f$\to\f$ \c SatCurveMultiplexerParams
      *   \f$\to\f$ \c PiecewiseLinearTwoPhaseMaterialParams.
+     *
+     * The hysteresis and endpoint-scaling layers are skipped without looking
+     * at their configuration. This is only correct after
+     * \c GpuManager::validate() has accepted the CPU manager.
      */
     template <class CpuParams>
     const auto& extractCpuPlParams(const CpuParams& params)
@@ -261,6 +266,66 @@ public:
     }
 #endif
 
+    /*!
+     * \brief Throw if the CPU manager uses a saturation-function option that
+     *        this manager does not implement.
+     *
+     * Host only. Called by the converting constructor before anything is
+     * built, so a GPU manager never silently drops an option.
+     */
+    template <class CpuManager>
+    static void validate(const CpuManager& cpu)
+    {
+        if (cpu.enableHysteresis()) {
+            OPM_THROW(std::logic_error, "GPU material manager does not support hysteresis");
+        }
+        if (cpu.hasDirectionalRelperms()) {
+            OPM_THROW(std::logic_error,
+                      "GPU material manager does not support directional relative "
+                      "permeabilities (KRNUMX/Y/Z)");
+        }
+        if (cpu.hasDirectionalImbnum()) {
+            OPM_THROW(std::logic_error,
+                      "GPU material manager does not support directional imbibition "
+                      "regions (IMBNUMX/Y/Z)");
+        }
+        if (!cpu.satCurveIsAllPiecewiseLinear()) {
+            OPM_THROW(std::logic_error,
+                      "GPU material manager only supports piecewise-linear saturation curves");
+        }
+        if (cpu.enableEndPointScaling()) {
+            OPM_THROW(std::logic_error,
+                      "GPU material manager does not support depth-dependent relative "
+                      "permeability endpoints (ENKRVD)");
+        }
+        if (cpu.enablePpcwmax()) {
+            OPM_THROW(std::logic_error, "GPU material manager does not support PPCWMAX");
+        }
+
+        bool anyScaling = false;
+        for (const auto* config :
+             {&cpu.gasOilConfig(), &cpu.oilWaterConfig(), &cpu.gasWaterConfig()}) {
+            if (config->enableKrwScaling() || config->enableKrnScaling()
+                || config->enableThreePointKrwScaling()
+                || config->enableThreePointKrnScaling()) {
+                OPM_THROW(std::logic_error,
+                          "GPU material manager does not support relative permeability "
+                          "value scaling (KRW, KRO, KRG, KRWR, KRORW, ...)");
+            }
+            if (config->enableLeverettScaling()) {
+                OPM_THROW(std::logic_error,
+                          "GPU material manager does not support Leverett J-function "
+                          "capillary pressure scaling (JFUNC)");
+            }
+            anyScaling = anyScaling || config->enableSatScaling() || config->enablePcScaling();
+        }
+        if (anyScaling) {
+            OPM_THROW(std::logic_error,
+                      "GPU material manager does not support endpoint scaling with this "
+                      "material law");
+        }
+    }
+
     template <class CpuParams>
     static bool samePiecewiseLinearParams(const CpuParams& lhs, const CpuParams& rhs)
     {
@@ -317,6 +382,8 @@ public:
     template <class CpuManager>
     static GpuData buildGpuData(const CpuManager& cpu, std::size_t numElements)
     {
+        validate(cpu);
+
         GpuData data;
         data.satnumRegionArray = buildHostSatnumRegionArray(cpu, numElements);
 
