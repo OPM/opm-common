@@ -274,6 +274,11 @@ void ActionX::required_summary(std::unordered_set<std::string>& required_summary
     this->condition.required_summary(required_summary);
 }
 
+void ActionX::requisiteSummaryVectors(RequisiteSummaryVectors& vectors) const
+{
+    this->condition.requisiteSummaryVectors(vectors);
+}
+
 void ActionX::update_id(const std::size_t id)
 {
     this->m_id = id;
