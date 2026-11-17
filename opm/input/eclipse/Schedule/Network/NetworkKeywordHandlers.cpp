@@ -822,9 +822,17 @@ void handleNODEPROP(HandlerContext& handlerContext)
             if (as_choke) {
                 group.as_choke(name);
                 if (group.wellgroup()) {
-                    // Wells belong to a group with autochoke enabled are to be run on a common THP and should not have guide rates
+                    // Producers that belong to a group with autochoke enabled are to be run on a common THP and should not have guide rates
                     for (const std::string& wellName : group.wells()) {
                         auto well = handlerContext.state().wells.get(wellName);
+
+                        // The choke regulates the production of the group.
+                        // An injector in the group keeps its controls;
+                        // giving it production controls would turn it
+                        // into a producer.
+                        if (well.isInjector()) {
+                            continue;
+                        }
 
                         // Let the wells be operating on a THP Constraint
                         auto properties = std::make_shared<Well::WellProductionProperties>(well.getProductionProperties());
