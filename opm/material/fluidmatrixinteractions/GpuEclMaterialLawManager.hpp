@@ -35,6 +35,7 @@
 #include <opm/common/utility/gpuistl_if_available.hpp>
 #include <opm/common/ErrorMacros.hpp>
 
+#include <opm/material/fluidmatrixinteractions/EclDefaultMaterial.hpp>
 #include <opm/material/fluidmatrixinteractions/EclDefaultMaterialParams.hpp>
 #include <opm/material/fluidmatrixinteractions/EclEpsConfig.hpp>
 #include <opm/material/fluidmatrixinteractions/EclEpsScalingPoints.hpp>
@@ -58,9 +59,51 @@
 
 namespace Opm::EclMaterialLaw
 {
+template <class TraitsT,
+          class GasOilLawT,
+          class OilWaterLawT,
+          template <class> class Storage = ::Opm::VectorWithDefaultAllocator,
+          class MaterialLawT = ::Opm::EclDefaultMaterial<TraitsT, GasOilLawT, OilWaterLawT>>
+class GpuManager;
+} // namespace Opm::EclMaterialLaw
+
+#if HAVE_CUDA
+namespace Opm::gpuistl
+{
+template <class TraitsT, class GasOilLawT, class OilWaterLawT, class MaterialLawT>
+::Opm::EclMaterialLaw::GpuManager<TraitsT, GasOilLawT, OilWaterLawT, GpuBuffer, MaterialLawT>
+copy_to_gpu(const ::Opm::EclMaterialLaw::GpuManager<TraitsT,
+                                                    GasOilLawT,
+                                                    OilWaterLawT,
+                                                    ::Opm::VectorWithDefaultAllocator,
+                                                    MaterialLawT>& cpu);
+
+template <class TraitsT, class GasOilLawT, class OilWaterLawT, class MaterialLawT>
+::Opm::EclMaterialLaw::GpuManager<TraitsT, GasOilLawT, OilWaterLawT, GpuView, MaterialLawT>
+make_view(
+    ::Opm::EclMaterialLaw::GpuManager<TraitsT, GasOilLawT, OilWaterLawT, GpuBuffer, MaterialLawT>&
+        buf);
+} // namespace Opm::gpuistl
+#endif // HAVE_CUDA
+
+namespace Opm::EclMaterialLaw
+{
 
 namespace detail
 {
+    template <class T>
+    struct IsGpuManager : std::false_type {
+    };
+
+    template <class TraitsT,
+              class GasOilLawT,
+              class OilWaterLawT,
+              template <class> class Storage,
+              class MaterialLawT>
+    struct IsGpuManager<GpuManager<TraitsT, GasOilLawT, OilWaterLawT, Storage, MaterialLawT>>
+        : std::true_type {
+    };
+
 
     /*!
      * \brief Walk down a CPU material-law parameter object until the enclosed
@@ -397,8 +440,8 @@ namespace detail
 template <class TraitsT,
           class GasOilLawT,
           class OilWaterLawT,
-          template <class> class Storage = ::Opm::VectorWithDefaultAllocator,
-          class MaterialLawT = ::Opm::EclDefaultMaterial<TraitsT, GasOilLawT, OilWaterLawT>>
+          template <class> class Storage,
+          class MaterialLawT>
 class GpuManager : private detail::GpuMaterialLawSampleBuffers<
                        typename TraitsT::Scalar,
                        std::is_same_v<Storage<int>, ::Opm::gpuistl::GpuBuffer<int>>>
@@ -464,15 +507,15 @@ private:
         detail::GpuTwoPhaseStorage<S, MaterialLawParams>,
         detail::GpuThreePhaseStorage<S, Scalar, GasOilEffectiveParams, OilWaterEffectiveParams>>;
 
-public:
     using StorageType = StorageFor<Storage>;
-
-    GpuManager() = default;
 
     explicit GpuManager(StorageType storage)
         : storage_(std::move(storage))
     {
     }
+
+public:
+    GpuManager() = default;
 
     /*! \brief Material-law parameters of an active cell. */
     OPM_HOST_DEVICE MaterialLawParams materialLawParams(unsigned elemIdx) const
@@ -505,20 +548,23 @@ public:
         return storage_.satnumRegionArray[elemIdx];
     }
 
-    std::size_t materialLawParamsRegionCount() const
+    /*! \brief Number of SATNUM regions with region data. */
+    std::size_t numMaterialLawRegions() const
     {
         return storage_.numRegions();
     }
 
-    /*! \brief Direct access to the underlying storage (used by make_view). */
-    StorageType& storage()
+    /*!
+     * \brief Whether the scaled endpoints and Swl are stored per cell, i.e.
+     *        whether the deck uses endpoint scaling.
+     */
+    bool hasPerCellEndpoints() const
     {
-        return storage_;
-    }
-
-    const Storage<int>& satnumRegionArrayStorage() const
-    {
-        return storage_.satnumRegionArray;
+        if constexpr (isTwoPhase) {
+            return false;
+        } else {
+            return storage_.hasPerCellEndpoints;
+        }
     }
 
     /*!
@@ -614,6 +660,7 @@ public:
                                                      ::Opm::gpuistl::GpuView<const Scalar>>,
                                int>
               = 0>
+        requires(!detail::IsGpuManager<CpuManager>::value)
     explicit GpuManager(const CpuManager& cpu, std::size_t numElements)
         : GpuManager(buildGpuData(cpu, numElements))
     {
@@ -915,6 +962,12 @@ private:
         return satnumRegionArray;
     }
 
+#if HAVE_CUDA
+    template <class T, class GO, class OW, class ML>
+    friend GpuManager<T, GO, OW, ::Opm::gpuistl::GpuView, ML>
+    (::Opm::gpuistl::make_view)(GpuManager<T, GO, OW, ::Opm::gpuistl::GpuBuffer, ML>& buf);
+#endif
+
     StorageType storage_ {};
 };
 
@@ -926,12 +979,10 @@ namespace Opm::gpuistl
 #if HAVE_CUDA
 
 /*!
- * \brief Copy a CPU GpuManager to GPU-resident GpuBuffer storage.
+ * \brief Not supported: a CPU-storage GpuManager cannot be built.
  *
- * The MaterialLawParams element type is assumed to be the same on the CPU
- * and the GPU, i.e. the caller is responsible for making the GasOilLaw and
- * OilWaterLaw GPU-compatible (typically by templating their parameter type
- * on a GPU storage).
+ * Defined only so that the return type can be named (\c GpuFlowProblem's
+ * \c copy_to_gpu does). Instantiating it is a compile error.
  */
 template <class TraitsT, class GasOilLawT, class OilWaterLawT, class MaterialLawT>
 ::Opm::EclMaterialLaw::GpuManager<TraitsT, GasOilLawT, OilWaterLawT, GpuBuffer, MaterialLawT>
@@ -939,11 +990,12 @@ copy_to_gpu(const ::Opm::EclMaterialLaw::GpuManager<TraitsT,
                                                     GasOilLawT,
                                                     OilWaterLawT,
                                                     ::Opm::VectorWithDefaultAllocator,
-                                                    MaterialLawT>& cpu)
+                                                    MaterialLawT>& /*cpu*/)
 {
-    using GpuManagerBuffer = ::Opm::EclMaterialLaw::
-        GpuManager<TraitsT, GasOilLawT, OilWaterLawT, GpuBuffer, MaterialLawT>;
-    return GpuManagerBuffer(cpu, cpu.satnumRegionArrayStorage().size());
+    static_assert(!std::is_same_v<TraitsT, TraitsT>,
+                  "copy_to_gpu(GpuManager<..., VectorWithDefaultAllocator>) is not supported. "
+                  "Build GpuManager<..., GpuBuffer> from the CPU EclMaterialLaw::Manager instead.");
+    return {};
 }
 
 /*!
@@ -958,7 +1010,7 @@ make_view(
 {
     using GpuManagerView = ::Opm::EclMaterialLaw::
         GpuManager<TraitsT, GasOilLawT, OilWaterLawT, GpuView, MaterialLawT>;
-    return GpuManagerView(::Opm::EclMaterialLaw::detail::makeStorageView(buf.storage()));
+    return GpuManagerView(::Opm::EclMaterialLaw::detail::makeStorageView(buf.storage_));
 }
 
 } // namespace Opm::gpuistl
