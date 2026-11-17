@@ -21,6 +21,8 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <opm/common/OpmLog/OpmLog.hpp>
+#include <opm/common/OpmLog/StreamLog.hpp>
 #include <opm/common/utility/OpmInputError.hpp>
 
 #include <opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquifers.hpp>
@@ -52,6 +54,7 @@
 #include <cstddef>
 #include <memory>
 #include <ranges>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -580,7 +583,17 @@ NEFAC
 'M5S'  0.9 /
 /)";
 
+    std::ostringstream warnings;
+    OpmLog::addBackend("STREAM",
+                       std::make_shared<StreamLog>(warnings, Log::MessageType::Warning));
     BOOST_CHECK_NO_THROW(make_schedule(input));
+    OpmLog::removeBackend("STREAM");
+
+    // NEFAC is on line 16 of the input.
+    const auto log = warnings.str();
+    BOOST_CHECK_MESSAGE(log.find("NEFAC has no effect for a standard network") != std::string::npos,
+                        log);
+    BOOST_CHECK_MESSAGE(log.find("line 16") != std::string::npos, log);
 }
 
 BOOST_AUTO_TEST_SUITE_END()     // Basic_Functionality
