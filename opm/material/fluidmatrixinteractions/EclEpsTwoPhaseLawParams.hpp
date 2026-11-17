@@ -59,6 +59,24 @@ public:
     }
 
     /*!
+     * \brief Construct finalized parameters from their parts.
+     *
+     * Usable in device code. The pointed-to objects are not owned and must
+     * outlive this object.
+     */
+    OPM_HOST_DEVICE EclEpsTwoPhaseLawParams(const EffLawParams* effectiveLawParams,
+                                            const ScalingPoints* unscaledPoints,
+                                            const EclEpsConfig& config,
+                                            const ScalingPoints& scaledPoints)
+        : effectiveLawParams_(effectiveLawParams)
+        , config_(config)
+        , unscaledPoints_(unscaledPoints)
+        , scaledPoints_(scaledPoints)
+    {
+        EnsureFinalized::finalize();
+    }
+
+    /*!
      * \brief Calculate all dependent quantities once the independent
      *        quantities of the parameter object have been set.
      */
@@ -152,9 +170,9 @@ public:
     }
 
 private:
-    EffLawParams* effectiveLawParams_{};
+    const EffLawParams* effectiveLawParams_{};
     EclEpsConfig config_;
-    ScalingPoints* unscaledPoints_{};
+    const ScalingPoints* unscaledPoints_{};
     ScalingPoints scaledPoints_;
 };
 
