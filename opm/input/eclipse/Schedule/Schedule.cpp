@@ -2016,6 +2016,7 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
         SimulatorUpdate sim_update;
         std::unordered_map<std::string, double> target_wellpi;
         std::unordered_map<std::string, double> wpimult_global_factor;
+        std::set<std::string> connection_order_wells;
         const auto matches = Action::Result{false}.matches();
 
         this->snapshots.resize(first + 1);
@@ -2025,9 +2026,11 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
             input_block.push_back(keyword);
             this->handleKeyword(first, input_block, keyword, parseContext, errors, grid,
                                 matches, /*action_mode=*/false, &sim_update,
-                                &target_wellpi, wpimult_global_factor);
+                                &target_wellpi, wpimult_global_factor,
+                                nullptr, nullptr, nullptr, &connection_order_wells);
         }
 
+        this->orderConnections(connection_order_wells);
         this->applyGlobalWPIMULT(wpimult_global_factor);
         this->end_report(first);
 

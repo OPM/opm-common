@@ -9543,3 +9543,92 @@ WCONPROD
     BOOST_CHECK_THROW(schedule.insertKeywords(beyond, parseContext, errors),
                       std::invalid_argument);
 }
+
+// Connections inserted at the first step are ordered, and a defaulted
+// reference depth is derived from them, as for the deck's own wells.
+BOOST_AUTO_TEST_CASE(InsertKeywordsOrdersConnections)
+{
+    const auto deck = Parser{}.parseString(R"(
+RUNSPEC
+DIMENS
+ 5 5 3 /
+OIL
+WATER
+GAS
+START
+1 JAN 2000 /
+GRID
+DXV
+ 5*100 /
+DYV
+ 5*100 /
+DZV
+ 3*10 /
+TOPS
+ 25*2000 /
+PORO
+ 75*0.25 /
+PERMX
+ 75*100 /
+PERMY
+ 75*100 /
+PERMZ
+ 75*10 /
+
+SCHEDULE
+WELSPECS
+  'OWN' 'G1' 3 3 1* 'OIL' /
+/
+COMPDAT
+  'OWN' 3 3 1 3 'OPEN' /
+/
+WCONPROD
+  'OWN' 'OPEN' 'ORAT' 100 /
+/
+DATES
+  1 FEB 2000 /
+/
+DATES
+  1 MAR 2000 /
+/
+)");
+
+    EclipseGrid grid(deck);
+    const TableManager table(deck);
+    const FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
+    auto schedule = Schedule { deck, grid, fp, NumericalAquifers{}, Runspec{deck},
+                               std::make_shared<Python>() };
+
+    const auto inserted = Parser{}.parseString(R"(
+WELSPECS
+  'ADDED' 'G2' 3 3 1* 'OIL' /
+/
+COMPDAT
+  'ADDED' 3 3 3 3 'OPEN' /
+  'ADDED' 3 3 1 1 'OPEN' /
+/
+WCONPROD
+  'ADDED' 'OPEN' 'ORAT' 100 /
+/
+)");
+
+    auto keywordsByStep = std::map<std::size_t, std::vector<DeckKeyword>>{};
+    keywordsByStep[1] = { inserted["WELSPECS"].back(),
+                          inserted["COMPDAT"].back(),
+                          inserted["WCONPROD"].back() };
+
+    auto parseContext = ParseContext{};
+    auto errors = ErrorGuard{};
+    schedule.insertKeywords(keywordsByStep, parseContext, errors);
+
+    const auto& own = schedule.getWell("OWN", 1);
+    for (const auto step : { std::size_t{1}, std::size_t{2} }) {
+        const auto& well = schedule.getWell("ADDED", step);
+        BOOST_CHECK_CLOSE(well.getRefDepth(), own.getRefDepth(), 1.0e-8);
+
+        const auto& conns = well.getConnections();
+        BOOST_REQUIRE_EQUAL(conns.size(), 2U);
+        BOOST_CHECK_EQUAL(conns[0].getK(), 0);
+        BOOST_CHECK_EQUAL(conns[1].getK(), 2);
+    }
+}
