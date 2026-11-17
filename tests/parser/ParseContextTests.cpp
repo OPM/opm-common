@@ -102,28 +102,27 @@ BOOST_AUTO_TEST_CASE(TestUnkownKeyword) {
 
 BOOST_AUTO_TEST_CASE(TestRandomTextWithBraces)
 {
-    // Braces in the offending text must not be taken as format syntax.
-    const char* deck =
-        "{x}\n"
-        "DIMENS\n"
-        "  10 10 10 /\n"
-        "\n";
+    // Braces in the offending text must not be taken as format syntax, and
+    // the message must show the text as written.
+    for (const std::string text : { "{x}", "b{{et}}a gamma" }) {
+        const auto deck = text + "\nDIMENS\n  10 10 10 /\n\n";
 
-    ErrorGuard errors;
-    ParseContext parseContext;
-    parseContext.update(ParseContext::PARSE_RANDOM_TEXT, InputErrorAction::THROW_EXCEPTION);
+        ErrorGuard errors;
+        ParseContext parseContext;
+        parseContext.update(ParseContext::PARSE_RANDOM_TEXT, InputErrorAction::THROW_EXCEPTION);
 
-    Parser parser(false);
-    parser.addKeyword<ParserKeywords::DIMENS>();
+        Parser parser(false);
+        parser.addKeyword<ParserKeywords::DIMENS>();
 
-    try {
-        parser.parseString(deck, parseContext, errors);
-        BOOST_FAIL("Random text must raise an input error");
-    }
-    catch (const OpmInputError& e) {
-        BOOST_CHECK_MESSAGE(std::string_view { e.what() }
-                            .find("String {x} not formatted as valid keyword") != std::string_view::npos,
-                            e.what());
+        try {
+            parser.parseString(deck, parseContext, errors);
+            BOOST_FAIL("Random text must raise an input error");
+        }
+        catch (const OpmInputError& e) {
+            const auto expected = "String " + text + " not formatted as valid keyword";
+            BOOST_CHECK_MESSAGE(std::string_view { e.what() }.find(expected) != std::string_view::npos,
+                                e.what());
+        }
     }
 }
 
