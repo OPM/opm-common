@@ -466,6 +466,7 @@ namespace Opm {
             serializer(this->m_sched_deck);
             serializer(this->action_wgnames);
             serializer(this->potential_wellopen_patterns);
+            serializer(this->action_wlist_patterns);
             serializer(this->exit_status);
             serializer(this->snapshots);
             serializer(this->restart_output);
@@ -529,6 +530,7 @@ namespace Opm {
         ScheduleDeck m_sched_deck{};
         Action::WGNames action_wgnames{};
         std::unordered_set<std::string> potential_wellopen_patterns{}; // Set of well name patterns that potentially can open
+        std::unordered_map<std::string, std::unordered_set<std::string>> action_wlist_patterns{}; // Well name patterns that ACTIONX may add to each well list
         std::optional<int> exit_status{};
         std::vector<ScheduleState> snapshots{};
         WriteRestartFileEvents restart_output{};

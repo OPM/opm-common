@@ -9371,6 +9371,82 @@ WCONPROD
 /
 ENDACTIO
 )"), { "NEW1" });
+
+    // List members count only if a keyword may open the list.
+    checkInactive(inactiveWellsAtEnd(R"(
+ACTIONX
+  'A' 1 /
+  FOPR < 50 /
+/
+WLIST
+  '*NEW' 'NEW' 'NEW2' /
+/
+WCONPROD
+  'NEW1' 'OPEN' 'ORAT' 100 4* 50 /
+/
+ENDACTIO
+)"), { "NEW2" });
+
+    // DEL does not add wells to the list.
+    checkInactive(inactiveWellsAtEnd(R"(
+ACTIONX
+  'A' 1 /
+  FOPR < 50 /
+/
+WLIST
+  '*NEW' 'NEW' 'NEW1' /
+  '*NEW' 'DEL' 'NEW2' /
+/
+WCONPROD
+  '*NEW' 'OPEN' 'ORAT' 100 4* 50 /
+/
+ENDACTIO
+)"), { "NEW2" });
+
+    // List defined in one ACTIONX block, opened through a list template in
+    // another.
+    checkInactive(inactiveWellsAtEnd(R"(
+ACTIONX
+  'A' 1 /
+  FOPR < 50 /
+/
+WLIST
+  '*NEW' 'NEW' 'NEW1' /
+/
+ENDACTIO
+ACTIONX
+  'B' 1 /
+  FOPR < 40 /
+/
+WELOPEN
+  '*NE*' 'OPEN' /
+/
+ENDACTIO
+)"), { "NEW2" });
+
+    // List whose members are given by a condition on another list defined
+    // in an ACTIONX block.
+    checkInactive(inactiveWellsAtEnd(R"(
+ACTIONX
+  'A' 1 /
+  FOPR < 50 /
+/
+WLIST
+  '*NEW' 'NEW' 'NEW1' /
+/
+ENDACTIO
+ACTIONX
+  'B' 1 /
+  WOPR '*NEW' < 1 /
+/
+WLIST
+  '*OPEN' 'NEW' '?' /
+/
+WELOPEN
+  '*OPEN' 'OPEN' /
+/
+ENDACTIO
+)"), { "NEW2" });
 }
 
 BOOST_AUTO_TEST_CASE(InactiveWells_ActionX_MatchingWells)
