@@ -61,6 +61,9 @@
 #include <opm/input/eclipse/Deck/Deck.hpp>
 #include <opm/input/eclipse/Deck/FileDeck.hpp>
 
+#include <opm/input/eclipse/Parser/ErrorGuard.hpp>
+#include <opm/input/eclipse/Parser/InputErrorAction.hpp>
+#include <opm/input/eclipse/Parser/ParseContext.hpp>
 #include <opm/input/eclipse/Parser/Parser.hpp>
 
 #include "tests/WorkArea.hpp"
@@ -1321,6 +1324,93 @@ TSTEP
             BOOST_CHECK(again_state.run_time(again) == rst_run_time);
         }
     }
+}
+
+BOOST_AUTO_TEST_CASE(RestartWellWithoutControl)
+{
+    WorkArea work {};
+
+    // OP1 is controlled before the restart (step 2).  OP2 is declared and
+    // connected after the restart.
+    const auto make_schedule = [](const std::string& op2_control)
+    {
+        return R"(WELSPECS
+  'OP1' 'G1' 1 1 1* 'OIL' /
+/
+
+COMPDAT
+  'OP1' 1 1 1 2 'OPEN' /
+/
+
+WCONPROD
+  'OP1' 'OPEN' 'ORAT' 100 4* 50 /
+/
+
+TSTEP
+  4*1.0 /
+
+WELSPECS
+  'OP2' 'G1' 2 2 1* 'OIL' /
+/
+
+COMPDAT
+  'OP2' 2 2 1 2 'OPEN' /
+/
+)" + op2_control + R"(
+TSTEP
+  2*1.0 /
+)";
+    };
+
+    const auto restart_step = 2;
+
+    // Returns the text of the SCHEDULE_WELL_WITHOUT_CONTROL error, if any.
+    const auto diagnostic = [&](const std::string& op2_control) -> std::string
+    {
+        const auto schedule = make_schedule(op2_control);
+
+        write_file("BASE.DATA", time_of_day_deck("", schedule));
+        write_restart_file("BASE", restart_step);
+        write_file("RESTART.DATA",
+                   time_of_day_deck(fmt::format("RESTART\n  'BASE' {} /\n", restart_step),
+                                    "SKIPREST\n\n" + schedule));
+
+        auto parser = Parser{};
+        const auto restart_deck = parser.parseFile("RESTART.DATA");
+        const auto es = EclipseState { restart_deck };
+
+        auto rst_file = std::make_shared<EclIO::ERst>("BASE.X0002");
+        auto rst_view = std::make_shared<EclIO::RestartFileView>(std::move(rst_file), restart_step);
+        const auto rst_state = RestartIO::RstState::load(std::move(rst_view), es.runspec(), parser);
+
+        auto parseContext = ParseContext{};
+        parseContext.update(ParseContext::SCHEDULE_WELL_WITHOUT_CONTROL,
+                            InputErrorAction::THROW_EXCEPTION);
+        auto errors = ErrorGuard{};
+
+        try {
+            Schedule { restart_deck, es, parseContext, errors,
+                       std::make_shared<Python>(), false, false, true, {}, &rst_state };
+        }
+        catch (const OpmInputError& e) {
+            return e.what();
+        }
+
+        return {};
+    };
+
+    const auto not_controlled = diagnostic("");
+    BOOST_CHECK_MESSAGE(not_controlled.find("never assigned a control") != std::string::npos,
+                        "Well declared and connected after restart, but never controlled, must trigger");
+    BOOST_CHECK(not_controlled.find("'OP2'") != std::string::npos);
+    // OP1 is restored from the restart file and is not tracked.
+    BOOST_CHECK(not_controlled.find("'OP1'") == std::string::npos);
+
+    BOOST_CHECK_MESSAGE(diagnostic(R"(
+WCONPROD
+  'OP2' 'OPEN' 'ORAT' 100 4* 50 /
+/
+)").empty(), "Well controlled after restart must NOT trigger");
 }
 
 BOOST_AUTO_TEST_CASE(RestartActionMinWait)
