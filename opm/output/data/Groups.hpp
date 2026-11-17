@@ -232,9 +232,16 @@ namespace Opm { namespace data {
     class GroupAndNetworkValues {
     public:
         std::map<std::string, GroupData> groupData {};
+        // Production network (GPR, GPRB, ...).
         std::map<std::string, NodeData>  nodeData {};
         std::map<std::string, BranchData> branchData {};
         std::map<std::string, BranchData> convergedBranchData {};
+        // Gas and water injection networks (GNETINJE; GPRG / GPRW). Kept apart from the
+        // production network because the same group can be a node of all three.
+        std::map<std::string, NodeData>  gasInjNodeData {};
+        std::map<std::string, BranchData> gasInjBranchData {};
+        std::map<std::string, NodeData>  waterInjNodeData {};
+        std::map<std::string, BranchData> waterInjBranchData {};
 
         template <class MessageBufferType>
         void write(MessageBufferType& buffer) const
@@ -243,6 +250,10 @@ namespace Opm { namespace data {
             this->writeMap(this->nodeData, buffer);
             this->writeMap(this->branchData, buffer);
             this->writeMap(this->convergedBranchData, buffer);
+            this->writeMap(this->gasInjNodeData, buffer);
+            this->writeMap(this->gasInjBranchData, buffer);
+            this->writeMap(this->waterInjNodeData, buffer);
+            this->writeMap(this->waterInjBranchData, buffer);
         }
 
         template <class MessageBufferType>
@@ -252,6 +263,10 @@ namespace Opm { namespace data {
             this->readMap(buffer, this->nodeData);
             this->readMap(buffer, this->branchData);
             this->readMap(buffer, this->convergedBranchData);
+            this->readMap(buffer, this->gasInjNodeData);
+            this->readMap(buffer, this->gasInjBranchData);
+            this->readMap(buffer, this->waterInjNodeData);
+            this->readMap(buffer, this->waterInjBranchData);
         }
 
         bool operator==(const GroupAndNetworkValues& other) const
@@ -259,7 +274,11 @@ namespace Opm { namespace data {
             return (this->groupData == other.groupData)
                 && (this->nodeData  == other.nodeData)
                 && (this->branchData == other.branchData)
-                && (this->convergedBranchData == other.convergedBranchData);
+                && (this->convergedBranchData == other.convergedBranchData)
+                && (this->gasInjNodeData == other.gasInjNodeData)
+                && (this->gasInjBranchData == other.gasInjBranchData)
+                && (this->waterInjNodeData == other.waterInjNodeData)
+                && (this->waterInjBranchData == other.waterInjBranchData);
         }
 
         void clear()
@@ -268,6 +287,10 @@ namespace Opm { namespace data {
             this->nodeData.clear();
             this->branchData.clear();
             this->convergedBranchData.clear();
+            this->gasInjNodeData.clear();
+            this->gasInjBranchData.clear();
+            this->waterInjNodeData.clear();
+            this->waterInjBranchData.clear();
         }
 
         template<class Serializer>
@@ -277,6 +300,10 @@ namespace Opm { namespace data {
             serializer(nodeData);
             serializer(branchData);
             serializer(convergedBranchData);
+            serializer(gasInjNodeData);
+            serializer(gasInjBranchData);
+            serializer(waterInjNodeData);
+            serializer(waterInjBranchData);
         }
 
         static GroupAndNetworkValues serializationTestObject()
@@ -285,7 +312,11 @@ namespace Opm { namespace data {
                         {{"test_data", GroupData::serializationTestObject()}},
                         {{"test_node", NodeData::serializationTestObject()}},
                         {{"test_branch", BranchData::serializationTestObject()}},
-                        {{"test_converged_branch", BranchData::serializationTestObject()}}
+                        {{"test_converged_branch", BranchData::serializationTestObject()}},
+                        {{"test_gas_inj_node", NodeData::serializationTestObject()}},
+                        {{"test_gas_inj_branch", BranchData::serializationTestObject()}},
+                        {{"test_water_inj_node", NodeData::serializationTestObject()}},
+                        {{"test_water_inj_branch", BranchData::serializationTestObject()}}
                    };
         }
 
