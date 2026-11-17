@@ -61,6 +61,20 @@ public:
     }
 
     /*!
+     * \brief Construct finalized parameters from the two-phase parameters and
+     *        the connate water saturation. Usable in device code.
+     */
+    OPM_HOST_DEVICE EclDefaultMaterialParams(const GasOilParams& gasOilParams,
+                                             const OilWaterParams& oilWaterParams,
+                                             Scalar swl)
+        : gasOilParams_(gasOilParams)
+        , oilWaterParams_(oilWaterParams)
+        , Swl_(swl)
+    {
+        EnsureFinalized::finalize();
+    }
+
+    /*!
      * \brief The parameter object for the gas-oil twophase law.
      */
     OPM_HOST_DEVICE const GasOilParams& gasOilParams() const
