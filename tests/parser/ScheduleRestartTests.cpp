@@ -1323,6 +1323,68 @@ TSTEP
     }
 }
 
+BOOST_AUTO_TEST_CASE(RestartActionOpensWell)
+{
+    WorkArea work {};
+
+    // OP2 is only ever opened by action 'A'.
+    const auto schedule = std::string { R"(WELSPECS
+  'OP1' 'G1' 1 1 1* 'OIL' /
+  'OP2' 'G1' 5 5 1* 'OIL' /
+/
+
+COMPDAT
+  'OP1' 1 1 1 2 'OPEN' /
+  'OP2' 5 5 1 2 'OPEN' /
+/
+
+WCONPROD
+  'OP1' 'OPEN' 'ORAT' 100 4* 50 /
+/
+
+ACTIONX
+  'A' 10 30 /
+  YEAR >= 2000 /
+/
+
+WCONPROD
+  'OP2' 'OPEN' 'ORAT' 100 4* 50 /
+/
+
+ENDACTIO
+
+TSTEP
+  2*1.0 /
+)" };
+
+    write_file("BASE.DATA", time_of_day_deck("", schedule));
+
+    {
+        const auto deck = Parser{}.parseFile("BASE.DATA");
+        const auto es = EclipseState { deck };
+        const auto sched = Schedule { deck, es, std::make_shared<Python>() };
+
+        auto state = Action::State {};
+        state.add_run(sched[1].actions()["A"], sched.simTime(1), Action::Result { true });
+
+        write_restart_file("BASE", 1, state);
+    }
+
+    write_file("RESTART.DATA",
+               time_of_day_deck("RESTART\n  'BASE' 1 /\n", "SKIPREST\n\n" + schedule));
+
+    const auto& [base, restarted, rst_state] =
+        load_schedule_pair("BASE.DATA", "RESTART.DATA", "BASE.X0001", 1);
+
+    // In the restarted run the action comes from the restart file, not the
+    // SCHEDULE section.
+    for (const auto* sched : { &base, &restarted }) {
+        const auto inactive = sched->getInactiveWellNamesAtEnd();
+        BOOST_CHECK_MESSAGE(std::ranges::find(inactive, "OP2") == inactive.end(),
+                            "OP2 must not be classified as inactive");
+    }
+}
+
 BOOST_AUTO_TEST_CASE(RestartActionMinWait)
 {
     WorkArea work {};
