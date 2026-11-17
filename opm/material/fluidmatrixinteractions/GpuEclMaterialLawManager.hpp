@@ -23,18 +23,9 @@
  * \brief GPU-compatible, simplified version of Opm::EclMaterialLaw::Manager.
  *
  * This class only supports the actions needed by FlowProblem,
- * FlowProblemBlackoil and the BlackOilIntensiveQuantities. It re-uses the
- * generic two-phase material types from opm-common
- * (\c Opm::EclTwoPhaseMaterial and \c Opm::EclTwoPhaseMaterialParams) with
- * a value-storage policy (\c Opm::gpuistl::ValueAsPointer) so the per-cell
- * material law parameters are trivially copyable to the device.
- *
- * The chain of multiplexers used by the CPU manager
- * (\c EclMultiplexerMaterial \f$\to\f$ \c EclEpsTwoPhaseLaw \f$\to\f$
- * \c EclHysteresisTwoPhaseLaw \f$\to\f$ \c SatCurveMultiplexer) is bypassed:
- * the GPU manager unwraps the CPU multiplexer parameters down to the
- * underlying \c PiecewiseLinearTwoPhaseMaterialParams and uploads only the
- * piecewise-linear sample tables.
+ * FlowProblemBlackoil and the BlackOilIntensiveQuantities. See the class
+ * documentation of \c Opm::EclMaterialLaw::GpuManager for the supported
+ * material laws and the data layout.
  */
 #ifndef OPM_GPU_ECL_MATERIAL_LAW_MANAGER_HPP
 #define OPM_GPU_ECL_MATERIAL_LAW_MANAGER_HPP
@@ -44,6 +35,11 @@
 #include <opm/common/utility/gpuistl_if_available.hpp>
 #include <opm/common/ErrorMacros.hpp>
 
+#include <opm/material/fluidmatrixinteractions/EclDefaultMaterialParams.hpp>
+#include <opm/material/fluidmatrixinteractions/EclEpsConfig.hpp>
+#include <opm/material/fluidmatrixinteractions/EclEpsScalingPoints.hpp>
+#include <opm/material/fluidmatrixinteractions/EclEpsTwoPhaseLaw.hpp>
+#include <opm/material/fluidmatrixinteractions/EclEpsTwoPhaseLawParams.hpp>
 #include <opm/material/fluidmatrixinteractions/EclMaterialLawManager.hpp>
 #include <opm/material/fluidmatrixinteractions/EclMultiplexerMaterialParams.hpp>
 #include <opm/material/fluidmatrixinteractions/EclTwoPhaseMaterial.hpp>
@@ -101,20 +97,257 @@ namespace detail
     }
 
     /*!
+     * \brief Unwrap the hysteresis layer of a CPU two-phase parameter object,
+     *        if there is one. The result is the endpoint-scaling parameter
+     *        object when the CPU traits enable endpoint scaling.
+     *
+     * Only the drainage curve is used, so this assumes that
+     * \c GpuManager::validate() has rejected hysteresis.
+     */
+    template <class CpuParams>
+    const auto& extractCpuEpsParams(const CpuParams& params)
+    {
+        if constexpr (requires { params.drainageParams(); }) {
+            return params.drainageParams();
+        } else {
+            return params;
+        }
+    }
+
+    inline bool sameEpsConfig(const ::Opm::EclEpsConfig& lhs, const ::Opm::EclEpsConfig& rhs)
+    {
+        return lhs.enableSatScaling() == rhs.enableSatScaling()
+            && lhs.enableThreePointKrSatScaling() == rhs.enableThreePointKrSatScaling()
+            && lhs.enablePcScaling() == rhs.enablePcScaling()
+            && lhs.enableLeverettScaling() == rhs.enableLeverettScaling()
+            && lhs.enableKrwScaling() == rhs.enableKrwScaling()
+            && lhs.enableKrnScaling() == rhs.enableKrnScaling()
+            && lhs.enableThreePointKrwScaling() == rhs.enableThreePointKrwScaling()
+            && lhs.enableThreePointKrnScaling() == rhs.enableThreePointKrnScaling();
+    }
+
+    /*!
+     * \brief Whether a GPU two-phase law has the endpoint-scaling layer, and
+     *        the law below it.
+     *
+     * Only \c EclEpsTwoPhaseLaw with its default parameter type counts, since
+     * \c GpuManager assembles those parameters itself.
+     */
+    template <class Law>
+    struct EpsLayer {
+        static constexpr bool present = false;
+        using EffectiveLaw = Law;
+    };
+
+    template <class EffLaw>
+    struct EpsLayer<::Opm::EclEpsTwoPhaseLaw<EffLaw, ::Opm::EclEpsTwoPhaseLawParams<EffLaw>>> {
+        static constexpr bool present = true;
+        using EffectiveLaw = EffLaw;
+    };
+
+    /*!
+     * \brief Per-cell scaled endpoints of one two-phase system, one array per
+     *        value.
+     *
+     * Holds the values of \c EclEpsScalingPoints that the endpoint-scaling law
+     * reads for saturation and capillary-pressure scaling. The kr value and
+     * Leverett scaling values are not stored; \c GpuManager::validate()
+     * rejects those options.
+     */
+    template <template <class> class Storage, class Scalar>
+    struct EpsScaledPointsArrays {
+        Storage<Scalar> saturationPcPoint0{};
+        Storage<Scalar> saturationPcPoint1{};
+        Storage<Scalar> saturationPcPoint2{};
+        Storage<Scalar> saturationKrwPoint0{};
+        Storage<Scalar> saturationKrwPoint1{};
+        Storage<Scalar> saturationKrwPoint2{};
+        Storage<Scalar> saturationKrnPoint0{};
+        Storage<Scalar> saturationKrnPoint1{};
+        Storage<Scalar> saturationKrnPoint2{};
+        //! Empty unless capillary-pressure scaling is enabled.
+        Storage<Scalar> maxPcnw{};
+
+        /*!
+         * \brief The scaled points of one cell. Fields the configuration does
+         *        not use are left at zero.
+         */
+        OPM_HOST_DEVICE ::Opm::EclEpsScalingPoints<Scalar>
+        load(unsigned elemIdx, const ::Opm::EclEpsConfig& config) const
+        {
+            ::Opm::EclEpsScalingPoints<Scalar> points;
+            if (config.enableSatScaling()) {
+                points.setSaturationPcPoint(0, saturationPcPoint0[elemIdx]);
+                points.setSaturationPcPoint(1, saturationPcPoint1[elemIdx]);
+                points.setSaturationPcPoint(2, saturationPcPoint2[elemIdx]);
+                points.setSaturationKrwPoint(0, saturationKrwPoint0[elemIdx]);
+                points.setSaturationKrwPoint(1, saturationKrwPoint1[elemIdx]);
+                points.setSaturationKrwPoint(2, saturationKrwPoint2[elemIdx]);
+                points.setSaturationKrnPoint(0, saturationKrnPoint0[elemIdx]);
+                points.setSaturationKrnPoint(1, saturationKrnPoint1[elemIdx]);
+                points.setSaturationKrnPoint(2, saturationKrnPoint2[elemIdx]);
+            }
+            if (config.enablePcScaling()) {
+                points.setMaxPcnw(maxPcnw[elemIdx]);
+            }
+            return points;
+        }
+
+        /*!
+         * \brief Append one cell's points (host vectors only).
+         */
+        void pushBack(const ::Opm::EclEpsScalingPoints<Scalar>& points,
+                      const ::Opm::EclEpsConfig& config)
+        {
+            saturationPcPoint0.push_back(points.saturationPcPoints()[0]);
+            saturationPcPoint1.push_back(points.saturationPcPoints()[1]);
+            saturationPcPoint2.push_back(points.saturationPcPoints()[2]);
+            saturationKrwPoint0.push_back(points.saturationKrwPoints()[0]);
+            saturationKrwPoint1.push_back(points.saturationKrwPoints()[1]);
+            saturationKrwPoint2.push_back(points.saturationKrwPoints()[2]);
+            saturationKrnPoint0.push_back(points.saturationKrnPoints()[0]);
+            saturationKrnPoint1.push_back(points.saturationKrnPoints()[1]);
+            saturationKrnPoint2.push_back(points.saturationKrnPoints()[2]);
+            if (config.enablePcScaling()) {
+                maxPcnw.push_back(points.maxPcnw());
+            }
+        }
+    };
+
+    /*!
+     * \brief Apply \p f to every array of \p src.
+     */
+    template <template <class> class ToStorage, class Scalar, class Src, class F>
+    EpsScaledPointsArrays<ToStorage, Scalar> transformArrays(Src& src, F f)
+    {
+        EpsScaledPointsArrays<ToStorage, Scalar> dst;
+        dst.saturationPcPoint0 = f(src.saturationPcPoint0);
+        dst.saturationPcPoint1 = f(src.saturationPcPoint1);
+        dst.saturationPcPoint2 = f(src.saturationPcPoint2);
+        dst.saturationKrwPoint0 = f(src.saturationKrwPoint0);
+        dst.saturationKrwPoint1 = f(src.saturationKrwPoint1);
+        dst.saturationKrwPoint2 = f(src.saturationKrwPoint2);
+        dst.saturationKrnPoint0 = f(src.saturationKrnPoint0);
+        dst.saturationKrnPoint1 = f(src.saturationKrnPoint1);
+        dst.saturationKrnPoint2 = f(src.saturationKrnPoint2);
+        dst.maxPcnw = f(src.maxPcnw);
+        return dst;
+    }
+
+    /*!
+     * \brief Storage of the three-phase (\c EclDefaultMaterial) path.
+     *
+     * Tables and unscaled points per SATNUM region, scaled endpoints and Swl
+     * per cell. The per-cell arrays are empty when the deck has no endpoint
+     * scaling; Swl then comes from \c swlByRegion. Nothing here holds a
+     * pointer: \c GpuManager::materialLawParams() takes the addresses of the
+     * region entries from the current storage.
+     */
+    template <template <class> class Storage,
+              class Scalar,
+              class GasOilEffectiveParams,
+              class OilWaterEffectiveParams>
+    struct GpuThreePhaseStorage {
+        Storage<int> satnumRegionArray{};
+
+        Storage<GasOilEffectiveParams> gasOilEffectiveParams{};
+        Storage<OilWaterEffectiveParams> oilWaterEffectiveParams{};
+        Storage<::Opm::EclEpsScalingPoints<Scalar>> gasOilUnscaledPoints{};
+        Storage<::Opm::EclEpsScalingPoints<Scalar>> oilWaterUnscaledPoints{};
+        Storage<Scalar> swlByRegion{};
+
+        EpsScaledPointsArrays<Storage, Scalar> gasOilScaledPoints{};
+        EpsScaledPointsArrays<Storage, Scalar> oilWaterScaledPoints{};
+        Storage<Scalar> swlByCell{};
+
+        ::Opm::EclEpsConfig gasOilConfig{};
+        ::Opm::EclEpsConfig oilWaterConfig{};
+        bool hasPerCellEndpoints = false;
+
+        std::size_t numRegions() const
+        {
+            return gasOilEffectiveParams.size();
+        }
+    };
+
+    /*!
+     * \brief Storage of the two-phase (\c EclTwoPhaseMaterial) path: one
+     *        parameter object per SATNUM region.
+     */
+    template <template <class> class Storage, class MaterialLawParams>
+    struct GpuTwoPhaseStorage {
+        Storage<int> satnumRegionArray{};
+        Storage<MaterialLawParams> materialLawParamsByRegion{};
+
+        std::size_t numRegions() const
+        {
+            return materialLawParamsByRegion.size();
+        }
+    };
+
+#if HAVE_CUDA
+    template <class Scalar, class GasOilEffectiveParams, class OilWaterEffectiveParams>
+    GpuThreePhaseStorage<::Opm::gpuistl::GpuView, Scalar, GasOilEffectiveParams, OilWaterEffectiveParams>
+    makeStorageView(GpuThreePhaseStorage<::Opm::gpuistl::GpuBuffer,
+                                         Scalar,
+                                         GasOilEffectiveParams,
+                                         OilWaterEffectiveParams>& buf)
+    {
+        auto toView = [](auto& buffer) { return ::Opm::gpuistl::make_view(buffer); };
+        GpuThreePhaseStorage<::Opm::gpuistl::GpuView, Scalar, GasOilEffectiveParams, OilWaterEffectiveParams>
+            view;
+        view.satnumRegionArray = toView(buf.satnumRegionArray);
+        view.gasOilEffectiveParams = toView(buf.gasOilEffectiveParams);
+        view.oilWaterEffectiveParams = toView(buf.oilWaterEffectiveParams);
+        view.gasOilUnscaledPoints = toView(buf.gasOilUnscaledPoints);
+        view.oilWaterUnscaledPoints = toView(buf.oilWaterUnscaledPoints);
+        view.swlByRegion = toView(buf.swlByRegion);
+        view.gasOilScaledPoints
+            = transformArrays<::Opm::gpuistl::GpuView, Scalar>(buf.gasOilScaledPoints, toView);
+        view.oilWaterScaledPoints
+            = transformArrays<::Opm::gpuistl::GpuView, Scalar>(buf.oilWaterScaledPoints, toView);
+        view.swlByCell = toView(buf.swlByCell);
+        view.gasOilConfig = buf.gasOilConfig;
+        view.oilWaterConfig = buf.oilWaterConfig;
+        view.hasPerCellEndpoints = buf.hasPerCellEndpoints;
+        return view;
+    }
+
+    template <class MaterialLawParams>
+    GpuTwoPhaseStorage<::Opm::gpuistl::GpuView, MaterialLawParams>
+    makeStorageView(GpuTwoPhaseStorage<::Opm::gpuistl::GpuBuffer, MaterialLawParams>& buf)
+    {
+        GpuTwoPhaseStorage<::Opm::gpuistl::GpuView, MaterialLawParams> view;
+        view.satnumRegionArray = ::Opm::gpuistl::make_view(buf.satnumRegionArray);
+        view.materialLawParamsByRegion = ::Opm::gpuistl::make_view(buf.materialLawParamsByRegion);
+        return view;
+    }
+
+    /*!
+     * \brief Upload a host vector; an empty vector gives an empty buffer.
+     */
+    template <class T>
+    ::Opm::gpuistl::GpuBuffer<T> toGpuBuffer(const std::vector<T>& host)
+    {
+        return host.empty() ? ::Opm::gpuistl::GpuBuffer<T>() : ::Opm::gpuistl::GpuBuffer<T>(host);
+    }
+#endif
+
+    /*!
      * \brief Optional host-side base used by \c GpuManager when its storage is
-     *        owning device memory: keeps the per-cell sample buffers alive so
-     *        that the \c GpuView pointers stored inside the cells'
-     *        \c PiecewiseLinearTwoPhaseMaterialParams remain valid for as long
-     *        as the manager exists. Empty for any non-owning storage so that
-     *        \c GpuView based managers stay device-trivially-copyable.
+     *        owning device memory: keeps the piecewise-linear sample buffers
+     *        alive so that the \c GpuView pointers stored inside the region
+     *        parameters remain valid for as long as the manager exists. Empty
+     *        for any non-owning storage so that \c GpuView based managers stay
+     *        device-trivially-copyable.
      */
     template <class Scalar, bool Owning>
-    struct GpuPiecewiseLinearSampleHolder {
+    struct GpuMaterialLawSampleBuffers {
     };
 
 #if HAVE_CUDA
     template <class Scalar>
-    struct GpuPiecewiseLinearSampleHolder<Scalar, true> {
+    struct GpuMaterialLawSampleBuffers<Scalar, true> {
         std::vector<::Opm::gpuistl::GpuBuffer<Scalar>> sampleBuffers {};
     };
 #endif
@@ -124,10 +357,30 @@ namespace detail
 /*!
  * \brief A minimal, GPU-compatible material-law manager.
  *
- * Only the EclDefaultMaterial three-phase law and the EclTwoPhaseMaterial
- * two-phase law are supported. The two-phase gas/oil and oil/water sub-law
- * types are template parameters so the caller can choose any GPU compatible
- * implementation (e.g. PiecewiseLinear).
+ * Supports two material laws:
+ * - the three-phase \c EclDefaultMaterial, with or without endpoint scaling.
+ *   \c GasOilLawT and \c OilWaterLawT are either piecewise-linear laws, or
+ *   \c EclEpsTwoPhaseLaw over piecewise-linear laws;
+ * - the two-phase \c EclTwoPhaseMaterial (GasWater only, as used by
+ *   CO2STORE), without endpoint scaling.
+ *
+ * The CPU manager's hysteresis layer and \c SatCurveMultiplexer are not
+ * reproduced; \c validate() rejects the options that would need them.
+ *
+ * Data layout of the three-phase path (struct of arrays):
+ * - per SATNUM region: the piecewise-linear parameters, the unscaled
+ *   endpoints of each system, and Swl when the deck has no endpoint scaling;
+ * - per cell: SATNUM, and with endpoint scaling the scaled saturation
+ *   endpoints (and the scaled maximum capillary pressure with Pc scaling) of
+ *   each system plus Swl, each value in its own array;
+ * - the endpoint-scaling configuration of each system once.
+ * \c materialLawParams() assembles the \c EclDefaultMaterialParams of a cell
+ * from these and returns it by value. Without endpoint scaling the per-cell
+ * arrays are empty, and a cell reads only SATNUM and its region's data.
+ *
+ * The manager is a snapshot of the CPU manager at construction. Later changes
+ * to the CPU manager, such as \c applySwatinit() or
+ * \c applyRestartSwatInit(), are not seen.
  *
  * \tparam TraitsT       Three-phase material traits.
  * \tparam GasOilLawT    Two-phase gas/oil law type (must implement the
@@ -146,19 +399,10 @@ template <class TraitsT,
           class OilWaterLawT,
           template <class> class Storage = ::Opm::VectorWithDefaultAllocator,
           class MaterialLawT = ::Opm::EclDefaultMaterial<TraitsT, GasOilLawT, OilWaterLawT>>
-class GpuManager : private detail::GpuPiecewiseLinearSampleHolder<
+class GpuManager : private detail::GpuMaterialLawSampleBuffers<
                        typename TraitsT::Scalar,
                        std::is_same_v<Storage<int>, ::Opm::gpuistl::GpuBuffer<int>>>
 {
-private:
-    #if HAVE_CUDA
-    struct GpuData {
-        std::vector<::Opm::gpuistl::GpuBuffer<typename TraitsT::Scalar>> sampleBuffers;
-        std::vector<typename MaterialLawT::Params> materialLawParamsByRegion;
-        std::vector<int> satnumRegionArray;
-    };
-    #endif
-
 public:
     using Traits = TraitsT;
     using Scalar = typename Traits::Scalar;
@@ -203,68 +447,79 @@ private:
 
     static constexpr bool isTwoPhase = IsTwoPhaseMaterialLawParams<MaterialLawParams>::value;
 
+    //! Whether the two-phase laws are \c EclEpsTwoPhaseLaw (three-phase path only).
+    static constexpr bool hasEpsLayer = detail::EpsLayer<GasOilLawT>::present;
+    static_assert(hasEpsLayer == detail::EpsLayer<OilWaterLawT>::present,
+                  "GpuManager: the gas-oil and oil-water laws must either both or neither "
+                  "have the endpoint-scaling layer");
+    static_assert(!(isTwoPhase && hasEpsLayer),
+                  "GpuManager: the two-phase path does not support endpoint scaling");
+
+    using GasOilEffectiveParams = typename detail::EpsLayer<GasOilLawT>::EffectiveLaw::Params;
+    using OilWaterEffectiveParams = typename detail::EpsLayer<OilWaterLawT>::EffectiveLaw::Params;
+
+    template <template <class> class S>
+    using StorageFor = std::conditional_t<
+        isTwoPhase,
+        detail::GpuTwoPhaseStorage<S, MaterialLawParams>,
+        detail::GpuThreePhaseStorage<S, Scalar, GasOilEffectiveParams, OilWaterEffectiveParams>>;
+
 public:
+    using StorageType = StorageFor<Storage>;
+
     GpuManager() = default;
 
-    GpuManager(Storage<MaterialLawParams> materialLawParamsByRegion,
-               Storage<int> satnumRegionArray)
-        : materialLawParamsByRegion_(std::move(materialLawParamsByRegion))
-        , satnumRegionArray_(std::move(satnumRegionArray))
+    explicit GpuManager(StorageType storage)
+        : storage_(std::move(storage))
     {
     }
 
     /*! \brief Material-law parameters of an active cell. */
-    OPM_HOST_DEVICE const MaterialLawParams& materialLawParams(unsigned elemIdx) const
+    OPM_HOST_DEVICE MaterialLawParams materialLawParams(unsigned elemIdx) const
     {
-        return materialLawParamsByRegion_[satnumRegionArray_[elemIdx]];
-    }
-
-    OPM_HOST_DEVICE MaterialLawParams& materialLawParams(unsigned elemIdx)
-    {
-        return materialLawParamsByRegion_[satnumRegionArray_[elemIdx]];
+        const auto& s = storage_;
+        const int region = s.satnumRegionArray[elemIdx];
+        if constexpr (isTwoPhase) {
+            return s.materialLawParamsByRegion[region];
+        } else if constexpr (hasEpsLayer) {
+            return MaterialLawParams(
+                GasOilParams(&s.gasOilEffectiveParams[region],
+                             &s.gasOilUnscaledPoints[region],
+                             s.gasOilConfig,
+                             s.gasOilScaledPoints.load(elemIdx, s.gasOilConfig)),
+                OilWaterParams(&s.oilWaterEffectiveParams[region],
+                               &s.oilWaterUnscaledPoints[region],
+                               s.oilWaterConfig,
+                               s.oilWaterScaledPoints.load(elemIdx, s.oilWaterConfig)),
+                s.hasPerCellEndpoints ? s.swlByCell[elemIdx] : s.swlByRegion[region]);
+        } else {
+            return MaterialLawParams(s.gasOilEffectiveParams[region],
+                                     s.oilWaterEffectiveParams[region],
+                                     s.swlByRegion[region]);
+        }
     }
 
     /*! \brief Saturation-region index of an active cell. */
     OPM_HOST_DEVICE int satnumRegionIdx(unsigned elemIdx) const
     {
-        return satnumRegionArray_[elemIdx];
+        return storage_.satnumRegionArray[elemIdx];
     }
 
     std::size_t materialLawParamsRegionCount() const
     {
-        return materialLawParamsByRegion_.size();
+        return storage_.numRegions();
     }
 
-    /*! \brief Direct access to the underlying storages
-     *         (used by copy_to_gpu / make_view). */
-    const Storage<MaterialLawParams>& materialLawParamsStorage() const
+    /*! \brief Direct access to the underlying storage (used by make_view). */
+    StorageType& storage()
     {
-        return materialLawParamsByRegion_;
-    }
-    Storage<MaterialLawParams>& materialLawParamsStorage()
-    {
-        return materialLawParamsByRegion_;
+        return storage_;
     }
 
     const Storage<int>& satnumRegionArrayStorage() const
     {
-        return satnumRegionArray_;
+        return storage_.satnumRegionArray;
     }
-    Storage<int>& satnumRegionArrayStorage()
-    {
-        return satnumRegionArray_;
-    }
-
-#if HAVE_CUDA
-    template <bool Enabled = isOwningGpu, std::enable_if_t<Enabled, int> = 0>
-    GpuManager(GpuData data)
-        : detail::GpuPiecewiseLinearSampleHolder<Scalar, Enabled>{std::move(data.sampleBuffers)}
-        , materialLawParamsByRegion_(::Opm::gpuistl::GpuBuffer<MaterialLawParams>(
-              data.materialLawParamsByRegion))
-        , satnumRegionArray_(::Opm::gpuistl::GpuBuffer<int>(data.satnumRegionArray))
-    {
-    }
-#endif
 
     /*!
      * \brief Throw if the CPU manager uses a saturation-function option that
@@ -320,10 +575,301 @@ public:
             anyScaling = anyScaling || config->enableSatScaling() || config->enablePcScaling();
         }
         if (anyScaling) {
-            OPM_THROW(std::logic_error,
-                      "GPU material manager does not support endpoint scaling with this "
-                      "material law");
+            if constexpr (isTwoPhase) {
+                OPM_THROW(std::logic_error,
+                          "GPU material manager does not support endpoint scaling in the "
+                          "two-phase material law");
+            } else if constexpr (!hasEpsLayer) {
+                OPM_THROW(std::logic_error,
+                          "GPU material manager does not support endpoint scaling without "
+                          "the endpoint-scaling layer (EclEpsTwoPhaseLaw) in its material law");
+            }
         }
+    }
+
+#if HAVE_CUDA
+private:
+    struct GpuData {
+        std::vector<::Opm::gpuistl::GpuBuffer<Scalar>> sampleBuffers;
+        StorageFor<::Opm::gpuistl::GpuBuffer> storage;
+    };
+
+    template <bool Enabled = isOwningGpu, std::enable_if_t<Enabled, int> = 0>
+    explicit GpuManager(GpuData data)
+        : detail::GpuMaterialLawSampleBuffers<Scalar, Enabled>{std::move(data.sampleBuffers)}
+        , storage_(std::move(data.storage))
+    {
+    }
+
+public:
+    template <class CpuTraits = TraitsT,
+              class CpuManager = ::Opm::EclMaterialLaw::Manager<CpuTraits>,
+              class GasOilParamsArg = GasOilEffectiveParams,
+              class OilWaterParamsArg = OilWaterEffectiveParams,
+              class IntegerStorage = Storage<int>,
+              std::enable_if_t<std::is_same_v<IntegerStorage, ::Opm::gpuistl::GpuBuffer<int>>
+                                   && std::is_same_v<typename GasOilParamsArg::ValueVector,
+                                                     ::Opm::gpuistl::GpuView<const Scalar>>
+                                   && std::is_same_v<typename OilWaterParamsArg::ValueVector,
+                                                     ::Opm::gpuistl::GpuView<const Scalar>>,
+                               int>
+              = 0>
+    explicit GpuManager(const CpuManager& cpu, std::size_t numElements)
+        : GpuManager(buildGpuData(cpu, numElements))
+    {
+    }
+
+private:
+    template <class CpuManager>
+    static GpuData buildGpuData(const CpuManager& cpu, std::size_t numElements)
+    {
+        validate(cpu);
+
+        GpuData data;
+        const std::vector<int> satnumRegionArray = buildHostSatnumRegionArray(cpu, numElements);
+
+        const auto maxRegion = std::max_element(satnumRegionArray.begin(), satnumRegionArray.end());
+        OPM_ERROR_IF(maxRegion == satnumRegionArray.end(),
+                     "Failed to find maximum SATNUM region index in GPU material manager");
+        const std::size_t numRegions = static_cast<std::size_t>(*maxRegion) + 1u;
+        for (const int region : satnumRegionArray) {
+            if (region < 0) {
+                OPM_THROW(std::logic_error, "Invalid SATNUM region index in GPU material manager");
+            }
+        }
+
+        // Each piecewise-linear two-phase law holds six sample tables; the two-phase
+        // (gas-water) path builds one such law per region, the three-phase path two
+        // (gas-oil and oil-water). Reserving only avoids reallocation: moving a
+        // GpuBuffer keeps its device pointer, so GpuViews stay valid either way.
+        constexpr std::size_t samplesPerLaw = 6u;
+        data.sampleBuffers.reserve(numRegions * samplesPerLaw * (isTwoPhase ? 1u : 2u));
+
+        auto pushSampleBuffer = [&](const auto& sampleVector) {
+            std::vector<Scalar> hostCopy(sampleVector.begin(), sampleVector.end());
+            data.sampleBuffers.emplace_back(hostCopy);
+            const auto& deviceBuffer = data.sampleBuffers.back();
+            return ::Opm::gpuistl::GpuView<const Scalar>(deviceBuffer.data(), deviceBuffer.size());
+        };
+
+        if constexpr (isTwoPhase) {
+            buildTwoPhaseStorage(cpu, satnumRegionArray, numRegions, data.storage, pushSampleBuffer);
+        } else {
+            buildThreePhaseStorage(cpu, satnumRegionArray, numRegions, data.storage, pushSampleBuffer);
+        }
+        data.storage.satnumRegionArray = detail::toGpuBuffer(satnumRegionArray);
+        return data;
+    }
+
+    template <class CpuManager, class PushBuffer>
+    static void buildTwoPhaseStorage(const CpuManager& cpu,
+                                     const std::vector<int>& satnumRegionArray,
+                                     std::size_t numRegions,
+                                     StorageFor<::Opm::gpuistl::GpuBuffer>& storage,
+                                     PushBuffer& pushSampleBuffer)
+    {
+        std::vector<MaterialLawParams> materialLawParamsByRegion(numRegions);
+        std::vector<bool> initialized(numRegions, false);
+        std::vector<std::size_t> firstElement(numRegions, 0u);
+
+        for (std::size_t elemIdx = 0; elemIdx < satnumRegionArray.size(); ++elemIdx) {
+            const int region = satnumRegionArray[elemIdx];
+            const auto& cpuMaterialParams = cpu.materialLawParams(static_cast<unsigned>(elemIdx));
+            if (!initialized[region]) {
+                buildTwoPhaseRegionParams(cpuMaterialParams,
+                                          materialLawParamsByRegion[region],
+                                          pushSampleBuffer);
+                initialized[region] = true;
+                firstElement[region] = elemIdx;
+            } else {
+                const auto& firstParams
+                    = cpu.materialLawParams(static_cast<unsigned>(firstElement[region]));
+                if (!sameTwoPhaseMaterialLawParams(cpuMaterialParams, firstParams)) {
+                    OPM_THROW(std::logic_error,
+                              "GPU material-law tables vary within one SATNUM region");
+                }
+            }
+        }
+        storage.materialLawParamsByRegion = detail::toGpuBuffer(materialLawParamsByRegion);
+    }
+
+    template <class CpuManager, class PushBuffer>
+    static void buildThreePhaseStorage(const CpuManager& cpu,
+                                       const std::vector<int>& satnumRegionArray,
+                                       std::size_t numRegions,
+                                       StorageFor<::Opm::gpuistl::GpuBuffer>& storage,
+                                       PushBuffer& pushSampleBuffer)
+    {
+        using CpuMaterialParams = std::decay_t<decltype(cpu.materialLawParams(0u))>;
+        using CpuDefaultParams = std::decay_t<decltype(std::declval<const CpuMaterialParams&>()
+            .template getRealParams<::Opm::EclMultiplexerApproach::Default>())>;
+        using CpuEpsParams = std::decay_t<decltype(detail::extractCpuEpsParams(
+            std::declval<const CpuDefaultParams&>().gasOilParams()))>;
+        constexpr bool cpuHasEpsLayer
+            = requires(const CpuEpsParams& p) { p.scaledPoints(); p.unscaledPoints(); };
+
+        // The configuration is the same in every cell (see the check below). If
+        // the CPU law has no endpoint-scaling layer, it ignores the deck's
+        // configuration, and so does the GPU law.
+        ::Opm::EclEpsConfig gasOilConfig{};
+        ::Opm::EclEpsConfig oilWaterConfig{};
+        if constexpr (hasEpsLayer && cpuHasEpsLayer) {
+            gasOilConfig = cpu.gasOilConfig();
+            oilWaterConfig = cpu.oilWaterConfig();
+        }
+        const bool perCell = gasOilConfig.enableSatScaling() || oilWaterConfig.enableSatScaling();
+
+        std::vector<GasOilEffectiveParams> gasOilEffectiveParams(numRegions);
+        std::vector<OilWaterEffectiveParams> oilWaterEffectiveParams(numRegions);
+        std::vector<::Opm::EclEpsScalingPoints<Scalar>> gasOilUnscaledPoints(numRegions);
+        std::vector<::Opm::EclEpsScalingPoints<Scalar>> oilWaterUnscaledPoints(numRegions);
+        std::vector<Scalar> swlByRegion(numRegions);
+        std::vector<const CpuDefaultParams*> firstParams(numRegions, nullptr);
+
+        detail::EpsScaledPointsArrays<::Opm::VectorWithDefaultAllocator, Scalar> gasOilScaledPoints;
+        detail::EpsScaledPointsArrays<::Opm::VectorWithDefaultAllocator, Scalar> oilWaterScaledPoints;
+        std::vector<Scalar> swlByCell;
+        if (perCell) {
+            swlByCell.reserve(satnumRegionArray.size());
+        }
+
+        for (std::size_t elemIdx = 0; elemIdx < satnumRegionArray.size(); ++elemIdx) {
+            const int region = satnumRegionArray[elemIdx];
+            const auto& cpuMaterialParams = cpu.materialLawParams(static_cast<unsigned>(elemIdx));
+            if (cpuMaterialParams.approach() != ::Opm::EclMultiplexerApproach::Default) {
+                OPM_THROW(std::logic_error,
+                          "GPU material manager only supports the Default three-phase approach");
+            }
+            const auto& cpuDefault
+                = cpuMaterialParams.template getRealParams<::Opm::EclMultiplexerApproach::Default>();
+            [[maybe_unused]] const auto& cpuGasOil
+                = detail::extractCpuEpsParams(cpuDefault.gasOilParams());
+            [[maybe_unused]] const auto& cpuOilWater
+                = detail::extractCpuEpsParams(cpuDefault.oilWaterParams());
+
+            if (firstParams[region] == nullptr) {
+                firstParams[region] = &cpuDefault;
+                gasOilEffectiveParams[region] = buildEffectiveParams<GasOilEffectiveParams>(
+                    detail::extractCpuPlParams(cpuDefault.gasOilParams()), pushSampleBuffer);
+                oilWaterEffectiveParams[region] = buildEffectiveParams<OilWaterEffectiveParams>(
+                    detail::extractCpuPlParams(cpuDefault.oilWaterParams()), pushSampleBuffer);
+                if constexpr (hasEpsLayer && cpuHasEpsLayer) {
+                    gasOilUnscaledPoints[region] = cpuGasOil.unscaledPoints();
+                    oilWaterUnscaledPoints[region] = cpuOilWater.unscaledPoints();
+                }
+                swlByRegion[region] = cpuDefault.Swl();
+            } else {
+                const auto& first = *firstParams[region];
+                bool sameTables = false;
+                if constexpr (hasEpsLayer && cpuHasEpsLayer) {
+                    // The CPU manager shares the tables and the unscaled points
+                    // of a region between its cells.
+                    const auto& firstGasOil = detail::extractCpuEpsParams(first.gasOilParams());
+                    const auto& firstOilWater = detail::extractCpuEpsParams(first.oilWaterParams());
+                    sameTables = &cpuGasOil.effectiveLawParams() == &firstGasOil.effectiveLawParams()
+                        && &cpuGasOil.unscaledPoints() == &firstGasOil.unscaledPoints()
+                        && &cpuOilWater.effectiveLawParams() == &firstOilWater.effectiveLawParams()
+                        && &cpuOilWater.unscaledPoints() == &firstOilWater.unscaledPoints();
+                } else {
+                    sameTables = samePiecewiseLinearParams(
+                                     detail::extractCpuPlParams(cpuDefault.gasOilParams()),
+                                     detail::extractCpuPlParams(first.gasOilParams()))
+                        && samePiecewiseLinearParams(
+                                     detail::extractCpuPlParams(cpuDefault.oilWaterParams()),
+                                     detail::extractCpuPlParams(first.oilWaterParams()));
+                }
+                if (!sameTables || (!perCell && cpuDefault.Swl() != first.Swl())) {
+                    OPM_THROW(std::logic_error,
+                              "GPU material-law tables vary within one SATNUM region");
+                }
+            }
+
+            if constexpr (hasEpsLayer && cpuHasEpsLayer) {
+                if (!detail::sameEpsConfig(cpuGasOil.config(), gasOilConfig)
+                    || !detail::sameEpsConfig(cpuOilWater.config(), oilWaterConfig)) {
+                    OPM_THROW(std::logic_error,
+                              "GPU material manager requires the same endpoint-scaling "
+                              "configuration in every cell");
+                }
+                if (perCell) {
+                    gasOilScaledPoints.pushBack(cpuGasOil.scaledPoints(), gasOilConfig);
+                    oilWaterScaledPoints.pushBack(cpuOilWater.scaledPoints(), oilWaterConfig);
+                    // The Swl the CPU law reads, so that the GPU law sees
+                    // exactly the CPU parameters.
+                    swlByCell.push_back(cpuDefault.Swl());
+                }
+            }
+        }
+
+        auto upload = [](const auto& host) { return detail::toGpuBuffer(host); };
+        storage.gasOilEffectiveParams = upload(gasOilEffectiveParams);
+        storage.oilWaterEffectiveParams = upload(oilWaterEffectiveParams);
+        if constexpr (hasEpsLayer) {
+            storage.gasOilUnscaledPoints = upload(gasOilUnscaledPoints);
+            storage.oilWaterUnscaledPoints = upload(oilWaterUnscaledPoints);
+        }
+        if (perCell) {
+            storage.gasOilScaledPoints = detail::transformArrays<::Opm::gpuistl::GpuBuffer, Scalar>(
+                gasOilScaledPoints, upload);
+            storage.oilWaterScaledPoints
+                = detail::transformArrays<::Opm::gpuistl::GpuBuffer, Scalar>(oilWaterScaledPoints,
+                                                                           upload);
+            storage.swlByCell = upload(swlByCell);
+        } else {
+            storage.swlByRegion = upload(swlByRegion);
+        }
+        storage.gasOilConfig = gasOilConfig;
+        storage.oilWaterConfig = oilWaterConfig;
+        storage.hasPerCellEndpoints = perCell;
+    }
+
+    /*!
+     * \brief Build a region's two-phase \c EclTwoPhaseMaterialParams instance
+     *        with GPU-resident piecewise-linear sample tables.
+     *
+     * Only the \c GasWater sub-approach is currently supported, since this
+     * is the only configuration produced by CO2STORE-style decks.
+     */
+    template <class CpuMaterialParams, class PushBuffer>
+    static void buildTwoPhaseRegionParams(const CpuMaterialParams& cpuMaterialParams,
+                                          MaterialLawParams& regionParams,
+                                          PushBuffer& pushSampleBuffer)
+    {
+        if (cpuMaterialParams.approach() != ::Opm::EclMultiplexerApproach::TwoPhase) {
+            OPM_THROW(std::logic_error,
+                      "GPU material manager requires EclMultiplexerApproach::TwoPhase");
+        }
+        const auto& cpuTwoPhaseParams
+            = cpuMaterialParams.template getRealParams<::Opm::EclMultiplexerApproach::TwoPhase>();
+        if (cpuTwoPhaseParams.approach() != ::Opm::EclTwoPhaseApproach::GasWater) {
+            OPM_THROW(std::logic_error,
+                      "GPU material manager only supports the GasWater two-phase approach");
+        }
+
+        using GasWaterParams = typename MaterialLawParams::GasWaterParams;
+        regionParams.setGasWaterParams(
+            typename MaterialLawParams::GasWaterParamsStorage(buildEffectiveParams<GasWaterParams>(
+                detail::extractCpuPlParams(cpuTwoPhaseParams.gasWaterParams()),
+                pushSampleBuffer)));
+        regionParams.setApproach(::Opm::EclTwoPhaseApproach::GasWater);
+        regionParams.finalize();
+    }
+#endif // HAVE_CUDA
+
+private:
+    /*!
+     * \brief Piecewise-linear parameters with GPU-resident sample tables.
+     */
+    template <class EffectiveParams, class CpuPlParams, class PushBuffer>
+    static EffectiveParams buildEffectiveParams(const CpuPlParams& cpuParams,
+                                                PushBuffer& pushSampleBuffer)
+    {
+        return EffectiveParams(pushSampleBuffer(cpuParams.SwPcwnSamples()),
+                               pushSampleBuffer(cpuParams.pcwnSamples()),
+                               pushSampleBuffer(cpuParams.SwKrwSamples()),
+                               pushSampleBuffer(cpuParams.krwSamples()),
+                               pushSampleBuffer(cpuParams.SwKrnSamples()),
+                               pushSampleBuffer(cpuParams.krnSamples()));
     }
 
     template <class CpuParams>
@@ -338,205 +884,24 @@ public:
     }
 
     template <class CpuMaterialParams>
-    static bool sameSupportedMaterialLawParams(const CpuMaterialParams& lhs,
-                                               const CpuMaterialParams& rhs)
+    static bool sameTwoPhaseMaterialLawParams(const CpuMaterialParams& lhs,
+                                              const CpuMaterialParams& rhs)
     {
-        if (lhs.approach() != rhs.approach()) {
+        if (lhs.approach() != rhs.approach()
+            || lhs.approach() != ::Opm::EclMultiplexerApproach::TwoPhase) {
             return false;
         }
-
-        if constexpr (isTwoPhase) {
-            if (lhs.approach() != ::Opm::EclMultiplexerApproach::TwoPhase) {
-                return false;
-            }
-            const auto& lhsTwoPhase
-                = lhs.template getRealParams<::Opm::EclMultiplexerApproach::TwoPhase>();
-            const auto& rhsTwoPhase
-                = rhs.template getRealParams<::Opm::EclMultiplexerApproach::TwoPhase>();
-            if (lhsTwoPhase.approach() != rhsTwoPhase.approach()
-                || lhsTwoPhase.approach() != ::Opm::EclTwoPhaseApproach::GasWater) {
-                return false;
-            }
-            return samePiecewiseLinearParams(
-                detail::extractCpuPlParams(lhsTwoPhase.gasWaterParams()),
-                detail::extractCpuPlParams(rhsTwoPhase.gasWaterParams()));
-        }
-
-        if (lhs.approach() != ::Opm::EclMultiplexerApproach::Default) {
+        const auto& lhsTwoPhase
+            = lhs.template getRealParams<::Opm::EclMultiplexerApproach::TwoPhase>();
+        const auto& rhsTwoPhase
+            = rhs.template getRealParams<::Opm::EclMultiplexerApproach::TwoPhase>();
+        if (lhsTwoPhase.approach() != rhsTwoPhase.approach()
+            || lhsTwoPhase.approach() != ::Opm::EclTwoPhaseApproach::GasWater) {
             return false;
         }
-        const auto& lhsDefault
-            = lhs.template getRealParams<::Opm::EclMultiplexerApproach::Default>();
-        const auto& rhsDefault
-            = rhs.template getRealParams<::Opm::EclMultiplexerApproach::Default>();
-        return lhsDefault.Swl() == rhsDefault.Swl()
-            && samePiecewiseLinearParams(
-                detail::extractCpuPlParams(lhsDefault.gasOilParams()),
-                detail::extractCpuPlParams(rhsDefault.gasOilParams()))
-            && samePiecewiseLinearParams(
-                detail::extractCpuPlParams(lhsDefault.oilWaterParams()),
-                detail::extractCpuPlParams(rhsDefault.oilWaterParams()));
-    }
-
-#if HAVE_CUDA
-    template <class CpuManager>
-    static GpuData buildGpuData(const CpuManager& cpu, std::size_t numElements)
-    {
-        validate(cpu);
-
-        GpuData data;
-        data.satnumRegionArray = buildHostSatnumRegionArray(cpu, numElements);
-
-        auto maxRegion = std::max_element(data.satnumRegionArray.begin(), data.satnumRegionArray.end());
-        OPM_ERROR_IF(maxRegion == data.satnumRegionArray.end(),
-                     "Failed to find maximum SATNUM region index in GPU material manager");
-
-        data.materialLawParamsByRegion.resize(static_cast<std::size_t>(*maxRegion) + 1u);
-        std::vector<bool> initialized(data.materialLawParamsByRegion.size(), false);
-        std::vector<std::size_t> firstElement(data.materialLawParamsByRegion.size(), 0u);
-        // Each piecewise-linear two-phase law holds six sample tables; the two-phase
-        // (gas-water) path builds one such law per region, the three-phase path two
-        // (gas-oil and oil-water). Reserving only avoids reallocation: moving a
-        // GpuBuffer keeps its device pointer, so GpuViews stay valid either way.
-        constexpr std::size_t samplesPerLaw = 6u;
-        data.sampleBuffers.reserve(data.materialLawParamsByRegion.size()
-                                   * samplesPerLaw * (isTwoPhase ? 1u : 2u));
-
-        auto pushSampleBuffer = [&](const auto& sampleVector) {
-            std::vector<Scalar> hostCopy(sampleVector.begin(), sampleVector.end());
-            data.sampleBuffers.emplace_back(hostCopy);
-            const auto& deviceBuffer = data.sampleBuffers.back();
-            return ::Opm::gpuistl::GpuView<const Scalar>(deviceBuffer.data(), deviceBuffer.size());
-        };
-
-        for (std::size_t elemIdx = 0; elemIdx < numElements; ++elemIdx) {
-            const int region = data.satnumRegionArray[elemIdx];
-            if (region < 0 || static_cast<std::size_t>(region) >= initialized.size()) {
-                OPM_THROW(std::logic_error, "Invalid SATNUM region index in GPU material manager");
-            }
-
-            const auto& cpuMaterialParams = cpu.materialLawParams(static_cast<unsigned>(elemIdx));
-            if (!initialized[region]) {
-                if constexpr (isTwoPhase) {
-                    buildTwoPhaseCellParams(cpuMaterialParams,
-                                            data.materialLawParamsByRegion[region],
-                                            pushSampleBuffer);
-                } else {
-                    buildThreePhaseCellParams(cpuMaterialParams,
-                                              data.materialLawParamsByRegion[region],
-                                              pushSampleBuffer);
-                }
-                initialized[region] = true;
-                firstElement[region] = elemIdx;
-            } else {
-                const auto& firstParams
-                    = cpu.materialLawParams(static_cast<unsigned>(firstElement[region]));
-                if (!sameSupportedMaterialLawParams(cpuMaterialParams, firstParams)) {
-                    OPM_THROW(std::logic_error,
-                              "GPU material-law tables vary within one SATNUM region");
-                }
-            }
-        }
-        return data;
-    }
-
-    template <class CpuTraits = TraitsT,
-              class CpuManager = ::Opm::EclMaterialLaw::Manager<CpuTraits>,
-              class GasOilParamsArg = GasOilParams,
-              class OilWaterParamsArg = OilWaterParams,
-              class IntegerStorage = Storage<int>,
-              class MaterialLawParamsStorageT = Storage<MaterialLawParams>,
-              std::enable_if_t<std::is_same_v<IntegerStorage, ::Opm::gpuistl::GpuBuffer<int>>
-                                   && std::is_same_v<MaterialLawParamsStorageT,
-                                                     ::Opm::gpuistl::GpuBuffer<MaterialLawParams>>
-                                   && std::is_same_v<typename GasOilParamsArg::ValueVector,
-                                                     ::Opm::gpuistl::GpuView<const Scalar>>
-                                   && std::is_same_v<typename OilWaterParamsArg::ValueVector,
-                                                     ::Opm::gpuistl::GpuView<const Scalar>>,
-                               int>
-              = 0>
-    explicit GpuManager(const CpuManager& cpu, std::size_t numElements)
-        : GpuManager(buildGpuData(cpu, numElements))
-    {
-    }
-#endif
-
-    /*!
-     * \brief Build a single cell's two-phase \c EclTwoPhaseMaterialParams
-     *        instance with GPU-resident piecewise-linear sample tables.
-     *
-     * Only the \c GasWater sub-approach is currently supported, since this
-     * is the only configuration produced by CO2STORE-style decks.
-     */
-    template <class CpuMaterialParams, class PushBuffer>
-    static void buildTwoPhaseCellParams(const CpuMaterialParams& cpuMaterialParams,
-                                        MaterialLawParams& cellParams,
-                                        PushBuffer& pushSampleBuffer)
-    {
-        if (cpuMaterialParams.approach() != ::Opm::EclMultiplexerApproach::TwoPhase) {
-            OPM_THROW(std::logic_error,
-                      "GPU material manager requires EclMultiplexerApproach::TwoPhase");
-        }
-        const auto& cpuTwoPhaseParams
-            = cpuMaterialParams.template getRealParams<::Opm::EclMultiplexerApproach::TwoPhase>();
-        if (cpuTwoPhaseParams.approach() != ::Opm::EclTwoPhaseApproach::GasWater) {
-            OPM_THROW(std::logic_error,
-                      "GPU material manager only supports the GasWater two-phase approach");
-        }
-
-        using GasWaterParams = typename MaterialLawParams::GasWaterParams;
-        const auto& cpuGasWaterPiecewiseLinear
-            = detail::extractCpuPlParams(cpuTwoPhaseParams.gasWaterParams());
-        GasWaterParams gasWaterParams(pushSampleBuffer(cpuGasWaterPiecewiseLinear.SwPcwnSamples()),
-                                      pushSampleBuffer(cpuGasWaterPiecewiseLinear.pcwnSamples()),
-                                      pushSampleBuffer(cpuGasWaterPiecewiseLinear.SwKrwSamples()),
-                                      pushSampleBuffer(cpuGasWaterPiecewiseLinear.krwSamples()),
-                                      pushSampleBuffer(cpuGasWaterPiecewiseLinear.SwKrnSamples()),
-                                      pushSampleBuffer(cpuGasWaterPiecewiseLinear.krnSamples()));
-
-        cellParams.setGasWaterParams(
-            typename MaterialLawParams::GasWaterParamsStorage(std::move(gasWaterParams)));
-        cellParams.setApproach(::Opm::EclTwoPhaseApproach::GasWater);
-        cellParams.finalize();
-    }
-
-    /*!
-     * \brief Build a single cell's three-phase \c EclDefaultMaterialParams
-     *        instance with GPU-resident piecewise-linear sample tables.
-     */
-    template <class CpuMaterialParams, class PushBuffer>
-    static void buildThreePhaseCellParams(const CpuMaterialParams& cpuMaterialParams,
-                                          MaterialLawParams& cellParams,
-                                          PushBuffer& pushSampleBuffer)
-    {
-        if (cpuMaterialParams.approach() != ::Opm::EclMultiplexerApproach::Default) {
-            OPM_THROW(std::logic_error,
-                      "GPU material manager only supports the Default three-phase approach");
-        }
-        const auto& cpuDefaultParams
-            = cpuMaterialParams.template getRealParams<::Opm::EclMultiplexerApproach::Default>();
-        const auto& cpuGasOilPiecewiseLinear
-            = detail::extractCpuPlParams(cpuDefaultParams.gasOilParams());
-        const auto& cpuOilWaterPiecewiseLinear
-            = detail::extractCpuPlParams(cpuDefaultParams.oilWaterParams());
-
-        GasOilParams gasOilParams(pushSampleBuffer(cpuGasOilPiecewiseLinear.SwPcwnSamples()),
-                                  pushSampleBuffer(cpuGasOilPiecewiseLinear.pcwnSamples()),
-                                  pushSampleBuffer(cpuGasOilPiecewiseLinear.SwKrwSamples()),
-                                  pushSampleBuffer(cpuGasOilPiecewiseLinear.krwSamples()),
-                                  pushSampleBuffer(cpuGasOilPiecewiseLinear.SwKrnSamples()),
-                                  pushSampleBuffer(cpuGasOilPiecewiseLinear.krnSamples()));
-        OilWaterParams oilWaterParams(pushSampleBuffer(cpuOilWaterPiecewiseLinear.SwPcwnSamples()),
-                                      pushSampleBuffer(cpuOilWaterPiecewiseLinear.pcwnSamples()),
-                                      pushSampleBuffer(cpuOilWaterPiecewiseLinear.SwKrwSamples()),
-                                      pushSampleBuffer(cpuOilWaterPiecewiseLinear.krwSamples()),
-                                      pushSampleBuffer(cpuOilWaterPiecewiseLinear.SwKrnSamples()),
-                                      pushSampleBuffer(cpuOilWaterPiecewiseLinear.krnSamples()));
-
-        cellParams.setGasOilParams(std::make_shared<GasOilParams>(std::move(gasOilParams)));
-        cellParams.setOilWaterParams(std::make_shared<OilWaterParams>(std::move(oilWaterParams)));
-        cellParams.setSwl(cpuDefaultParams.Swl());
-        cellParams.finalize();
+        return samePiecewiseLinearParams(
+            detail::extractCpuPlParams(lhsTwoPhase.gasWaterParams()),
+            detail::extractCpuPlParams(rhsTwoPhase.gasWaterParams()));
     }
 
     template <class CpuManager>
@@ -550,8 +915,7 @@ public:
         return satnumRegionArray;
     }
 
-    Storage<MaterialLawParams> materialLawParamsByRegion_ {};
-    Storage<int> satnumRegionArray_ {};
+    StorageType storage_ {};
 };
 
 } // namespace Opm::EclMaterialLaw
@@ -594,11 +958,7 @@ make_view(
 {
     using GpuManagerView = ::Opm::EclMaterialLaw::
         GpuManager<TraitsT, GasOilLawT, OilWaterLawT, GpuView, MaterialLawT>;
-    using MaterialLawParams = typename GpuManagerView::MaterialLawParams;
-    return GpuManagerView(
-        GpuView<MaterialLawParams>(buf.materialLawParamsStorage().data(),
-                                   buf.materialLawParamsStorage().size()),
-        GpuView<int>(buf.satnumRegionArrayStorage().data(), buf.satnumRegionArrayStorage().size()));
+    return GpuManagerView(::Opm::EclMaterialLaw::detail::makeStorageView(buf.storage()));
 }
 
 } // namespace Opm::gpuistl
