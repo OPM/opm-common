@@ -237,6 +237,16 @@ public:
     const EclEpsConfig& oilWaterConfig() const
     { return oilWaterConfig_; }
 
+    //! End-point scaling configuration of the imbibition curves (hysteresis).
+    const EclEpsConfig& gasOilImbibitionConfig() const
+    { return gasOilImbConfig_; }
+
+    const EclEpsConfig& gasWaterImbibitionConfig() const
+    { return gasWaterImbConfig_; }
+
+    const EclEpsConfig& oilWaterImbibitionConfig() const
+    { return oilWaterImbConfig_; }
+
     MaterialLawParams& materialLawParams(unsigned elemIdx)
     {
         assert(elemIdx <  params_.materialLawParams.size());
@@ -623,6 +633,10 @@ private:
     EclEpsConfig gasOilConfig_;
     EclEpsConfig oilWaterConfig_;
     EclEpsConfig gasWaterConfig_;
+
+    EclEpsConfig gasOilImbConfig_;
+    EclEpsConfig oilWaterImbConfig_;
+    EclEpsConfig gasWaterImbConfig_;
 
     HysteresisStateSnapshot prevHysteresisState_{};
 };

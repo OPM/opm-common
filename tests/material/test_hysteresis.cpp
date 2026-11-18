@@ -3467,6 +3467,131 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(GasWaterKilloughTrappedAnchorConsistentWithBound, 
     }
 }
 
+// The drainage and the imbibition curves have separate end-point scaling
+// configurations: an imbibition-only keyword (IKRWR) must not switch the
+// drainage curve from two-point (KRW) to three-point vertical scaling. Model 2
+// uses the drainage curve for the water relperm throughout, so Krw must be the
+// same with and without IKRWR, and follow the KRW scaled drainage table.
+BOOST_AUTO_TEST_CASE_TEMPLATE(GasWaterImbibitionKeywordsDoNotScaleDrainage, Scalar, Types)
+{
+    const std::string sgfnDrain = "0.0 0.0 0.0\n    0.1 0.0 0.0\n    0.8 1.0 0.0 /";
+    const std::string sgfnImb = "0.0 0.0 0.0\n    0.3 0.0 0.0\n    0.8 1.0 0.0 /";
+    const std::string swfn = "0.2 0.0 0.0\n    1.0 1.0 0.0 /";
+    const std::string krw = "KRW\n 1*0.8 /\n";
+    const std::string ikrwr = "IKRWR\n 1*0.4 /\n";
+
+    std::vector<Scalar> sgPath;
+    for (int i = 0; i <= 80; ++i) {
+        sgPath.push_back(Scalar(i) / 100);
+    }
+    for (int i = 79; i >= 0; --i) {
+        sgPath.push_back(Scalar(i) / 100);
+    }
+
+    const std::string ehystr2 = "0.1 2 0.1 1* BOTH /";
+    const auto krDrain = gasWaterRelpermPath<Scalar>(gasWaterHysteresisDeck(ehystr2, sgfnDrain, sgfnImb, swfn, swfn, krw),
+                                                     sgPath);
+    const auto krDrainImb = gasWaterRelpermPath<Scalar>(gasWaterHysteresisDeck(ehystr2, sgfnDrain, sgfnImb, swfn, swfn, krw + ikrwr),
+                                                        sgPath);
+    for (std::size_t i = 0; i < sgPath.size(); ++i) {
+        const Scalar Sw = 1 - sgPath[i];
+        BOOST_CHECK_SMALL(krDrain[i][0] - linearScaledRelperm(Sw, Scalar(0.2), Scalar(1.0), Scalar(0.8)), Scalar(1e-5));
+        BOOST_CHECK_SMALL(krDrainImb[i][0] - krDrain[i][0], Scalar(1e-6));
+    }
+
+    // Model 1 uses the imbibition curve for the water relperm, which is still
+    // scaled by IKRWR: at the reference point Sw = 1 - Sgcr,i = 0.7 the value is
+    // IKRWR instead of the tabulated 0.625.
+    const std::string ehystr1 = "0.1 1 0.1 1* BOTH /";
+    const std::vector<Scalar> sgRef = {Scalar(0.3)};
+    const auto krImb = gasWaterRelpermPath<Scalar>(gasWaterHysteresisDeck(ehystr1, sgfnDrain, sgfnImb, swfn, swfn, krw + ikrwr),
+                                                   sgRef);
+    BOOST_CHECK_SMALL(krImb[0][0] - Scalar(0.4), Scalar(1e-5));
+}
+
+// The imbibition Pc scaling keyword (IPCG) enables Pc scaling of the imbibition
+// curve only. With the Leverett J-function it is ignored (with a warning)
+// instead of failing as mutually exclusive with JFUNC.
+BOOST_AUTO_TEST_CASE_TEMPLATE(GasWaterImbibitionPcScalingConfig, Scalar, Types)
+{
+    using MaterialLawManager = typename Fixture<Scalar>::MaterialLawManager;
+
+    const auto deckString = [](const std::string& grid, const std::string& props)
+    {
+        return R"(
+    RUNSPEC
+    DIMENS
+       1 1 1 /
+    TABDIMS
+     2 /
+    WATER
+    GAS
+    ENDSCALE
+    /
+    GRID
+    DX
+       1*1000 /
+    DY
+       1*1000 /
+    DZ
+       1*50 /
+    TOPS
+       1*0 /
+    PORO
+      1*0.15 /
+    PERMX
+      1*100 /
+    PERMY
+      1*100 /
+    PERMZ
+      1*10 /
+    )" + grid + R"(
+    EHYSTR
+      0.1 2 0.1 1* BOTH /
+    SATOPTS
+      HYSTER /
+    PROPS
+    SGFN
+    0.0 0.0 0.0
+    0.8 1.0 0.0 /
+    0.0 0.0 0.0
+    0.8 1.0 0.0 /
+    SWFN
+    0.2 0.0 2.0
+    1.0 1.0 0.0 /
+    0.2 0.0 1.0
+    1.0 1.0 0.0 /
+    )" + props + R"(
+    REGIONS
+    SATNUM
+    1*1 /
+    IMBNUM
+    1*2 / )";
+    };
+
+    const auto init = [](const std::string& deckStr)
+    {
+        Opm::Parser parser;
+        const Opm::EclipseState eclState(parser.parseString(deckStr));
+        auto manager = std::make_unique<MaterialLawManager>();
+        manager->initFromState(eclState);
+        return manager;
+    };
+
+    {
+        const auto manager = init(deckString("", "IPCG\n 1*0.5 /\n"));
+        BOOST_CHECK(!manager->gasWaterConfig().enablePcScaling());
+        BOOST_CHECK(manager->gasWaterImbibitionConfig().enablePcScaling());
+    }
+    {
+        std::unique_ptr<MaterialLawManager> manager;
+        BOOST_CHECK_NO_THROW(manager = init(deckString("JFUNC\n GAS 1* 22.0 /\n", "IPCG\n 1*0.5 /\n")));
+        BOOST_REQUIRE(manager);
+        BOOST_CHECK(manager->gasWaterImbibitionConfig().enableLeverettScaling());
+        BOOST_CHECK(!manager->gasWaterImbibitionConfig().enablePcScaling());
+    }
+}
+
 // Carlson (model 0): the scanning curve is shifted using the inverse of the
 // imbibition end-point scaling. With IKRGR given only for the imbibition curve,
 // the three-point scaling must be inverted consistently, otherwise the gas

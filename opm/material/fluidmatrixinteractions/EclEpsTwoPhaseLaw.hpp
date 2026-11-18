@@ -647,9 +647,9 @@ private:
         const auto fr = scaled.krwr();
         const auto fm = scaled.maxKrw();
 
-        // The vertical scaling can be unchanged, e.g. for the drainage curve when
-        // only imbibition keywords (IKRWR/IKRW) are given and the configuration
-        // is shared between the two curves. Then leave the curve alone.
+        // The vertical scaling can be unchanged, e.g. for the imbibition curve
+        // when only the drainage keywords (KRWR/KRW) are given. Then leave the
+        // curve alone.
         if (fr == fdisp && fm == fmax) {
             return unscaledKrw;
         }

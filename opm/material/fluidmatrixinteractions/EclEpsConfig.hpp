@@ -187,7 +187,27 @@ public:
                        const std::string& prefix = "",
                        const std::string& suffix = "");
 
+    /*!
+     * \brief Reads the configuration for the imbibition curve (hysteresis).
+     *
+     * As initFromState(), but scaling is also enabled by the imbibition
+     * keywords (IKRW, IKRWR, IPCW, ...). The drainage curve must use the
+     * configuration from initFromState(), so that the imbibition keywords do
+     * not alter it (e.g. IKRWR alone must not enable three-point scaling of the
+     * drainage curve).
+     */
+    void initImbibitionFromState(const EclipseState& eclState,
+                                 EclTwoPhaseSystemType twoPhaseSystemType,
+                                 const std::string& prefix = "",
+                                 const std::string& suffix = "");
+
 private:
+    void initFromState_(const EclipseState& eclState,
+                        EclTwoPhaseSystemType twoPhaseSystemType,
+                        const std::string& prefix,
+                        const std::string& suffix,
+                        bool imbibition);
+
     // enable scaling of the input saturations (i.e., rescale the x-Axis)
     bool enableSatScaling_{false};
 
