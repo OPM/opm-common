@@ -20,6 +20,7 @@
 
 #include <opm/common/ErrorMacros.hpp>
 
+#include <opm/io/eclipse/ByteOrder.hpp>
 #include <opm/io/eclipse/EclUtil.hpp>
 
 #include <algorithm>
@@ -180,7 +181,7 @@ void EclOutput::writeStringVector(const std::string&              name,
 
 void EclOutput::writeBinaryHeader(const std::string&arrName, std::int64_t size, eclArrType arrType, int element_size)
 {
-    int bhead = flipEndianInt(16);
+    const std::int32_t bhead = 16;
     std::string name = paddedArrayName(arrName);
 
     // write X231 header if size larger that limits for 4 byte integers
@@ -188,23 +189,19 @@ void EclOutput::writeBinaryHeader(const std::string&arrName, std::int64_t size, 
         std::int64_t val231 = std::pow(2,31);
         std::int64_t x231 = size / val231;
 
-        int flippedx231 = flipEndianInt(static_cast<int>( (-1)*x231 ));
-
-        ofileH.write(reinterpret_cast<char*>(&bhead), sizeof(bhead));
+        writeFileOrder(ofileH, bhead);
         ofileH.write(name.c_str(), 8);
-        ofileH.write(reinterpret_cast<char*>(&flippedx231), sizeof(flippedx231));
+        writeFileOrder(ofileH, static_cast<std::int32_t>( (-1)*x231 ));
         ofileH.write("X231", 4);
-        ofileH.write(reinterpret_cast<char*>(&bhead), sizeof(bhead));
+        writeFileOrder(ofileH, bhead);
 
         size = size - (x231 * val231);
     }
 
-    int flippedSize = flipEndianInt(size);
-
-    ofileH.write(reinterpret_cast<char*>(&bhead), sizeof(bhead));
+    writeFileOrder(ofileH, bhead);
 
     ofileH.write(name.c_str(), 8);
-    ofileH.write(reinterpret_cast<char*>(&flippedSize), sizeof(flippedSize));
+    writeFileOrder(ofileH, static_cast<std::int32_t>(size));
 
     std::string c0nn_str;
 
@@ -238,7 +235,7 @@ void EclOutput::writeBinaryHeader(const std::string&arrName, std::int64_t size, 
         break;
     }
 
-    ofileH.write(reinterpret_cast<char *>(&bhead), sizeof(bhead));
+    writeFileOrder(ofileH, bhead);
 }
 
 template <typename T>
@@ -274,7 +271,7 @@ void EclOutput::writeBinaryArray(const std::vector<T>& data)
         OPM_THROW(std::runtime_error, "fstream fileH not open for writing");
     }
 
-    int logi_true_val = ix_standard ? true_value_ix : true_value_ecl;
+    const unsigned int logi_true_val = ix_standard ? true_value_ix : true_value_ecl;
 
     rest = size * static_cast<std::int64_t>(sizeOfElement);
 
@@ -289,58 +286,25 @@ void EclOutput::writeBinaryArray(const std::vector<T>& data)
             rest = 0;
         }
 
-        dhead = flipEndianInt(num * sizeOfElement);
+        dhead = num * sizeOfElement;
 
-        ofileH.write(reinterpret_cast<char*>(&dhead), sizeof(dhead));
+        writeFileOrder(ofileH, dhead);
 
-        if (arrType == INTE) {
+        if constexpr (std::is_same_v<T, bool>) {
 
-            std::vector<int> flipped_data;
-            flipped_data.resize(num, 0);
-
-            for (int m = 0; m < num; ++m) {
-                flipped_data[m] = flipEndianInt(data[m + offset]);
-            }
-
-            ofileH.write(reinterpret_cast<char*>(flipped_data.data()), flipped_data.size() * sizeof(int)) ;
-
-        } else if (arrType == REAL) {
-
-            std::vector<float> flipped_data;
-            flipped_data.resize(num, 0);
-
-            for (int m = 0; m < num; ++m) {
-                flipped_data[m] = flipEndianFloat(data[m + offset]);
-            }
-
-            ofileH.write(reinterpret_cast<char*>(flipped_data.data()), flipped_data.size() * sizeof(float)) ;
-
-        } else if (arrType == DOUB) {
-
-            std::vector<double> flipped_data;
-            flipped_data.resize(num, 0);
-
-            for (int m = 0; m < num; ++m) {
-                flipped_data[m] = flipEndianDouble(data[m + offset]);
-            }
-
-            ofileH.write(reinterpret_cast<char*>(flipped_data.data()), flipped_data.size() * sizeof(double)) ;
-
-        } else if (arrType == LOGI) {
-
-            std::vector<int> logi_data;
-            logi_data.resize(num, 0);
+            std::vector<unsigned int> logi_data(num, false_value);
 
             for (int m = 0; m < num; ++m) {
                 if (data[m + offset]) {
                     logi_data[m] = logi_true_val;
                 }
-                else {
-                    logi_data[m] = false_value;
-                }
             }
 
-            ofileH.write(reinterpret_cast<char*>(logi_data.data()), logi_data.size() * sizeof(int)) ;
+            writeFileOrder(ofileH, logi_data);
+
+        } else if constexpr (FileScalar<T>) {
+
+            writeFileOrder(ofileH, std::span{data}.subspan(offset, num));
 
         } else {
 
@@ -349,7 +313,7 @@ void EclOutput::writeBinaryArray(const std::vector<T>& data)
         }
 
         offset += num;
-        ofileH.write(reinterpret_cast<char*>(&dhead), sizeof(dhead));
+        writeFileOrder(ofileH, dhead);
     }
 }
 
@@ -394,9 +358,9 @@ void EclOutput::writeBinaryCharArray(const std::vector<std::string>& data, int e
             rest = 0;
         }
 
-        dhead = flipEndianInt(num * sizeOfElement);
+        dhead = num * sizeOfElement;
 
-        ofileH.write(reinterpret_cast<char*>(&dhead), sizeof(dhead));
+        writeFileOrder(ofileH, dhead);
 
         for (int i = 0; i < num; ++i) {
             std::string tmpStr = data[n] + std::string(sizeOfElement - data[n].size(),' ');
@@ -404,7 +368,7 @@ void EclOutput::writeBinaryCharArray(const std::vector<std::string>& data, int e
             ++n;
         }
 
-        ofileH.write(reinterpret_cast<char*>(&dhead), sizeof(dhead));
+        writeFileOrder(ofileH, dhead);
     }
 }
 
@@ -432,15 +396,15 @@ void EclOutput::writeBinaryCharArray(const std::vector<PaddedOutputString<8>>& d
 
         rest = (rest > maxBlockSize) ? rest - maxBlockSize : 0;
 
-        auto dhead = flipEndianInt(numElm * sizeOfElement);
+        const auto dhead = static_cast<std::int32_t>(numElm * sizeOfElement);
 
-        ofileH.write(reinterpret_cast<char*>(&dhead), sizeof(dhead));
+        writeFileOrder(ofileH, dhead);
 
         for (auto i = 0*numElm; i < numElm; ++i, ++elm) {
             ofileH.write(elm->c_str(), sizeOfElement);
         }
 
-        ofileH.write(reinterpret_cast<char*>(&dhead), sizeof(dhead));
+        writeFileOrder(ofileH, dhead);
     }
 }
 
