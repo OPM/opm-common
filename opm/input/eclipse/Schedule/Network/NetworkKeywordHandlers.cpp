@@ -866,6 +866,10 @@ void handleNODEPROP(HandlerContext& handlerContext)
                 }
             }
         }
+        else if (as_choke) {
+            const std::string msg = "The auto-choke option is implemented only for well groups.";
+            throw OpmInputError(msg, handlerContext.keyword.location());
+        }
 
         node.add_gas_lift_gas(add_gas_lift_gas);
         ext_network.update_node(node);

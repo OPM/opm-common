@@ -319,6 +319,49 @@ NODEPROP
     BOOST_CHECK_THROW( make_schedule(deck_string), std::exception);
 }
 
+BOOST_AUTO_TEST_CASE(AUTOCHOKE_NODE_NOT_A_WELL_GROUP) {
+    // The automatic choke is implemented for sub-sea manifold well groups
+    // only.  It is rejected on a group of groups and on a node that is not
+    // a group, whatever the VFP table of its outlet branch.
+    const auto deck = [](const std::string_view node,
+                         const std::string_view as_choke,
+                         const int junction_vfp)
+    {
+        return fmt::format(R"(
+RUNSPEC
+NETWORK
+ 4 3 /
+
+SCHEDULE
+
+GRUPTREE
+ 'M5S'  'PLAT-A' /
+ 'B1'   'M5S'    /
+/
+
+BRANPROP
+--  Downtree  Uptree   #VFP    ALQ
+    B1        JUNC     5       1* /
+    JUNC      M5S      {2}     1* /
+    M5S       PLAT-A   9999    1* /
+/
+
+NODEPROP
+--  Node_name  Pr     autoChoke?  addGasLift?  Group_name
+    PLAT-A     21.0   NO          NO           1* /
+    {0}        1*     {1}         NO           1* /
+/
+)", node, as_choke, junction_vfp);
+    };
+
+    BOOST_CHECK_NO_THROW(make_schedule(deck("JUNC", "NO", 5)));
+    BOOST_CHECK_NO_THROW(make_schedule(deck("B1", "YES", 5)));
+
+    BOOST_CHECK_THROW(make_schedule(deck("JUNC", "YES", 5)), std::exception);
+    BOOST_CHECK_THROW(make_schedule(deck("JUNC", "YES", 9999)), std::exception);
+    BOOST_CHECK_THROW(make_schedule(deck("M5S", "YES", 5)), std::exception);
+}
+
 BOOST_AUTO_TEST_CASE(AUTOCHOKE_GROUP_WITH_INJECTOR) {
     // Making a well group an automatic choke puts its producers on THP
     // control and takes them out of group control.  An injector in the
