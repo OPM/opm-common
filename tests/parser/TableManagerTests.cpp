@@ -290,8 +290,6 @@ BOOST_AUTO_TEST_CASE( CreateTablesWithJFunc ) {
     for (std::size_t tab = 0; tab < swfnTab.size(); tab++) {
         const auto& t = swfnTab.getTable(tab);
 
-       //TODO uncomment BOOST_CHECK_THROW( t.getColumn("PCOW"), std::invalid_argument );
-
         for (std::size_t c_idx = 0; c_idx < t.numColumns(); c_idx++) {
             const auto& col = t.getColumn(c_idx);
             for (std::size_t i = 0; i < col.size(); i++) {
@@ -302,7 +300,6 @@ BOOST_AUTO_TEST_CASE( CreateTablesWithJFunc ) {
     }
 
     const auto& tt = swfnTab.getTable<Opm::SwfnTable>(0);
-    //TODO uncommentBOOST_CHECK_THROW(tt.getPcowColumn(), std::invalid_argument);
 
     const auto& col = tt.getJFuncColumn();
     for (std::size_t i = 0; i < col.size(); i++) {
