@@ -39,6 +39,7 @@
 #include <opm/input/eclipse/Schedule/Network/ExtNetwork.hpp>
 #include <opm/input/eclipse/Schedule/Network/Node.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
+#include <opm/input/eclipse/Schedule/Well/Well.hpp>
 
 #include <opm/input/eclipse/Units/Units.hpp>
 
@@ -302,6 +303,85 @@ NODEPROP
 )";
 
     BOOST_CHECK_THROW( make_schedule(deck_string), std::exception);
+}
+
+BOOST_AUTO_TEST_CASE(AUTOCHOKE_GROUP_WITH_INJECTOR) {
+    // Making a well group an automatic choke puts its producers on THP
+    // control and takes them out of group control.  An injector in the
+    // same group must be left as it is.
+    const auto sched = make_schedule(R"(
+RUNSPEC
+OIL
+WATER
+GAS
+
+NETWORK
+ 2 1 /
+
+GRID
+
+PORO
+ 1000*0.3 /
+
+PERMX
+ 1000*100.0 /
+
+COPY
+ 'PERMX'  'PERMY' /
+ 'PERMX'  'PERMZ' /
+/
+
+SCHEDULE
+
+GRUPTREE
+ 'B1'    'PLAT-A'  /
+/
+
+WELSPECS
+ 'P1'  'B1'  1  1  1*  'OIL'   /
+ 'I1'  'B1'  5  5  1*  'WATER' /
+/
+
+COMPDAT
+ 'P1'  1  1  1  1  'OPEN'  1*  1.168  0.311  107.872  1*  1*  'Z'  21.925 /
+ 'I1'  5  5  1  1  'OPEN'  1*  1.168  0.311  107.872  1*  1*  'Z'  21.925 /
+/
+
+WCONPROD
+ 'P1'  'OPEN'  'ORAT'  1000  4*  50 /
+/
+
+WCONINJE
+ 'I1'  'WATER'  'OPEN'  'RATE'  2000  1*  300 /
+/
+
+BRANPROP
+--  Downtree  Uptree   #VFP    ALQ
+    B1        PLAT-A   9999    1*  /
+/
+
+NODEPROP
+--  Node_name Pr    autoChock?      addGasLift?     Group_name
+    PLAT-A    21.0  NO              NO              1*  /
+    B1        1*    YES             NO              1*  /
+/
+)");
+
+    BOOST_CHECK(sched[0].network.get().node("B1").as_choke());
+
+    const auto& producer = sched.getWell(/*wellName=*/"P1", /*timeStep=*/0);
+    BOOST_CHECK(producer.isProducer());
+    BOOST_CHECK(producer.getProductionProperties().controlMode == Well::ProducerCMode::THP);
+    BOOST_CHECK(!producer.isAvailableForGroupControl());
+
+    const auto& injector = sched.getWell(/*wellName=*/"I1", /*timeStep=*/0);
+    BOOST_CHECK(injector.isInjector());
+    BOOST_CHECK(injector.isAvailableForGroupControl());
+
+    const auto& injection = injector.getInjectionProperties();
+    BOOST_CHECK(injection.controlMode == Well::InjectorCMode::RATE);
+    BOOST_CHECK(injection.hasInjectionControl(Well::InjectorCMode::BHP));
+    BOOST_CHECK_CLOSE(injection.BHPTarget.get<double>(), 300.0, 1.0e-10);
 }
 
 BOOST_AUTO_TEST_CASE(OK) {
