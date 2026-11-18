@@ -151,7 +151,11 @@ WSEGAICD
     parseContext.update(Opm::ParseContext::SCHEDULE_COMPSEGS_NOT_SUPPORTED, Opm::InputErrorAction::THROW_EXCEPTION);
     Opm::CompletedCells cells(grid);
     Opm::FieldPropsManager fp(deck, Opm::Phases{true, true, true}, grid, Opm::TableManager());
-    const auto new_connection_set = Opm::Compsegs::processCOMPSEGS(compsegs, connection_set, segment_set, Opm::ScheduleGrid(grid, fp, cells), parseContext, errorGuard);
+    const auto new_connection_set = Opm::Compsegs::processCOMPSEGS
+        (compsegs, connection_set, segment_set,
+         Opm::ScheduleGrid(grid, fp, cells),
+         parseContext, errorGuard,
+         /* links = */ nullptr);
 
     // checking the ICD segment
     const Opm::DeckKeyword wsegaicd = deck["WSEGAICD"].back();
@@ -329,7 +333,11 @@ WSEGSICD
     Opm::FieldPropsManager fp(deck, Opm::Phases{true, true, true}, grid, Opm::TableManager());
     parseContext.update(Opm::ParseContext::SCHEDULE_COMPSEGS_INVALID, Opm::InputErrorAction::THROW_EXCEPTION);
     parseContext.update(Opm::ParseContext::SCHEDULE_COMPSEGS_NOT_SUPPORTED, Opm::InputErrorAction::THROW_EXCEPTION);
-    const auto new_connection_set = Opm::Compsegs::processCOMPSEGS(compsegs, connection_set, segment_set, Opm::ScheduleGrid(grid, fp, cells), parseContext, errorGuard);
+    const auto new_connection_set = Opm::Compsegs::processCOMPSEGS
+        (compsegs, connection_set, segment_set,
+         Opm::ScheduleGrid(grid, fp, cells),
+         parseContext, errorGuard,
+         /* links = */ nullptr);
 
     // checking the ICD segment
     const Opm::DeckKeyword wsegsicd = deck["WSEGSICD"].back();
@@ -916,10 +924,15 @@ BOOST_AUTO_TEST_CASE(WrongDistanceCOMPSEGS)
     Opm::CompletedCells cells(grid);
     Opm::FieldPropsManager fp(deck, Opm::Phases{true, true, true}, grid, Opm::TableManager());
     parseContext.update(Opm::ParseContext::SCHEDULE_COMPSEGS_INVALID, Opm::InputErrorAction::THROW_EXCEPTION);
-    BOOST_CHECK_THROW(Opm::Compsegs::processCOMPSEGS(compsegs, connection_set, segment_set, Opm::ScheduleGrid(grid, fp, cells), parseContext, errorGuard), Opm::OpmInputError);
+    BOOST_CHECK_THROW(Opm::Compsegs::processCOMPSEGS(compsegs, connection_set, segment_set,
+                                                     Opm::ScheduleGrid(grid, fp, cells),
+                                                     parseContext, errorGuard, /* links = */ nullptr),
+                      Opm::OpmInputError);
 
     parseContext.update(Opm::ParseContext::SCHEDULE_COMPSEGS_INVALID, Opm::InputErrorAction::IGNORE);
-    BOOST_CHECK_NO_THROW(Opm::Compsegs::processCOMPSEGS(compsegs, connection_set, segment_set, Opm::ScheduleGrid(grid, fp, cells), parseContext, errorGuard));
+    BOOST_CHECK_NO_THROW(Opm::Compsegs::processCOMPSEGS(compsegs, connection_set, segment_set,
+                                                        Opm::ScheduleGrid(grid, fp, cells),
+                                                        parseContext, errorGuard, /* links = */ nullptr));
 }
 
 BOOST_AUTO_TEST_CASE(NegativeDepthCOMPSEGS)
@@ -1000,10 +1013,15 @@ BOOST_AUTO_TEST_CASE(NegativeDepthCOMPSEGS)
     Opm::CompletedCells cells(grid);
     Opm::FieldPropsManager fp(deck, Opm::Phases{true, true, true}, grid, Opm::TableManager());
     parseContext.update(Opm::ParseContext::SCHEDULE_COMPSEGS_NOT_SUPPORTED, Opm::InputErrorAction::THROW_EXCEPTION);
-    BOOST_CHECK_THROW(Opm::Compsegs::processCOMPSEGS(compsegs, connection_set, segment_set, Opm::ScheduleGrid(grid, fp, cells), parseContext, errorGuard), Opm::OpmInputError);
+    BOOST_CHECK_THROW(Opm::Compsegs::processCOMPSEGS(compsegs, connection_set, segment_set,
+                                                     Opm::ScheduleGrid(grid, fp, cells),
+                                                     parseContext, errorGuard, /* links = */ nullptr),
+                      Opm::OpmInputError);
 
     parseContext.update(Opm::ParseContext::SCHEDULE_COMPSEGS_NOT_SUPPORTED, Opm::InputErrorAction::IGNORE);
-    BOOST_CHECK_NO_THROW( Opm::Compsegs::processCOMPSEGS(compsegs, connection_set, segment_set, Opm::ScheduleGrid(grid, fp, cells), parseContext, errorGuard) );
+    BOOST_CHECK_NO_THROW(Opm::Compsegs::processCOMPSEGS(compsegs, connection_set, segment_set,
+                                                        Opm::ScheduleGrid(grid, fp, cells),
+                                                        parseContext, errorGuard, /* links = */ nullptr));
 }
 
 BOOST_AUTO_TEST_CASE(testwsegvalv)
@@ -1090,7 +1108,9 @@ BOOST_AUTO_TEST_CASE(testwsegvalv)
     Opm::FieldPropsManager fp(deck, Opm::Phases{true, true, true}, grid, Opm::TableManager());
     parseContext.update(Opm::ParseContext::SCHEDULE_COMPSEGS_INVALID, Opm::InputErrorAction::THROW_EXCEPTION);
     parseContext.update(Opm::ParseContext::SCHEDULE_COMPSEGS_NOT_SUPPORTED, Opm::InputErrorAction::THROW_EXCEPTION);
-    BOOST_CHECK_NO_THROW( Opm::Compsegs::processCOMPSEGS(compsegs, connection_set, segment_set, Opm::ScheduleGrid(grid, fp, cells), parseContext, errorGuard));
+    BOOST_CHECK_NO_THROW(Opm::Compsegs::processCOMPSEGS(compsegs, connection_set, segment_set,
+                                                        Opm::ScheduleGrid(grid, fp, cells),
+                                                        parseContext, errorGuard, /* links = */ nullptr));
 
     // checking the WSEGVALV segment
     const Opm::DeckKeyword wsegvalv = deck["WSEGVALV"].back();
@@ -2326,4 +2346,177 @@ BOOST_AUTO_TEST_CASE(loadCOMPTRAJTESTSPE1_MSW) {
     BOOST_CHECK_EQUAL(segments[i].outletSegment(), i);
     BOOST_CHECK_CLOSE(segments[i].totalLength(), units.to_si(Opm::UnitSystem::measure::length, lengths[i]), 2e-2);
   }
+}
+
+// ---------------------------------------------------------------------------
+// MSW consistency checks: connections added after the initial COMPSEGS.
+
+namespace {
+
+std::string mswConsistencyDeck(const std::string& later_schedule)
+{
+    return std::string { R"(RUNSPEC
+START
+  1 JAN 2026 /
+DIMENS
+  20 20 20 /
+OIL
+WATER
+GRID
+DXV
+  20*100 /
+DYV
+  20*100 /
+DZV
+  20*10 /
+DEPTHZ
+  441*2000.0 /
+PORO
+  8000*0.1 /
+PERMX
+  8000*100 /
+PERMY
+  8000*100 /
+PERMZ
+  8000*10 /
+
+SCHEDULE
+
+WELSPECS
+ 'PROD01' 'P' 20 20 1* OIL /
+/
+
+COMPDAT
+ 'PROD01' 20 20 1 2 'OPEN' /
+/
+
+WELSEGS
+ 'PROD01' 2000.0 0.0 1* INC 'HF-' 'HO' /
+  2  3  1  1  10.0  10.0  0.15  1.0e-5 /
+/
+
+COMPSEGS
+ 'PROD01' /
+  20 20 1  1   0.0 10.0 /
+  20 20 2  1  10.0 20.0 /
+/
+
+WCONPROD
+ 'PROD01' 'OPEN' 'ORAT' 100.0 4* 50.0 /
+/
+
+TSTEP
+  10 /
+)" } + later_schedule;
+}
+
+std::string mswConsistencyError(const std::string&        later_schedule,
+                                const Opm::InputErrorAction action = Opm::InputErrorAction::THROW_EXCEPTION)
+{
+    const auto deck = Opm::Parser{}.parseString(mswConsistencyDeck(later_schedule));
+    const auto es = Opm::EclipseState { deck };
+
+    auto parseContext = Opm::ParseContext{};
+    parseContext.update(Opm::ParseContext::SCHEDULE_COMPSEGS_INVALID, action);
+
+    auto errors = Opm::ErrorGuard{};
+
+    try {
+        Opm::Schedule { deck, es, parseContext, errors,
+                        std::make_shared<const Opm::Python>() };
+    }
+    catch (const Opm::OpmInputError& e) {
+        return e.what();
+    }
+
+    return {};
+}
+
+bool contains(const std::string& haystack, const std::string& needle)
+{
+    return haystack.find(needle) != std::string::npos;
+}
+
+} // Anonymous namespace
+
+BOOST_AUTO_TEST_CASE(MSW_Consistent_Well)
+{
+    const auto msg = mswConsistencyError(R"(
+COMPDAT
+ 'PROD01' 20 20 1 2 'SHUT' /
+/
+TSTEP
+  10 /
+)");
+
+    BOOST_CHECK_MESSAGE(msg.empty(), "Consistent MSW must not fail: " << msg);
+}
+
+BOOST_AUTO_TEST_CASE(MSW_Later_COMPDAT_Without_COMPSEGS)
+{
+    const auto later = std::string { R"(
+COMPDAT
+ 'PROD01' 20 20 3 4 'OPEN' /
+/
+TSTEP
+  10 /
+)" };
+
+    const auto msg = mswConsistencyError(later);
+
+    BOOST_REQUIRE_MESSAGE(! msg.empty(), "Unlinked connections must be diagnosed");
+    BOOST_TEST_MESSAGE(msg);
+    BOOST_CHECK_MESSAGE(contains(msg, "PROD01"), "Message must name well: " << msg);
+    BOOST_CHECK_MESSAGE(contains(msg, "not attached to any well segment"),
+                        "Message must describe problem: " << msg);
+    BOOST_CHECK_MESSAGE(contains(msg, "(20,20,3)") && contains(msg, "(20,20,4)"),
+                        "Message must name unlinked connections: " << msg);
+    BOOST_CHECK_MESSAGE(! contains(msg, "(20,20,1)") && ! contains(msg, "(20,20,2)"),
+                        "Message must not name linked connections: " << msg);
+    BOOST_CHECK_MESSAGE(contains(msg, "COMPDAT"),
+                        "Message must name the COMPDAT keyword: " << msg);
+
+    BOOST_CHECK_MESSAGE(mswConsistencyError(later, Opm::InputErrorAction::IGNORE).empty(),
+                        "Diagnostic must honour SCHEDULE_COMPSEGS_INVALID");
+}
+
+BOOST_AUTO_TEST_CASE(MSW_Later_COMPDAT_With_COMPSEGS)
+{
+    const auto msg = mswConsistencyError(R"(
+COMPDAT
+ 'PROD01' 20 20 3 3 'OPEN' /
+/
+WELSEGS
+ 'PROD01' 2000.0 0.0 1* INC 'HF-' 'HO' /
+  4  4  1  3  10.0  10.0  0.15  1.0e-5 /
+/
+COMPSEGS
+ 'PROD01' /
+  20 20 3  1  20.0 30.0 /
+/
+TSTEP
+  10 /
+)");
+
+    BOOST_CHECK_MESSAGE(msg.empty(), "Fully linked new connection must not fail: " << msg);
+}
+
+BOOST_AUTO_TEST_CASE(MSW_Connection_Multiply_Linked)
+{
+    const auto msg = mswConsistencyError(R"(
+COMPSEGS
+ 'PROD01' /
+  20 20 1  1   0.0 10.0 1* 1* 1* 1* 2 /
+  20 20 2  1  10.0 20.0 1* 1* 1* 1* 3 /
+  20 20 1  1  10.0 20.0 1* 1* 1* 1* 3 /
+/
+TSTEP
+  10 /
+)");
+
+    BOOST_REQUIRE_MESSAGE(! msg.empty(), "Multiply linked connection must be diagnosed");
+    BOOST_CHECK_MESSAGE(contains(msg, "multiple segments"),
+                        "Message must describe problem: " << msg);
+    BOOST_CHECK_MESSAGE(contains(msg, "(20,20,1) attached to segments 2, 3"),
+                        "Message must name connection and segments: " << msg);
 }

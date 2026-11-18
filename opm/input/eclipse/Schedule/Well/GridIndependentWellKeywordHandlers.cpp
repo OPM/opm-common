@@ -178,6 +178,11 @@ Well {} has no connections to the grid. The well will remain SHUT)", name);
                                  wellTraj.wellPathGeometry,
                                  record.getItem<Kw::DIAMETER>().getSIDouble(0));
 
+                // COMPTRAJ generates connections, segments, and links.
+                handlerContext.msw_connections(name, well.getConnections());
+                handlerContext.msw_segments(well);
+                handlerContext.msw_links(name, well.getConnections());
+
                 handlerContext.state().wells.update(std::move(well));
 
                 handlerContext.state().wellgroup_events()
