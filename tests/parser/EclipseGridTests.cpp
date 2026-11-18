@@ -32,6 +32,7 @@
 
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/GridDims.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/LgrCollection.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/MapAxes.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/NNC.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/PinchMode.hpp>
@@ -45,6 +46,7 @@
 
 #include <opm/input/eclipse/Parser/Parser.hpp>
 
+#include <array>
 #include <cstddef>
 #include <cstdio>
 #include <ctime>
@@ -53,7 +55,10 @@
 #include <numbers>
 #include <optional>
 #include <numeric>
+#include <sstream>
 #include <stdexcept>
+#include <string>
+#include <vector>
 
 #include <unistd.h>
 
@@ -4517,4 +4522,298 @@ BOOST_AUTO_TEST_CASE(DPGRIDCornerPointRejected) {
         "\n";
     auto deck = Opm::Parser{}.parseString(deckData);
     BOOST_CHECK_THROW(Opm::EclipseGrid{ deck }, Opm::OpmInputError);
+}
+
+namespace {
+
+// 2x1x4 dual-porosity corner-point grid: two matrix layers on top of two
+// stacked fracture layers. The pillars are not parallel, so cells at
+// different depths have different volumes and the stacked fracture layers
+// differ from their matrix twins.
+Opm::Deck createDualContinuumCornerPointDeck()
+{
+    constexpr int nx = 2;
+    constexpr int ny = 1;
+    constexpr int nz = 4;
+    constexpr double top = 2000.0;
+    constexpr double dz = 10.0;
+
+    std::ostringstream coord;
+    int pillar = 0;
+    for (int j = 0; j <= ny; ++j) {
+        for (int i = 0; i <= nx; ++i, ++pillar) {
+            const double x = 100.0 * i;
+            const double y = 100.0 * j;
+            const double slope = 0.05 * pillar;
+            coord << (x) << ' ' << y << ' ' << top << ' '
+                  << (x + slope * nz * dz) << ' ' << y << ' ' << (top + nz * dz) << '\n';
+        }
+    }
+
+    std::ostringstream zcorn;
+    for (int k = 0; k < nz; ++k) {
+        for (int face = 0; face < 2; ++face) {
+            for (int j = 0; j < ny; ++j) {
+                for (int jj = 0; jj < 2; ++jj) {
+                    for (int i = 0; i < 2 * nx; ++i) {
+                        zcorn << (top + (k + face) * dz) << ' ';
+                    }
+                    zcorn << '\n';
+                }
+            }
+        }
+    }
+
+    const std::string deckData =
+        "RUNSPEC\nOIL\nWATER\nDIMENS\n 2 1 4 /\nDUALPORO\n"
+        "GRID\nCOORD\n" + coord.str() + "/\nZCORN\n" + zcorn.str() + "/\n"
+        "PORO\n 8*0.2 /\nPERMX\n 8*1.0 /\n";
+    return Opm::Parser{}.parseString(deckData);
+}
+
+void checkSameGeometry(const Opm::EclipseGrid& a, const std::size_t cellA,
+                       const Opm::EclipseGrid& b, const std::size_t cellB)
+{
+    BOOST_CHECK_CLOSE(a.getCellVolume(cellA), b.getCellVolume(cellB), 1e-10);
+    BOOST_CHECK_CLOSE(a.getCellThickness(cellA), b.getCellThickness(cellB), 1e-10);
+    const auto ca = a.getCellCenter(cellA);
+    const auto cb = b.getCellCenter(cellB);
+    for (int d = 0; d < 3; ++d) {
+        BOOST_CHECK_CLOSE(ca[d] + 1.0, cb[d] + 1.0, 1e-10);
+    }
+}
+
+} // anonymous namespace
+
+BOOST_AUTO_TEST_CASE(ContinuumGridBlockCentred) {
+    // The deck gives the fracture half different sizes. The continuum grids
+    // share the matrix geometry regardless.
+    const char* deckData =
+        "RUNSPEC\nOIL\nWATER\nDIMENS\n 2 1 2 /\nDUALPORO\n"
+        "GRID\n"
+        "DX\n 2*100 2*7 /\n"
+        "DY\n 2*100 2*7 /\n"
+        "DZ\n 2*10 2*99 /\n"
+        "TOPS\n 2*2000 2*2500 /\n"
+        "PORO\n 4*0.2 /\nPERMX\n 4*1.0 /\n";
+    const auto deck = Opm::Parser{}.parseString(deckData);
+    const Opm::EclipseGrid grid(deck);
+
+    const auto matrix = grid.continuumGrid(Opm::EclipseGrid::Continuum::Matrix);
+    const auto fracture = grid.continuumGrid(Opm::EclipseGrid::Continuum::Fracture);
+
+    for (const auto* g : {&matrix, &fracture}) {
+        BOOST_CHECK(!g->dualPorosity());
+        BOOST_CHECK(!g->dualPermeability());
+        BOOST_CHECK_EQUAL(g->getNX(), 2U);
+        BOOST_CHECK_EQUAL(g->getNY(), 1U);
+        BOOST_CHECK_EQUAL(g->getNZ(), 1U);
+        BOOST_CHECK_EQUAL(g->getNumActive(), 2U);
+    }
+
+    for (std::size_t c = 0; c < 2; ++c) {
+        checkSameGeometry(matrix, c, grid, c);
+        checkSameGeometry(fracture, c, grid, c);
+        BOOST_CHECK_CLOSE(fracture.getCellDepth(c), 2005.0, 1e-10);
+    }
+
+    // The doubled grid is unchanged.
+    BOOST_CHECK(grid.dualPorosity());
+    BOOST_CHECK_EQUAL(grid.getNZ(), 2U);
+}
+
+BOOST_AUTO_TEST_CASE(ContinuumGridCornerPointSharesMatrixGeometry) {
+    const auto deck = createDualContinuumCornerPointDeck();
+    const Opm::EclipseGrid grid(deck);
+    const std::size_t half = grid.getCartesianSize() / 2;
+
+    const auto matrix = grid.continuumGrid(Opm::EclipseGrid::Continuum::Matrix);
+    const auto fracture = grid.continuumGrid(Opm::EclipseGrid::Continuum::Fracture);
+
+    BOOST_CHECK_EQUAL(matrix.getNZ(), 2U);
+    BOOST_CHECK_EQUAL(fracture.getNZ(), 2U);
+    BOOST_CHECK_EQUAL(matrix.getCartesianSize(), half);
+
+    for (std::size_t c = 0; c < half; ++c) {
+        checkSameGeometry(matrix, c, grid, c);
+        checkSameGeometry(fracture, c, matrix, c);
+
+        // The doubled grid reports the geometry of the matrix twin for a fracture
+        // cell too, although its fracture layers are stacked below the matrix with
+        // non-parallel pillars.
+        checkSameGeometry(grid, c + half, grid, c);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(ContinuumGridKeepsOwnActivity) {
+    const auto deck = createDualContinuumCornerPointDeck();
+    // Cells 1 and 3 of the matrix and 4 and 6 (twins of 0 and 2) of the
+    // fracture are inactive, so the activity differs between the halves.
+    const std::vector<int> actnum{1, 0, 1, 0, 0, 1, 0, 1};
+    const Opm::EclipseGrid grid(deck, actnum.data());
+
+    const auto matrix = grid.continuumGrid(Opm::EclipseGrid::Continuum::Matrix);
+    const auto fracture = grid.continuumGrid(Opm::EclipseGrid::Continuum::Fracture);
+
+    BOOST_CHECK(matrix.getACTNUM() == (std::vector<int>{1, 0, 1, 0}));
+    BOOST_CHECK(fracture.getACTNUM() == (std::vector<int>{0, 1, 0, 1}));
+    BOOST_CHECK_EQUAL(matrix.getNumActive() + fracture.getNumActive(), grid.getNumActive());
+
+    // Active indices: the matrix first, then the fracture, as in the doubled grid.
+    for (std::size_t c = 0; c < 4; ++c) {
+        if (matrix.cellActive(c)) {
+            BOOST_CHECK_EQUAL(matrix.activeIndex(c), grid.activeIndex(c));
+        }
+        if (fracture.cellActive(c)) {
+            BOOST_CHECK_EQUAL(fracture.activeIndex(c) + matrix.getNumActive(),
+                              grid.activeIndex(c + 4));
+        }
+    }
+
+    // The geometry of an inactive cell is still the matrix twin's.
+    checkSameGeometry(fracture, 0, matrix, 0);
+}
+
+BOOST_AUTO_TEST_CASE(ContinuumGridSlicesMinpvAndDepthEdits) {
+    const auto deck = createDualContinuumCornerPointDeck();
+    const std::vector<int> actnum{1, 0, 1, 1, 1, 1, 0, 1};
+    Opm::EclipseGrid grid(deck, actnum.data());
+
+    std::vector<double> minpv(8);
+    std::iota(minpv.begin(), minpv.end(), 1.0);
+    grid.setMINPVV(minpv);
+
+    // One depth per active cell, in active order: 1000, 1001, ...
+    std::vector<double> depth(grid.getNumActive());
+    std::iota(depth.begin(), depth.end(), 1000.0);
+    grid.setDEPTH(depth);
+
+    const auto matrix = grid.continuumGrid(Opm::EclipseGrid::Continuum::Matrix);
+    const auto fracture = grid.continuumGrid(Opm::EclipseGrid::Continuum::Fracture);
+
+    BOOST_CHECK(matrix.getMinpvVector() == (std::vector<double>{1, 2, 3, 4}));
+    BOOST_CHECK(fracture.getMinpvVector() == (std::vector<double>{5, 6, 7, 8}));
+
+    // Matrix has 3 active cells (0, 2, 3), fracture 3 (4, 5, 7).
+    BOOST_REQUIRE_EQUAL(matrix.getNumActive(), 3U);
+    BOOST_REQUIRE_EQUAL(fracture.getNumActive(), 3U);
+    BOOST_CHECK_EQUAL(matrix.getCellDepth(0), 1000.0);
+    BOOST_CHECK_EQUAL(matrix.getCellDepth(2), 1001.0);
+    BOOST_CHECK_EQUAL(matrix.getCellDepth(3), 1002.0);
+    BOOST_CHECK_EQUAL(fracture.getCellDepth(0), 1003.0);
+    BOOST_CHECK_EQUAL(fracture.getCellDepth(1), 1004.0);
+    BOOST_CHECK_EQUAL(fracture.getCellDepth(3), 1005.0);
+}
+
+BOOST_AUTO_TEST_CASE(ContinuumGridRequiresDualContinuumGrid) {
+    const auto deck = createDualPorosityDeck("1 1 2",
+        "DX\n 2*100 /\nDY\n 2*100 /\nDZ\n 2*10 /\nTOPS\n 2*2000 /\n", false);
+    const Opm::EclipseGrid grid(deck);
+
+    BOOST_CHECK_THROW(grid.continuumGrid(Opm::EclipseGrid::Continuum::Matrix),
+                      std::invalid_argument);
+    BOOST_CHECK_THROW(grid.continuumGrid(Opm::EclipseGrid::Continuum::Fracture),
+                      std::invalid_argument);
+}
+
+BOOST_AUTO_TEST_CASE(ContinuumGridRejectsLocalGridRefinement) {
+    const auto deck = Opm::Parser{}.parseString(
+        "RUNSPEC\nOIL\nWATER\nDIMENS\n 3 3 2 /\nDUALPORO\n"
+        "GRID\n"
+        "CARFIN\n'LGR1' 2 2 2 2 1 1 3 3 1 /\nENDFIN\n"
+        "DX\n 18*100 /\nDY\n 18*100 /\nDZ\n 18*10 /\nTOPS\n 18*2000 /\n"
+        "PORO\n 18*0.2 /\nPERMX\n 18*1.0 /\n");
+    // EclipseState refuses local grid refinement in a dual-continuum run, so give
+    // the grid its local grids directly.
+    Opm::EclipseGrid grid(deck);
+    grid.init_lgr_cells(Opm::LgrCollection{ Opm::GRIDSection{ deck }, grid, deck });
+    BOOST_REQUIRE(!grid.get_all_lgr_labels().empty());
+
+    BOOST_CHECK_THROW(grid.continuumGrid(Opm::EclipseGrid::Continuum::Matrix),
+                      std::invalid_argument);
+    BOOST_CHECK_THROW(grid.continuumGrid(Opm::EclipseGrid::Continuum::Fracture),
+                      std::invalid_argument);
+}
+
+BOOST_AUTO_TEST_CASE(ContinuumGridRejectsRadialGeometry) {
+    const auto deck = Opm::Parser{}.parseString(
+        "RUNSPEC\nOIL\nWATER\nDIMENS\n 3 2 2 /\nRADIAL\nDUALPORO\n"
+        "GRID\nINRAD\n 1 /\nDRV\n 3*1 /\nDTHETAV\n 2*180 /\nDZV\n 2*10 /\n"
+        "TOPS\n 6*2000 /\n"
+        "PORO\n 12*0.2 /\nPERMX\n 12*1.0 /\n");
+    const Opm::EclipseGrid grid(deck);
+
+    BOOST_CHECK_THROW(grid.continuumGrid(Opm::EclipseGrid::Continuum::Matrix),
+                      std::invalid_argument);
+    BOOST_CHECK_THROW(grid.continuumGrid(Opm::EclipseGrid::Continuum::Fracture),
+                      std::invalid_argument);
+}
+
+BOOST_AUTO_TEST_CASE(DualPorosityFractureCellsReportTheMatrixTwinGeometry) {
+    // Stacked fracture layers below the matrix: all geometric queries for a
+    // fracture cell give those of its twin.
+    const auto deck = createDualContinuumCornerPointDeck();
+    const Opm::EclipseGrid grid(deck);
+
+    for (std::size_t c = 0; c < 4; ++c) {
+        const auto twin = c + 4;
+        BOOST_CHECK_CLOSE(grid.getCellDepth(twin), grid.getCellDepth(c), 1e-12);
+        BOOST_CHECK_CLOSE(grid.getCellVolume(twin), grid.getCellVolume(c), 1e-12);
+        BOOST_CHECK_CLOSE(grid.getCellThickness(twin), grid.getCellThickness(c), 1e-12);
+        const auto dimsTwin = grid.getCellDims(twin);
+        const auto dims = grid.getCellDims(c);
+        const auto centerTwin = grid.getCellCenter(twin);
+        const auto center = grid.getCellCenter(c);
+        for (int d = 0; d < 3; ++d) {
+            BOOST_CHECK_CLOSE(dimsTwin[d], dims[d], 1e-12);
+            BOOST_CHECK_CLOSE(centerTwin[d], center[d], 1e-12);
+        }
+    }
+
+    // The corner positions too: the well trajectory code builds its cell search
+    // from getCornerPos(). The first fracture layer lies at the top of the grid.
+    for (std::size_t c = 0; c < 4; ++c) {
+        const auto [i, j, k] = grid.getIJK(c + 4);
+        const auto [im, jm, km] = grid.getIJK(c);
+        BOOST_CHECK_EQUAL(k, km + 2);
+        for (std::size_t corner = 0; corner < 8; ++corner) {
+            const auto pos = grid.getCornerPos(i, j, k, corner);
+            const auto posMatrix = grid.getCornerPos(im, jm, km, corner);
+            for (int d = 0; d < 3; ++d) {
+                BOOST_CHECK_EQUAL(pos[d], posMatrix[d]);
+            }
+        }
+    }
+    BOOST_CHECK_EQUAL(grid.getCornerPos(1, 0, 2, 0)[2], 2000.0);
+    BOOST_CHECK_EQUAL(grid.getCornerPos(1, 0, 2, 4)[2], 2010.0);
+}
+
+BOOST_AUTO_TEST_CASE(DualContinuumWarnsWhenFractureSizesDiffer) {
+    // Without DPGRID the sizes given for fracture cells are not used either.
+    // Differing sizes are reported in one warning, at DUALPORO or DUALPERM.
+    const auto warnings = [](const std::string& model, const std::string& sizes) {
+        auto counter = std::make_shared<Opm::CounterLog>(Opm::Log::MessageType::Warning);
+        Opm::OpmLog::addBackend("DUAL_TEST_COUNTER", counter);
+        {
+            const auto deck = Opm::Parser{}.parseString(
+                "RUNSPEC\n"
+                "OIL\nWATER\n"
+                "DIMENS\n 2 1 2 /\n" +
+                model + "\n"
+                "GRID\n" +
+                sizes +
+                "TOPS\n 4*2000 /\n"
+                "PORO\n 0.20 0.20 0.01 0.01 /\n"
+                "PERMX\n 4*1.0 /\n");
+            const Opm::EclipseGrid grid{ deck };
+        }
+        Opm::OpmLog::removeBackend("DUAL_TEST_COUNTER");
+        return counter->numMessages(Opm::Log::MessageType::Warning);
+    };
+
+    for (const std::string model : {"DUALPORO", "DUALPERM"}) {
+        const auto same = warnings(model, "DX\n 4*100 /\nDY\n 4*100 /\nDZ\n 4*10 /\n");
+        BOOST_CHECK_EQUAL(warnings(model, "DX\n 2*100 2*7 /\nDY\n 4*100 /\nDZ\n 2*10 2*99 /\n"), same + 1);
+        BOOST_CHECK_EQUAL(warnings(model, "DX\n 2*100 /\nDY\n 2*100 /\nDZ\n 2*10 /\n"), same);
+    }
 }
