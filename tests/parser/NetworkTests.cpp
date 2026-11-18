@@ -21,6 +21,8 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <opm/common/OpmLog/OpmLog.hpp>
+#include <opm/common/OpmLog/StreamLog.hpp>
 #include <opm/common/utility/OpmInputError.hpp>
 
 #include <opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquifers.hpp>
@@ -52,6 +54,7 @@
 #include <cstddef>
 #include <memory>
 #include <ranges>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -555,6 +558,42 @@ GRUPNET
     BOOST_CHECK(p.terminal_pressure());
     BOOST_CHECK_EQUAL(p.terminal_pressure().value(), 21 * 100000);
     BOOST_CHECK(p == network.roots()[0]);
+}
+
+BOOST_AUTO_TEST_CASE(StandardNetwork_NEFAC_Ignored)
+{
+    // NEFAC applies to extended networks only.  For a standard network it
+    // is ignored with a warning.
+    const std::string input = R"(
+
+SCHEDULE
+
+GRUPTREE
+'M5S'    'PLAT-A'  /
+'B1'     'M5S'  /
+/
+
+GRUPNET
+'PLAT-A'     21.000  5* /
+'M5S'  1*    3  1*        'NO'  2* /
+'B1'  1*     5  1*        'NO'  2* /
+/
+
+NEFAC
+'M5S'  0.9 /
+/)";
+
+    std::ostringstream warnings;
+    OpmLog::addBackend("STREAM",
+                       std::make_shared<StreamLog>(warnings, Log::MessageType::Warning));
+    BOOST_CHECK_NO_THROW(make_schedule(input));
+    OpmLog::removeBackend("STREAM");
+
+    // NEFAC is on line 16 of the input.
+    const auto log = warnings.str();
+    BOOST_CHECK_MESSAGE(log.find("NEFAC has no effect for a standard network") != std::string::npos,
+                        log);
+    BOOST_CHECK_MESSAGE(log.find("line 16") != std::string::npos, log);
 }
 
 BOOST_AUTO_TEST_SUITE_END()     // Basic_Functionality
