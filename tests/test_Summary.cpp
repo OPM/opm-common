@@ -3034,6 +3034,69 @@ BOOST_AUTO_TEST_CASE(region_vars)
     }
 }
 
+BOOST_AUTO_TEST_CASE(recovery_efficiency)
+{
+    setup cfg("recovery_efficiency");
+
+    auto writer = out::Summary {
+        cfg.config, cfg.es, cfg.grid, cfg.schedule, cfg.name
+    };
+
+    auto st = SummaryState {
+        TimeService::now(), cfg.es.runspec().udqParams().undefinedValue()
+    };
+
+    auto initial = Inplace{};
+    auto current = Inplace{};
+    for (std::size_t r = 1; r <= 10; ++r) {
+        initial.add("FIPNUM", Inplace::Phase::OIL, r, 100.0 * r);
+        current.add("FIPNUM", Inplace::Phase::OIL, r,  75.0 * r);
+
+        // No initial gas in region 10 => RGE should be zero there.
+        initial.add("FIPNUM", Inplace::Phase::GAS, r, (r == 10) ? 0.0 : 200.0 * r);
+        current.add("FIPNUM", Inplace::Phase::GAS, r,  50.0 * r);
+    }
+
+    // FOE and FGE are computed by the simulator and passed through.
+    auto single_values = out::Summary::
+        DynamicSimulatorState::GlobalProcessParameters {};
+    single_values.insert_or_assign("FOE", 0.25);
+    single_values.insert_or_assign("FGE", 0.6);
+
+    auto values = out::Summary::DynamicSimulatorState{};
+    values.well_solution = &cfg.wells;
+    values.wbp = &cfg.wbp;
+    values.group_and_nwrk_solution = &cfg.grp_nwrk;
+    values.single_values = &single_values;
+    values.inplace.current = &current;
+    values.inplace.initial = &initial;
+
+    writer.eval(/* report_step = */ 1, /* secs_elapsed = */ 1.0*day, values, st);
+    writer.add_timestep(st, /* report_step = */ 1, /* ministep_id = */ 0, /* isSubstep = */ false);
+    writer.write();
+
+    auto res = readsum( cfg.name );
+    const auto* resp = res.get();
+
+    BOOST_CHECK_CLOSE(ecl_sum_get_field_var(resp, 0, "FOE"), 0.25, 1.0e-5);
+    BOOST_CHECK_CLOSE(ecl_sum_get_field_var(resp, 0, "FGE"), 0.6, 1.0e-5);
+
+    for (std::size_t r = 1; r <= 10; ++r) {
+        const auto roe_key = "ROE:" + std::to_string(r);
+        const auto rge_key = "RGE:" + std::to_string(r);
+
+        BOOST_REQUIRE_MESSAGE(ecl_sum_has_general_var(resp, roe_key.c_str()),
+                              "Summary file must have " << roe_key);
+        BOOST_REQUIRE_MESSAGE(ecl_sum_has_general_var(resp, rge_key.c_str()),
+                              "Summary file must have " << rge_key);
+
+        BOOST_CHECK_CLOSE(ecl_sum_get_general_var(resp, 0, roe_key.c_str()), 0.25, 1.0e-5);
+
+        const auto expect_rge = (r == 10) ? 0.0 : 0.75;
+        BOOST_CHECK_CLOSE(ecl_sum_get_general_var(resp, 0, rge_key.c_str()), expect_rge, 1.0e-5);
+    }
+}
+
 BOOST_AUTO_TEST_CASE(region_production)
 {
     setup cfg("region_production");
