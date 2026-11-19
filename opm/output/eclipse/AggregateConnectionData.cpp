@@ -376,17 +376,16 @@ namespace {
         }
 
         template <class SConnArray>
-        void injMultContrib(const Opm::Well&         well,
-                            const Opm::Connection&   conn,
+        void injMultContrib(const Opm::Connection&   conn,
                             const Opm::UnitSystem&   units,
                             SConnArray&              sConn)
         {
             using M  = ::Opm::UnitSystem::measure;
             using Ix = ::Opm::RestartIO::Helpers::VectorItems::SConn::index;
-            using IMM = ::Opm::Well::InjMultMode;
 
-            const auto mode = well.getInjMultMode();
-            if (((mode != IMM::CREV) && (mode != IMM::CIRR)) || !conn.activeInjMult()) {
+            // Connection level data is retained also when the well level
+            // mode (WREV) is active.
+            if (! conn.activeInjMult()) {
                 return;
             }
 
@@ -536,7 +535,7 @@ captureDeclaredConnData(const Schedule&     sched,
         }
 
         const auto& well = sched[sim_step].wells(wellName);
-        SConn::injMultContrib(well, conn, units, sc);
+        SConn::injMultContrib(conn, units, sc);
 
         auto xc = this->xConn_(wellID, connID);
         XConn::dynamicContrib(wellName, is_producer,
@@ -577,7 +576,7 @@ captureDeclaredConnDataLGR(const Schedule&     sched,
         }
 
         const auto& well = sched[sim_step].wells(wellName);
-        SConn::injMultContrib(well, conn, units, sc);
+        SConn::injMultContrib(conn, units, sc);
 
         auto xc = this->xConn_(wellID, connID);
         XConn::dynamicContrib(wellName, is_producer,

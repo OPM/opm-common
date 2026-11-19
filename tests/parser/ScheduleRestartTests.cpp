@@ -49,6 +49,7 @@
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQState.hpp>
+#include <opm/input/eclipse/Schedule/Well/WINJMULT.hpp>
 #include <opm/input/eclipse/Schedule/Well/WListManager.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
@@ -1560,4 +1561,108 @@ BOOST_AUTO_TEST_CASE(RestartWINJMULT)
                     restart_sched.getWell(wname, report_step).getInjMultMode());
     }
 
+}
+
+namespace {
+
+// Connection level data must survive a period of well level (WREV) mode,
+// and well level data a period of connection level (CIRR) mode.
+const std::string winjmult_mode_switch_schedule = R"(
+WELSPECS
+  'WI1' 'G1' 5 5 1* 'WATER' /
+  'WI2' 'G1' 1 1 1* 'WATER' /
+/
+COMPDAT
+  'WI1' 5 5 1 3 'OPEN' /
+  'WI2' 1 1 1 3 'OPEN' /
+/
+WCONINJE
+  'WI1' 'WATER' 'OPEN' 'BHP' 1* 1* 400 /
+  'WI2' 'WATER' 'OPEN' 'BHP' 1* 1* 400 /
+/
+WINJMULT
+  'WI1' 350.0 0.001 'CREV' 5 5 1 /
+  'WI1' 300.0 0.002 'CREV' 5 5 2 /
+/
+TSTEP
+  1.0 /
+WINJMULT
+  'WI1' 360.0 0.003 'WREV' /
+/
+TSTEP
+  1.0 /
+WINJMULT
+  'WI1' 340.0 0.004 'CIRR' 5 5 1 /
+/
+TSTEP
+  1.0 /
+TSTEP
+  1.0 /
+)";
+
+void check_injmult_equal(const InjMult& base, const InjMult& restarted)
+{
+    BOOST_CHECK_CLOSE(restarted.fracture_pressure, base.fracture_pressure, 1.0e-5);
+    BOOST_CHECK_CLOSE(restarted.multiplier_gradient, base.multiplier_gradient, 1.0e-5);
+}
+
+void check_injmult_equal(const Well& base, const Well& restarted)
+{
+    BOOST_CHECK(restarted.getInjMultMode() == base.getInjMultMode());
+
+    BOOST_REQUIRE_EQUAL(restarted.aciveWellInjMult(), base.aciveWellInjMult());
+    if (base.aciveWellInjMult()) {
+        check_injmult_equal(base.getWellInjMult(), restarted.getWellInjMult());
+    }
+
+    const auto& base_conns = base.getConnections();
+    const auto& rst_conns = restarted.getConnections();
+    BOOST_REQUIRE_EQUAL(rst_conns.size(), base_conns.size());
+    for (auto i = 0*base_conns.size(); i < base_conns.size(); ++i) {
+        BOOST_REQUIRE_EQUAL(rst_conns[i].activeInjMult(), base_conns[i].activeInjMult());
+        if (base_conns[i].activeInjMult()) {
+            check_injmult_equal(base_conns[i].injmult(), rst_conns[i].injmult());
+        }
+    }
+}
+
+} // Anonymous namespace
+
+BOOST_AUTO_TEST_CASE(RestartWINJMULTModeSwitch)
+{
+    WorkArea work {};
+
+    write_file("BASE.DATA", winjmult_deck("", winjmult_mode_switch_schedule));
+
+    // Report step 2: WREV with retained connection level data.
+    // Report step 3: CIRR with retained well level data.
+    for (const auto report_step : { 2, 3 }) {
+        BOOST_TEST_CONTEXT("Restart at report step " << report_step) {
+            write_winjmult_restart_file("BASE", report_step);
+            write_file("RESTART.DATA",
+                       winjmult_deck(fmt::format("RESTART\n  'BASE' {} /\n", report_step),
+                                     "SKIPREST\n" + winjmult_mode_switch_schedule));
+
+            const auto& [sched, restart_sched, rst_state] =
+                load_schedule_pair("BASE.DATA", "RESTART.DATA",
+                                   fmt::format("BASE.X{:04d}", report_step), report_step);
+
+            for (auto step = static_cast<std::size_t>(report_step); step < sched.size(); ++step) {
+                BOOST_TEST_CONTEXT("Report step " << step) {
+                    check_injmult_equal(sched.getWell("WI1", step),
+                                        restart_sched.getWell("WI1", step));
+                }
+            }
+
+            // Connection (5,5,2) keeps its CREV data in the CIRR period.
+            const auto& wi1 = restart_sched.getWell("WI1", 3);
+            BOOST_CHECK(wi1.getInjMultMode() == Well::InjMultMode::CIRR);
+            BOOST_CHECK_CLOSE(wi1.getConnections()[0].injmult().fracture_pressure, 340.0e5, 1.0e-5);
+            BOOST_CHECK_CLOSE(wi1.getConnections()[1].injmult().fracture_pressure, 300.0e5, 1.0e-5);
+            BOOST_CHECK(! wi1.getConnections()[2].activeInjMult());
+            BOOST_CHECK_CLOSE(wi1.getWellInjMult().fracture_pressure, 360.0e5, 1.0e-5);
+
+            BOOST_CHECK_EQUAL(rst_state.get_well("WI1").inj_mult_mode, (report_step == 2) ? 0 : 2);
+        }
+    }
 }

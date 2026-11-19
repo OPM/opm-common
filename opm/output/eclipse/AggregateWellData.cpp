@@ -1307,9 +1307,9 @@ namespace {
             using Ix = VI::SWell::index;
             using M = ::Opm::UnitSystem::measure;
 
-            if ((well.getInjMultMode() != Opm::Well::InjMultMode::WREV) ||
-                ! well.aciveWellInjMult())
-            {
+            // Well level data is retained also when the connection level
+            // modes (CREV/CIRR) are active.
+            if (! well.aciveWellInjMult()) {
                 return;
             }
 

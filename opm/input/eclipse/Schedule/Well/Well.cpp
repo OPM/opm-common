@@ -2570,6 +2570,19 @@ void Opm::Well::restoreInjMultFromRestart(const RestartIO::RstWell& rst_well)
 {
     using IMVal = RestartIO::Helpers::VectorItems::IWell::Value::InjMultMode;
 
+    // Well level data is retained also when the connection level modes
+    // (CREV/CIRR) are active.
+    const auto has_well_inj_mult = (rst_well.inj_mult_gradient != 0.0)
+        || (rst_well.inj_mult_frac_press != 0.0);
+
+    if (has_well_inj_mult) {
+        // Restart values are in SI units.
+        this->well_inj_mult = InjMult {
+            rst_well.inj_mult_frac_press,
+            rst_well.inj_mult_gradient
+        };
+    }
+
     switch (rst_well.inj_mult_mode) {
     case IMVal::CREV:
         this->inj_mult_mode = InjMultMode::CREV;
@@ -2580,18 +2593,9 @@ void Opm::Well::restoreInjMultFromRestart(const RestartIO::RstWell& rst_well)
         break;
 
     default:
-        // WREV and "no WINJMULT" share the same mode value.  WREV wells
-        // have a non-zero fracture pressure or multiplier gradient.
-        if ((rst_well.inj_mult_gradient != 0.0) ||
-            (rst_well.inj_mult_frac_press != 0.0))
-        {
+        // WREV and "no WINJMULT" share the same mode value.
+        if (has_well_inj_mult) {
             this->inj_mult_mode = InjMultMode::WREV;
-
-            // Restart values are in SI units.
-            this->well_inj_mult = InjMult {
-                rst_well.inj_mult_frac_press,
-                rst_well.inj_mult_gradient
-            };
         }
         break;
     }
