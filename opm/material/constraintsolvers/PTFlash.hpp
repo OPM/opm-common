@@ -641,6 +641,11 @@ protected:
             = is_vapour_trial ? static_cast<int>(gasPhaseIdx) : static_cast<int>(oilPhaseIdx);
         const int reference_phase_idx
             = is_vapour_trial ? static_cast<int>(oilPhaseIdx) : static_cast<int>(gasPhaseIdx);
+        // Stability is a property of the mixture at its own pressure. A trial
+        // at the other phase pressure would see the feed's fugacities shifted
+        // by the pressure ratio, so its collapse onto the feed would end with
+        // a mole number sum away from one and look like an instability.
+        trial_state.setPressure(trial_phase_idx, fluid_state.pressure(reference_phase_idx));
 
         // An absent component has no fugacity ratio. Setting its undefined K
         // to one excludes it from both convergence measures below.

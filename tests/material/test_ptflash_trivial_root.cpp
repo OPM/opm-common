@@ -669,6 +669,76 @@ BOOST_AUTO_TEST_CASE(RelabelledSplitStoresItsFugacityCoefficients)
     }
 }
 
+namespace {
+
+// A cold start with separate phase pressures, as with a gas-oil capillary pressure.
+ScalarFluidState makeColdState(const std::array<Scalar, numComponents>& z,
+                               const Scalar temperature,
+                               const Scalar oilPressure,
+                               const Scalar gasPressure)
+{
+    ScalarFluidState fs;
+    fs.setPressure(FluidSystem::oilPhaseIdx, oilPressure);
+    fs.setPressure(FluidSystem::gasPhaseIdx, gasPressure);
+    fs.setTemperature(temperature);
+    for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+        fs.setMoleFraction(compIdx, z[compIdx]);
+        fs.setKvalue(compIdx, fs.wilsonK_(compIdx));
+    }
+    fs.setLvalue(-1.0);
+    return fs;
+}
+
+// A two-phase result in equilibrium at the phase pressures, decane-rich phase as oil.
+void checkOrientedSplit(const ScalarFluidState& fs)
+{
+    BOOST_CHECK_GT(fs.moleFraction(FluidSystem::oilPhaseIdx, 2),
+                   fs.moleFraction(FluidSystem::gasPhaseIdx, 2));
+    for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+        BOOST_CHECK_SMALL(fs.fugacity(FluidSystem::oilPhaseIdx, compIdx)
+                                  / fs.fugacity(FluidSystem::gasPhaseIdx, compIdx)
+                              - 1.0,
+                          1.e-6);
+    }
+}
+
+} // anonymous namespace
+
+// This vapour is single-phase at either phase pressure. A trial phase tested
+// against the feed at the other pressure sees only the pressure ratio, which
+// made the vapour unstable and labelled it liquid.
+BOOST_AUTO_TEST_CASE(UnequalPressureColdStartKeepsVapour)
+{
+    for (const auto method :
+         {PTFlashMethod::Newton, PTFlashMethod::Ssi, PTFlashMethod::SsiNewton}) {
+        BOOST_TEST_CONTEXT("method " << Opm::ptFlashMethodToString(method))
+        {
+            auto fs = makeColdState({0.5, 0.2, 0.3}, 600.0, 15.e5, 16.e5);
+            BOOST_CHECK(PtFlash::flash_solve_scalar(fs, method, flashTolerance, EOSType::PR));
+            BOOST_CHECK_EQUAL(fs.L(), 0.0);
+        }
+    }
+}
+
+// A 1 bar capillary pressure shifts this split only slightly.
+BOOST_AUTO_TEST_CASE(UnequalPressureColdStartFindsTheSplit)
+{
+    constexpr auto z = std::array {Scalar(0.05), Scalar(0.8), Scalar(0.15)};
+    for (const auto method : {PTFlashMethod::Ssi, PTFlashMethod::SsiNewton}) {
+        BOOST_TEST_CONTEXT("method " << Opm::ptFlashMethodToString(method))
+        {
+            auto reference = makeColdState(z, 360.0, 35.e5, 35.e5);
+            BOOST_REQUIRE(
+                !PtFlash::flash_solve_scalar(reference, method, flashTolerance, EOSType::PR));
+
+            auto fs = makeColdState(z, 360.0, 35.e5, 36.e5);
+            BOOST_REQUIRE(!PtFlash::flash_solve_scalar(fs, method, flashTolerance, EOSType::PR));
+            BOOST_CHECK_SMALL(fs.L() - reference.L(), 0.01);
+            checkOrientedSplit(fs);
+        }
+    }
+}
+
 // An absent component contributes no ratio, but the remaining equal phase
 // compositions must still be recognised as coincident.
 BOOST_AUTO_TEST_CASE(AbsentComponentDoesNotHideCoincidentPhases)
