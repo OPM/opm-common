@@ -240,8 +240,12 @@ NODEPROP
     BOOST_CHECK(network.has_node("PLAT-AX"));
 }
 
-BOOST_AUTO_TEST_CASE(INVALID_VFP_NODE) {
+BOOST_AUTO_TEST_CASE(MANIFOLD_GROUP_OUTLET_VFP) {
     std::string deck_string = R"(
+RUNSPEC
+NETWORK
+ 3 2 /
+
 SCHEDULE
 
 GRUPTREE
@@ -259,7 +263,7 @@ GRUPTREE
 BRANPROP
 --  Downtree  Uptree   #VFP    ALQ
     B1         PLAT-A    5      1*      /
-    C1         PLAT-A    4      1*      /  --This is a choke branch - must have VFP=9999
+    C1         PLAT-A    4      1*      /
 /
 
 NODEPROP
@@ -270,7 +274,17 @@ NODEPROP
 /
 )";
 
-    BOOST_CHECK_THROW( make_schedule(deck_string), std::exception);
+    // C1 is a well group, so item 3 makes it a sub-sea manifold group. Its choke
+    // acts on the common THP of its wells, so the outlet branch may have a VFP table.
+    const auto sched = make_schedule(deck_string);
+    const auto& network = sched[0].network.get();
+    BOOST_CHECK(network.node("C1").as_choke());
+    BOOST_CHECK(network.node("C1").target_group() == "C1");
+
+    const auto C1_uptree = network.uptree_branch("C1");
+    BOOST_REQUIRE(C1_uptree.has_value());
+    BOOST_REQUIRE(C1_uptree->vfp_table().has_value());
+    BOOST_CHECK_EQUAL(*C1_uptree->vfp_table(), 4);
 }
 BOOST_AUTO_TEST_CASE(INVALID_AUTOCHOKE_NODE) {
     std::string deck_string = R"(
@@ -303,6 +317,49 @@ NODEPROP
 )";
 
     BOOST_CHECK_THROW( make_schedule(deck_string), std::exception);
+}
+
+BOOST_AUTO_TEST_CASE(AUTOCHOKE_NODE_NOT_A_WELL_GROUP) {
+    // The automatic choke is implemented for sub-sea manifold well groups
+    // only.  It is rejected on a group of groups and on a node that is not
+    // a group, whatever the VFP table of its outlet branch.
+    const auto deck = [](const std::string_view node,
+                         const std::string_view as_choke,
+                         const int junction_vfp)
+    {
+        return fmt::format(R"(
+RUNSPEC
+NETWORK
+ 4 3 /
+
+SCHEDULE
+
+GRUPTREE
+ 'M5S'  'PLAT-A' /
+ 'B1'   'M5S'    /
+/
+
+BRANPROP
+--  Downtree  Uptree   #VFP    ALQ
+    B1        JUNC     5       1* /
+    JUNC      M5S      {2}     1* /
+    M5S       PLAT-A   9999    1* /
+/
+
+NODEPROP
+--  Node_name  Pr     autoChoke?  addGasLift?  Group_name
+    PLAT-A     21.0   NO          NO           1* /
+    {0}        1*     {1}         NO           1* /
+/
+)", node, as_choke, junction_vfp);
+    };
+
+    BOOST_CHECK_NO_THROW(make_schedule(deck("JUNC", "NO", 5)));
+    BOOST_CHECK_NO_THROW(make_schedule(deck("B1", "YES", 5)));
+
+    BOOST_CHECK_THROW(make_schedule(deck("JUNC", "YES", 5)), std::exception);
+    BOOST_CHECK_THROW(make_schedule(deck("JUNC", "YES", 9999)), std::exception);
+    BOOST_CHECK_THROW(make_schedule(deck("M5S", "YES", 5)), std::exception);
 }
 
 BOOST_AUTO_TEST_CASE(AUTOCHOKE_GROUP_WITH_INJECTOR) {
