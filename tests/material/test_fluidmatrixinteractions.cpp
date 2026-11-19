@@ -431,6 +431,73 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(ApiConformance, Scalar, Types)
     }
 }
 
+// The inverse of the three-point Kr scaling must also exist when the scaled end
+// points are equal (Krw(Sr) == Krw(Smax) > 0). The scaled curve is then
+// flat above Sr, but below Sr it is still the pure vertical scaling by fr/fdisp.
+BOOST_AUTO_TEST_CASE_TEMPLATE(ThreePointScalingInverseEqualScaledEndpoints, Scalar, Types)
+{
+    using Traits = Opm::TwoPhaseMaterialTraits<Scalar, 0, 1>;
+    using RawLaw = Opm::PiecewiseLinearTwoPhaseMaterial<Traits>;
+    using Law = Opm::EclEpsTwoPhaseLaw<RawLaw>;
+
+    auto raw = std::make_shared<typename RawLaw::Params>();
+    raw->setPcnwSamples(std::vector<Scalar>{0, 1}, std::vector<Scalar>{0, 0});
+    raw->setKrwSamples(std::vector<Scalar>{0, 0.75, 1}, std::vector<Scalar>{0, 0.5, 1});
+    raw->setKrnSamples(std::vector<Scalar>{0, 0.25, 1}, std::vector<Scalar>{1, 0.5, 0});
+    raw->finalize();
+
+    auto unscaled = std::make_shared<Opm::EclEpsScalingPoints<Scalar>>();
+    unscaled->setSaturationKrwPoint(0, 0);
+    unscaled->setSaturationKrwPoint(1, 0.75);
+    unscaled->setSaturationKrwPoint(2, 1);
+    unscaled->setSaturationKrnPoint(0, 0);
+    unscaled->setSaturationKrnPoint(1, 0.25);
+    unscaled->setSaturationKrnPoint(2, 1);
+    unscaled->setKrwr(0.5);
+    unscaled->setMaxKrw(1);
+    unscaled->setKrnr(0.5);
+    unscaled->setMaxKrn(1);
+
+    Opm::EclEpsConfig config;
+    config.setEnableSatScaling(true);
+    config.setEnableThreePointKrSatScaling(true);
+    config.setEnableKrwScaling(true);
+    config.setEnableKrnScaling(true);
+    config.setEnableThreePointKrwScaling(true);
+    config.setEnableThreePointKrnScaling(true);
+
+    typename Law::Params params;
+    params.setConfig(config);
+    params.setUnscaledPoints(unscaled);
+    params.setEffectiveLawParams(raw);
+    auto& scaled = params.scaledPoints();
+    scaled.setSaturationKrwPoint(0, 0.25);
+    scaled.setSaturationKrwPoint(1, 0.5);
+    scaled.setSaturationKrwPoint(2, 0.75);
+    scaled.setSaturationKrnPoint(0, 0.25);
+    scaled.setSaturationKrnPoint(1, 0.5);
+    scaled.setSaturationKrnPoint(2, 0.75);
+    scaled.setKrwr(0.8);
+    scaled.setMaxKrw(0.8);
+    scaled.setKrnr(0.8);
+    scaled.setMaxKrn(0.8);
+    params.finalize();
+
+    // below the reference saturation the inverse recovers the saturation
+    for (const Scalar sw : {Scalar{0.3}, Scalar{0.4}, Scalar{0.45}}) {
+        const Scalar krw = Law::twoPhaseSatKrw(params, sw);
+        BOOST_CHECK_CLOSE(Law::twoPhaseSatKrwInv(params, krw), sw, 1e-3);
+    }
+    for (const Scalar sw : {Scalar{0.55}, Scalar{0.6}, Scalar{0.7}}) {
+        const Scalar krn = Law::twoPhaseSatKrn(params, sw);
+        BOOST_CHECK_CLOSE(Law::twoPhaseSatKrnInv(params, krn), sw, 1e-3);
+    }
+    // the flat part is inverted to the lower end (the reference saturation), not NaN
+    const Scalar swFlat = Law::twoPhaseSatKrwInv(params, Scalar{0.8});
+    BOOST_CHECK(std::isfinite(swFlat));
+    BOOST_CHECK_CLOSE(swFlat, Scalar{0.5}, 1e-3);
+}
+
 BOOST_AUTO_TEST_CASE_TEMPLATE(ThreePointScalingCollapsedEndpoints, Scalar, Types)
 {
     using Traits = Opm::TwoPhaseMaterialTraits<Scalar, 0, 1>;

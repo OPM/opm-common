@@ -37,6 +37,7 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <string>
 
 namespace Opm::EclMaterialLaw {
 
@@ -547,6 +548,24 @@ readGlobalEpsOptions_(const EclipseState& eclState)
     gasOilConfig_.initFromState(eclState, EclTwoPhaseSystemType::GasOil);
     oilWaterConfig_.initFromState(eclState, EclTwoPhaseSystemType::OilWater);
     gasWaterConfig_.initFromState(eclState, EclTwoPhaseSystemType::GasWater);
+
+    gasOilImbConfig_.initImbibitionFromState(eclState, EclTwoPhaseSystemType::GasOil);
+    oilWaterImbConfig_.initImbibitionFromState(eclState, EclTwoPhaseSystemType::OilWater);
+    gasWaterImbConfig_.initImbibitionFromState(eclState, EclTwoPhaseSystemType::GasWater);
+
+    // The imbibition Pc keywords are ignored with Leverett (JFUNC) scaling.
+    const auto& fp = eclState.fieldProps();
+    const auto ignoresImbPc = [&fp](const EclEpsConfig& config, const std::string& keyword)
+    {
+        return config.enableLeverettScaling() && fp.has_double(keyword);
+    };
+    if ((hasOil_ && hasWater_ && ignoresImbPc(oilWaterImbConfig_, "IPCW")) ||
+        (hasOil_ && hasGas_ && ignoresImbPc(gasOilImbConfig_, "IPCG")) ||
+        (!hasOil_ && ignoresImbPc(gasWaterImbConfig_, "IPCG")))
+    {
+        OpmLog::warning("The imbibition capillary pressure scaling keywords (IPCW/IPCG) "
+                        "are ignored, since the Leverett J-function (JFUNC) is used.");
+    }
 }
 
 template<class TraitsT>

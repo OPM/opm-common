@@ -29,11 +29,23 @@
 
 #include <opm/common/utility/gpuDecorators.hpp>
 
+#include <limits>
 #include <string>
 
 namespace Opm {
 
 class EclipseState;
+
+/*!
+ * \brief Relative tolerance (with respect to the magnitude of the values) for
+ *        treating two relative permeability values as equal.
+ *
+ * Relative permeability values that are equal in the tables may differ by
+ * round-off after interpolation and scaling. A strict comparison could then
+ * select a branch with a (nearly) zero denominator.
+ */
+template <class Scalar>
+inline constexpr Scalar krEqualityTolerance = 1000 * std::numeric_limits<Scalar>::epsilon();
 
 /*!
  * \brief Specified which fluids are involved in a given twophase material law for
@@ -175,7 +187,27 @@ public:
                        const std::string& prefix = "",
                        const std::string& suffix = "");
 
+    /*!
+     * \brief Reads the configuration for the imbibition curve (hysteresis).
+     *
+     * As initFromState(), but scaling is also enabled by the imbibition
+     * keywords (IKRW, IKRWR, IPCW, ...). The drainage curve must use the
+     * configuration from initFromState(), so that the imbibition keywords do
+     * not alter it (e.g. IKRWR alone must not enable three-point scaling of the
+     * drainage curve).
+     */
+    void initImbibitionFromState(const EclipseState& eclState,
+                                 EclTwoPhaseSystemType twoPhaseSystemType,
+                                 const std::string& prefix = "",
+                                 const std::string& suffix = "");
+
 private:
+    void initFromState_(const EclipseState& eclState,
+                        EclTwoPhaseSystemType twoPhaseSystemType,
+                        const std::string& prefix,
+                        const std::string& suffix,
+                        bool imbibition);
+
     // enable scaling of the input saturations (i.e., rescale the x-Axis)
     bool enableSatScaling_{false};
 

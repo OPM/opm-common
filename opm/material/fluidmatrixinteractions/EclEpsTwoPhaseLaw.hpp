@@ -32,7 +32,9 @@
 #include <opm/common/utility/gpuDecorators.hpp>
 
 #include <algorithm>
+#include <cmath>
 #include <cstddef>
+#include <limits>
 #include <type_traits>
 
 namespace Opm {
@@ -231,6 +233,22 @@ public:
     template <class Evaluation>
     static Evaluation twoPhaseSatKrwInv(const Params& params, const Evaluation& krwScaled)
     {
+        if (params.config().enableKrwScaling() && params.config().enableThreePointKrwScaling()) {
+            // Special case of the three-point scaling, Kr(Smax) == Kr(Sr): the
+            // scaled function is linear in saturation between (sr,fr) and (sm,fm)
+            // while the unscaled value is constant there, so it can only be
+            // inverted in saturation (see unscaledToScaledKrw_).
+            const auto fdisp = params.unscaledPoints().krwr();
+            const auto fmax  = params.unscaledPoints().maxKrw();
+            const auto fr    = params.scaledPoints().krwr();
+            const auto fm    = params.scaledPoints().maxKrw();
+            const auto sm    = params.scaledPoints().saturationKrwPoints()[2];
+            const auto sr    = std::min(params.scaledPoints().saturationKrwPoints()[1], sm);
+            if (!(fr == fdisp && fm == fmax) && !krMaxExceedsKrR_(fmax, fdisp) &&
+                sr < sm && fm > fr && krwScaled > fr) {
+                return sr + (krwScaled - fr) / (fm - fr) * (sm - sr);
+            }
+        }
         const Evaluation krwUnscaled = scaledToUnscaledKrw_(params, krwScaled);
         const Evaluation SwUnscaled = EffLaw::twoPhaseSatKrwInv(params.effectiveLawParams(), krwUnscaled);
         return unscaledToScaledSatKrw(params, SwUnscaled);
@@ -256,6 +274,19 @@ public:
     template <class Evaluation>
     static Evaluation twoPhaseSatKrnInv(const Params& params, const Evaluation& krnScaled)
     {
+        if (params.config().enableKrnScaling() && params.config().enableThreePointKrnScaling()) {
+            // Kr(Smax) == Kr(Sr) special case, see twoPhaseSatKrwInv(): invert in saturation.
+            const auto fdisp = params.unscaledPoints().krnr();
+            const auto fmax  = params.unscaledPoints().maxKrn();
+            const auto fr    = params.scaledPoints().krnr();
+            const auto fm    = params.scaledPoints().maxKrn();
+            const auto sl    = params.scaledPoints().saturationKrnPoints()[0];
+            const auto sr    = std::max(params.scaledPoints().saturationKrnPoints()[1], sl);
+            if (!(fr == fdisp && fm == fmax) && !krMaxExceedsKrR_(fmax, fdisp) &&
+                sr > sl && fm > fr && krnScaled > fr) {
+                return sr - (krnScaled - fr) / (fm - fr) * (sr - sl);
+            }
+        }
         const Evaluation krnUnscaled = scaledToUnscaledKrn_(params, krnScaled);
         const Evaluation SwUnscaled = EffLaw::twoPhaseSatKrnInv(params.effectiveLawParams(), krnUnscaled);
         return unscaledToScaledSatKrn(params, SwUnscaled);
@@ -521,6 +552,71 @@ private:
     }
 
     /*!
+     * \brief True if the end point relative permeability Kr(Smax) is larger than
+     *        Kr(Sr) by more than round-off.
+     */
+    OPM_HOST_DEVICE static bool krMaxExceedsKrR_(const Scalar fmax, const Scalar fdisp)
+    {
+        return fmax - fdisp > krEqualityTolerance<Scalar> * std::max(std::abs(fmax), std::abs(fdisp));
+    }
+
+    /*!
+     * \brief Invert the three-point vertical scaling in terms of the relperm value.
+     *
+     * The forward scaling maps an unscaled value u to
+     *   u * fr/fdisp                       for u <= fdisp
+     *   fr + (u - fdisp)/(fmax - fdisp)*(fm - fr)   for u >  fdisp
+     * (the saturation intervals of the wetting and non-wetting phase are
+     * mirrored, but in terms of function values both are increasing and
+     * piecewise linear). This is the inverse of that map.
+     */
+    template <class Evaluation>
+    OPM_HOST_DEVICE static Evaluation threePointInverseKr_(const Evaluation& scaledKr,
+                                                           const Scalar fdisp,
+                                                           const Scalar fmax,
+                                                           const Scalar fr,
+                                                           const Scalar fm)
+    {
+        // Upper segment: needs fm > fr only (also valid if fr == 0, fdisp == 0 or
+        // fmax == fdisp; in the last case the unscaled value is constant = fdisp).
+        if (scaledKr > fr) {
+            if (fm > fr) {
+                return fdisp + (scaledKr - fr) / (fm - fr) * (fmax - fdisp);
+            }
+            // fm == fr: the scaled function is flat above the reference point, so
+            // values above it are not attained. Return the reference value.
+            return Evaluation(fdisp);
+        }
+        // Lower segment: the ratio fr/fdisp is only defined for positive values.
+        // If either is zero the forward map is the identity (fdisp == 0) or maps
+        // everything to zero (fr == 0), so the inverse is the identity as well.
+        if (fr > 0 && fdisp > 0) {
+            return scaledKr * (fdisp / fr);
+        }
+        return scaledKr;
+    }
+
+    /*!
+     * \brief Pure vertical scaling by fr/fdisp in the interval where the
+     *        unscaled function is bounded by its value fdisp at the reference point.
+     *
+     * If fdisp is zero the unscaled function is zero throughout the interval
+     * (it is monotone), so there is nothing to scale and the ratio fr/fdisp
+     * must not be formed: 0*(0/0) would give NaN, e.g. when the reference
+     * relative permeability of the unchanged drainage curve is zero.
+     */
+    template <class Evaluation>
+    OPM_HOST_DEVICE static Evaluation scaleByRatio_(const Evaluation& unscaledKr,
+                                                    const Scalar fr,
+                                                    const Scalar fdisp)
+    {
+        if (!(fdisp > Scalar(0))) {
+            return unscaledKr;
+        }
+        return unscaledKr * (fr / fdisp);
+    }
+
+    /*!
      * \brief Scale the wetting phase relative permeability of a phase according to the given parameters
      */
     template <class Evaluation>
@@ -551,15 +647,22 @@ private:
         const auto fr = scaled.krwr();
         const auto fm = scaled.maxKrw();
 
+        // The vertical scaling can be unchanged, e.g. for the imbibition curve
+        // when only the drainage keywords (KRWR/KRW) are given. Then leave the
+        // curve alone.
+        if (fr == fdisp && fm == fmax) {
+            return unscaledKrw;
+        }
+
         if (SwScaled >= sm) {
             return fm;
         }
 
         if (! (SwScaled > sr)) {
             // Pure vertical scaling in left interval ([SWL, SR])
-            return unscaledKrw * (fr / fdisp);
+            return scaleByRatio_(unscaledKrw, fr, fdisp);
         }
-        else if (fmax > fdisp) {
+        else if (krMaxExceedsKrR_(fmax, fdisp)) {
             // s \in [sr, sm), sm > sr; normal case: Kr(Smax) > Kr(Sr).
             //
             // Linear function between (sr,fr) and (sm,fm) in terms of
@@ -592,6 +695,21 @@ private:
     {
         if (!params.config().enableKrwScaling())
             return scaledKrw;
+
+        if (params.config().enableThreePointKrwScaling()) {
+            const auto fdisp = params.unscaledPoints().krwr();
+            const auto fmax  = params.unscaledPoints().maxKrw();
+            const auto fr    = params.scaledPoints().krwr();
+            const auto fm    = params.scaledPoints().maxKrw();
+            // The map is piecewise linear in terms of the function value (see
+            // unscaledToScaledKrw_) and invertible if fm > fr, also for zero or
+            // equal reference values. If fm == fr the scaled function is flat
+            // above the reference point, but the part below it is still
+            // invertible.
+            if (fm >= fr) {
+                return threePointInverseKr_(scaledKrw, fdisp, fmax, fr, fm);
+            }
+        }
 
         Scalar alpha = params.unscaledPoints().maxKrw()/params.scaledPoints().maxKrw();
         return scaledKrw*alpha;
@@ -629,6 +747,11 @@ private:
         const auto fr = scaled.krnr();
         const auto fm = scaled.maxKrn();
 
+        // See unscaledToScaledKrw_(): unchanged vertical scaling leaves the curve alone.
+        if (fr == fdisp && fm == fmax) {
+            return unscaledKrn;
+        }
+
         // Note logic here.  Krn is a decreasing function of Sw (dKrn/dSw <=
         // 0) so the roles of left and right intervals are reversed viz
         // unscaledToScaledKrw_().
@@ -639,9 +762,9 @@ private:
 
         if (! (SwScaled < sr)) {
             // Pure vertical scaling in right-hand interval ([SR, SWU])
-            return unscaledKrn * (fr / fdisp);
+            return scaleByRatio_(unscaledKrn, fr, fdisp);
         }
-        else if (fmax > fdisp) {
+        else if (krMaxExceedsKrR_(fmax, fdisp)) {
             // s \in [SWL, SR), SWL < SR; normal case: Kr(Swl) > Kr(Sr).
             //
             // Linear function between (sr,fr) and (sl,fm) in terms of
@@ -674,6 +797,17 @@ private:
     {
         if (!params.config().enableKrnScaling())
             return scaledKrn;
+
+        if (params.config().enableThreePointKrnScaling()) {
+            const auto fdisp = params.unscaledPoints().krnr();
+            const auto fmax  = params.unscaledPoints().maxKrn();
+            const auto fr    = params.scaledPoints().krnr();
+            const auto fm    = params.scaledPoints().maxKrn();
+            // see scaledToUnscaledKrw_ for fm == fr
+            if (fm >= fr) {
+                return threePointInverseKr_(scaledKrn, fdisp, fmax, fr, fm);
+            }
+        }
 
         Scalar alpha = params.unscaledPoints().maxKrn()/params.scaledPoints().maxKrn();
         return scaledKrn*alpha;

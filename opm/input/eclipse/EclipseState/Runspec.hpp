@@ -348,6 +348,12 @@ public:
      */
     bool fixWettingPhaseKillough() const;
 
+    /*!
+     * \brief Extend the imbibition water relperm beyond the end of the imbibition
+     *        table linearly to the drainage end point (OPM only).
+     */
+    bool extendImbibitionKrw() const;
+
     bool operator==(const EclHysterConfig& data) const;
 
     template<class Serializer>
@@ -361,6 +367,7 @@ public:
         serializer(activeWagHyst);
         serializer(enablePcScaling);
         serializer(enableKilloughWettingFix);
+        serializer(enableImbibitionKrwExtension);
     }
 
 private:
@@ -383,6 +390,9 @@ private:
 
     // flag to enable Fix for wetting phase Killough
     bool enableKilloughWettingFix { false };
+
+    // flag to extend the imbibition water relperm beyond the imbibition table
+    bool enableImbibitionKrwExtension { false };
 };
 
 class SatFuncControls {

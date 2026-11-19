@@ -35,10 +35,84 @@
 #include <opm/material/fluidmatrixinteractions/EclEpsScalingPoints.hpp>
 #include <opm/material/fluidmatrixinteractions/EclHysteresisConfig.hpp>
 
+#include <algorithm>
 #include <cassert>
 #include <cmath>
+#include <limits>
 #include <memory>
+#include <type_traits>
+#include <utility>
+
 namespace Opm {
+
+namespace EclHysteresisDetail {
+
+//! True if the effective-law parameters carry end-point scaling information
+//! (config() and scaled/unscaled scaling points), as the EclEpsTwoPhaseLaw
+//! parameters do. Plain laws such as Brooks-Corey do not.
+template <class P, class = void>
+struct HasEpsPoints : std::false_type {};
+
+template <class P>
+struct HasEpsPoints<P, std::void_t<decltype(std::declval<const P&>().config().enableSatScaling()),
+                                   decltype(std::declval<const P&>().scaledPoints().saturationKrwPoints()[2]),
+                                   decltype(std::declval<const P&>().unscaledPoints().saturationKrwPoints()[2])>>
+    : std::true_type {};
+
+/*!
+ * \brief The largest wetting-phase saturation of an end-point scaled two-phase
+ *        law, i.e. the last of its wetting-phase relperm saturation scaling points
+ *        (the saturation at zero non-wetting saturation for the drainage curve,
+ *        and the end of the table for the imbibition curve).
+ *
+ * Laws without end-point scaling information (e.g. Brooks-Corey) return
+ * \c defaultValue.
+ */
+template <class EffLawParams, class Scalar>
+Scalar krwSwMax(const EffLawParams& effParams, const Scalar defaultValue)
+{
+    if constexpr (HasEpsPoints<EffLawParams>::value) {
+        const auto& points = effParams.config().enableSatScaling()
+            ? effParams.scaledPoints()
+            : effParams.unscaledPoints();
+        return points.saturationKrwPoints()[2];
+    }
+    else {
+        return defaultValue;
+    }
+}
+
+/*!
+ * \brief The bounding imbibition curve of the wetting phase, extended beyond the
+ *        end of the imbibition table.
+ *
+ * Beyond the table end (generally at Sg = Sncri) the curve interpolates linearly
+ * in saturation to the drainage end point instead of the flat extrapolation.
+ * It is used as the bound of the Killough scanning curve and for its anchor at
+ * the trapped saturation, independently of EHYSTR item 15 (which only selects
+ * the curve used below the trapped saturation): a flat extrapolation of the
+ * table is not a meaningful bound.
+ */
+template <class EffLaw, class Evaluation, class ...Args>
+Evaluation krwImbibitionExtended(const typename EffLaw::Params& drainageParams,
+                                 const typename EffLaw::Params& imbibitionParams,
+                                 const Evaluation& Sw)
+{
+    using Scalar = typename EffLaw::Scalar;
+    Evaluation Krwi = EffLaw::template twoPhaseSatKrw<Evaluation, Args...>(imbibitionParams, Sw);
+    const Scalar SwTab = krwSwMax(imbibitionParams, std::numeric_limits<Scalar>::max());
+    const Scalar SwEnd = krwSwMax(drainageParams, Scalar(1));
+    if (Sw > SwTab && SwEnd > SwTab) {
+        const Evaluation KrwdEnd = EffLaw::template twoPhaseSatKrw<Evaluation, Args...>(drainageParams, Evaluation(SwEnd));
+        const Evaluation KrwiTab = EffLaw::template twoPhaseSatKrw<Evaluation, Args...>(imbibitionParams, Evaluation(SwTab));
+        const Evaluation t = max(Evaluation(0.0), (SwEnd - Sw) / (SwEnd - SwTab));
+        Krwi = KrwdEnd + t * (KrwiTab - KrwdEnd);
+    }
+    return Krwi;
+}
+
+} // namespace EclHysteresisDetail
+
 // The independent history needed by ordinary (non-WAG) hysteresis.
 template <class Scalar>
 struct EclHysteresisCompactState
@@ -508,13 +582,24 @@ public:
     Scalar krnWght() const
     { return KrndHy_/KrndMax_; }
 
-    template <class Evaluation>
-    Evaluation krwWght(const Evaluation& Krwd) const
+    /*!
+     * \brief The Killough wetting phase relative permeability at the trapped
+     *        non-wetting saturation, independent of the current drainage value.
+     *
+     * This is the end value of the Killough scanning curve at Sw = 1 - Sncrt.
+     */
+    Scalar krwiAtTrapped() const
     {
         // a = 1 (deltaKrw)^a Formulation according to KILLOUGH 1976
         Scalar deltaKrw = Krwi_snrmax() - Krwd_sncri();
-        Scalar Krwi_snr = Krwd_sncrt() + deltaKrw * (Sncrt() / max(saturationEpsilon_, Sncri()));
-        return (Krwi_snr - Krwd) / ( Krwi_snrmax() - Krwi_snmax());
+        // Measure the saturations from the drainage critical saturation so that
+        // the correction vanishes when Sncrt -> Sncrd (reversal just above the
+        // critical saturation); identical to Sncrt/Sncri for Sncrd = 0.
+        const Scalar den = Sncri() - Sncrd();
+        const Scalar ratio = (den > saturationEpsilon_)
+            ? (Sncrt() - Sncrd()) / den
+            : Sncrt() / max(saturationEpsilon_, Sncri());
+        return Krwd_sncrt() + deltaKrw * ratio;
     }
 
     Scalar krwdMax() const
@@ -545,6 +630,30 @@ public:
     Scalar Krwd_sncrt() const
     {
         return Krwd_sncrt_;
+    }
+
+    /*!
+     * \brief The imbibition wetting-phase relperm at the trapped non-wetting
+     *        saturation, Sw = 1 - Sncrt (Killough).
+     */
+    Scalar Krwi_sncrt() const
+    {
+        return Krwi_sncrt_;
+    }
+
+    /*!
+     * \brief The Killough wetting-phase relperm at the trapped saturation,
+     *        Sw = 1 - Sncrt.
+     *
+     * This is krwiAtTrapped() limited to lie between the drainage and the
+     * (extended) imbibition curves, as the scanning curve is. Using the same
+     * value as anchor for the continuations below the trapped saturation keeps
+     * Krw continuous there also when the tables are not proportional. It only
+     * depends on the hysteresis state, so it is updated together with Sncrt.
+     */
+    Scalar krwTrappedAnchor() const
+    {
+        return KrwTrappedAnchor_;
     }
 
     Scalar pcWght() const // Aligning pci and pcd at Swir
@@ -835,6 +944,9 @@ public:
             KrndHy_ = state.KrndHy;
             KrwdHy_ = state.KrwdHy;
             Krwd_sncrt_ = state.Krwd_sncrt;
+            if (config().krHysteresisModel() == 4) {
+                updateKilloughWettingAnchor_();
+            }
             SncrtWAG_ = state.SncrtWAG;
             SncrtWAGPrev_ = state.SncrtWAGPrev;
             SncrtWAGImb_ = state.SncrtWAGImb;
@@ -950,7 +1062,19 @@ private:
                 Swcrt_ = Swcrd_;
             }
             Krwd_sncrt_ = EffLawT::twoPhaseSatKrw(drainageParams(), 1 - Sncrt());
+            updateKilloughWettingAnchor_();
         }
+    }
+
+    void updateKilloughWettingAnchor_()
+    {
+        const Scalar SwT = 1.0 - Sncrt();
+        Krwi_sncrt_ = EffLawT::twoPhaseSatKrw(imbibitionParams(), SwT);
+        const Scalar Krwd = Krwd_sncrt_;
+        const Scalar Krwi = EclHysteresisDetail::krwImbibitionExtended<EffLawT, Scalar>(drainageParams(),
+                                                                                        imbibitionParams(),
+                                                                                        SwT);
+        KrwTrappedAnchor_ = std::min(std::max(krwiAtTrapped(), std::min(Krwd, Krwi)), std::max(Krwd, Krwi));
     }
 
     void updateWagDerivedParams_()
@@ -1072,6 +1196,8 @@ private:
     Scalar Krwi_snmax_{};
     Scalar Krwi_snrmax_{};
     Scalar Krwd_sncrt_{};
+    Scalar Krwi_sncrt_{};
+    Scalar KrwTrappedAnchor_{};
     Scalar Swcrt_{}; // trapped wetting phase saturation
 
     Scalar pcmaxd_{};  // max pc for drain

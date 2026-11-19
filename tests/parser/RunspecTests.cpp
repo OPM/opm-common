@@ -1569,3 +1569,30 @@ WAGHYSTR
     BOOST_CHECK_EQUAL(hyst.krHysteresisModel(), 0);
     BOOST_CHECK_EQUAL(hyst.modParamTrapped(), 0.0);
 }
+
+BOOST_AUTO_TEST_CASE(EHYSTR_ExtendImbibitionKrw)
+{
+    const auto deck = [](const std::string& item15)
+    {
+        return Parser{}.parseString(R"(
+RUNSPEC
+OIL
+WATER
+GAS
+SATOPTS
+  HYSTER /
+PROPS
+EHYSTR
+  1* 4 1* 1* BOTH 1* 1* 1* 1* 1* 1* 1* 1* 1* )" + item15 + R"( /
+)");
+    };
+
+    // item 15 is OPM only and defaults to 0 (flat extrapolation)
+    BOOST_CHECK(!EclHysterConfig { deck("1*") }.extendImbibitionKrw());
+    BOOST_CHECK(!EclHysterConfig { deck("0") }.extendImbibitionKrw());
+    BOOST_CHECK( EclHysterConfig { deck("1") }.extendImbibitionKrw());
+    BOOST_CHECK_THROW(EclHysterConfig { deck("2") }, std::runtime_error);
+
+    // the item is part of the comparison
+    BOOST_CHECK(!(EclHysterConfig { deck("0") } == EclHysterConfig { deck("1") }));
+}

@@ -459,6 +459,14 @@ EclHysterConfig::EclHysterConfig(const Opm::Deck& deck)
                     "(the 13 item of the 'EHYSTR' keyword).");
             }
             enableKilloughWettingFix = fix_wetting_phase_killough;
+
+            const int extend_imbibition_krw = ehystrKeyword.getRecord(0).getItem<Kw::extend_imbibition_krw>().get<int>(0);
+            if (extend_imbibition_krw != 0 && extend_imbibition_krw != 1) {
+                throw std::runtime_error(
+                    "Only 0 and 1 allowed for the 'extend imbibition water relperm flag' "
+                    "(the 15 item of the 'EHYSTR' keyword).");
+            }
+            enableImbibitionKrwExtension = extend_imbibition_krw;
         }
 
         if (pcHystMod >= 0) {
@@ -483,6 +491,7 @@ EclHysterConfig EclHysterConfig::serializationTestObject()
     result.activeWagHyst = true;
     result.enablePcScaling = false;
     result.enableKilloughWettingFix = false;
+    result.enableImbibitionKrwExtension = true;
 
     return result;
 }
@@ -511,6 +520,9 @@ bool EclHysterConfig::doPcScaling() const
 bool EclHysterConfig::fixWettingPhaseKillough() const
 { return enableKilloughWettingFix; }
 
+bool EclHysterConfig::extendImbibitionKrw() const
+{ return enableImbibitionKrwExtension; }
+
 bool EclHysterConfig::operator==(const EclHysterConfig& data) const
 {
     return (this->active() == data.active())
@@ -521,6 +533,7 @@ bool EclHysterConfig::operator==(const EclHysterConfig& data) const
         && (this->activeWag() == data.activeWag())
         && (this->doPcScaling() == data.doPcScaling())
         && (this->fixWettingPhaseKillough() == data.fixWettingPhaseKillough())
+        && (this->extendImbibitionKrw() == data.extendImbibitionKrw())
         ;
 }
 
