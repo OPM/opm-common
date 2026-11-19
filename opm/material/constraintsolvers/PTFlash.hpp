@@ -271,6 +271,15 @@ protected:
                     L_scalar = RachfordRice::solve(K_scalar, z_scalar, verbosity);
                     newton_jacobian = flash_2ph(z_scalar, twoPhaseMethod, K_scalar, L_scalar,
                                                 fluid_state, flash_tolerance, eos_type, verbosity);
+                    keepHeavierPhaseInOilSlot_(z_scalar,
+                                               twoPhaseMethod,
+                                               K_scalar,
+                                               L_scalar,
+                                               fluid_state,
+                                               flash_tolerance,
+                                               eos_type,
+                                               verbosity,
+                                               newton_jacobian);
                     return true;
                 }
                 catch (const NumericalProblem& error) {
@@ -369,16 +378,6 @@ protected:
                 // Cell is one-phase. Use Li's phase labeling method to see if it's liquid or vapor
                 L_scalar = li_single_phase_label_(fluid_state, z_scalar, verbosity);
             }
-        } else {
-            keepHeavierPhaseInOilSlot_(z_scalar,
-                                       twoPhaseMethod,
-                                       K_scalar,
-                                       L_scalar,
-                                       fluid_state,
-                                       flash_tolerance,
-                                       eos_type,
-                                       verbosity,
-                                       newton_jacobian);
         }
         fluid_state.setLvalue(L_scalar);
         return {is_single_phase, newton_jacobian};
@@ -409,7 +408,12 @@ protected:
      * With unequal phase pressures the swapped phases were in equilibrium at
      * each other's pressure, so the split is solved again from them.
      * \p newton_jacobian is cleared when the phases are swapped and replaced by
-     * the Jacobian of the solve that follows.
+     * the Jacobian of the solve that follows. Only a two-phase split with
+     * distinct phases is relabelled.
+     *
+     * \throws NumericalProblem when the split solved again is not two-phase
+     *         with the heavier phase in the oil slot, so the caller can
+     *         reassess phase stability.
      */
     template <class FlashFluidState, class ComponentVector>
     static void keepHeavierPhaseInOilSlot_(const ComponentVector& z,
@@ -427,7 +431,10 @@ protected:
                 return fluid_state.moleFraction(phaseIdx, compIdx);
             });
         };
-        if (!(phaseTemperature(gasPhaseIdx) > phaseTemperature(oilPhaseIdx))) {
+        const auto phasesSwapped = [&phaseTemperature] {
+            return phaseTemperature(gasPhaseIdx) > phaseTemperature(oilPhaseIdx);
+        };
+        if (!(L > 0 && L < 1) || phasesCoincide_(fluid_state) || !phasesSwapped()) {
             return;
         }
         for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
@@ -454,10 +461,11 @@ protected:
         }
         newton_jacobian = flash_2ph(z, method, K, L, fluid_state, flash_tolerance, eos_type,
                                     verbosity);
-        if (!(L > 0 && L < 1) || phasesCoincide_(fluid_state)) {
+        // Newton can return to the swapped split; swapping again would not end.
+        if (!(L > 0 && L < 1) || phasesCoincide_(fluid_state) || phasesSwapped()) {
             OPM_THROW_NOLOG(NumericalProblem,
-                            "The relabelled split did not stay two-phase when solved again "
-                            "at the phase pressures");
+                            "The relabelled split did not stay two-phase with the heavier "
+                            "phase as oil when solved again at the phase pressures");
         }
     }
 

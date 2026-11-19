@@ -739,6 +739,48 @@ BOOST_AUTO_TEST_CASE(UnequalPressureColdStartFindsTheSplit)
     }
 }
 
+// Here the swapped split fails to solve again at the phase pressures. That
+// must lead to the stability retry, not out of the flash; Newton's singular
+// Jacobian escaped as a Dune exception.
+BOOST_AUTO_TEST_CASE(FailedRelabelledSplitReassessesStability)
+{
+    constexpr auto nearUnitK = std::array {Scalar(0.99), Scalar(1.01), Scalar(1.02)};
+    for (const auto method :
+         {PTFlashMethod::Newton, PTFlashMethod::Ssi, PTFlashMethod::SsiNewton}) {
+        BOOST_TEST_CONTEXT("method " << Opm::ptFlashMethodToString(method))
+        {
+            auto fs = makeColdState({0.76524, 0.16825, 0.06651}, 352.0, 125.e5, 130.e5);
+            for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+                fs.setKvalue(compIdx, nearUnitK[compIdx]);
+            }
+            fs.setLvalue(0.5);
+            try {
+                if (!PtFlash::flash_solve_scalar(fs, method, flashTolerance, EOSType::PR)) {
+                    checkOrientedSplit(fs);
+                }
+            }
+            catch (const Opm::NumericalProblem&) {
+                BOOST_CHECK(method == PTFlashMethod::Newton);
+            }
+        }
+    }
+}
+
+// Newton solves this swapped split back into the swapped slots. It may fail
+// here, but must not return the split with the heavier phase as gas.
+BOOST_AUTO_TEST_CASE(RelabelledNewtonSplitIsCheckedAgain)
+{
+    auto fs = makeColdState({0.1, 0.6, 0.3}, 360.0, 135.e5, 136.e5);
+    try {
+        BOOST_CHECK(
+            !PtFlash::flash_solve_scalar(fs, PTFlashMethod::Newton, flashTolerance, EOSType::PR));
+        checkOrientedSplit(fs);
+    }
+    catch (const Opm::NumericalProblem&) {
+        // Failing is acceptable here; the swapped split is not.
+    }
+}
+
 // An absent component contributes no ratio, but the remaining equal phase
 // compositions must still be recognised as coincident.
 BOOST_AUTO_TEST_CASE(AbsentComponentDoesNotHideCoincidentPhases)
