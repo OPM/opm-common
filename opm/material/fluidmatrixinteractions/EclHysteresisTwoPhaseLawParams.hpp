@@ -88,6 +88,10 @@ Scalar krwSwMax(const EffLawParams& effParams, const Scalar defaultValue)
  *
  * Beyond the table end (generally at Sg = Sncri) the curve interpolates linearly
  * in saturation to the drainage end point instead of the flat extrapolation.
+ * It is used as the bound of the Killough scanning curve and for its anchor at
+ * the trapped saturation, independently of EHYSTR item 15 (which only selects
+ * the curve used below the trapped saturation): a flat extrapolation of the
+ * table is not a meaningful bound.
  */
 template <class EffLaw, class Evaluation, class ...Args>
 Evaluation krwImbibitionExtended(const typename EffLaw::Params& drainageParams,

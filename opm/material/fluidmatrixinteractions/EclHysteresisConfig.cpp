@@ -44,6 +44,7 @@ void EclHysteresisConfig::initFromState(const Runspec& runspec)
     enableWagHyst_ = runspec.hysterPar().activeWag();
     enablePcScalingHyst_ = runspec.hysterPar().doPcScaling();
     enableWettingPhaseKilloughFix_ = runspec.hysterPar().fixWettingPhaseKillough();
+    enableImbibitionKrwExtension_ = runspec.hysterPar().extendImbibitionKrw();
 
 }
 

@@ -3166,10 +3166,18 @@ static std::vector<std::array<Scalar,2>> gasWaterRelpermPath(const std::string& 
     return result;
 }
 
+// EHYSTR with item 15 (extend the imbibition water relperm beyond the imbibition
+// table) set to \c extend; items 6-14 take their defaults.
+static std::string ehystrExtension(const std::string& model, const bool extend)
+{
+    return "0.1 " + model + " 0.1 1* BOTH 1* 1* 1* 1* 1* 1* 1* 1* 1* " + (extend ? "1" : "0") + " /";
+}
+
 // Models 1 and 3: the imbibition SWFN table ends at Sw = 0.7 with Krw = 0.3,
 // while the drainage table runs to Sw = 1 with Krw = 1. Within the imbibition
-// table its values are used; beyond it Krw is interpolated linearly in
-// saturation to the drainage value at Sw = 1 (Sg = 0), not held flat at 0.3.
+// table its values are used; beyond it, with EHYSTR item 15 = 1, Krw is
+// interpolated linearly in saturation to the drainage value at Sw = 1 (Sg = 0),
+// and with item 15 = 0 (default) it is held flat at 0.3.
 BOOST_AUTO_TEST_CASE_TEMPLATE(GasWaterTruncatedImbibitionTableModels13, Scalar, Types)
 {
     const std::string sgfn = "0.0 0.0 0.0\n    0.8 1.0 0.0 /";
@@ -3177,11 +3185,22 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(GasWaterTruncatedImbibitionTableModels13, Scalar, 
     const std::string swfnImb = "0.2 0.0 0.0\n    0.7 0.3 0.0 /";
 
     for (const char* model : {"1", "3"}) {
-        const auto deckString = gasWaterHysteresisDeck(std::string("0.1 ") + model + " 0.1 1* BOTH /",
-                                                       sgfn, sgfn, swfnDrain, swfnImb);
         const std::vector<Scalar> sgPath = {0.0, 0.15, 0.30, 0.4, 0.5};
-        const auto kr = gasWaterRelpermPath<Scalar>(deckString, sgPath);
         const Scalar tol = 1e-4;
+
+        // default (item 15 = 0, also given explicitly): flat extrapolation
+        for (const std::string& ehystr : {std::string("0.1 ") + model + " 0.1 1* BOTH /",
+                                          ehystrExtension(model, false)}) {
+            const auto krFlat = gasWaterRelpermPath<Scalar>(
+                gasWaterHysteresisDeck(ehystr, sgfn, sgfn, swfnDrain, swfnImb), sgPath);
+            BOOST_CHECK_SMALL(krFlat[0][0] - Scalar(0.3), tol);
+            BOOST_CHECK_SMALL(krFlat[1][0] - Scalar(0.3), tol);
+            BOOST_CHECK_SMALL(krFlat[2][0] - Scalar(0.3), tol);
+        }
+
+        const auto deckString = gasWaterHysteresisDeck(ehystrExtension(model, true),
+                                                       sgfn, sgfn, swfnDrain, swfnImb);
+        const auto kr = gasWaterRelpermPath<Scalar>(deckString, sgPath);
         // Sg = 0 (Sw = 1): drainage end point
         BOOST_CHECK_SMALL(kr[0][0] - Scalar(1.0), tol);
         // Sg = 0.15 (Sw = 0.85): halfway between (0.7, 0.3) and (1.0, 1.0)
@@ -3207,7 +3226,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(GasWaterTruncatedImbibitionTableKillough, Scalar, 
     const std::string sgfnImb = "0.3 0.0 0.0\n    0.8 1.0 0.0 /";
     const std::string swfnDrain = "0.2 0.0 0.0\n    1.0 1.0 0.0 /";
     const std::string swfnImb = "0.2 0.0 0.0\n    0.7 0.3 0.0 /";
-    const auto deckString = gasWaterHysteresisDeck("0.1 4 1* 1* BOTH RETR DRAIN 1* 4* 1 1 /",
+    const auto deckString = gasWaterHysteresisDeck("0.1 4 1* 1* BOTH RETR DRAIN 1* 4* 1 1 1 /",
                                                    sgfnDrain, sgfnImb, swfnDrain, swfnImb);
 
     std::vector<Scalar> sgPath;
@@ -3235,6 +3254,46 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(GasWaterTruncatedImbibitionTableKillough, Scalar, 
         }
     }
     BOOST_CHECK_SMALL(kr.back()[0] - Scalar(1.0), Scalar(1e-4));
+}
+
+// The same Killough case without the extension (EHYSTR item 15 = 0, the default):
+// Krw is held flat beyond the end of the imbibition table. It must
+// still be continuous at the trapped gas saturation, where the table (0.3) would
+// differ from the Killough value, and must not reach the drainage end point.
+BOOST_AUTO_TEST_CASE_TEMPLATE(GasWaterTruncatedImbibitionTableKilloughNoExtension, Scalar, Types)
+{
+    const std::string sgfnDrain = "0.0 0.0 0.0\n    0.8 1.0 0.0 /";
+    const std::string sgfnImb = "0.3 0.0 0.0\n    0.8 1.0 0.0 /";
+    const std::string swfnDrain = "0.2 0.0 0.0\n    1.0 1.0 0.0 /";
+    const std::string swfnImb = "0.2 0.0 0.0\n    0.7 0.3 0.0 /";
+    std::vector<Scalar> sgPath;
+    for (int i = 0; i <= 60; ++i) {
+        sgPath.push_back(Scalar(i) / 100);
+    }
+    for (int i = 59; i >= 0; --i) {
+        sgPath.push_back(Scalar(i) / 100);
+    }
+
+    std::vector<std::vector<std::array<Scalar, 2>>> krs;
+    for (const char* ehystr : {"0.1 4 1* 1* BOTH RETR DRAIN 1* 4* 1 1 /",     // default
+                               "0.1 4 1* 1* BOTH RETR DRAIN 1* 4* 1 1 0 /"}) { // explicit
+        const auto deckString = gasWaterHysteresisDeck(ehystr, sgfnDrain, sgfnImb, swfnDrain, swfnImb);
+        krs.push_back(gasWaterRelpermPath<Scalar>(deckString, sgPath));
+    }
+    for (std::size_t i = 0; i < krs[0].size(); ++i) {
+        BOOST_CHECK_EQUAL(krs[0][i][0], krs[1][i][0]);
+    }
+
+    const auto& kr = krs[0];
+    for (std::size_t i = 61; i < kr.size(); ++i) {
+        BOOST_CHECK(std::isfinite(kr[i][0]));
+        // no jump across the table end (Sg = 0.3) and the trapped gas saturation
+        BOOST_CHECK_LT(std::abs(kr[i][0] - kr[i - 1][0]), Scalar(0.05));
+    }
+    // flat beyond the table end: constant below Sg = 0.2, well below the drainage
+    // end point
+    BOOST_CHECK_SMALL(kr.back()[0] - kr[kr.size() - 15][0], Scalar(1e-4));
+    BOOST_CHECK_LT(kr.back()[0], Scalar(0.5));
 }
 
 // Model 4 with a zero imbibition water relperm (IKRW = 0): Krwi_snrmax and
@@ -3411,7 +3470,10 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(GasWaterKilloughScanningBoundBeyondTableEnd, Scala
     const std::string sgfnImb = "0.3 0.0 0.0\n    0.8 1.0 0.0 /";
     const std::string swfnDrain = "0.2 0.0 0.0\n    0.9 0.3 0.0\n    1.0 1.0 0.0 /";
     const std::string swfnImb = "0.2 0.0 0.0\n    0.7 0.5 0.0 /";
-    const auto deckString = gasWaterHysteresisDeck("0.1 4 1* 1* BOTH RETR DRAIN 1* 4* 1 1 /",
+    // The bound does not depend on EHYSTR item 15, which only selects the curve
+    // below the trapped saturation.
+    for (const char* extend : {"0", "1"}) {
+    const auto deckString = gasWaterHysteresisDeck(std::string("0.1 4 1* 1* BOTH RETR DRAIN 1* 4* 1 1 ") + extend + " /",
                                                    sgfnDrain, sgfnImb, swfnDrain, swfnImb);
     std::vector<Scalar> sgPath;
     for (int i = 0; i <= 100; ++i) {
@@ -3423,9 +3485,53 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(GasWaterKilloughScanningBoundBeyondTableEnd, Scala
     const auto kr = gasWaterRelpermPath<Scalar>(deckString, sgPath);
     for (std::size_t i = 101; i < kr.size(); ++i) {
         // the steepest slope is the drainage slope near Sg = 0, 7 per unit
-        BOOST_CHECK_LT(std::abs(kr[i][0] - kr[i - 1][0]), Scalar(0.02));
+        BOOST_CHECK_MESSAGE(std::abs(kr[i][0] - kr[i - 1][0]) < Scalar(0.02), "item 15 = " << extend << " i " << i);
     }
-    BOOST_CHECK_SMALL(kr.back()[0] - Scalar(1.0), Scalar(1e-4));
+    if (std::string(extend) == "1") {
+        // the extension reaches the drainage end point; otherwise it is flat
+        BOOST_CHECK_SMALL(kr.back()[0] - Scalar(1.0), Scalar(1e-4));
+    }
+    }
+}
+
+// EHYSTR item 15 only selects the imbibition Krw below the trapped saturation.
+// The Killough scanning curve above it, including its bound (the extended
+// imbibition curve) for Sw beyond the end of the imbibition table, must be the
+// same with and without the extension.
+BOOST_AUTO_TEST_CASE_TEMPLATE(GasWaterKilloughScanningAboveTrappedIndependentOfExtension, Scalar, Types)
+{
+    const std::string sgfnDrain = "0.0 0.0 0.0\n    0.8 1.0 0.0 /";
+    const std::string sgfnImb = "0.3 0.0 0.0\n    0.8 1.0 0.0 /";
+    const std::string swfnDrain = "0.2 0.0 0.0\n    0.9 0.3 0.0\n    1.0 1.0 0.0 /";
+    // table end at Sw = 0.7 (Sg = 0.3), Krw(table end) well below Krwd(Sw > 0.9)
+    const std::string swfnImb = "0.2 0.0 0.0\n    0.7 0.2 0.0 /";
+    std::vector<std::vector<std::array<Scalar, 2>>> kr;
+    for (const char* extend : {"0", "1"}) {
+        const auto deckString = gasWaterHysteresisDeck(std::string("0.1 4 1* 1* BOTH RETR DRAIN 1* 4* 1 1 ") + extend + " /",
+                                                       sgfnDrain, sgfnImb, swfnDrain, swfnImb);
+        std::vector<Scalar> sgPath;
+        for (int i = 0; i <= 200; ++i) {
+            sgPath.push_back(Scalar(i) / 1000);
+        }
+        for (int i = 199; i >= 0; --i) {
+            sgPath.push_back(Scalar(i) / 1000);
+        }
+        const auto k = gasWaterRelpermPath<Scalar>(deckString, sgPath);
+        std::vector<std::array<Scalar, 2>> krw;
+        for (std::size_t i = 201; i < k.size(); ++i) {
+            krw.push_back({sgPath[i], k[i][0]});
+        }
+        kr.push_back(krw);
+    }
+    BOOST_REQUIRE_EQUAL(kr[0].size(), kr[1].size());
+    std::size_t nCompared = 0;
+    for (std::size_t i = 0; i < kr[0].size(); ++i) {
+        if (kr[0][i][0] >= Scalar(0.15)) { // above the trapped saturation (about 0.14)
+            BOOST_CHECK_SMALL(kr[0][i][1] - kr[1][i][1], Scalar(1e-5));
+            ++nCompared;
+        }
+    }
+    BOOST_CHECK_GT(nCompared, std::size_t(30));
 }
 
 // The scanning curve is bounded between the drainage and the imbibition curves.
@@ -3443,8 +3549,10 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(GasWaterKilloughTrappedAnchorConsistentWithBound, 
         "0.2 0.0 0.0\n    0.5 0.8 0.0\n    0.7 0.9 0.0 /",
         "0.2 0.0 0.0\n    0.5 0.01 0.0\n    0.7 0.02 0.0 /",
         "0.2 0.0 0.0\n    0.9 0.9 0.0\n    1.0 1.0 0.0 /"};
+    // with and without the extension of the imbibition table (EHYSTR item 15)
+    for (const char* extend : {"0", "1"})
     for (const auto& swfnImb : swfnImbs) {
-        const auto deckString = gasWaterHysteresisDeck("0.1 4 1* 1* BOTH RETR DRAIN 1* 4* 1 1 /",
+        const auto deckString = gasWaterHysteresisDeck(std::string("0.1 4 1* 1* BOTH RETR DRAIN 1* 4* 1 1 ") + extend + " /",
                                                        sgfnDrain, sgfnImb, swfnDrain, swfnImb);
         for (const int sgMax : {50, 100, 200}) {
             std::vector<Scalar> sgPath;
@@ -3461,7 +3569,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(GasWaterKilloughTrappedAnchorConsistentWithBound, 
                 const Scalar step = kr[i][0] - kr[i - 1][0];
                 const Scalar prev = kr[i - 1][0] - kr[i - 2][0];
                 BOOST_CHECK_MESSAGE(std::abs(step - prev) < Scalar(0.02),
-                                    "Krw step change, imbibition table size " << swfnImb.size() << ", max Sg (x1000) " << sgMax << " sg " << sgPath[i] << " steps " << prev << " -> " << step);
+                                    "Krw step change, item 15 = " << extend << ", imbibition table size " << swfnImb.size() << ", max Sg (x1000) " << sgMax << " sg " << sgPath[i] << " steps " << prev << " -> " << step);
             }
         }
     }

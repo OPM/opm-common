@@ -300,11 +300,12 @@ public:
             // Within the imbibition table, use it as is.
             // Without end-point information on the imbibition table, use it as is.
             const Scalar SwTab = krwSwMax_(params.imbibitionParams(), std::numeric_limits<Scalar>::max());
-            if (Sw <= SwTab)
+            if (Sw <= SwTab || !params.config().enableImbibitionKrwExtension())
                 return EffectiveLaw::template twoPhaseSatKrw<Evaluation, Args...>(params.imbibitionParams(), Sw);
 
             // The imbibition table generally ends at Sg = Sncri, so reading it
-            // beyond that would give a flat extrapolation. Instead interpolate
+            // beyond that would give a flat extrapolation (the behaviour
+            // without EHYSTR item 15). Instead interpolate
             // linearly in saturation between the imbibition value at the table end
             // and the drainage end point, i.e. the value at the largest wetting
             // saturation (zero non-wetting saturation).
@@ -356,6 +357,17 @@ public:
                     Krwi += t * delta;
                 }
                 return Krwi;
+            }
+
+            if (!params.config().enableImbibitionKrwExtension()) {
+                // Flat extrapolation beyond the end of the imbibition table. If
+                // the table ends below the trapped saturation, hold
+                // the Killough value at Sg = Sncrt instead of switching to the
+                // table value, to keep Krw continuous there.
+                if (!(SwTab > 1.0 - params.Sncrt())) {
+                    return Evaluation(params.krwTrappedAnchor());
+                }
+                return EffectiveLaw::template twoPhaseSatKrw<Evaluation, Args...>(params.imbibitionParams(), Sw);
             }
 
             // Beyond the end of the imbibition table (generally at Sg = Sncri) the

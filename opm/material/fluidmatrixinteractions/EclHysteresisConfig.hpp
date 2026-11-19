@@ -139,6 +139,14 @@ public:
     { return enableWettingPhaseKilloughFix_; }
 
     /*!
+     * \brief Returns whether the imbibition water relperm is extended beyond the end
+     *        of the imbibition table, linearly to the drainage end point. Otherwise
+     *        it is extrapolated flat.
+     */
+    bool enableImbibitionKrwExtension() const
+    { return enableImbibitionKrwExtension_; }
+
+    /*!
      * \brief Reads all relevant material parameters form a cell of a parsed ECL deck.
      *
      * This requires that the opm-parser module is available.
@@ -163,6 +171,9 @@ private:
 
     // Enable bug fix for wetting phase killough hysteresis
     bool enableWettingPhaseKilloughFix_{false};
+
+    // Extend the imbibition water relperm beyond the imbibition table
+    bool enableImbibitionKrwExtension_{false};
 };
 
 } // namespace Opm
