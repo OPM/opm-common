@@ -33,8 +33,11 @@
 #include "EclTwoPhaseMaterial.hpp"
 
 #include <cassert>
+#include <cstddef>
 #include <memory>
 #include <type_traits>
+#include <utility>
+#include <vector>
 
 #include <opm/material/common/EnsureFinalized.hpp>
 
@@ -118,6 +121,67 @@ public:
         realParams_.reset();
         setApproach( other.approach() );
         return *this;
+    }
+
+    /*!
+     * \brief Contiguous storage for \a n parameter objects of one approach.
+     *
+     * Hand the slots out with arenaSlot(). Keep the returned pointer alive for
+     * as long as any of them is in use.
+     */
+    static ParamPointerType makeArena(EclMultiplexerApproach approach, std::size_t n)
+    {
+        switch (approach) {
+        case EclMultiplexerApproach::Stone1:
+            return std::make_shared<std::vector<Stone1Params>>(n);
+        case EclMultiplexerApproach::Stone2:
+            return std::make_shared<std::vector<Stone2Params>>(n);
+        case EclMultiplexerApproach::Default:
+            return std::make_shared<std::vector<DefaultParams>>(n);
+        case EclMultiplexerApproach::TwoPhase:
+            return std::make_shared<std::vector<TwoPhaseParams>>(n);
+        case EclMultiplexerApproach::OnePhase:
+            break;  // no parameters
+        }
+        return {};
+    }
+
+    /*!
+     * \brief Slot \a i of an arena, as an aliasing pointer sharing the arena's
+     *        single control block.
+     */
+    static ParamPointerType arenaSlot(const ParamPointerType& arena,
+                                      EclMultiplexerApproach approach,
+                                      std::size_t i)
+    {
+        const auto at = [&arena, i](auto* tag) {
+            using V = std::vector<std::remove_pointer_t<decltype(tag)>>;
+            return ParamPointerType{arena, &(*std::static_pointer_cast<V>(arena))[i]};
+        };
+        switch (approach) {
+        case EclMultiplexerApproach::Stone1:   return at(static_cast<Stone1Params*>(nullptr));
+        case EclMultiplexerApproach::Stone2:   return at(static_cast<Stone2Params*>(nullptr));
+        case EclMultiplexerApproach::Default:  return at(static_cast<DefaultParams*>(nullptr));
+        case EclMultiplexerApproach::TwoPhase: return at(static_cast<TwoPhaseParams*>(nullptr));
+        case EclMultiplexerApproach::OnePhase: break;
+        }
+        return {};
+    }
+
+    /*!
+     * \brief Point this object at storage owned by someone else.
+     *
+     * The caller keeps ownership; \a pooled is expected to be an aliasing
+     * shared_ptr into an arena, so a whole grid's worth of parameter objects
+     * costs one allocation and one control block instead of one of each per
+     * cell. Type and lifetime are the caller's responsibility, exactly as for
+     * the self-allocating overload.
+     */
+    void setApproach(EclMultiplexerApproach newApproach, ParamPointerType pooled)
+    {
+        assert(realParams_ == nullptr);
+        approach_ = newApproach;
+        realParams_ = std::move(pooled);
     }
 
     void setApproach(EclMultiplexerApproach newApproach)
