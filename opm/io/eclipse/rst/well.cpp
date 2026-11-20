@@ -156,6 +156,10 @@ Opm::RestartIO::RstWell::RstWell(const UnitSystem&  unit_system,
     dfac_corr_coeff_a(dfactor_correlation_coefficient_a(unit_system, swel[VI::SWell::DFacCorrCoeffA])),
     dfac_corr_exponent_b(                                            swel[VI::SWell::DFacCorrExpB]),
     dfac_corr_exponent_c(                                            swel[VI::SWell::DFacCorrExpC]),
+    inj_mult_mode(                                                   iwel[VI::IWell::InjMultMode]),
+    // Gradient has units of 1/pressure.
+    inj_mult_gradient(   swel[VI::SWell::InjMultGradient] / unit_system.to_si(M::pressure, 1.0)),
+    inj_mult_frac_press( unit_system.to_si(M::pressure,              swel[VI::SWell::InjMultFracPress])),
     //
     oil_rate(            unit_system.to_si(M::liquid_surface_rate,   xwel[VI::XWell::OilPrRate])),
     water_rate(          unit_system.to_si(M::liquid_surface_rate,   xwel[VI::XWell::WatPrRate])),

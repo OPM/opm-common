@@ -834,6 +834,11 @@ namespace {
             restoreConnRates(xcon, usys, oil, gas, wat, *xc);
 
             xc->pressure = usys.to_si(M::pressure, xcon[Ix::Pressure]);
+
+            // Zero when the well has no WINJMULT.
+            if (const auto inj_mult = xcon[Ix::InjMultMax]; inj_mult > 0.0) {
+                xc->inj_mult = inj_mult;
+            }
         }
     }
 
