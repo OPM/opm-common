@@ -1,0 +1,6 @@
+@Library('opm') _
+
+opmModule(branchTriggers: [master: 'jenkins build this serial no downstreams please'],
+          nvccParser: 'nvcc',
+          // master builds only on the post-merge builder
+          label: env.BRANCH_NAME == 'master' ? 'Post-builder' : 'built-in || Post-builder')
