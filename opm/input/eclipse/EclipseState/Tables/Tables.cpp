@@ -129,6 +129,87 @@
 
 namespace {
 
+    /// Table value reader with constant scaling factor
+    ///
+    /// Multiplies raw input values by a constant, typically positive,
+    /// scaling factor configured at construction time.
+    class ScaledRawValueReader
+    {
+    public:
+        /// Constructor.
+        ///
+        /// \param[in] factor Constant scaling factor by which to multiply
+        /// the raw table input values.  Should typically be positive.
+        explicit ScaledRawValueReader(const double factor)
+            : factor_ { factor }
+        {}
+
+        /// Function call operator.
+        ///
+        /// \param[in] item Table data as defined by input layer.
+        ///
+        /// \param[in] index Specific table data element.
+        ///
+        /// \return Raw table input value at position \p index scaled by
+        /// configured multiplicative constant factor.
+        double operator()(const Opm::DeckItem& item, const std::size_t index) const
+        {
+            return this->factor_ * item.getData<double>()[index];
+        }
+
+    private:
+        /// Constant scaling factor.
+        double factor_{};
+    };
+
+    /// Initialise a SimpleTable corresponding to a particular saturation function.
+    ///
+    /// \param[in] jfunc_is_active Whether or not the Leverett J-function
+    /// facility is active in the run.
+    ///
+    /// \param[in] tableName Table name (input keyword).  Expected to be a
+    /// saturation function table keyword like SWFN or SGOF.  Used mainly
+    /// for diagnostic purposes.
+    ///
+    /// \param[in] item Table data as defined by the input layer.
+    ///
+    /// \param[in] tableID Current saturation region.  Used mainly for
+    /// diagnostic purposes.
+    ///
+    /// \param[in,out] table Internal representation of tabulated saturation
+    /// function \p tableName in region \p tableID.  Internal table data
+    /// values populated on exit.
+    void initialiseSatfuncTable(const bool           jfunc_is_active,
+                                const std::string&   tableName,
+                                const Opm::DeckItem& deckItem,
+                                const int            tableID,
+                                Opm::SimpleTable&    table)
+    {
+        if (! jfunc_is_active) {
+            // Common case.  Run does not use the Leverett J-function
+            // facility.  Convert raw input values from I/O units to the
+            // internal strict SI unit convention.
+            table.init(tableName, deckItem, tableID,
+                       [](const Opm::DeckItem& item, const std::size_t index)
+                       { return item.getSIDouble(index); });
+        }
+        else {
+            // Run uses the Leverett J-function facility whence the
+            // tabulated capillary pressure column is the non-dimensional
+            // J-function instead of the actual capillary pressure.  Don't
+            // perform unit conversion on the capillary pressure column.
+            //
+            // This code also fundamentally depends directly on saturation
+            // and relative permeability values being non-dimensional--i.e.,
+            // "Dimension: 1" in the respective keyword data models.  That
+            // is arguably a hack since the raw values only work for those
+            // quantities by accident.
+            table.init(tableName, deckItem, tableID,
+                       [](const Opm::DeckItem& item, const std::size_t index)
+                       { return item.getData<double>()[index]; });
+        }
+    }
+
     /// Simple query interface for extracting tabulated values of saturated
     /// gas.
     ///
@@ -814,14 +895,14 @@ SpecrockTable::getCvRockColumn() const
 
 SwofTable::SwofTable(const DeckItem& item, const bool jfunc, const int tableID)
 {
+    using namespace std::string_literals;
 
-    m_schema.addColumn(ColumnSchema("SW", Table::STRICTLY_INCREASING, Table::DEFAULT_NONE));
-    m_schema.addColumn(ColumnSchema("KRW", Table::RANDOM, Table::DEFAULT_LINEAR));
-    m_schema.addColumn(ColumnSchema("KROW", Table::RANDOM, Table::DEFAULT_LINEAR));
-    m_schema.addColumn(ColumnSchema("PCOW", Table::RANDOM, Table::DEFAULT_LINEAR));
+    m_schema.addColumn(ColumnSchema("SW"s, Table::STRICTLY_INCREASING, Table::DEFAULT_NONE));
+    m_schema.addColumn(ColumnSchema("KRW"s, Table::RANDOM, Table::DEFAULT_LINEAR));
+    m_schema.addColumn(ColumnSchema("KROW"s, Table::RANDOM, Table::DEFAULT_LINEAR));
+    m_schema.addColumn(ColumnSchema("PCOW"s, Table::RANDOM, Table::DEFAULT_LINEAR));
 
-    m_jfunc = jfunc;
-    SimpleTable::init("SWOF", item, tableID);
+    initialiseSatfuncTable(jfunc, "SWOF"s, item, tableID, *this);
 }
 
 const TableColumn&
@@ -845,14 +926,12 @@ SwofTable::getKrowColumn() const
 const TableColumn&
 SwofTable::getPcowColumn() const
 {
-    SimpleTable::assertJFuncPressure(false);
     return SimpleTable::getColumn(3);
 }
 
 const TableColumn&
 SwofTable::getJFuncColumn() const
 {
-    SimpleTable::assertJFuncPressure(true);
     return SimpleTable::getColumn(3);
 }
 
@@ -893,13 +972,14 @@ SgwfnTable::getPcgwColumn() const
 
 SgofTable::SgofTable(const DeckItem& item, const bool jfunc, const int tableID)
 {
-    m_schema.addColumn(ColumnSchema("SG", Table::STRICTLY_INCREASING, Table::DEFAULT_NONE));
-    m_schema.addColumn(ColumnSchema("KRG", Table::RANDOM, Table::DEFAULT_LINEAR));
-    m_schema.addColumn(ColumnSchema("KROG", Table::RANDOM, Table::DEFAULT_LINEAR));
-    m_schema.addColumn(ColumnSchema("PCOG", Table::RANDOM, Table::DEFAULT_LINEAR));
+    using namespace std::string_literals;
 
-    m_jfunc = jfunc;
-    SimpleTable::init("SGOF", item, tableID);
+    m_schema.addColumn(ColumnSchema("SG"s, Table::STRICTLY_INCREASING, Table::DEFAULT_NONE));
+    m_schema.addColumn(ColumnSchema("KRG"s, Table::RANDOM, Table::DEFAULT_LINEAR));
+    m_schema.addColumn(ColumnSchema("KROG"s, Table::RANDOM, Table::DEFAULT_LINEAR));
+    m_schema.addColumn(ColumnSchema("PCOG"s, Table::RANDOM, Table::DEFAULT_LINEAR));
+
+    initialiseSatfuncTable(jfunc, "SGOF"s, item, tableID, *this);
 }
 
 const TableColumn&
@@ -923,26 +1003,25 @@ SgofTable::getKrogColumn() const
 const TableColumn&
 SgofTable::getPcogColumn() const
 {
-    SimpleTable::assertJFuncPressure(false);
     return SimpleTable::getColumn(3);
 }
 
 const TableColumn&
 SgofTable::getJFuncColumn() const
 {
-    SimpleTable::assertJFuncPressure(true);
     return SimpleTable::getColumn(3);
 }
 
 SlgofTable::SlgofTable(const DeckItem& item, const bool jfunc, const int tableID)
 {
-    m_schema.addColumn(ColumnSchema("SL", Table::STRICTLY_INCREASING, Table::DEFAULT_NONE));
-    m_schema.addColumn(ColumnSchema("KRG", Table::DECREASING, Table::DEFAULT_LINEAR));
-    m_schema.addColumn(ColumnSchema("KROG", Table::INCREASING, Table::DEFAULT_LINEAR));
-    m_schema.addColumn(ColumnSchema("PCOG", Table::DECREASING, Table::DEFAULT_LINEAR));
+    using namespace std::string_literals;
 
-    m_jfunc = jfunc;
-    SimpleTable::init("SLGOF", item, tableID);
+    m_schema.addColumn(ColumnSchema("SL"s, Table::STRICTLY_INCREASING, Table::DEFAULT_NONE));
+    m_schema.addColumn(ColumnSchema("KRG"s, Table::DECREASING, Table::DEFAULT_LINEAR));
+    m_schema.addColumn(ColumnSchema("KROG"s, Table::INCREASING, Table::DEFAULT_LINEAR));
+    m_schema.addColumn(ColumnSchema("PCOG"s, Table::DECREASING, Table::DEFAULT_LINEAR));
+
+    initialiseSatfuncTable(jfunc, "SLGOF"s, item, tableID, *this);
 
     if (getSlColumn().back() != 1.0) {
         throw std::invalid_argument("The last saturation of the SLGOF keyword must be 1!");
@@ -970,14 +1049,12 @@ SlgofTable::getKrogColumn() const
 const TableColumn&
 SlgofTable::getPcogColumn() const
 {
-    SimpleTable::assertJFuncPressure(false);
     return SimpleTable::getColumn(3);
 }
 
 const TableColumn&
 SlgofTable::getJFuncColumn() const
 {
-    SimpleTable::assertJFuncPressure(true);
     return SimpleTable::getColumn(3);
 }
 
@@ -1173,12 +1250,13 @@ RsconstTable::getPbubColumn() const
 
 SwfnTable::SwfnTable(const DeckItem& item, const bool jfunc, const int tableID)
 {
-    m_schema.addColumn(ColumnSchema("SW", Table::STRICTLY_INCREASING, Table::DEFAULT_NONE));
-    m_schema.addColumn(ColumnSchema("KRW", Table::INCREASING, Table::DEFAULT_LINEAR));
-    m_schema.addColumn(ColumnSchema("PCOW", Table::DECREASING, Table::DEFAULT_LINEAR));
+    using namespace std::string_literals;
 
-    m_jfunc = jfunc;
-    SimpleTable::init("SWFN", item, tableID);
+    m_schema.addColumn(ColumnSchema("SW"s, Table::STRICTLY_INCREASING, Table::DEFAULT_NONE));
+    m_schema.addColumn(ColumnSchema("KRW"s, Table::INCREASING, Table::DEFAULT_LINEAR));
+    m_schema.addColumn(ColumnSchema("PCOW"s, Table::DECREASING, Table::DEFAULT_LINEAR));
+
+    initialiseSatfuncTable(jfunc, "SWFN", item, tableID, *this);
 }
 
 const TableColumn&
@@ -1196,28 +1274,26 @@ SwfnTable::getKrwColumn() const
 const TableColumn&
 SwfnTable::getPcowColumn() const
 {
-    SimpleTable::assertJFuncPressure(false);
     return SimpleTable::getColumn(2);
 }
 
 const TableColumn&
 SwfnTable::getJFuncColumn() const
 {
-    SimpleTable::assertJFuncPressure(true);
     return SimpleTable::getColumn(2);
 }
 
 
 SgfnTable::SgfnTable(const DeckItem& item, const bool jfunc, const int tableID)
 {
-    m_schema.addColumn(ColumnSchema("SG", Table::STRICTLY_INCREASING, Table::DEFAULT_NONE));
-    m_schema.addColumn(ColumnSchema("KRG", Table::INCREASING, Table::DEFAULT_LINEAR));
-    m_schema.addColumn(ColumnSchema("PCOG", Table::INCREASING, Table::DEFAULT_LINEAR));
+    using namespace std::string_literals;
 
-    m_jfunc = jfunc;
-    SimpleTable::init("SGFN", item, tableID);
+    m_schema.addColumn(ColumnSchema("SG"s, Table::STRICTLY_INCREASING, Table::DEFAULT_NONE));
+    m_schema.addColumn(ColumnSchema("KRG"s, Table::INCREASING, Table::DEFAULT_LINEAR));
+    m_schema.addColumn(ColumnSchema("PCOG"s, Table::INCREASING, Table::DEFAULT_LINEAR));
+
+    initialiseSatfuncTable(jfunc, "SGFN"s, item, tableID, *this);
 }
-
 
 const TableColumn&
 SgfnTable::getSgColumn() const
@@ -1234,14 +1310,12 @@ SgfnTable::getKrgColumn() const
 const TableColumn&
 SgfnTable::getPcogColumn() const
 {
-    SimpleTable::assertJFuncPressure(false);
     return SimpleTable::getColumn(2);
 }
 
 const TableColumn&
 SgfnTable::getJFuncColumn() const
 {
-    SimpleTable::assertJFuncPressure(true);
     return SimpleTable::getColumn(2);
 }
 
@@ -2719,14 +2793,14 @@ SpeciesVdTable::SpeciesVdTable(const Opm::DeckItem& item, double inv_volume, con
 {
     m_schema.addColumn(Opm::ColumnSchema("DEPTH", Table::STRICTLY_INCREASING, Table::DEFAULT_NONE));
     m_schema.addColumn(Opm::ColumnSchema("SPECIES_CONCENTRATION", Table::RANDOM, Table::DEFAULT_NONE));
-    SimpleTable::init("SPECIESVD", item, tableID, inv_volume);
+    SimpleTable::init("SPECIESVD", item, tableID, ScaledRawValueReader { inv_volume });
 }
 
 TracerVdTable::TracerVdTable(const Opm::DeckItem& item, double inv_volume, const int tableID)
 {
     m_schema.addColumn(Opm::ColumnSchema("DEPTH", Table::STRICTLY_INCREASING, Table::DEFAULT_NONE));
     m_schema.addColumn(Opm::ColumnSchema("TRACER_CONCENTRATION", Table::RANDOM, Table::DEFAULT_NONE));
-    SimpleTable::init("TRACERVD", item, tableID, inv_volume);
+    SimpleTable::init("TRACERVD", item, tableID, ScaledRawValueReader { inv_volume });
 }
 
 const TableColumn&
