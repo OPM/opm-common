@@ -73,6 +73,14 @@ using FluidSystemF2 = Opm::FlashTest::F2FluidSystem<Scalar>;
 constexpr int numComponentsF2 = FluidSystemF2::numComponents;
 using EvaluationF2 = Opm::FlashTest::FlashEvaluation<FluidSystemF2>;
 
+// The scalar flash also returns the composition Jacobian when Newton finished
+// the split itself.
+class ExposedPtFlashF2 : public Opm::PTFlash<Scalar, FluidSystemF2>
+{
+public:
+    using Opm::PTFlash<Scalar, FluidSystemF2>::flashScalar_;
+};
+
 // The F2 components are static: register them once per process.
 struct F2Components
 {
@@ -317,4 +325,68 @@ BOOST_AUTO_TEST_CASE(TernaryInvariantsF2)
     const auto outcome = runFlash<FluidSystemF2, EvaluationF2>(testCase);
     checkExpectedPhase(testCase, outcome.summary);
     checkTwoPhaseInvariants<FluidSystemF2>(outcome.state, testCase.z, testCase.eos_type);
+}
+
+// The stability test overstates the split of this methane-rich feed, and full
+// Newton steps from its ratios left the physical range at 19 of these
+// pressures. Newton now finds the split of the hybrid method at all of them,
+// without substitution finishing the solve.
+BOOST_AUTO_TEST_CASE(NewtonFromStabilityRatiosF2)
+{
+    const std::array<double, numComponentsF2> z = {0.05, 0.8, 0.15};
+    std::vector<double> failed;
+    for (double p = 5e5; p <= 300e5; p += 5e5) {
+        FlashCase<numComponentsF2> testCase{"stability ratios F2", p, 480., z};
+        testCase.method = Opm::PTFlashMethod::SsiNewton;
+        const auto hybrid = runFlash<FluidSystemF2, EvaluationF2>(testCase).summary;
+
+        Opm::CompositionalFluidState<Scalar, FluidSystemF2> fs;
+        fs.setPressure(FluidSystemF2::oilPhaseIdx, p);
+        fs.setPressure(FluidSystemF2::gasPhaseIdx, p);
+        fs.setTemperature(480.);
+        for (int compIdx = 0; compIdx < numComponentsF2; ++compIdx) {
+            fs.setMoleFraction(compIdx, z[compIdx]);
+            fs.setKvalue(compIdx, fs.wilsonK_(compIdx));
+        }
+        fs.setLvalue(1.);
+        try {
+            const auto [single_phase, newton_jacobian] = ExposedPtFlashF2::flashScalar_(
+                fs, Opm::PTFlashMethod::Newton, testCase.tolerance, testCase.eos_type, 0);
+            // Substitution leaves no Newton Jacobian.
+            if (single_phase != hybrid.single_phase || (!single_phase && !newton_jacobian)
+                || std::abs(fs.L() - hybrid.L) > PARITY_TOLERANCE) {
+                failed.push_back(p);
+            }
+        }
+        catch (const std::exception&) {
+            failed.push_back(p);
+        }
+    }
+    BOOST_CHECK_MESSAGE(failed.empty(),
+                        "newton needs substitution or differs from ssi+newton at " << failed.size()
+                            << " pressures, the first at "
+                            << (failed.empty() ? 0. : failed.front()) << " Pa");
+}
+
+// Near its critical point the split of this methane-rich feed is far from the
+// estimate of the stability test, although the residual there is already
+// small: the first Newton steps raise it before Newton converges. Started
+// from that estimate, both Newton methods must still find the split.
+BOOST_AUTO_TEST_CASE(NewtonCrossesARisingResidualNearCriticalF1)
+{
+    constexpr std::array<double, numComponentsF1> z = {0.9, 0.1};
+    using Flash = Opm::PTFlash<Scalar, FluidSystemF1>;
+    for (const auto method : {Opm::PTFlashMethod::Newton, Opm::PTFlashMethod::SsiNewton}) {
+        BOOST_TEST_CONTEXT("method " << method) {
+            auto fs = Opm::FlashTest::makeInitialState<FluidSystemF1, EvaluationF1>(396e5, 300., z);
+            // A two-phase estimate skips the stability test.
+            fs.setKvalue(0, 1.029);
+            fs.setKvalue(1, 0.745);
+            fs.setLvalue(0.91);
+            const bool single_phase = Flash::solve(fs, method, 1e-8, EOSType::PR);
+            BOOST_CHECK(!single_phase);
+            BOOST_CHECK_CLOSE(Opm::getValue(fs.L()), 0.74694, 0.01);
+            checkTwoPhaseInvariants<FluidSystemF1>(fs, z, EOSType::PR);
+        }
+    }
 }

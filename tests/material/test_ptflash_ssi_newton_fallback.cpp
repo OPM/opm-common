@@ -276,6 +276,39 @@ public:
     }
 };
 
+//! Test adapter whose AD EoS, as Newton evaluates it, has no finite value for
+//! a liquid with less methane than a limit. Scalar successive substitution
+//! retains the physical EoS.
+template <class Scalar>
+class MethaneLimitTestFluidSystem : public C1C10TestFluidSystem<Scalar>
+{
+    using Parent = C1C10TestFluidSystem<Scalar>;
+
+public:
+    template <class ValueType>
+    using ParameterCache = typename Parent::template ParameterCache<ValueType>;
+
+    static constexpr Scalar minLiquidMethane = 0.2;
+
+    template <class FluidState,
+              class LhsEval = typename FluidState::ValueType,
+              class ParamCacheEval = LhsEval>
+    static LhsEval fugacityCoefficient(const FluidState& fluidState,
+                                       const ParameterCache<ParamCacheEval>& paramCache,
+                                       unsigned phaseIdx,
+                                       unsigned compIdx)
+    {
+        if constexpr (!std::is_floating_point_v<LhsEval>) {
+            if (phaseIdx == Parent::oilPhaseIdx
+                && getValue(fluidState.moleFraction(phaseIdx, Parent::Comp0Idx))
+                       < minLiquidMethane) {
+                throw NumericalProblem("No finite fugacity coefficient below the methane limit");
+            }
+        }
+        return Parent::fugacityCoefficient(fluidState, paramCache, phaseIdx, compIdx);
+    }
+};
+
 } // namespace Opm
 
 using Scalar = double;
@@ -294,6 +327,11 @@ using CoincidentFluidSystem = Opm::CoincidentPhasesTestFluidSystem<Scalar>;
 using CoincidentFluidState = Opm::CompositionalFluidState<Scalar, CoincidentFluidSystem>;
 using CoincidentComponentVector = Dune::FieldVector<Scalar, CoincidentFluidSystem::numComponents>;
 
+using MethaneLimitFluidSystem = Opm::MethaneLimitTestFluidSystem<Scalar>;
+using MethaneLimitFluidState = Opm::CompositionalFluidState<Scalar, MethaneLimitFluidSystem>;
+using MethaneLimitComponentVector
+    = Dune::FieldVector<Scalar, MethaneLimitFluidSystem::numComponents>;
+
 class ExposedPtFlash : public PtFlash
 {
 public:
@@ -310,6 +348,12 @@ class CoincidentPtFlash : public Opm::PTFlash<Scalar, CoincidentFluidSystem>
 {
 public:
     using Opm::PTFlash<Scalar, CoincidentFluidSystem>::flash_2ph;
+};
+
+class MethaneLimitPtFlash : public Opm::PTFlash<Scalar, MethaneLimitFluidSystem>
+{
+public:
+    using Opm::PTFlash<Scalar, MethaneLimitFluidSystem>::flash_2ph;
 };
 
 namespace {
@@ -585,5 +629,52 @@ BOOST_AUTO_TEST_CASE(NegativeFlashLiquidFractionIsNotACompositionFailure)
         BOOST_REQUIRE_NO_THROW(
             CoincidentPtFlash::flash_2ph(z, method, K, L, fs, 1.e-8, EOSType::PR));
         BOOST_CHECK_SMALL(L - 2.12, 1.e-12);
+    }
+}
+
+// From the Wilson estimates at L = 0.9, the full Newton step leaves the liquid
+// with less methane than this EoS allows, half of it does not. Newton must
+// shorten the step and finish the split itself, without substitution.
+BOOST_AUTO_TEST_CASE(NewtonShortensAStepWithoutAFiniteEos)
+{
+    struct Split
+    {
+        bool newton_finished;
+        Scalar L;
+        MethaneLimitFluidState state;
+    };
+    const auto solve = [](const PTFlashMethod method) {
+        MethaneLimitFluidState fs;
+        for (unsigned phaseIdx = 0; phaseIdx < MethaneLimitFluidSystem::numPhases; ++phaseIdx) {
+            fs.setPressure(phaseIdx, 100e5);
+            fs.setSaturation(phaseIdx, 0.5);
+        }
+        fs.setTemperature(350.0);
+        MethaneLimitComponentVector z;
+        z[0] = 0.7;
+        z[1] = 0.3;
+        MethaneLimitComponentVector K;
+        for (int compIdx = 0; compIdx < MethaneLimitFluidSystem::numComponents; ++compIdx) {
+            fs.setMoleFraction(compIdx, z[compIdx]);
+            K[compIdx] = fs.wilsonK_(compIdx);
+        }
+        Scalar L = 0.9;
+        const auto newton_jacobian
+            = MethaneLimitPtFlash::flash_2ph(z, method, K, L, fs, 1.e-8, EOSType::PR);
+        return Split{newton_jacobian.has_value(), L, fs};
+    };
+
+    const auto ssi = solve(PTFlashMethod::Ssi);
+    const auto newton = solve(PTFlashMethod::Newton);
+    BOOST_CHECK(newton.newton_finished);
+    BOOST_CHECK_SMALL(newton.L - ssi.L, 1.e-8);
+    BOOST_CHECK_GT(newton.state.moleFraction(MethaneLimitFluidSystem::oilPhaseIdx, 0),
+                   MethaneLimitFluidSystem::minLiquidMethane);
+    for (unsigned phaseIdx = 0; phaseIdx < MethaneLimitFluidSystem::numPhases; ++phaseIdx) {
+        for (int compIdx = 0; compIdx < MethaneLimitFluidSystem::numComponents; ++compIdx) {
+            BOOST_CHECK_SMALL(newton.state.moleFraction(phaseIdx, compIdx)
+                                  - ssi.state.moleFraction(phaseIdx, compIdx),
+                              1.e-8);
+        }
     }
 }
