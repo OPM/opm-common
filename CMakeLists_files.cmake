@@ -740,6 +740,7 @@ list(APPEND DUNE_TEST_SOURCE_FILES
   tests/material/test_phflash.cpp
   tests/material/test_ptflash_jacobian_reuse.cpp
   tests/material/test_ptflash_newton_residual_scale.cpp
+  tests/material/test_ptflash_pressure_derivatives.cpp
   tests/material/test_ptflash_ssi_newton_fallback.cpp
   tests/material/test_ptflash_trivial_root.cpp
   tests/material/test_saturation_pressure.cpp
