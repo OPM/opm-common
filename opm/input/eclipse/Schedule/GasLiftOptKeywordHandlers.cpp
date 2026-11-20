@@ -90,7 +90,7 @@ void handleGLIFTLIM(HandlerContext& handlerContext)
 
         // Item 2 limits the group's total lift gas rate.  Zero or
         // defaulted means no limit.  Item 3, the maximum number of wells
-        // on lift, is not stored; the simulator rejects nonzero values.
+        // on lift, is not stored here; the simulator validates it.
         const double max_lift_capacity = record
             .getItem<ParserKeywords::GLIFTLIM::MAX_LIFT_CAPACITY>().getSIDouble(0);
 
