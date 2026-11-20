@@ -574,6 +574,20 @@ protected:
             }
         }
 
+        // The reference state is the feed: its fugacities do not change while
+        // the trial phase grows, so they are evaluated once.
+        for (int compIdx=0; compIdx<numComponents; ++compIdx){
+            reference_state.setMoleFraction(reference_phase_idx, compIdx, z[compIdx]);
+        }
+        ParamCache reference_param_cache(eos_type);
+        reference_param_cache.updatePhase(reference_state, reference_phase_idx);
+        for (int compIdx=0; compIdx<numComponents; ++compIdx){
+            const auto reference_fugacity_coefficient = CubicEOS::computeFugacityCoefficient(
+                reference_state, reference_param_cache, reference_phase_idx, compIdx);
+            reference_state.setFugacityCoefficient(
+                reference_phase_idx, compIdx, reference_fugacity_coefficient);
+        }
+
         // Setup output
         if (verbosity >= 3) {
             OpmLog::debug(fmt::format("{:>10}{:>16}{:>16}", "Iteration", "K-Norm", "R-Norm"));
@@ -595,27 +609,15 @@ protected:
                 trial_state.setMoleFraction(trial_phase_idx, compIdx, trial_composition[compIdx]);
             }
 
-            for (int compIdx=0; compIdx<numComponents; ++compIdx){
-                reference_state.setMoleFraction(reference_phase_idx, compIdx, z[compIdx]);
-            }
-
             ParamCache trial_param_cache(eos_type);
             trial_param_cache.updatePhase(trial_state, trial_phase_idx);
 
-            ParamCache reference_param_cache(eos_type);
-            reference_param_cache.updatePhase(reference_state, reference_phase_idx);
-
-            // Fugacity coefficients of the trial phase and reference phase.
+            // Fugacity coefficients of the trial phase.
             for (int compIdx=0; compIdx<numComponents; ++compIdx){
                 const auto trial_fugacity_coefficient = CubicEOS::computeFugacityCoefficient(
                     trial_state, trial_param_cache, trial_phase_idx, compIdx);
-                const auto reference_fugacity_coefficient = CubicEOS::computeFugacityCoefficient(
-                    reference_state, reference_param_cache, reference_phase_idx, compIdx);
-
                 trial_state.setFugacityCoefficient(
                     trial_phase_idx, compIdx, trial_fugacity_coefficient);
-                reference_state.setFugacityCoefficient(
-                    reference_phase_idx, compIdx, reference_fugacity_coefficient);
             }
 
             // The substitution factors R_i of the brief.
