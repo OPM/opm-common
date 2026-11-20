@@ -5237,6 +5237,7 @@ GLIFTLIM
 -- GRPNAME  MXLIFT  MXWELS
  'FIELD'   0 /
  'PLAT-A'  1* /
+ 'M5N'     0 /
 /
 
 TSTEP
@@ -5303,6 +5304,9 @@ TSTEP
         const auto& plat_a = glo.group("PLAT-A");
         BOOST_CHECK(!plat_a.max_lift_capacity().has_value());
         BOOST_CHECK_CLOSE(*plat_a.lift_gas_limit(), 200000 * siFactorG, 1.0e-8);
+
+        // A record without a limit creates no entry for a group that had none
+        BOOST_CHECK(!glo.has_group("M5N"));
 
         // Not named in the last GLIFTLIM
         const auto& plat_b = glo.group("PLAT-B");

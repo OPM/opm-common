@@ -94,6 +94,12 @@ void handleGLIFTLIM(HandlerContext& handlerContext)
             .getItem<ParserKeywords::GLIFTLIM::MAX_LIFT_CAPACITY>().getSIDouble(0);
 
         for (const auto& gname : group_names) {
+            if (! glo.has_group(gname) && ! (max_lift_capacity > 0.0)) {
+                // No limit for a group without gas lift data: nothing to
+                // store, and no group entry to create.
+                continue;
+            }
+
             auto group = glo.has_group(gname)
                 ? glo.group(gname)
                 : GasLiftGroup(gname);
