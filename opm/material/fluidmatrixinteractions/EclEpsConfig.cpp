@@ -40,23 +40,6 @@ void EclEpsConfig::initFromState(const EclipseState& eclState,
                                  const std::string& prefix,
                                  const std::string& suffix)
 {
-    initFromState_(eclState, twoPhaseSystemType, prefix, suffix, /*imbibition=*/false);
-}
-
-void EclEpsConfig::initImbibitionFromState(const EclipseState& eclState,
-                                           EclTwoPhaseSystemType twoPhaseSystemType,
-                                           const std::string& prefix,
-                                           const std::string& suffix)
-{
-    initFromState_(eclState, twoPhaseSystemType, prefix, suffix, /*imbibition=*/true);
-}
-
-void EclEpsConfig::initFromState_(const EclipseState& eclState,
-                                  EclTwoPhaseSystemType twoPhaseSystemType,
-                                  const std::string& prefix,
-                                  const std::string& suffix,
-                                  const bool imbibition)
-{
     const auto& endscale = eclState.runspec().endpointScaling();
     // find out if endpoint scaling is used in the first place
     if (!endscale) {
@@ -87,25 +70,21 @@ void EclEpsConfig::initFromState_(const EclipseState& eclState,
     }
 
     const auto& fp = eclState.fieldProps();
-    // The imbibition curve is scaled if either the drainage (KRW, ...) or the
-    // imbibition (IKRW, ...) keyword is present; without the imbibition keyword
-    // its scaled points are the unscaled ones, so the scaling is an identity.
-    // The drainage curve only depends on the drainage keywords. In particular,
-    // an imbibition-only IKRWR must not switch the drainage curve to three-point
-    // scaling.
-    auto hasKR = [&fp, &prefix, &suffix, imbibition](const std::string& scaling)
+    // The prefix selects the keywords of the imbibition curve ("I": IKRW, IPCW,
+    // ...). The drainage curve (no prefix) only depends on the plain keywords. In
+    // particular, an imbibition-only IKRWR must not switch the drainage curve to
+    // three-point scaling.
+    auto hasKR = [&fp, &prefix, &suffix](const std::string& scaling)
     {
-        return fp.has_double(prefix + "KR" + scaling + suffix)
-            || (imbibition && fp.has_double("I" + prefix + "KR" + scaling + suffix));
+        return fp.has_double(prefix + "KR" + scaling + suffix);
     };
     // With Leverett (JFUNC) scaling the imbibition Pc keywords (IPCW, IPCG) are
     // ignored, as before, instead of triggering the error below. The material
     // law manager issues a warning about it.
-    auto hasPC = [&fp, &prefix, imbibition, this](const std::string& scaling)
+    auto hasPC = [&fp, &prefix, this](const std::string& scaling)
     {
         return fp.has_double(prefix + "PC" + scaling)
-            || (imbibition && !this->enableLeverettScaling_ &&
-                fp.has_double("I" + prefix + "PC" + scaling));
+            && (prefix.empty() || !this->enableLeverettScaling_);
     };
 
     // check if we are supposed to scale the Y axis of the capillary pressure
