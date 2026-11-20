@@ -3615,6 +3615,13 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(GasWaterImbibitionKeywordsDoNotScaleDrainage, Scal
     const auto krImb = gasWaterRelpermPath<Scalar>(gasWaterHysteresisDeck(ehystr1, sgfnDrain, sgfnImb, swfn, swfn, krw + ikrwr),
                                                    sgRef);
     BOOST_CHECK_SMALL(krImb[0][0] - Scalar(0.4), Scalar(1e-5));
+
+    // With only the drainage keyword KRW the imbibition curve is not scaled
+    // (its end points are the tabulated ones), also with the imbibition keywords
+    // read separately.
+    const auto krImbKrw = gasWaterRelpermPath<Scalar>(gasWaterHysteresisDeck(ehystr1, sgfnDrain, sgfnImb, swfn, swfn, krw),
+                                                      sgRef);
+    BOOST_CHECK_SMALL(krImbKrw[0][0] - Scalar(0.625), Scalar(1e-5));
 }
 
 // The imbibition Pc scaling keyword (IPCG) enables Pc scaling of the imbibition

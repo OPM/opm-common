@@ -549,9 +549,9 @@ readGlobalEpsOptions_(const EclipseState& eclState)
     oilWaterConfig_.initFromState(eclState, EclTwoPhaseSystemType::OilWater);
     gasWaterConfig_.initFromState(eclState, EclTwoPhaseSystemType::GasWater);
 
-    gasOilImbConfig_.initImbibitionFromState(eclState, EclTwoPhaseSystemType::GasOil);
-    oilWaterImbConfig_.initImbibitionFromState(eclState, EclTwoPhaseSystemType::OilWater);
-    gasWaterImbConfig_.initImbibitionFromState(eclState, EclTwoPhaseSystemType::GasWater);
+    gasOilImbConfig_.initFromState(eclState, EclTwoPhaseSystemType::GasOil, "I");
+    oilWaterImbConfig_.initFromState(eclState, EclTwoPhaseSystemType::OilWater, "I");
+    gasWaterImbConfig_.initFromState(eclState, EclTwoPhaseSystemType::GasWater, "I");
 
     // The imbibition Pc keywords are ignored with Leverett (JFUNC) scaling.
     const auto& fp = eclState.fieldProps();
