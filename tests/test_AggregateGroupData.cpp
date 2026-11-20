@@ -1139,6 +1139,136 @@ END
     }
 }
 
+// Wells under group control report the rate which their group target
+// controls as a negative control mode.  Their groups must still be seen as
+// responding to higher level control.
+BOOST_AUTO_TEST_CASE (Wells_Under_Group_Target)
+{
+    const auto cse = SimulationCase { R"(
+RUNSPEC
+
+DIMENS
+ 5 5 3 /
+
+OIL
+WATER
+GAS
+DISGAS
+
+WELLDIMS
+ 4 3 4 2 /
+
+START
+ 1 JAN 2020 /
+
+GRID
+
+DXV
+ 5*100.0 /
+DYV
+ 5*100.0 /
+DZV
+ 3*10.0 /
+DEPTHZ
+36*2000.0 /
+
+PORO
+ 75*0.2 /
+PERMX
+ 75*100 /
+PERMY
+ 75*100 /
+PERMZ
+ 75*10 /
+
+SCHEDULE
+
+GRUPTREE
+ 'PLAT'  'FIELD' /
+ 'PRODG' 'PLAT' /
+ 'INJG'  'PLAT' /
+/
+
+WELSPECS
+ 'P1' 'PRODG' 1 1 1* 'OIL' /
+ 'P2' 'PRODG' 2 2 1* 'OIL' /
+ 'I1' 'INJG'  4 4 1* 'WATER' /
+ 'I2' 'INJG'  5 5 1* 'WATER' /
+/
+
+COMPDAT
+ 'P1' 1 1 1 3 'OPEN' 1* 10.0 0.2 /
+ 'P2' 2 2 1 3 'OPEN' 1* 10.0 0.2 /
+ 'I1' 4 4 1 3 'OPEN' 1* 10.0 0.2 /
+ 'I2' 5 5 1 3 'OPEN' 1* 10.0 0.2 /
+/
+
+GCONPROD
+ 'PLAT' 'WRAT' 1* 500.0 /
+/
+
+GCONINJE
+ 'FIELD' 'WATER' 'VREP' 3* 1.0 /
+/
+
+WCONPROD
+ 'P1' 'OPEN' 'GRUP' 500.0 4* 50.0 /
+ 'P2' 'OPEN' 'BHP'  500.0 4* 50.0 /
+/
+
+WCONINJE
+ 'I1' 'WATER' 'OPEN' 'GRUP' 1000.0 1* 400.0 /
+ 'I2' 'WATER' 'OPEN' 'BHP'  1000.0 1* 400.0 /
+/
+
+TSTEP
+ 10 10 /
+
+END
+)" };
+
+    const auto rptStep = std::size_t {1};
+    const double secs_elapsed = 10*86400.0;
+
+    const auto& es    = cse.es;
+    const auto& sched = cse.sched;
+    const auto& grid  = cse.grid;
+
+    auto st = Opm::SummaryState { Opm::TimeService::now(), 0.0 };
+    st.update("FMCTP", 0.0);
+    st.update("FMCTW", 4.0);  // VREP
+    st.update_group_var("PLAT", "GMCTP", 2.0);  // WRAT
+    st.update_group_var("PRODG", "GMCTP", 0.0);
+    st.update_group_var("INJG", "GMCTW", 0.0);
+
+    st.update_well_var("P1", "WMCTL", -2.0);  // Water rate of PLAT's target
+    st.update_well_var("P2", "WMCTL",  7.0);  // BHP
+    st.update_well_var("I1", "WMCTL", -5.0);  // Reservoir rate of FIELD's target
+    st.update_well_var("I2", "WMCTL",  7.0);  // BHP
+
+    const auto ih = Opm::RestartIO::Helpers::createInteHead(es, grid, sched, secs_elapsed,
+                                                            rptStep, rptStep + 1, rptStep);
+
+    auto agrpd = Opm::RestartIO::Helpers::AggregateGroupData(ih);
+    agrpd.captureDeclaredGroupData(sched, es.tracer(), rptStep, st, ih);
+
+    namespace VI = ::Opm::RestartIO::Helpers::VectorItems;
+    using Ix = VI::IGroup::index;
+
+    const auto& iGrp = agrpd.getIGroup();
+    const auto nwgmax = ih[VI::NWGMAX];
+
+    auto igrpValue = [&iGrp, &ih, &sched, rptStep, nwgmax]
+        (const std::string& gname, const int item)
+    {
+        const auto groupID = sched.getGroup(gname, rptStep).insert_index() - 1;
+        return iGrp[groupID*ih[VI::intehead::NIGRPZ] + nwgmax + item];
+    };
+
+    BOOST_CHECK_EQUAL(igrpValue("PRODG", Ix::ProdHighLevCtrl), 1);
+    BOOST_CHECK_EQUAL(igrpValue("INJG", Ix::WInjHighLevCtrl), 1);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 // =====================================================================
