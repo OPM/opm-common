@@ -422,7 +422,7 @@ function run_static_analysis {
           -j $TESTTHREADS
     popd
 
-    run-clang-tidy -checks='clang-analyzer.*' \
+    run-clang-tidy -checks='-*,clang-diagnostic-*,clang-analyzer-*' \
                    -p $WORKSPACE/clang_lto/build-$1/ \
                    -j$TESTTHREADS | tee $WORKSPACE/clang-tidy-report.log
 
