@@ -59,6 +59,47 @@ void handleGLIFTOPT(HandlerContext& handlerContext)
             group.max_lift_gas(max_lift_gas_value);
             group.max_total_gas(max_total_gas_value);
 
+            // Keep a lift capacity set earlier by GLIFTLIM.
+            if (glo.has_group(gname)) {
+                if (const auto& capacity = glo.group(gname).max_lift_capacity();
+                    capacity.has_value())
+                {
+                    group.max_lift_capacity(*capacity);
+                }
+            }
+
+            glo.add_group(group);
+        }
+    }
+
+    handlerContext.state().glo.update( std::move(glo) );
+}
+
+void handleGLIFTLIM(HandlerContext& handlerContext)
+{
+    auto glo = handlerContext.state().glo();
+    const auto& keyword = handlerContext.keyword;
+
+    for (const auto& record : keyword) {
+        const std::string& groupNamePattern = record.getItem<ParserKeywords::GLIFTLIM::GROUP_NAME>().getTrimmedString(0);
+        const auto group_names = handlerContext.groupNames(groupNamePattern);
+        if (group_names.empty()) {
+            handlerContext.invalidNamePattern(groupNamePattern);
+        }
+
+        // Item 2 limits the group's total lift gas rate.  Zero or
+        // defaulted means no limit.  Item 3, the maximum number of wells
+        // on lift, is not stored; the simulator rejects nonzero values.
+        const double max_lift_capacity = record
+            .getItem<ParserKeywords::GLIFTLIM::MAX_LIFT_CAPACITY>().getSIDouble(0);
+
+        for (const auto& gname : group_names) {
+            auto group = glo.has_group(gname)
+                ? glo.group(gname)
+                : GasLiftGroup(gname);
+
+            group.max_lift_capacity(max_lift_capacity);
+
             glo.add_group(group);
         }
     }
@@ -127,6 +168,7 @@ std::vector<std::pair<std::string,KeywordHandlers::handler_function>>
 getGasLiftOptHandlers()
 {
     return {
+        { "GLIFTLIM", &handleGLIFTLIM },
         { "GLIFTOPT", &handleGLIFTOPT },
         { "LIFTOPT" , &handleLIFTOPT  },
         { "WLIFTOPT", &handleWLIFTOPT },

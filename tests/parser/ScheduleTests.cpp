@@ -5182,6 +5182,134 @@ WLIFTOPT
     BOOST_CHECK(!glo.has_well("NO-WELL"));
 }
 
+BOOST_AUTO_TEST_CASE(GASLIFT_GLIFTLIM_DECK) {
+    const auto input = R"(RUNSPEC
+OIL
+GAS
+WATER
+
+SCHEDULE
+
+GRUPTREE
+ 'PLAT-A'  'FIELD' /
+ 'PLAT-B'  'FIELD' /
+ 'M5S'     'PLAT-A'  /
+ 'M5N'     'PLAT-A'  /
+/
+
+-- GLIFTLIM before LIFTOPT is allowed
+GLIFTLIM
+-- GRPNAME  MXLIFT  MXWELS
+ 'FIELD'   500000 1* /
+ 'PLAT*'   300000 /
+/
+
+LIFTOPT
+-- INCR   MINGRAD  MINTIME  ALLNEWT
+ 12500 5E-3 0.0 YES /
+
+GLIFTOPT
+-- GRPNAME  MXLIFT  MXTOT
+ 'PLAT-A'  200000 /
+ 'M5S'     100000 /
+/
+
+GLIFTLIM
+-- GRPNAME  MXLIFT  MXWELS
+ 'M5S'     50000 0 /
+/
+
+TSTEP
+ 1 /
+
+-- GLIFTOPT after GLIFTLIM keeps the GLIFTLIM value
+GLIFTOPT
+-- GRPNAME  MXLIFT  MXTOT
+ 'PLAT-B'  400000 /
+ 'M5S'     1* /
+/
+
+TSTEP
+ 1 /
+
+-- Zero or default removes the GLIFTLIM limit
+GLIFTLIM
+-- GRPNAME  MXLIFT  MXWELS
+ 'FIELD'   0 /
+ 'PLAT-A'  1* /
+/
+
+TSTEP
+ 1 /
+)";
+
+    // From sm3/day to SI (sm3/s): 1/86400, about 1.157e-5
+    const auto siFactorG = UnitSystem(UnitSystem::UnitType::UNIT_TYPE_METRIC)
+        .parse("GasSurfaceVolume/Time").getSIScaling();
+    const auto sched = make_schedule(input);
+
+    {
+        const auto& glo = sched.glo(/*report_step=*/0);
+
+        // Group with GLIFTLIM only
+        BOOST_REQUIRE(glo.has_group("FIELD"));
+        const auto& field = glo.group("FIELD");
+        BOOST_CHECK(!field.max_lift_gas().has_value());
+        BOOST_CHECK(!field.max_total_gas().has_value());
+        BOOST_CHECK_CLOSE(*field.max_lift_capacity(), 500000 * siFactorG, 1.0e-8);
+        BOOST_CHECK_CLOSE(*field.lift_gas_limit(), 500000 * siFactorG, 1.0e-8);
+
+        // Group name pattern, then GLIFTOPT after GLIFTLIM: both kept,
+        // smaller value is the limit.
+        const auto& plat_a = glo.group("PLAT-A");
+        BOOST_CHECK_CLOSE(*plat_a.max_lift_gas(), 200000 * siFactorG, 1.0e-8);
+        BOOST_CHECK_CLOSE(*plat_a.max_lift_capacity(), 300000 * siFactorG, 1.0e-8);
+        BOOST_CHECK_CLOSE(*plat_a.lift_gas_limit(), 200000 * siFactorG, 1.0e-8);
+
+        const auto& plat_b = glo.group("PLAT-B");
+        BOOST_CHECK(!plat_b.max_lift_gas().has_value());
+        BOOST_CHECK_CLOSE(*plat_b.max_lift_capacity(), 300000 * siFactorG, 1.0e-8);
+
+        // GLIFTLIM after GLIFTOPT keeps the GLIFTOPT value
+        const auto& m5s = glo.group("M5S");
+        BOOST_CHECK_CLOSE(*m5s.max_lift_gas(), 100000 * siFactorG, 1.0e-8);
+        BOOST_CHECK_CLOSE(*m5s.max_lift_capacity(), 50000 * siFactorG, 1.0e-8);
+        BOOST_CHECK_CLOSE(*m5s.lift_gas_limit(), 50000 * siFactorG, 1.0e-8);
+
+        BOOST_CHECK(!glo.has_group("M5N"));
+    }
+
+    {
+        const auto& glo = sched.glo(/*report_step=*/1);
+
+        const auto& plat_b = glo.group("PLAT-B");
+        BOOST_CHECK_CLOSE(*plat_b.max_lift_gas(), 400000 * siFactorG, 1.0e-8);
+        BOOST_CHECK_CLOSE(*plat_b.max_lift_capacity(), 300000 * siFactorG, 1.0e-8);
+        BOOST_CHECK_CLOSE(*plat_b.lift_gas_limit(), 300000 * siFactorG, 1.0e-8);
+
+        // GLIFTOPT with defaulted item 2 removes its own limit only
+        const auto& m5s = glo.group("M5S");
+        BOOST_CHECK(!m5s.max_lift_gas().has_value());
+        BOOST_CHECK_CLOSE(*m5s.lift_gas_limit(), 50000 * siFactorG, 1.0e-8);
+    }
+
+    {
+        const auto& glo = sched.glo(/*report_step=*/2);
+
+        const auto& field = glo.group("FIELD");
+        BOOST_CHECK(!field.max_lift_capacity().has_value());
+        BOOST_CHECK(!field.lift_gas_limit().has_value());
+
+        const auto& plat_a = glo.group("PLAT-A");
+        BOOST_CHECK(!plat_a.max_lift_capacity().has_value());
+        BOOST_CHECK_CLOSE(*plat_a.lift_gas_limit(), 200000 * siFactorG, 1.0e-8);
+
+        // Not named in the last GLIFTLIM
+        const auto& plat_b = glo.group("PLAT-B");
+        BOOST_CHECK_CLOSE(*plat_b.max_lift_capacity(), 300000 * siFactorG, 1.0e-8);
+    }
+}
+
 BOOST_AUTO_TEST_CASE(WellPI) {
     const auto deck = Parser{}.parseString(R"(RUNSPEC
 OIL
