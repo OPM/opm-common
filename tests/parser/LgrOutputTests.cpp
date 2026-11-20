@@ -36,6 +36,7 @@
 
 #include <array>
 #include <cstddef>
+#include <numeric>
 #include <string>
 #include <tuple>
 #include <utility>
