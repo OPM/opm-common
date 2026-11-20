@@ -472,49 +472,36 @@ BOOST_AUTO_TEST_CASE(NewtonRecoveryRetriesFromStabilityEstimate)
     BOOST_CHECK_LT(Opm::getValue(fs.L()), 1.0);
 }
 
-// A singular FieldMatrix solve must trigger the hybrid SSI fallback rather
-// than escape as an uncaught Dune::FMatrixError.
+// A singular FieldMatrix solve must trigger the SSI fallback of either Newton
+// method rather than escape as an uncaught Dune::FMatrixError.
 BOOST_AUTO_TEST_CASE(SingularJacobianFallsBackToSsi)
 {
     const auto z = makeOverallComposition();
-
-    auto newtonState = makeSingularState();
-    auto newtonK = makeInitialK();
-    Scalar newtonL = 0.5;
-    BOOST_CHECK_THROW(SingularPtFlash::flash_2ph(z,
-                                                 PTFlashMethod::Newton,
-                                                 newtonK,
-                                                 newtonL,
-                                                 newtonState,
-                                                 1.e-8,
-                                                 EOSType::PR),
-                      Dune::FMatrixError);
 
     auto ssiState = makeSingularState();
     auto ssiK = makeInitialK();
     Scalar ssiL = 0.5;
     SingularPtFlash::flash_2ph(z, PTFlashMethod::Ssi, ssiK, ssiL, ssiState, 1.e-8, EOSType::PR);
 
-    auto hybridState = makeSingularState();
-    auto hybridK = makeInitialK();
-    Scalar hybridL = 0.5;
-    SingularFluidSystem::adFugacityCalls = 0;
-    BOOST_REQUIRE_NO_THROW(SingularPtFlash::flash_2ph(z,
-                                                      PTFlashMethod::SsiNewton,
-                                                      hybridK,
-                                                      hybridL,
-                                                      hybridState,
-                                                      1.e-8,
-                                                      EOSType::PR));
-    BOOST_CHECK_GT(SingularFluidSystem::adFugacityCalls, 0);
+    for (const auto method : {PTFlashMethod::Newton, PTFlashMethod::SsiNewton}) {
+        BOOST_TEST_CONTEXT("method " << method)
+        {
+            auto state = makeSingularState();
+            auto K = makeInitialK();
+            Scalar L = 0.5;
+            SingularFluidSystem::adFugacityCalls = 0;
+            BOOST_REQUIRE_NO_THROW(
+                SingularPtFlash::flash_2ph(z, method, K, L, state, 1.e-8, EOSType::PR));
+            BOOST_CHECK_GT(SingularFluidSystem::adFugacityCalls, 0);
 
-    BOOST_CHECK_SMALL(std::abs(hybridL - ssiL), 1.e-8);
-    for (unsigned phaseIdx = 0; phaseIdx < SingularFluidSystem::numPhases; ++phaseIdx) {
-        for (int compIdx = 0; compIdx < SingularFluidSystem::numComponents; ++compIdx) {
-            BOOST_CHECK_SMALL(
-                std::abs(hybridState.moleFraction(phaseIdx, compIdx)
-                         - ssiState.moleFraction(phaseIdx, compIdx)),
-                1.e-8);
+            BOOST_CHECK_SMALL(std::abs(L - ssiL), 1.e-8);
+            for (unsigned phaseIdx = 0; phaseIdx < SingularFluidSystem::numPhases; ++phaseIdx) {
+                for (int compIdx = 0; compIdx < SingularFluidSystem::numComponents; ++compIdx) {
+                    BOOST_CHECK_SMALL(std::abs(state.moleFraction(phaseIdx, compIdx)
+                                               - ssiState.moleFraction(phaseIdx, compIdx)),
+                                      1.e-8);
+                }
+            }
         }
     }
 }

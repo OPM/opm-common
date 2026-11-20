@@ -225,11 +225,14 @@ BOOST_AUTO_TEST_CASE(SinglePhaseVaporF1)
 // A lean feed (10 % C1) at 1 bar is a single vapour from 447 to 549 K, where
 // the stability test still finds a trial phase. The split failed there at
 // every temperature (#5533); substitution now returns the single vapour.
-// Newton is left out: from the trial's ratios it converges to L > 1 here.
+// No physical split is near the trial's ratios, so Newton hands over to
+// substitution as well.
 BOOST_AUTO_TEST_CASE(LeanFeedSingleVapourF1)
 {
     const std::array<double, numComponentsF1> leanZ = {0.1, 0.9};
-    for (const auto method : {Opm::PTFlashMethod::Ssi, Opm::PTFlashMethod::SsiNewton}) {
+    for (const auto method : {Opm::PTFlashMethod::Ssi,
+                              Opm::PTFlashMethod::Newton,
+                              Opm::PTFlashMethod::SsiNewton}) {
         std::vector<double> failed;
         for (double T = 447.; T <= 549.; T += 1.) {
             FlashCase<numComponentsF1> testCase{"lean feed F1", 1e5, T, leanZ};
