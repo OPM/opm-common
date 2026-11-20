@@ -1235,7 +1235,7 @@ protected:
      *
      * With the flash residuals \f$F(\mathbf u, \mathbf s) = 0\f$ in the
      * unknowns \f$\mathbf u = (\mathbf x, \mathbf y, L)\f$ and the state
-     * variables \f$\mathbf s = (p, [T,] \mathbf z)\f$,
+     * variables \f$\mathbf s = (p_o, p_g, [T,] \mathbf z)\f$,
      *
      * \f[ \frac{\partial \mathbf u}{\partial \mathbf s}
      *   = - \left( \frac{\partial F}{\partial \mathbf u} \right)^{-1}
@@ -1244,6 +1244,9 @@ protected:
      * and the chain rule through the caller's derivatives of \f$\mathbf s\f$
      * gives those of \f$\mathbf u\f$. A Newton solve that converged at exactly
      * this state already assembled \f$\partial F / \partial \mathbf u\f$.
+     * Each phase is at its own pressure, and the two pressures are separate
+     * state variables: a capillary pressure makes their values differ, and
+     * their derivatives need not agree.
      */
     template <typename FlashFluidStateScalar, typename FluidState>
     static void updateDerivativesTwoPhase_(const FlashFluidStateScalar& fluid_state_scalar,
@@ -1259,33 +1262,37 @@ protected:
         }
 
         constexpr std::size_t num_equations = numMisciblePhases * numMiscibleComponents + 1;
-        constexpr std::size_t num_state_variables
-            = isThermal ? numComponents + 2 : numComponents + 1;
+        // The oil and gas pressures, the temperature of a thermal flash, then z.
+        constexpr unsigned oil_pressure_idx = 0;
+        constexpr unsigned gas_pressure_idx = 1;
+        [[maybe_unused]] constexpr unsigned temperature_idx = 2;
+        constexpr unsigned composition_offset = isThermal ? 3 : 2;
+        constexpr std::size_t num_state_variables = composition_offset + numComponents;
         using StateEval = Opm::DenseAd::Evaluation<double, num_state_variables>;
         using StateComponentVector = Dune::FieldVector<StateEval, numComponents>;
         using StateFluidState = Opm::CompositionalFluidState<StateEval, FluidSystem>;
 
-        // Evaluate F with s = (p, [T], z) as independent AD variables while
+        // Evaluate F with s = (p_o, p_g, [T], z) as independent AD variables while
         // holding the converged flash unknowns u = (x, y, L) fixed.
         StateFluidState state_derivative_state;
         StateComponentVector state_composition;
-        const StateEval state_pressure
-            = StateEval(fluid_state_scalar.pressure(FluidSystem::oilPhaseIdx), 0);
-        state_derivative_state.setPressure(FluidSystem::oilPhaseIdx, state_pressure);
-        state_derivative_state.setPressure(FluidSystem::gasPhaseIdx, state_pressure);
+        state_derivative_state.setPressure(
+            FluidSystem::oilPhaseIdx,
+            StateEval(fluid_state_scalar.pressure(FluidSystem::oilPhaseIdx), oil_pressure_idx));
+        state_derivative_state.setPressure(
+            FluidSystem::gasPhaseIdx,
+            StateEval(fluid_state_scalar.pressure(FluidSystem::gasPhaseIdx), gas_pressure_idx));
 
         if constexpr (isThermal) {
             // set the temperature with derivatives
-            const StateEval state_temperature = StateEval(fluid_state_scalar.temperature(0), 1);
+            const StateEval state_temperature
+                = StateEval(fluid_state_scalar.temperature(0), temperature_idx);
             state_derivative_state.setTemperature(state_temperature);
         } else {
             // set the temperature as a scalar
             state_derivative_state.setTemperature(Opm::getValue(fluid_state_scalar.temperature(0)));
         }
 
-        // composition variable offset: 2 for thermal (pressure=0, temperature=1, z starts at 2)
-        //                               1 for non-thermal (pressure=0, z starts at 1)
-        constexpr unsigned composition_offset = isThermal ? 2 : 1;
         for (unsigned idx = 0; idx < numComponents; ++idx) {
             state_composition[idx] = StateEval(Opm::getValue(z[idx]), idx + composition_offset);
         }
@@ -1340,118 +1347,44 @@ protected:
         // state_jacobian now stores (dF/du)^-1 dF/ds; the minus sign is
         // applied while transferring each sensitivity below.
 
-        ComponentVector liquid_composition(numComponents);
-        ComponentVector vapour_composition(numComponents);
-        InputEval liquid_fraction_with_derivatives = scalar_liquid_fraction;
-
         // Apply du/ds = -(dF/du)^-1 dF/ds, then compose it with the
         // caller's derivatives of s.
-
-        const auto liquid_pressure = fluid_state.pressure(FluidSystem::oilPhaseIdx);
-        const auto vapour_pressure = fluid_state.pressure(FluidSystem::gasPhaseIdx);
+        const auto& oil_pressure = fluid_state.pressure(FluidSystem::oilPhaseIdx);
+        const auto& gas_pressure = fluid_state.pressure(FluidSystem::gasPhaseIdx);
         // at the moment, the temperature is the same for both phases
         // input_temperature is not used for non-thermal case
         [[maybe_unused]] const auto& input_temperature = fluid_state.temperature(0);
-
-        for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
-            liquid_composition[compIdx]
-                = fluid_state_scalar.moleFraction(FluidSystem::oilPhaseIdx, compIdx);
-            vapour_composition[compIdx]
-                = fluid_state_scalar.moleFraction(FluidSystem::gasPhaseIdx, compIdx);
-        }
-
-        // The two pressures are equal today. Keep both inputs explicit so this
-        // chain rule can accommodate capillary pressure later.
-
-        constexpr std::size_t num_derivatives = InputEval::numVars;
-        for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
-            std::vector<double> derivatives(num_derivatives, 0.);
-            // derivatives from P
-            for (unsigned idx = 0; idx < num_derivatives; ++idx) {
-                derivatives[idx] = -state_jacobian[compIdx][0] * liquid_pressure.derivative(idx);
-            }
-            // derivatives from T (only for thermal case)
-            if constexpr (isThermal) {
-                for (unsigned idx = 0; idx < num_derivatives; ++idx) {
-                    derivatives[idx]
-                        += -state_jacobian[compIdx][1] * input_temperature.derivative(idx);
+        const auto with_derivatives = [&](const Scalar value, const unsigned unknown_idx) {
+            const auto& sensitivity = state_jacobian[unknown_idx];
+            InputEval result = value;
+            for (unsigned idx = 0; idx < InputEval::numVars; ++idx) {
+                double derivative = sensitivity[oil_pressure_idx] * oil_pressure.derivative(idx)
+                    + sensitivity[gas_pressure_idx] * gas_pressure.derivative(idx);
+                if constexpr (isThermal) {
+                    derivative += sensitivity[temperature_idx] * input_temperature.derivative(idx);
                 }
+                for (unsigned cIdx = 0; cIdx < numComponents; ++cIdx) {
+                    derivative += sensitivity[cIdx + composition_offset] * z[cIdx].derivative(idx);
+                }
+                result.setDerivative(idx, -derivative);
             }
+            return result;
+        };
 
-            for (unsigned cIdx = 0; cIdx < numComponents; ++cIdx) {
-                const double composition_sensitivity
-                    = -state_jacobian[compIdx][cIdx + composition_offset];
-                const auto& overall_mole_fraction = z[cIdx];
-                for (unsigned idx = 0; idx < num_derivatives; ++idx) {
-                    derivatives[idx]
-                        += composition_sensitivity * overall_mole_fraction.derivative(idx);
-                }
-            }
-            for (unsigned idx = 0; idx < num_derivatives; ++idx) {
-                liquid_composition[compIdx].setDerivative(idx, derivatives[idx]);
-            }
-            // handling y
-            for (unsigned idx = 0; idx < num_derivatives; ++idx) {
-                derivatives[idx]
-                    = -state_jacobian[compIdx + numComponents][0] * vapour_pressure.derivative(idx);
-            }
-            // derivatives from T (only for thermal case)
-            if constexpr (isThermal) {
-                for (unsigned idx = 0; idx < num_derivatives; ++idx) {
-                    derivatives[idx] += -state_jacobian[compIdx + numComponents][1]
-                        * input_temperature.derivative(idx);
-                }
-            }
-            for (unsigned cIdx = 0; cIdx < numComponents; ++cIdx) {
-                const double composition_sensitivity
-                    = -state_jacobian[compIdx + numComponents][cIdx + composition_offset];
-                const auto& overall_mole_fraction = z[cIdx];
-                for (unsigned idx = 0; idx < num_derivatives; ++idx) {
-                    derivatives[idx]
-                        += composition_sensitivity * overall_mole_fraction.derivative(idx);
-                }
-            }
-            for (unsigned idx = 0; idx < num_derivatives; ++idx) {
-                vapour_composition[compIdx].setDerivative(idx, derivatives[idx]);
-            }
-
-            // handling derivatives of L
-            std::vector<double> liquid_fraction_derivatives(num_derivatives, 0.);
-            for (unsigned idx = 0; idx < num_derivatives; ++idx) {
-                liquid_fraction_derivatives[idx]
-                    = -state_jacobian[2 * numComponents][0] * vapour_pressure.derivative(idx);
-            }
-            // derivatives from T (only for thermal case)
-            if constexpr (isThermal) {
-                for (unsigned idx = 0; idx < num_derivatives; ++idx) {
-                    liquid_fraction_derivatives[idx] += -state_jacobian[2 * numComponents][1]
-                        * input_temperature.derivative(idx);
-                }
-            }
-            for (unsigned cIdx = 0; cIdx < numComponents; ++cIdx) {
-                const double composition_sensitivity
-                    = -state_jacobian[2 * numComponents][cIdx + composition_offset];
-                const auto& overall_mole_fraction = z[cIdx];
-                for (unsigned idx = 0; idx < num_derivatives; ++idx) {
-                    liquid_fraction_derivatives[idx]
-                        += composition_sensitivity * overall_mole_fraction.derivative(idx);
-                }
-            }
-
-            for (unsigned idx = 0; idx < num_derivatives; ++idx) {
-                liquid_fraction_with_derivatives.setDerivative(idx,
-                                                               liquid_fraction_derivatives[idx]);
-            }
-        }
-
-        // set up the mole fractions
+        // u is ordered as x, y, then L.
         for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
             fluid_state.setMoleFraction(
-                FluidSystem::oilPhaseIdx, compIdx, liquid_composition[compIdx]);
+                FluidSystem::oilPhaseIdx,
+                compIdx,
+                with_derivatives(fluid_state_scalar.moleFraction(FluidSystem::oilPhaseIdx, compIdx),
+                                 compIdx));
             fluid_state.setMoleFraction(
-                FluidSystem::gasPhaseIdx, compIdx, vapour_composition[compIdx]);
+                FluidSystem::gasPhaseIdx,
+                compIdx,
+                with_derivatives(fluid_state_scalar.moleFraction(FluidSystem::gasPhaseIdx, compIdx),
+                                 compIdx + numComponents));
         }
-        fluid_state.setLvalue(liquid_fraction_with_derivatives);
+        fluid_state.setLvalue(with_derivatives(scalar_liquid_fraction, 2 * numComponents));
     } //end updateDerivativesTwoPhase
 
     /*!
