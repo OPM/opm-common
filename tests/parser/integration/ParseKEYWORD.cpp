@@ -840,6 +840,7 @@ BOOST_AUTO_TEST_CASE( RSVD ) {
 
 BOOST_AUTO_TEST_CASE( PVTG ) {
 const std::string pvtgData = R"(
+VAPOIL
 TABDIMS
 -- NTSFUN NTPVT NSSFUN NPPVT NTFIP NRPVT
      1      2     30    24    10    20  /
@@ -932,6 +933,7 @@ PVTG
 
 BOOST_AUTO_TEST_CASE( PVTO ) {
 const std::string pvtoData = R"(
+DISGAS
 TABDIMS
 -- NTSFUN NTPVT NSSFUN NPPVT NTFIP NRPVT
      1      2     30    24    10    20  /
