@@ -491,7 +491,7 @@ EclHysterConfig EclHysterConfig::serializationTestObject()
     result.activeWagHyst = true;
     result.enablePcScaling = false;
     result.enableKilloughWettingFix = false;
-    result.enableImbibitionKrwExtension = true;
+    result.enableImbibitionKrwExtension = false;
 
     return result;
 }
