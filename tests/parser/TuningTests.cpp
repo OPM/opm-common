@@ -491,8 +491,8 @@ BOOST_AUTO_TEST_CASE(TuningDpTest)
         BOOST_CHECK_CLOSE(tuning_dp.XXXLCV, 0.001, tol);
         BOOST_CHECK_CLOSE(tuning_dp.TRGDDP, 1.0 * Metric::Pressure, tol);
         BOOST_CHECK_CLOSE(tuning_dp.TRGDDS, 0.01, tol);
-        BOOST_CHECK_CLOSE(tuning_dp.TRGDDRS, 0.0 * Metric::GasDissolutionFactor, tol);
-        BOOST_CHECK_CLOSE(tuning_dp.TRGDDRV, 0.0 * Metric::OilDissolutionFactor, tol);
+        BOOST_CHECK_CLOSE(tuning_dp.TRGDDRS, 1.0 * Metric::GasDissolutionFactor, tol);
+        BOOST_CHECK_CLOSE(tuning_dp.TRGDDRV, 0.0001 * Metric::OilDissolutionFactor, tol);
     }
 
     // TIMESTEP 4:
