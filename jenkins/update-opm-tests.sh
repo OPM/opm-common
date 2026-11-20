@@ -51,12 +51,15 @@ if [ "${upstreamRev[opm-tests]}" == "master" ]
 then
   export BRANCH_BASE=origin/master
 else
-  export BRANCH_BASE=${upstreamRev[opm-tests]}
+  # The requested revision has no local ref, only the branch_to_build checkout
+  export BRANCH_BASE=HEAD
 fi
 export BRANCH_NAME
 $WORKSPACE/deps/opm-simulators/tests/update_reference_data.sh $OPM_TESTS_ROOT $WORKSPACE/$configuration/build-opm-simulators $WORKSPACE/$configuration/install/bin/convertECL
-if test $? -eq 5
+status=$?
+if test $status -eq 5
 then
   echo "No tests failed - no data to update. Exiting"
   exit 0
 fi
+exit $status
