@@ -124,6 +124,9 @@ namespace Opm
             /// re-specifying either input cancels a THP limit imposed
             /// dynamically by the simulator (e.g. by network balancing).
             WELL_THP_UPDATE = (UINT64_C(1) << 25),
+
+            /// CVCRIT has changed
+            CVCRIT_CHANGE = (UINT64_C(1) << 26),
         };
     } // namespace ScheduleEvents
 
