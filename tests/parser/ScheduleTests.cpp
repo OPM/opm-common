@@ -5257,6 +5257,7 @@ TSTEP
         const auto& field = glo.group("FIELD");
         BOOST_CHECK(!field.max_lift_gas().has_value());
         BOOST_CHECK(!field.max_total_gas().has_value());
+        BOOST_CHECK(!field.has_gliftopt_data());
         BOOST_CHECK_CLOSE(*field.max_lift_capacity(), 500000 * siFactorG, 1.0e-8);
         BOOST_CHECK_CLOSE(*field.lift_gas_limit(), 500000 * siFactorG, 1.0e-8);
 
@@ -5264,6 +5265,7 @@ TSTEP
         // smaller value is the limit.
         const auto& plat_a = glo.group("PLAT-A");
         BOOST_CHECK_CLOSE(*plat_a.max_lift_gas(), 200000 * siFactorG, 1.0e-8);
+        BOOST_CHECK(plat_a.has_gliftopt_data());
         BOOST_CHECK_CLOSE(*plat_a.max_lift_capacity(), 300000 * siFactorG, 1.0e-8);
         BOOST_CHECK_CLOSE(*plat_a.lift_gas_limit(), 200000 * siFactorG, 1.0e-8);
 

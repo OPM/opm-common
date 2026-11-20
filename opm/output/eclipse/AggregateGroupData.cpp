@@ -1429,7 +1429,11 @@ void staticContrib(const Opm::Group&         group,
                                        sgprop, sGrp);
     }
 
-    if (const auto& glo = sched.glo(); glo.has_group(group.name())) {
+    // Only groups with GLIFTOPT data.  The GLIFTLIM limit has no place in
+    // the restart file.
+    if (const auto& glo = sched.glo();
+        glo.has_group(group.name()) && glo.group(group.name()).has_gliftopt_data())
+    {
         assignGasLiftOptimisation(glo.group(group.name()), sgprop, sGrp);
     }
 

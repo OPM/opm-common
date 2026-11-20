@@ -58,6 +58,7 @@ void handleGLIFTOPT(HandlerContext& handlerContext)
             auto group = GasLiftGroup(gname);
             group.max_lift_gas(max_lift_gas_value);
             group.max_total_gas(max_total_gas_value);
+            group.has_gliftopt_data(true);
 
             // Keep a lift capacity set earlier by GLIFTLIM.
             if (glo.has_group(gname)) {

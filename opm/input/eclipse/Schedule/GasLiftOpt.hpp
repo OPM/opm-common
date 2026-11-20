@@ -129,6 +129,24 @@ public:
         }
     }
 
+    /// Whether keyword GLIFTOPT, or a restart file, has given gas lift
+    /// optimisation data for this group.
+    ///
+    /// False for a group that has only a GLIFTLIM limit.  Restart output
+    /// writes the GLIFTOPT items only for groups where this is true.
+    bool has_gliftopt_data() const
+    {
+        return this->m_has_gliftopt_data;
+    }
+
+    /// Mark whether GLIFTOPT data has been given for this group.
+    ///
+    /// \param[in] value Whether GLIFTOPT data has been given.
+    void has_gliftopt_data(const bool value)
+    {
+        this->m_has_gliftopt_data = value;
+    }
+
     /// Effective maximum lift gas limit for this group.
     ///
     /// The smaller of max_lift_gas() and max_lift_capacity().  Nullopt if
@@ -155,6 +173,7 @@ public:
         serializer(m_max_lift_gas);
         serializer(m_max_total_gas);
         serializer(m_max_lift_capacity);
+        serializer(m_has_gliftopt_data);
     }
 
     /// Create a serialisation test object.
@@ -183,6 +202,9 @@ private:
     /// Maximum lift capacity (GLIFTLIM) for this group.  Nullopt for no
     /// limit.
     std::optional<double> m_max_lift_capacity{};
+
+    /// Whether GLIFTOPT, or a restart file, has given data for this group.
+    bool m_has_gliftopt_data{false};
 };
 
 // ---------------------------------------------------------------------------
