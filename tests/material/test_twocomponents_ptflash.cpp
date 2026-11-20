@@ -298,3 +298,32 @@ BOOST_AUTO_TEST_CASE(TernaryInvariantsF2)
     checkExpectedPhase(testCase, outcome.summary);
     checkTwoPhaseInvariants<FluidSystemF2>(outcome.state, testCase.z, testCase.eos_type);
 }
+
+// The stability test overstates the split of this methane-rich feed, and full
+// Newton steps from its ratios left the physical range at 19 of these
+// pressures. Newton now finds the split of the hybrid method at all of them.
+BOOST_AUTO_TEST_CASE(NewtonFromStabilityRatiosF2)
+{
+    const std::array<double, numComponentsF2> z = {0.05, 0.8, 0.15};
+    std::vector<double> failed;
+    for (double p = 5e5; p <= 300e5; p += 5e5) {
+        FlashCase<numComponentsF2> testCase{"stability ratios F2", p, 480., z};
+        testCase.method = Opm::PTFlashMethod::SsiNewton;
+        const auto hybrid = runFlash<FluidSystemF2, EvaluationF2>(testCase).summary;
+        testCase.method = Opm::PTFlashMethod::Newton;
+        try {
+            const auto newton = runFlash<FluidSystemF2, EvaluationF2>(testCase).summary;
+            if (newton.single_phase != hybrid.single_phase
+                || std::abs(newton.L - hybrid.L) > PARITY_TOLERANCE) {
+                failed.push_back(p);
+            }
+        }
+        catch (const std::exception&) {
+            failed.push_back(p);
+        }
+    }
+    BOOST_CHECK_MESSAGE(failed.empty(),
+                        "newton differs from ssi+newton at " << failed.size()
+                            << " pressures, the first at "
+                            << (failed.empty() ? 0. : failed.front()) << " Pa");
+}
