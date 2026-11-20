@@ -109,17 +109,7 @@ private:
     template <class Vector>
     static WorkingScalar<Vector> validateInputs(const Vector& K, const Vector& z)
     {
-        if (K.size() == 0) {
-            OPM_THROW(std::invalid_argument, "Rachford-Rice requires at least one component");
-        }
-
-        if (K.size() != z.size()) {
-            OPM_THROW(std::invalid_argument,
-                      fmt::format("Rachford-Rice received {} equilibrium ratios and {} "
-                                  "overall mole fractions",
-                                  K.size(),
-                                  z.size()));
-        }
+        validateSizes(K, z);
 
         bool allRatiosAreOne = true;
         WorkingScalar<Vector> compositionTotal = 0;
@@ -157,6 +147,23 @@ private:
         }
 
         return compositionTotal;
+    }
+
+    //! \brief Reject vectors that are empty or differ in length.
+    template <class Vector>
+    static void validateSizes(const Vector& K, const Vector& z)
+    {
+        if (K.size() == 0) {
+            OPM_THROW(std::invalid_argument, "Rachford-Rice requires at least one component");
+        }
+
+        if (K.size() != z.size()) {
+            OPM_THROW(std::invalid_argument,
+                      fmt::format("Rachford-Rice received {} equilibrium ratios and {} "
+                                  "overall mole fractions",
+                                  K.size(),
+                                  z.size()));
+        }
     }
 
     //! \brief The residual \f$g(V)\f$ and its negative slope \f$-g'(V)\f$.
