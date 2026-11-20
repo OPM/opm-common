@@ -1812,6 +1812,7 @@ BOOST_AUTO_TEST_CASE(FactliTest)
         const CompositionalConfig comp_config{deck, runspec};
 
         check_vectors_close(comp_config.liCorrelationFactors(), {1.0}, tolerance);
+        BOOST_CHECK(!comp_config.liCorrelationFactorsSpecified());
     }
 
     // The repeat count form used by decks that only spell out the default.
@@ -1822,6 +1823,7 @@ BOOST_AUTO_TEST_CASE(FactliTest)
 
         check_vectors_close(comp_config.liCorrelationFactors(), {1.0}, tolerance);
         BOOST_CHECK_CLOSE(comp_config.liCorrelationFactor(0), 1.0, tolerance);
+        BOOST_CHECK(comp_config.liCorrelationFactorsSpecified());
     }
 
     // One value per equilibration region.
