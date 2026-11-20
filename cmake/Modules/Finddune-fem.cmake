@@ -25,7 +25,7 @@ if(dune-fem_FOUND)
   # make version number available in config.h
   include (UseDuneVer)
   find_dune_version ("dune" "fem")
-  target_compile_definitions(dunefem
+  target_compile_definitions(Dune::Fem
     INTERFACE
       HAVE_DUNE_FEM=1
       DUNE_FEM_VERSION_MAJOR=${DUNE_FEM_VERSION_MAJOR}
