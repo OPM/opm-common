@@ -165,14 +165,19 @@ public:
      * The stages are:
      * -# a stability test when the state does not already carry a two-phase
      *    split (\f$L \le 0\f$ or \f$L \ge 1\f$), which either declares the
-     *    mixture single-phase or returns starting equilibrium ratios;
+     *    mixture single-phase or returns starting equilibrium ratios; each
+     *    trial phase is evaluated at the pressure of the phase it is tested against;
      * -# for a two-phase mixture, the Rachford-Rice equation for the
      *    starting liquid fraction, then the phase compositions from
      *    equality of fugacities by successive substitution and/or Newton;
-     * -# a finite negative-flash liquid fraction is labelled single-phase;
+     * -# a split whose gas phase has the higher Li pseudo-critical temperature
+     *    is relabelled, and solved again when the phase pressures differ;
+     * -# a finite negative-flash liquid fraction, or substitution that ends at
+     *    a Rachford-Rice endpoint, is labelled single-phase: liquid for
+     *    \f$L \ge 1\f$ and vapour for \f$L \le 0\f$;
      * -# a rejected split, or coincident phases from a warm start, triggers a
      *    new stability test from Wilson estimates and at most one retry; and
-     * -# for a single-phase mixture, the phase label.
+     * -# for a mixture the stability test finds single-phase, Li's phase label.
      *
      * The state also receives the fugacity coefficients of the phase
      * compositions it returns, which are the feed for a single phase.
@@ -400,11 +405,11 @@ protected:
     }
 
     /*!
-     * \brief Put the heavier phase of a two-phase split in the oil slot.
+     * \brief Put the liquid-like phase of a two-phase split in the oil slot.
      *
      * Substitution from ratios near one can converge to the split with its
-     * phases in the opposite slots. The pseudo-critical temperature that
-     * labels single phases also decides which phase is the liquid here.
+     * phases in the opposite slots. The liquid-like phase is the one with the
+     * higher Li pseudo-critical temperature, which also labels single phases.
      * With unequal phase pressures the swapped phases were in equilibrium at
      * each other's pressure, so the split is solved again from them.
      * \p newton_jacobian is cleared when the phases are swapped and replaced by
@@ -412,7 +417,7 @@ protected:
      * distinct phases is relabelled.
      *
      * \throws NumericalProblem when the split solved again is not two-phase
-     *         with the heavier phase in the oil slot, so the caller can
+     *         with the liquid-like phase in the oil slot, so the caller can
      *         reassess phase stability.
      */
     template <class FlashFluidState, class ComponentVector>
@@ -464,7 +469,7 @@ protected:
         // Newton can return to the swapped split; swapping again would not end.
         if (!(L > 0 && L < 1) || phasesCoincide_(fluid_state) || phasesSwapped()) {
             OPM_THROW_NOLOG(NumericalProblem,
-                            "The relabelled split did not stay two-phase with the heavier "
+                            "The relabelled split did not stay two-phase with the liquid-like "
                             "phase as oil when solved again at the phase pressures");
         }
     }
