@@ -271,7 +271,7 @@ BOOST_AUTO_TEST_CASE(DenseLiquidKeepsLiquidLabel)
 {
     for (const auto method :
          {PTFlashMethod::Newton, PTFlashMethod::Ssi, PTFlashMethod::SsiNewton}) {
-        BOOST_TEST_CONTEXT("method " << Opm::ptFlashMethodToString(method))
+        BOOST_TEST_CONTEXT("method " << method)
         {
             constexpr auto z = std::array {Scalar(0.1), Scalar(0.6), Scalar(0.3)};
             FluidState fs;
@@ -305,8 +305,8 @@ BOOST_AUTO_TEST_CASE(NearPureHeavyLiquidIsSinglePhase)
     for (const auto eos : {EOSType::PR, EOSType::SRK}) {
         for (const auto method :
              {PTFlashMethod::Newton, PTFlashMethod::Ssi, PTFlashMethod::SsiNewton}) {
-            BOOST_TEST_CONTEXT("EOS " << static_cast<int>(eos) << ", method "
-                                      << static_cast<int>(method))
+            BOOST_TEST_CONTEXT("EOS " << Opm::CompositionalConfig::eosTypeToString(eos)
+                                      << ", method " << method)
             {
                 constexpr Scalar trace = 1.e-8;
                 constexpr auto z = std::array {trace, trace, Scalar(1. - 2. * trace)};
@@ -321,7 +321,7 @@ BOOST_AUTO_TEST_CASE(NearPureHeavyLiquidIsSinglePhase)
                 }
                 fs.setLvalue(-1.0);
 
-                BOOST_REQUIRE(PtFlash::solve(fs, method, flashTolerance, eos));
+                BOOST_CHECK(PtFlash::solve(fs, method, flashTolerance, eos));
                 BOOST_CHECK_EQUAL(Opm::getValue(fs.L()), 1.0);
             }
         }
@@ -429,7 +429,7 @@ BOOST_AUTO_TEST_CASE(EndpointEstimatesRecoverTwoPhaseEquilibrium)
         BOOST_CHECK(!PtFlash::solve(reference, method, flashTolerance, EOSType::PR));
 
         for (const Scalar heavy_k : {0.8, 0.4}) {
-            BOOST_TEST_CONTEXT("method " << static_cast<int>(method) << ", heavy K " << heavy_k)
+            BOOST_TEST_CONTEXT("method " << method << ", heavy K " << heavy_k)
             {
                 auto warm = makeRecordedState();
                 warm.setMoleFraction(0, 0.0);
@@ -548,7 +548,7 @@ BOOST_AUTO_TEST_CASE(NearUnitWarmStartKeepsHeavierPhaseAsOil)
 
     for (const auto method :
          {PTFlashMethod::Newton, PTFlashMethod::Ssi, PTFlashMethod::SsiNewton}) {
-        BOOST_TEST_CONTEXT("method " << static_cast<int>(method))
+        BOOST_TEST_CONTEXT("method " << method)
         {
             auto warm = makeState(0.5);
             for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
@@ -575,7 +575,7 @@ BOOST_AUTO_TEST_CASE(RelabelledSplitKeepsEquilibriumAtPhasePressures)
     constexpr auto nearUnitK = std::array {Scalar(0.99), Scalar(1.01), Scalar(1.02)};
     for (const auto method :
          {PTFlashMethod::Newton, PTFlashMethod::Ssi, PTFlashMethod::SsiNewton}) {
-        BOOST_TEST_CONTEXT("method " << static_cast<int>(method))
+        BOOST_TEST_CONTEXT("method " << method)
         {
             FluidState fs;
             fs.setPressure(FluidSystem::oilPhaseIdx, 135.42e5);
@@ -615,7 +615,7 @@ BOOST_AUTO_TEST_CASE(RelabelledSplitReturnsTheJacobianOfItsSolve)
     constexpr auto z = std::array {Scalar(0.76524), Scalar(0.16825), Scalar(0.06651)};
     constexpr auto nearUnitK = std::array {Scalar(0.99), Scalar(1.01), Scalar(1.02)};
     for (const auto method : {PTFlashMethod::Newton, PTFlashMethod::SsiNewton}) {
-        BOOST_TEST_CONTEXT("method " << static_cast<int>(method))
+        BOOST_TEST_CONTEXT("method " << method)
         {
             ScalarFluidState fs;
             fs.setPressure(FluidSystem::oilPhaseIdx, 135.42e5);
@@ -644,7 +644,7 @@ BOOST_AUTO_TEST_CASE(RelabelledSplitStoresItsFugacityCoefficients)
     for (const Scalar gasPressure : {135.42e5, 136.42e5}) {
         for (const auto method :
              {PTFlashMethod::Newton, PTFlashMethod::Ssi, PTFlashMethod::SsiNewton}) {
-            BOOST_TEST_CONTEXT("method " << static_cast<int>(method) << ", gas pressure "
+            BOOST_TEST_CONTEXT("method " << method << ", gas pressure "
                                          << gasPressure)
             {
                 ScalarFluidState fs;
@@ -711,7 +711,7 @@ BOOST_AUTO_TEST_CASE(UnequalPressureColdStartKeepsVapour)
 {
     for (const auto method :
          {PTFlashMethod::Newton, PTFlashMethod::Ssi, PTFlashMethod::SsiNewton}) {
-        BOOST_TEST_CONTEXT("method " << Opm::ptFlashMethodToString(method))
+        BOOST_TEST_CONTEXT("method " << method)
         {
             auto fs = makeColdState({0.5, 0.2, 0.3}, 600.0, 15.e5, 16.e5);
             BOOST_CHECK(PtFlash::flash_solve_scalar(fs, method, flashTolerance, EOSType::PR));
@@ -725,7 +725,7 @@ BOOST_AUTO_TEST_CASE(UnequalPressureColdStartFindsTheSplit)
 {
     constexpr auto z = std::array {Scalar(0.05), Scalar(0.8), Scalar(0.15)};
     for (const auto method : {PTFlashMethod::Ssi, PTFlashMethod::SsiNewton}) {
-        BOOST_TEST_CONTEXT("method " << Opm::ptFlashMethodToString(method))
+        BOOST_TEST_CONTEXT("method " << method)
         {
             auto reference = makeColdState(z, 360.0, 35.e5, 35.e5);
             BOOST_REQUIRE(
@@ -747,7 +747,7 @@ BOOST_AUTO_TEST_CASE(FailedRelabelledSplitReassessesStability)
     constexpr auto nearUnitK = std::array {Scalar(0.99), Scalar(1.01), Scalar(1.02)};
     for (const auto method :
          {PTFlashMethod::Newton, PTFlashMethod::Ssi, PTFlashMethod::SsiNewton}) {
-        BOOST_TEST_CONTEXT("method " << Opm::ptFlashMethodToString(method))
+        BOOST_TEST_CONTEXT("method " << method)
         {
             auto fs = makeColdState({0.76524, 0.16825, 0.06651}, 352.0, 125.e5, 130.e5);
             for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
