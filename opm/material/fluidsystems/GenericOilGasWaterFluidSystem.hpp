@@ -47,6 +47,8 @@
 #include <string>
 #include <string_view>
 #include <type_traits>
+#include <utility>
+#include <vector>
 
 #include <fmt/format.h>
 
@@ -149,6 +151,42 @@ namespace Opm {
                                 NumComp, param.name)
                 };
             }
+        }
+
+        /*!
+         * \brief Set the binary interaction coefficients of the components,
+         *        for a fluid system that is configured without a deck.
+         *
+         * \param bic the coefficients as a packed lower triangle in the order
+         *        (1,0), (2,0), (2,1), (3,0), ..., the order in which
+         *        interactionCoefficient() reads them. An empty vector sets all
+         *        coefficients to zero.
+         *
+         * \throw std::invalid_argument if bic is neither empty nor of size
+         *        numComponents * (numComponents - 1) / 2
+         */
+        static void setInteractionCoefficients(std::vector<Scalar> bic)
+        {
+            const auto expected = static_cast<std::size_t>(numComponents) * (numComponents - 1) / 2;
+            if (!bic.empty() && bic.size() != expected) {
+                throw std::invalid_argument {
+                    fmt::format("Expected {} binary interaction coefficients for {} "
+                                "components, or none, got {}.",
+                                expected, NumComp, bic.size())
+                };
+            }
+            interaction_coefficients_ = std::move(bic);
+        }
+
+        /*!
+         * \brief Set the coefficients of the Lorentz-Bray-Clark viscosity
+         *        correlation, for a fluid system that is configured without
+         *        a deck. From a deck, they come from the LBCCOEF keyword.
+         *        init() restores the defaults.
+         */
+        static void setLbcCoefficients(const std::array<Scalar, 5>& lbc)
+        {
+            lbc_coefficients_ = lbc;
         }
 
         /*!
