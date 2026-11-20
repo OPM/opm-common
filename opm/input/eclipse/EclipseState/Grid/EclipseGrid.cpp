@@ -324,6 +324,25 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
 
     initGrid(deck, actnum);
 
+    // OLDTRAN is the default for block-centred grids, so the keyword changes
+    // nothing there (the keywords OLDTRAN and NEWTRAN exclude each other).
+    // It is not implemented for the thermal, diffusive and dispersive
+    // transmissibilities, which use the faces of the grid. NEWTRAN is used
+    // for everything in these runs.
+    if (hasDTOPSKeywords(deck)) {
+        const bool unsupportedRun = deck.hasKeyword("THERMAL") || deck.hasKeyword("TEMP")
+            || deck.hasKeyword("DIFFUSE") || deck.hasKeyword("DISPERC");
+        if (unsupportedRun && deck.hasKeyword("OLDTRAN")) {
+            OpmLog::warning("OLDTRAN is not implemented for runs with thermal, diffusion or dispersion. "
+                            "NEWTRAN is used.");
+        }
+        this->m_oldTran = !unsupportedRun && !deck.hasKeyword("NEWTRAN");
+    }
+    else if (deck.hasKeyword("OLDTRAN")) {
+        OpmLog::warning("OLDTRAN is only supported when the grid is given by DX, DY, DZ and TOPS. "
+                        "The keyword is ignored and NEWTRAN is used.");
+    }
+
     if (this->m_dualPorosity) {
         if (this->getNZ() % 2 != 0) {
             const auto& location = deck.hasKeyword<ParserKeywords::DUALPORO>()
@@ -385,6 +404,10 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
 
     bool EclipseGrid::circle( ) const{
         return this->m_circle;
+    }
+
+    bool EclipseGrid::useOldTran() const noexcept {
+        return this->m_oldTran;
     }
 
     bool EclipseGrid::dualPorosity() const noexcept {
