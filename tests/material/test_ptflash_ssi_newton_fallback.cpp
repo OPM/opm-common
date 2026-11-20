@@ -485,7 +485,7 @@ BOOST_AUTO_TEST_CASE(ColdStartCollapsedEndpointIsSinglePhase)
     using ClampedPtFlash = Opm::PTFlash<Scalar, ClampedFluidSystem>;
 
     for (const auto method : {PTFlashMethod::Ssi, PTFlashMethod::SsiNewton}) {
-        BOOST_TEST_CONTEXT("method " << static_cast<int>(method))
+        BOOST_TEST_CONTEXT("method " << method)
         {
             ClampedFluidState fs;
             for (unsigned phaseIdx = 0; phaseIdx < ClampedFluidSystem::numPhases; ++phaseIdx) {
