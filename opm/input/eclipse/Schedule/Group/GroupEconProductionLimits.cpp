@@ -26,6 +26,7 @@
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
 
 #include <cstddef>
+#include <stdexcept>
 
 #include "../eval_uda.hpp"
 

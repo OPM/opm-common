@@ -38,6 +38,7 @@
 #include <fmt/format.h>
 
 #include <ostream>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 

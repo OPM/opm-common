@@ -33,6 +33,7 @@
 #include <cstddef>
 #include <functional>
 #include <initializer_list>
+#include <iterator>
 #include <memory>
 #include <numeric>
 #include <optional>
