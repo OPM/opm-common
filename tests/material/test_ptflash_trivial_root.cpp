@@ -388,10 +388,10 @@ BOOST_AUTO_TEST_CASE(NewtonRejectsCoincidentInitialPhases)
         return std::string_view{error.what()}.find("started from the trivial solution")
             != std::string_view::npos;
     };
-    BOOST_CHECK_EXCEPTION(ExposedPtFlash::flash_2ph(
-                              z, PTFlashMethod::Newton, K, L, fs, flashTolerance, EOSType::PR),
-                          Opm::NumericalProblem,
-                          reports_initial_trivial_solution);
+    BOOST_CHECK_EXCEPTION(
+        ExposedPtFlash::newtonComposition_(K, L, fs, z, flashTolerance, EOSType::PR, 0),
+        Opm::NumericalProblem,
+        reports_initial_trivial_solution);
 }
 
 // From the recorded state the residual decreases towards x = y while L grows

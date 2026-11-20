@@ -40,7 +40,7 @@ namespace Opm
 enum class PTFlashMethod {
     //! Successive substitution.
     Ssi,
-    //! Newton's method.
+    //! Newton's method, falling back to substitution should it fail.
     Newton,
     //! A few substitution steps to condition the Newton start, falling back
     //! to substitution should Newton fail.

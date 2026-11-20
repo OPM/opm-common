@@ -820,14 +820,45 @@ protected:
         const auto composition_method = (at_endpoint() && flash_2p_method == PTFlashMethod::Newton)
             ? PTFlashMethod::Ssi
             : flash_2p_method;
+        // Newton refines a split but cannot grow or reject a trial phase: when
+        // its composition update fails to converge — no physical split may be
+        // near its start — switch to plain successive substitution and finish
+        // the solve with the method that is robust on these states, instead
+        // of failing the whole solve. Newton throws rather than returning a
+        // bad result; it may already have mutated some fluid state (e.g. via
+        // computeLiquidVapor_()) before throwing, but the successive-
+        // substitution fallback re-derives the composition from K and L and
+        // overwrites that state, so restarting it here is safe.
+        const auto newton_or_substitution = [&] {
+            const auto fall_back_to_ssi = [&](const auto& error) {
+                if (verbosity >= 1) {
+                    OpmLog::debug(fmt::format(
+                        "Newton did not finish the composition update ({}); "
+                        "switching to successive substitution.", error.what()));
+                }
+                converged = successiveSubstitutionComposition_(K_scalar, L_scalar, fluid_state_scalar, z_scalar, false, flash_tolerance, eos_type, verbosity);
+            };
+            try {
+                newton_jacobian = newtonComposition_(K_scalar, L_scalar, fluid_state_scalar,
+                                                     z_scalar, flash_tolerance, eos_type,
+                                                     verbosity);
+                converged = true;
+            }
+            catch (const NumericalProblem& error) {
+                fall_back_to_ssi(error);
+            }
+            catch (const Dune::FMatrixError& error) {
+                // FieldMatrix::solve reports a singular Jacobian with
+                // FMatrixError, which is outside the std::runtime_error hierarchy.
+                fall_back_to_ssi(error);
+            }
+        };
         switch (composition_method) {
         case PTFlashMethod::Newton:
             if (verbosity >= 1) {
                 OpmLog::debug("Calculate composition using Newton.");
             }
-            newton_jacobian = newtonComposition_(K_scalar, L_scalar, fluid_state_scalar, z_scalar,
-                                                 flash_tolerance, eos_type, verbosity);
-            converged = true;
+            newton_or_substitution();
             break;
 
         case PTFlashMethod::Ssi:
@@ -853,39 +884,7 @@ protected:
                                                                eos_type,
                                                                verbosity);
             } else if (!converged) {
-                // In this method Newton is an accelerator, not the
-                // guarantee: when its composition update fails to converge —
-                // or a diverged iterate makes the EoS report non-finite
-                // mixing parameters — switch back to plain successive
-                // substitution and finish the solve with the method that is
-                // robust on these states, instead of failing the whole
-                // solve. Newton throws rather than returning a bad result;
-                // it may already have mutated some fluid state (e.g. via
-                // computeLiquidVapor_()) before throwing, but the successive-
-                // substitution fallback re-derives the composition from K and
-                // L and overwrites that state, so restarting it here is safe.
-                const auto fall_back_to_ssi = [&](const auto& error) {
-                    if (verbosity >= 1) {
-                        OpmLog::debug(fmt::format(
-                            "Newton did not finish the composition update ({}); "
-                            "switching back to successive substitution.", error.what()));
-                    }
-                    converged = successiveSubstitutionComposition_(K_scalar, L_scalar, fluid_state_scalar, z_scalar, false, flash_tolerance, eos_type, verbosity);
-                };
-                try {
-                    newton_jacobian = newtonComposition_(K_scalar, L_scalar, fluid_state_scalar,
-                                                         z_scalar, flash_tolerance, eos_type,
-                                                         verbosity);
-                    converged = true;
-                }
-                catch (const NumericalProblem& error) {
-                    fall_back_to_ssi(error);
-                }
-                catch (const Dune::FMatrixError& error) {
-                    // FieldMatrix::solve reports a singular Jacobian with
-                    // FMatrixError, which is outside the std::runtime_error hierarchy.
-                    fall_back_to_ssi(error);
-                }
+                newton_or_substitution();
             }
             break;
         }
