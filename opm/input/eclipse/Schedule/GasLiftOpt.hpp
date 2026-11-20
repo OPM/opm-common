@@ -102,6 +102,57 @@ public:
         }
     }
 
+    /// Maximum lift capacity for this group, from keyword GLIFTLIM.
+    ///
+    /// Limit on the sum of the lift gas rates of the group's producers.
+    /// Kept apart from the GLIFTOPT limit max_lift_gas(), since the two
+    /// keywords are set independently of each other.
+    ///
+    /// Nullopt for no limit.
+    const std::optional<double>& max_lift_capacity() const
+    {
+        return this->m_max_lift_capacity;
+    }
+
+    /// Assign maximum lift capacity for this group.
+    ///
+    /// \param[in] value Maximum lift capacity.  A value that is not
+    /// positive removes the limit, as a zero or defaulted item does in
+    /// keyword GLIFTLIM.
+    void max_lift_capacity(const double value)
+    {
+        if (value > 0.0) {
+            this->m_max_lift_capacity = value;
+        }
+        else {
+            this->m_max_lift_capacity.reset();
+        }
+    }
+
+    /// Whether keyword GLIFTOPT, or a restart file, has given gas lift
+    /// optimisation data for this group.
+    ///
+    /// False for a group that has only a GLIFTLIM limit.  Restart output
+    /// writes the GLIFTOPT items only for groups where this is true.
+    bool has_gliftopt_data() const
+    {
+        return this->m_has_gliftopt_data;
+    }
+
+    /// Mark whether GLIFTOPT data has been given for this group.
+    ///
+    /// \param[in] value Whether GLIFTOPT data has been given.
+    void has_gliftopt_data(const bool value)
+    {
+        this->m_has_gliftopt_data = value;
+    }
+
+    /// Effective maximum lift gas limit for this group.
+    ///
+    /// The smaller of max_lift_gas() and max_lift_capacity().  Nullopt if
+    /// neither is set.
+    std::optional<double> lift_gas_limit() const;
+
     /// Group name.
     ///
     /// Mostly for convenience.
@@ -121,6 +172,8 @@ public:
         serializer(m_name);
         serializer(m_max_lift_gas);
         serializer(m_max_total_gas);
+        serializer(m_max_lift_capacity);
+        serializer(m_has_gliftopt_data);
     }
 
     /// Create a serialisation test object.
@@ -145,6 +198,13 @@ private:
     /// Maximum total gas (lift + produced) limit for this group.  Nullopt
     /// for no limit.
     std::optional<double> m_max_total_gas{};
+
+    /// Maximum lift capacity (GLIFTLIM) for this group.  Nullopt for no
+    /// limit.
+    std::optional<double> m_max_lift_capacity{};
+
+    /// Whether GLIFTOPT, or a restart file, has given data for this group.
+    bool m_has_gliftopt_data{false};
 };
 
 // ---------------------------------------------------------------------------

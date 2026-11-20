@@ -11,6 +11,7 @@
     {
       "name": "MAX_LIFT_CAPACITY",
       "value_type": "DOUBLE",
+      "dimension": "GasSurfaceVolume/Time",
       "default": 0
     },
     {

@@ -19,6 +19,7 @@
 
 #include <opm/input/eclipse/Schedule/GasLiftOpt.hpp>
 
+#include <algorithm>
 #include <cstddef>
 #include <map>
 #include <optional>
@@ -44,6 +45,7 @@ GasLiftGroup::GasLiftGroup(const RestartIO::RstGroup& rst_group)
     : m_name          { rst_group.name }
     , m_max_lift_gas  { liftOptMaxRateIfDefined(rst_group.glift_max_supply) }
     , m_max_total_gas { liftOptMaxRateIfDefined(rst_group.glift_max_rate) }
+    , m_has_gliftopt_data { true }
 {}
 
 GasLiftGroup GasLiftGroup::serializationTestObject()
@@ -51,10 +53,28 @@ GasLiftGroup GasLiftGroup::serializationTestObject()
     GasLiftGroup group{};
 
     group.m_name = "GR";
-    group.m_max_lift_gas  = 100;
-    group.m_max_total_gas = 200;
+    group.m_max_lift_gas  = 100;      // GLIFTOPT item 2
+    group.m_max_total_gas = 200;      // GLIFTOPT item 3
+    group.m_max_lift_capacity = 150;  // GLIFTLIM item 2
+    group.m_has_gliftopt_data = true;
 
     return group;
+}
+
+// Both GLIFTOPT item 2 and GLIFTLIM item 2 limit the group's total lift
+// gas rate, and either may be set without the other.  When both are set,
+// both must be honored, so the smaller value is the effective limit.
+std::optional<double> GasLiftGroup::lift_gas_limit() const
+{
+    if (! this->m_max_lift_gas.has_value()) {
+        return this->m_max_lift_capacity;
+    }
+
+    if (! this->m_max_lift_capacity.has_value()) {
+        return this->m_max_lift_gas;
+    }
+
+    return std::min(*this->m_max_lift_gas, *this->m_max_lift_capacity);
 }
 
 bool GasLiftGroup::operator==(const GasLiftGroup& other) const
@@ -62,6 +82,8 @@ bool GasLiftGroup::operator==(const GasLiftGroup& other) const
     return (this->m_name == other.m_name)
         && (this->m_max_lift_gas == other.m_max_lift_gas)
         && (this->m_max_total_gas == other.m_max_total_gas)
+        && (this->m_max_lift_capacity == other.m_max_lift_capacity)
+        && (this->m_has_gliftopt_data == other.m_has_gliftopt_data)
         ;
 }
 
