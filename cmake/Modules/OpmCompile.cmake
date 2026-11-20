@@ -66,7 +66,7 @@ macro(opm_compile opm)
     TYPE
       HEADERS
     BASE_DIRS
-      ${PROJECT_BINARY_DIR}
+      ${PROJECT_BINARY_DIR}/generated/include
     FILES
       ${${opm}_GENERATED_HEADERS}
   )
