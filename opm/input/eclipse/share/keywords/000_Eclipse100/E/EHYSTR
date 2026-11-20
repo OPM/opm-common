@@ -92,21 +92,21 @@
       "item": 13,
       "name": "fix_wetting_phase_killough",
       "value_type": "INT",
-      "default": 0,
+      "default": 1,
       "comment": "Not used"
     },
     {
       "item": 14,
       "name": "enable_pc_scaling",
       "value_type": "INT",
-      "default": 0,
+      "default": 1,
       "comment": "Not used"
     },
     {
       "item": 15,
       "name": "extend_imbibition_krw",
       "value_type": "INT",
-      "default": 0,
+      "default": 1,
       "comment": "OPM only. 1: extend the imbibition water relperm beyond the end of the imbibition table linearly to the drainage end point, instead of extrapolating it flat"
     }
   ]

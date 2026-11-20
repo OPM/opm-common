@@ -386,13 +386,13 @@ private:
     bool activeWagHyst  { false };
 
     // flag to enable Pc scaling
-    bool enablePcScaling { false };
+    bool enablePcScaling { true };
 
     // flag to enable Fix for wetting phase Killough
-    bool enableKilloughWettingFix { false };
+    bool enableKilloughWettingFix { true };
 
     // flag to extend the imbibition water relperm beyond the imbibition table
-    bool enableImbibitionKrwExtension { false };
+    bool enableImbibitionKrwExtension { true };
 };
 
 class SatFuncControls {

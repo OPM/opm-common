@@ -1570,6 +1570,42 @@ WAGHYSTR
     BOOST_CHECK_EQUAL(hyst.modParamTrapped(), 0.0);
 }
 
+// The items 13 (Killough wetting-phase fix), 14 (Pc scaling) and 15 (extend the
+// imbibition Krw, OPM only) are enabled by default.
+BOOST_AUTO_TEST_CASE(EHYSTR_BugFixItemsDefaultOn)
+{
+    const auto deck = [](const std::string& items)
+    {
+        return Parser{}.parseString(R"(
+RUNSPEC
+OIL
+WATER
+GAS
+SATOPTS
+  HYSTER /
+PROPS
+EHYSTR
+  1* 4 1* 1* BOTH )" + items + R"( /
+)");
+    };
+
+    const EclHysterConfig defaults { deck("1* 1* 1* 1* 1* 1* 1* 1* 1* 1*") };
+    BOOST_CHECK(defaults.fixWettingPhaseKillough());
+    BOOST_CHECK(defaults.doPcScaling());
+    BOOST_CHECK(defaults.extendImbibitionKrw());
+
+    const EclHysterConfig off { deck("1* 1* 1* 1* 1* 1* 1* 0 0 0") };
+    BOOST_CHECK(!off.fixWettingPhaseKillough());
+    BOOST_CHECK(!off.doPcScaling());
+    BOOST_CHECK(!off.extendImbibitionKrw());
+
+    // hysteresis without an EHYSTR keyword uses the defaults as well
+    const EclHysterConfig noEhystr { Parser{}.parseString("RUNSPEC\nOIL\nWATER\nGAS\nSATOPTS\n  HYSTER /\n") };
+    BOOST_CHECK(noEhystr.fixWettingPhaseKillough());
+    BOOST_CHECK(noEhystr.doPcScaling());
+    BOOST_CHECK(noEhystr.extendImbibitionKrw());
+}
+
 BOOST_AUTO_TEST_CASE(EHYSTR_ExtendImbibitionKrw)
 {
     const auto deck = [](const std::string& item15)
@@ -1587,8 +1623,8 @@ EHYSTR
 )");
     };
 
-    // item 15 is OPM only and defaults to 0 (flat extrapolation)
-    BOOST_CHECK(!EclHysterConfig { deck("1*") }.extendImbibitionKrw());
+    // item 15 is OPM only and defaults to 1 (extend the imbibition Krw)
+    BOOST_CHECK( EclHysterConfig { deck("1*") }.extendImbibitionKrw());
     BOOST_CHECK(!EclHysterConfig { deck("0") }.extendImbibitionKrw());
     BOOST_CHECK( EclHysterConfig { deck("1") }.extendImbibitionKrw());
     BOOST_CHECK_THROW(EclHysterConfig { deck("2") }, std::runtime_error);
