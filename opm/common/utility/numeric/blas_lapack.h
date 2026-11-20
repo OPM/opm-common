@@ -30,6 +30,11 @@ extern "C" {
 
 #include <FCMacros.h>
 
+#if defined(__EMSCRIPTEN__) && !defined(FC_GLOBAL)
+/* No Fortran compiler in WebAssembly builds; assume the usual name mangling */
+#define FC_GLOBAL(name,NAME) name##_
+#endif
+
 #if defined(MATLAB_MEX_FILE) && MATLAB_MEX_FILE
 #include <mex.h>
 #undef  MAT_SIZE_T
