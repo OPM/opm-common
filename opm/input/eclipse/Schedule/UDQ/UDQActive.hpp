@@ -26,6 +26,7 @@
 
 #include <opm/input/eclipse/Deck/UDAValue.hpp>
 
+#include <array>
 #include <cstddef>
 #include <cstdlib>
 #include <optional>
@@ -110,6 +111,12 @@ public:
         ///
         /// Nullopt unless the control is a GCONINJE item.
         std::optional<Phase> ig_phase{};
+
+        /// Zero-based (I,J,K) cell of affected well connection.
+        ///
+        /// Nullopt unless the control is a connection level control (see
+        /// UDQ::connection_control()).
+        std::optional<std::array<int, 3>> conn_ijk{};
     };
 
     /// Single UDA with use counts and IUAP start offsets for restart file
@@ -239,10 +246,14 @@ public:
         ///
         /// \param[in] control_arg Keyword and item/limit for which this UDA
         /// supplies the numeric value.
+        ///
+        /// \param[in] conn_ijk_arg Zero-based (I,J,K) cell of affected
+        /// well connection.  Nullopt for well/group level UDAs.
         InputRecord(const std::size_t  input_index_arg,
                     const std::string& udq_arg,
                     const std::string& wgname_arg,
-                    const UDAControl   control_arg);
+                    const UDAControl   control_arg,
+                    const std::optional<std::array<int, 3>>& conn_ijk_arg = std::nullopt);
 
         /// Equality predicate.
         ///
@@ -265,6 +276,7 @@ public:
             serializer(udq);
             serializer(wgname);
             serializer(control);
+            serializer(conn_ijk);
         }
 
         /// Zero-based index in order of appearance of the UDQ use for this
@@ -280,6 +292,10 @@ public:
         /// Constraint keyword and item/limit for which this UDA supplies
         /// the numeric value.
         UDAControl control;
+
+        /// Zero-based (I,J,K) cell of affected well connection.  Nullopt
+        /// for well/group level UDAs.
+        std::optional<std::array<int, 3>> conn_ijk{};
     };
 
     /// Create a serialisation test object.
@@ -331,12 +347,16 @@ public:
     /// \param[in] control Constraint keyword and associate item/limit for
     /// which \p uda supplies the numeric value.
     ///
+    /// \param[in] conn_ijk Zero-based (I,J,K) cell of affected well
+    /// connection for connection level controls.  Nullopt otherwise.
+    ///
     /// \return Whether or not internal data structures were altered.  One
     /// (1) if changes were made, and zero (0) otherwise.
     int update(const UDQConfig&   udq_config,
                const UDAValue&    uda,
                const std::string& wgname,
-               const UDAControl   control);
+               const UDAControl   control,
+               const std::optional<std::array<int, 3>>& conn_ijk = std::nullopt);
 
     /// UDA existence predicate
     ///

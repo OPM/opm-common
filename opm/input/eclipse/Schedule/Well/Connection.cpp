@@ -166,6 +166,16 @@ namespace Opm
                                                 rst_connection.segdist_end);
         }
 
+        if ((rst_connection.inj_mult_gradient != 0.0) ||
+            (rst_connection.inj_mult_frac_press != 0.0))
+        {
+            // Restart values are in SI units.
+            this->m_injmult = InjMult {
+                UDAValue { rst_connection.inj_mult_frac_press },
+                rst_connection.inj_mult_gradient
+            };
+        }
+
         // m_thermal_length (COMPSEGS item 10) keeps its default: RstConnection
         // does not carry it, so a thermal MSW run restarted here begins with a
         // zero thermal length.  TODO: persist and restore it.

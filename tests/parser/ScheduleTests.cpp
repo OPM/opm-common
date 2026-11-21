@@ -2062,14 +2062,14 @@ TSTEP
     }
 
     const auto& conn_mult = conns.getFromIJK(4, 4, 1).injmult();
-    BOOST_CHECK_CLOSE(conn_mult.fracture_pressure, 280.0 * unit::barsa, 1.0e-8);
+    BOOST_CHECK_CLOSE(conn_mult.fracture_pressure.getSI(), 280.0 * unit::barsa, 1.0e-8);
     BOOST_CHECK_CLOSE(conn_mult.multiplier_gradient, 0.2 / unit::barsa, 1.0e-8);
 
     const auto& inj2 = schedule.getWell("INJ2", 1);
     BOOST_CHECK(inj2.hasActiveInjMult());
     BOOST_CHECK(inj2.getInjMultMode() == Well::InjMultMode::WREV);
     BOOST_REQUIRE(inj2.aciveWellInjMult());
-    BOOST_CHECK_CLOSE(inj2.getWellInjMult().fracture_pressure, 250.0 * unit::barsa, 1.0e-8);
+    BOOST_CHECK_CLOSE(inj2.getWellInjMult().fracture_pressure.getSI(), 250.0 * unit::barsa, 1.0e-8);
     BOOST_CHECK_CLOSE(inj2.getWellInjMult().multiplier_gradient, 0.1 / unit::barsa, 1.0e-8);
 }
 

@@ -2974,9 +2974,14 @@ namespace {
             const auto& udq_config = this->snapshots.back().udq();
             auto udq_active = this->snapshots.back().udq_active();
 
-            for (const auto& [control, value, wgname, ig_phase] : uda_records) {
+            for (const auto& [control, value, wgname, ig_phase, conn_ijk] : uda_records) {
                 if (UDQ::well_control(control)) {
                     auto& well = this->snapshots.back().wells.get(wgname);
+
+                    if (UDQ::keyword(control) == UDAKeyword::WINJMULT) {
+                        well.updateWINJMULTUDA(udq_config, udq_active, value, conn_ijk);
+                        continue;
+                    }
 
                     if (UDQ::is_well_injection_control(control, well.isInjector())) {
                         auto injection_properties = std::make_shared<Well::WellInjectionProperties>(well.getInjectionProperties());

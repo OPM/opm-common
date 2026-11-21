@@ -131,6 +131,13 @@ struct RstWell
     float dfac_corr_exponent_b{};
     float dfac_corr_exponent_c{};
     float inj_temperature{UNDEFINED_VALUE};
+
+    /// WINJMULT mode (IWEL), see VectorItems::IWell::Value::InjMultMode.
+    int inj_mult_mode{0};
+
+    /// WINJMULT data for WREV wells.  SI units.  Zero if not set.
+    double inj_mult_gradient{0.0};
+    double inj_mult_frac_press{0.0};
     std::vector<float> tracer_concentration_injection;
 
     double oil_rate;

@@ -611,6 +611,8 @@ UDAKeyword keyword(const UDAControl control)
         {UDAControl::WCONINJE_RESV, UDAKeyword::WCONINJE},
         {UDAControl::WCONINJE_BHP,  UDAKeyword::WCONINJE},
         {UDAControl::WCONINJE_THP,  UDAKeyword::WCONINJE},
+        {UDAControl::WINJMULT_FRACTURE_PRESSURE, UDAKeyword::WINJMULT},
+        {UDAControl::WINJMULT_CONN_FRACTURE_PRESSURE, UDAKeyword::WINJMULT},
 
         // --------------------------------------------------------------
         {UDAControl::WELTARG_ORAT, UDAKeyword::WELTARG},
@@ -657,11 +659,17 @@ bool well_control(const UDAControl control)
         const auto kw = keyword(control);
         return (kw == UDAKeyword::WCONPROD)
             || (kw == UDAKeyword::WCONINJE)
-            || (kw == UDAKeyword::WELTARG);
+            || (kw == UDAKeyword::WELTARG)
+            || (kw == UDAKeyword::WINJMULT);
     }
     catch (const std::logic_error&) {
         return false;
     }
+}
+
+bool connection_control(const UDAControl control)
+{
+    return control == UDAControl::WINJMULT_CONN_FRACTURE_PRESSURE;
 }
 
 bool is_well_injection_control(const UDAControl control,
@@ -670,6 +678,7 @@ bool is_well_injection_control(const UDAControl control,
     try {
         const auto kw = keyword(control);
         return (kw == UDAKeyword::WCONINJE)
+            || (kw == UDAKeyword::WINJMULT)
             || (isInjector && (kw == UDAKeyword::WELTARG));
     }
     catch (const std::logic_error&) {
@@ -750,6 +759,11 @@ int udaCode(const UDAControl control)
         {UDAControl::WELTARG_BHP,    500'016},
         {UDAControl::WELTARG_THP,    600'016},
         {UDAControl::WELTARG_LIFT, 1'000'016},
+
+        // --------------------------------------------------------------
+        // WINJMULT fracture pressure, well and connection level.
+        {UDAControl::WINJMULT_FRACTURE_PRESSURE,      200'022},
+        {UDAControl::WINJMULT_CONN_FRACTURE_PRESSURE, 200'023},
     };
 
     return lookup_control_map_value(c2uda, control);
@@ -838,6 +852,9 @@ namespace { namespace UDAVersionCompat {
             case   500'016: return UDAControl::WELTARG_BHP;
             case   600'016: return UDAControl::WELTARG_THP;
             case 1'000'016: return UDAControl::WELTARG_LIFT;
+
+            case   200'022: return UDAControl::WINJMULT_FRACTURE_PRESSURE;
+            case   200'023: return UDAControl::WINJMULT_CONN_FRACTURE_PRESSURE;
             }
 
             throw std::logic_error {
@@ -944,6 +961,12 @@ std::string controlName(const UDAControl control)
 
     case UDAControl::WCONINJE_THP:
         return "WCONINJE_THP";
+
+    case UDAControl::WINJMULT_FRACTURE_PRESSURE:
+        return "WINJMULT_FRACTURE_PRESSURE";
+
+    case UDAControl::WINJMULT_CONN_FRACTURE_PRESSURE:
+        return "WINJMULT_CONN_FRACTURE_PRESSURE";
 
     case UDAControl::WELTARG_ORAT: return "WELTARG_ORAT";
     case UDAControl::WELTARG_WRAT: return "WELTARG_WRAT";

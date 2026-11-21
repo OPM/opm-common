@@ -36,6 +36,7 @@
 #include <iosfwd>
 #include <map>
 #include <memory>
+#include <array>
 #include <optional>
 #include <string>
 #include <utility>
@@ -651,6 +652,20 @@ public:
     bool handleWINJCLN(const DeckRecord& record, const KeywordLocation& location);
     bool handleWINJDAM(const DeckRecord& record, const KeywordLocation& location);
     bool handleWINJMULT(const DeckRecord& record, const KeywordLocation& location);
+    /// Apply WINJMULT fracture pressure UDA loaded from a restart file.
+    ///
+    /// \param[in] conn_ijk Zero-based (I,J,K) of affected connection for
+    /// connection level (CREV/CIRR) UDAs.  Nullopt for well level (WREV).
+    void updateWINJMULTUDA(const UDQConfig& udq_config,
+                           UDQActive& udq_active,
+                           const UDAValue& value,
+                           const std::optional<std::array<int, 3>>& conn_ijk = std::nullopt);
+
+    /// Synchronise WINJMULT fracture pressure UDAs, at both well and
+    /// connection level, with the collection of active UDAs.
+    ///
+    /// \return Whether or not \p active changed.
+    bool updateUDQActive(const UDQConfig& udq_config, UDQActive& active) const;
     void setFilterConc(const UDAValue& conc);
     double evalFilterConc(const SummaryState& summary_sate) const;
     void setFilterConcBasis(FilterConcBasis basis);
@@ -751,6 +766,7 @@ private:
     };
     void switchToInjector();
     void switchToProducer();
+    void restoreInjMultFromRestart(const RestartIO::RstWell& rst_well);
 
     GuideRateTarget preferredPhaseAsGuideRatePhase() const;
 
