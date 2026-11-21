@@ -162,7 +162,7 @@ public:
     /*!
      * \brief Sets an saturation value for capillary pressure saturation scaling
      */
-    void setSaturationPcPoint(unsigned pointIdx, Scalar value)
+    OPM_HOST_DEVICE void setSaturationPcPoint(unsigned pointIdx, Scalar value)
     { saturationPcPoints_[pointIdx] = value; }
 
     /*!
@@ -174,7 +174,7 @@ public:
     /*!
      * \brief Sets an saturation value for wetting-phase relperm saturation scaling
      */
-    void setSaturationKrwPoint(unsigned pointIdx, Scalar value)
+    OPM_HOST_DEVICE void setSaturationKrwPoint(unsigned pointIdx, Scalar value)
     { saturationKrwPoints_[pointIdx] = value; }
 
     /*!
@@ -186,7 +186,7 @@ public:
     /*!
      * \brief Sets an saturation value for non-wetting phase relperm saturation scaling
      */
-    void setSaturationKrnPoint(unsigned pointIdx, Scalar value)
+    OPM_HOST_DEVICE void setSaturationKrnPoint(unsigned pointIdx, Scalar value)
     { saturationKrnPoints_[pointIdx] = value; }
 
     /*!
@@ -198,7 +198,7 @@ public:
     /*!
      * \brief Sets the maximum capillary pressure
      */
-    void setMaxPcnw(Scalar value)
+    OPM_HOST_DEVICE void setMaxPcnw(Scalar value)
     { maxPcnwOrLeverettFactor_ = value; }
 
     /*!
