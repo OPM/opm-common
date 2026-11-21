@@ -239,7 +239,7 @@ public:
 
 private:
     time_t time_from_rec(const Opm::DeckRecord& rec);
-    time_t time_from_rst(const std::string& rstfile, int rstep);
+    time_t time_from_rst(const std::filesystem::path& rstfile, int rstep);
 
     bool node_exist(const std::string& name);
 
@@ -247,7 +247,7 @@ private:
     void add_branch(const std::string& downtree, const std::string& uptree, int vfp);
     void delete_branch(const std::string& downtree, const std::string& uptree);
 
-    void br_input_from_rst(const std::string& rstfile,
+    void br_input_from_rst(const std::filesystem::path& rstfile,
                            const std::vector<int>& rstep_vect);
 
     void parse_data_deck(const std::filesystem::path& inputFileName,
@@ -769,7 +769,7 @@ NetWork::time_from_rec(const Opm::DeckRecord& rec)
 }
 
 time_t
-NetWork::time_from_rst(const std::string& rstfile, int rstep)
+NetWork::time_from_rst(const std::filesystem::path& rstfile, int rstep)
 {
     Opm::EclIO::ERst rst1(rstfile);
 
@@ -797,7 +797,7 @@ NetWork::time_from_rst(const std::string& rstfile, int rstep)
 }
 
 void
-NetWork::br_input_from_rst(const std::string& rstfile,
+NetWork::br_input_from_rst(const std::filesystem::path& rstfile,
                            const std::vector<int>& rstep_vect)
 {
     Opm::EclIO::ERst rst1(rstfile);
