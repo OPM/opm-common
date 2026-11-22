@@ -162,6 +162,18 @@ namespace {
         return keywords;
     }
 
+    // Action mode for keywords inserted from PYACTION
+    bool getActionMode() {
+        // false outside PYACTION: opm_embedded can't be imported,
+        // or _action_mode was never set (only PyRunModule::run sets it)
+        try {
+            py::module opm_embedded = py::module::import("opm_embedded");
+            if (py::hasattr(opm_embedded, "_action_mode"))
+                return opm_embedded.attr("_action_mode").cast<bool>();
+        } catch (const py::error_already_set&) {}
+        return false;
+    }
+
     std::pair<std::unordered_map<std::string, double>, bool> getTargetWellPIAndActionMode() {
         py::module opm_embedded = py::module::import("opm_embedded");
         py::object target_wellpi_obj = opm_embedded.attr("_target_wellpi");
@@ -174,7 +186,7 @@ namespace {
             return getTargetWellPIAndActionMode();
         }
         // Return an empty map and false if the keyword WELPI, which needs the target_wellpi map, is not in the deck_string
-        return std::make_pair(std::unordered_map<std::string, double>{}, false);
+        return std::make_pair(std::unordered_map<std::string, double>{}, getActionMode());
     }
 
     void insert_keywords(Schedule& sch, const std::string& deck_string, std::size_t report_step, const UnitSystem& unit_system, const std::vector<std::string>& matched_wells)
@@ -217,7 +229,7 @@ namespace {
             }
         }
         // Return an empty map and false if the keyword WELPI, which needs the target_wellpi map, is not in the deck_keywords
-        auto twpiaam = contains_wellpi_keywords ? getTargetWellPIAndActionMode() : std::make_pair(std::unordered_map<std::string, double>{}, false);
+        auto twpiaam = contains_wellpi_keywords ? getTargetWellPIAndActionMode() : std::make_pair(std::unordered_map<std::string, double>{}, getActionMode());
         sch.applyKeywords(keywords, twpiaam.first, twpiaam.second , report_step);
     }
 }
