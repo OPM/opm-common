@@ -674,6 +674,25 @@ BOOST_AUTO_TEST_CASE(MSIM_PYACTION_INSERT_MATCHED_WELLS) {
     }
 }
 
+BOOST_AUTO_TEST_CASE(MSIM_PYACTION_INSERT_UDQ_EMPTY_MATCHES) {
+    test_data td("msim/MSIM_PYACTION_INSERT_UDQ_EMPTY_MATCHES.DATA");
+    msim sim(td.state, td.schedule);
+
+    {
+        WorkArea work_area("test_msim");
+        EclipseIO io(td.state, td.state.getInputGrid(), sim.schedule, td.summary_config);
+
+        // Step 2 inserts ASSIGN WUBHP '?' 99 with no matched wells: this must not throw.
+        // Step 4 inserts the same with matched_wells P1.
+        BOOST_CHECK_NO_THROW(sim.run(io, false));
+
+        BOOST_CHECK_EQUAL(sim.st.get_well_var("P1", "WUBHP"), 99); // P1 was matched at step 4
+        BOOST_CHECK_EQUAL(sim.st.get_well_var("P2", "WUBHP"), 12); // the other wells keep the deck values
+        BOOST_CHECK_EQUAL(sim.st.get_well_var("P3", "WUBHP"), 13);
+        BOOST_CHECK_EQUAL(sim.st.get_well_var("P4", "WUBHP"), 14);
+    }
+}
+
 BOOST_AUTO_TEST_CASE(PYTHON_WELL_CLOSE_EXAMPLE) {
     for (const auto& deck : {
             "msim/MSIM_PYACTION.DATA",
