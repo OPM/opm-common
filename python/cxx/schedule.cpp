@@ -185,7 +185,7 @@ namespace {
         if (deck_string.find("WELPI", 0) != std::string::npos) {
             return getTargetWellPIAndActionMode();
         }
-        // Return an empty map and false if the keyword WELPI, which needs the target_wellpi map, is not in the deck_string
+        // Return an empty map and action_mode if the keyword WELPI, which needs the target_wellpi map, is not in the deck_string
         return std::make_pair(std::unordered_map<std::string, double>{}, getActionMode());
     }
 
@@ -228,7 +228,7 @@ namespace {
                 contains_wellpi_keywords = true;
             }
         }
-        // Return an empty map and false if the keyword WELPI, which needs the target_wellpi map, is not in the deck_keywords
+        // Return an empty map and action_mode if the keyword WELPI, which needs the target_wellpi map, is not in the deck_keywords
         auto twpiaam = contains_wellpi_keywords ? getTargetWellPIAndActionMode() : std::make_pair(std::unordered_map<std::string, double>{}, getActionMode());
         sch.applyKeywords(keywords, twpiaam.first, twpiaam.second , report_step);
     }
