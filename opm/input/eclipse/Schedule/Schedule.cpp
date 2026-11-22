@@ -1886,7 +1886,7 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
                 OpmLog::error(fmt::format("insert_keywords: unknown matched well '{}'", wname));
             }
         }
-        const auto matches = well_names.empty() ? Action::Result{false}.matches() : Action::Result{true}.wells(well_names).matches();
+        const auto matches = Action::Result{true}.wells(well_names).matches();
 
         ParseContext parseContext;
         ErrorGuard errors;
