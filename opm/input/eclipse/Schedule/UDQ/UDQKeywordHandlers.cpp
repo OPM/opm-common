@@ -46,7 +46,7 @@ namespace {
     {
         auto dynSelector = std::optional<Opm::UDQConfig::DynamicSelector>{};
 
-        if (handlerContext.action_mode || ! handlerContext.matches.wells().empty()) {
+        if (handlerContext.action_mode) {
             dynSelector = Opm::UDQConfig::DynamicSelector{};
 
             if (const auto dynWells = handlerContext.matches.wells();
