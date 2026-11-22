@@ -28,11 +28,21 @@
 #include <opm/input/eclipse/Parser/ParseContext.hpp>
 #include <opm/input/eclipse/Parser/Parser.hpp>
 
+#include <algorithm>
 #include <cstddef>
+#include <cstdlib>
+#include <exception>
+#include <filesystem>
 #include <getopt.h>
+#include <iomanip>
 #include <iostream>
+#include <iterator>
+#include <map>
 #include <memory>
 #include <sstream>
+#include <string>
+#include <tuple>
+#include <vector>
 
 class Node
 {
