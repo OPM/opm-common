@@ -6316,14 +6316,12 @@ GPTABLE
  1 3 3
    0.0  0.10 0.20 0.70
    0.2  0.15 0.25 0.60 /
-/
 SCHEDULE
 TSTEP
  10 /
 GPTABLE
  1 3 3
    0.0  0.0  0.0  1.0 /
-/
 )");
 
     // SOLUTION occurrence is seeded at report step 0.
@@ -6346,7 +6344,6 @@ GPTABLE
 BOOST_AUTO_TEST_CASE(GPTABLE_default_indices_resolve_to_ncomps) {
     const auto sched = make_schedule(gptable_deck(R"(GPTABLE
  1 1* 1*  0.0  0.10 0.20 0.70 /
-/
 )"));
 
     const auto& g = sched[0].gptable(1);
@@ -6360,7 +6357,6 @@ BOOST_AUTO_TEST_CASE(GPTABLE_bad_row_width_throws) {
         make_schedule(gptable_deck(R"(GPTABLE
  1 3 3
    0.0 0.10 0.20 /
-/
 )")),
         Opm::OpmInputError);
 }
@@ -6370,7 +6366,6 @@ BOOST_AUTO_TEST_CASE(GPTABLE_table_number_required_throws) {
     BOOST_CHECK_THROW(
         make_schedule(gptable_deck(R"(GPTABLE
  1* 3 3  0.0 0.10 0.20 0.70 /
-/
 )")),
         Opm::OpmInputError);
 }
@@ -6379,7 +6374,6 @@ BOOST_AUTO_TEST_CASE(GPTABLE_table_number_must_be_positive_throws) {
     BOOST_CHECK_THROW(
         make_schedule(gptable_deck(R"(GPTABLE
  0 3 3  0.0 0.10 0.20 0.70 /
-/
 )")),
         Opm::OpmInputError);
 }
@@ -6389,7 +6383,6 @@ BOOST_AUTO_TEST_CASE(GPTABLE_component_index_out_of_range_throws) {
     BOOST_CHECK_THROW(
         make_schedule(gptable_deck(R"(GPTABLE
  1 1 4  0.0 0.10 0.20 0.70 /
-/
 )")),
         Opm::OpmInputError);
 }
@@ -6401,25 +6394,98 @@ BOOST_AUTO_TEST_CASE(GPTABLE_inverted_component_range_throws) {
     BOOST_CHECK_THROW(
         make_schedule(gptable_deck(R"(GPTABLE
  1 3 2  0.0 0.10 0.20 0.70 /
-/
 )")),
         Opm::OpmInputError);
 }
 
-BOOST_AUTO_TEST_CASE(GPTABLE_duplicate_table_number_in_one_keyword_warns_last_wins) {
-    // Two records with the same gas plant table number within a single GPTABLE
-    // keyword is an authoring error, but the table store (map_member) resolves it
-    // last-wins, so it is diagnosed with a warning rather than rejected: the deck
-    // parses and the surviving table is the LAST record.
+BOOST_AUTO_TEST_CASE(GPTABLE_one_table_per_keyword) {
+    // A GPTABLE keyword holds one table and ends with the slash of its record: the
+    // first line gives the table number and the heavy-component indices, and the
+    // rows follow on lines of their own. A second table takes a second keyword.
     const auto sched = make_schedule(gptable_deck(R"(GPTABLE
- 1 3 3  0.0 0.10 0.20 0.70 /
- 1 3 3  0.0 0.05 0.15 0.80 /
+ 1 3 3
+-- heavy  C1   C2   C3
+   0.0    0.10 0.20 0.70
+   0.2    0.15 0.25 0.60
 /
+GPTABLE
+ 2 3 3
+   0.0    0.0  0.0  1.0
+/
+TSTEP
+ 10 /
 )"));
 
+    const auto& g1 = sched[0].gptable(1);
+    BOOST_REQUIRE_EQUAL(g1.numRows(), std::size_t{2});
+    BOOST_CHECK_CLOSE  (g1.heavyMoleFraction(1), 0.2,  1e-9);
+    BOOST_CHECK_CLOSE  (g1.recovery(1, 2),       0.60, 1e-9);
+
+    const auto& g2 = sched[0].gptable(2);
+    BOOST_REQUIRE_EQUAL(g2.numRows(), std::size_t{1});
+    BOOST_CHECK_CLOSE  (g2.recovery(0, 2),       1.0,  1e-9);
+}
+
+BOOST_AUTO_TEST_CASE(GPTABLE_ten_components_one_slash) {
+    // A table for ten components, heavy components 10 to 10: a comment line names
+    // the columns, each row holds the heavy mole fraction and ten recoveries, and
+    // one slash ends the keyword.
+    const auto sched = make_schedule(R"(
+RUNSPEC
+DIMENS
+ 10 10 10 /
+OIL
+GAS
+WATER
+COMPS
+ 10 /
+START
+ 1 'JAN' 2020 /
+GRID
+DXV
+ 10*100 /
+DYV
+ 10*100 /
+DZV
+ 10*10 /
+BOX
+ 1 10 1 10 1 1 /
+TOPS
+ 100*2000 /
+ENDBOX
+SCHEDULE
+GPTABLE
+1 10 10
+-- C7+ CO2 N2 C1 C2 C3 C4-6 C71 C72 C73 C74
+0.0 0.0 0.00 0.00 0.00031 0.05 0.10 1.0 1.0 1.0 1.0
+0.2 0.0 0.00 0.00 0.00032 0.07 0.12 1.0 1.0 1.0 1.0
+/
+TSTEP
+ 10 /
+)");
+
     const auto& g = sched[0].gptable(1);
-    BOOST_CHECK_EQUAL(g.name(), 1);
-    BOOST_CHECK_CLOSE(g.recovery(0, 0), 0.05, 1.0e-6);
+    BOOST_CHECK_EQUAL  (g.lowerComponent(), 10);
+    BOOST_CHECK_EQUAL  (g.upperComponent(), 10);
+    BOOST_REQUIRE_EQUAL(g.numRows(), std::size_t{2});
+    BOOST_CHECK_CLOSE  (g.heavyMoleFraction(1), 0.2,     1e-9);
+    BOOST_CHECK_CLOSE  (g.recovery(0, 3),       0.00031, 1e-9);
+    BOOST_CHECK_CLOSE  (g.recovery(1, 5),       0.12,    1e-9);
+    BOOST_CHECK_CLOSE  (g.recovery(1, 9),       1.0,     1e-9);
+}
+
+BOOST_AUTO_TEST_CASE(GPTABLE_second_table_in_one_keyword_is_rejected) {
+    // The slash of the first table ends the keyword, so neither a second table nor
+    // a second slash belongs to it: both are rejected as stray input.
+    BOOST_CHECK_THROW(make_schedule(gptable_deck(R"(GPTABLE
+ 1 3 3  0.0 0.10 0.20 0.70 /
+ 2 3 3  0.0 0.05 0.15 0.80 /
+)")), Opm::OpmInputError);
+
+    BOOST_CHECK_THROW(make_schedule(gptable_deck(R"(GPTABLE
+ 1 3 3  0.0 0.10 0.20 0.70 /
+/
+)")), Opm::OpmInputError);
 }
 
 BOOST_AUTO_TEST_CASE(GPTABLE_negative_value_throws) {
@@ -6427,7 +6493,6 @@ BOOST_AUTO_TEST_CASE(GPTABLE_negative_value_throws) {
     BOOST_CHECK_THROW(
         make_schedule(gptable_deck(R"(GPTABLE
  1 3 3  0.0 -0.10 0.20 0.70 /
-/
 )")),
         Opm::OpmInputError);
 }
@@ -6438,7 +6503,6 @@ BOOST_AUTO_TEST_CASE(GPTABLE_value_above_one_throws) {
     BOOST_CHECK_THROW(
         make_schedule(gptable_deck(R"(GPTABLE
  1 3 3  0.0 0.10 0.20 1.70 /
-/
 )")),
         Opm::OpmInputError);
 }
@@ -6450,7 +6514,6 @@ BOOST_AUTO_TEST_CASE(GPTABLE_non_monotonic_key_column_throws) {
         make_schedule(gptable_deck(R"(GPTABLE
  1 3 3  0.2 0.10 0.20 0.70
  0.2 0.15 0.25 0.60 /
-/
 )")),
         Opm::OpmInputError);
 }
@@ -6490,7 +6553,6 @@ ENDBOX
 SCHEDULE
 GPTABLE
  5 3 3  0.0 0.10 0.20 0.70 /
-/
 )");
 
     const auto& g = sched[0].gptable(5);
@@ -6527,16 +6589,13 @@ ENDBOX
 SCHEDULE
 GPTABLE
  1 3 3  0.0 0.10 0.20 0.70 /
-/
 )"),
         Opm::OpmInputError);
 }
 
-BOOST_AUTO_TEST_CASE(GPTABLE_solution_duplicate_table_number_warns_last_wins) {
-    // The SOLUTION-section seeding applies the same in-keyword duplicate handling as
-    // the SCHEDULE handler: a repeated table number within one keyword is diagnosed
-    // with a warning (not rejected) and resolves last-wins when seeded at report
-    // step 0.
+BOOST_AUTO_TEST_CASE(GPTABLE_solution_one_table_per_keyword) {
+    // The SOLUTION-section seeding reads one table per keyword, as the SCHEDULE
+    // handler does: two keywords seed two tables at report step 0.
     const auto sched = make_schedule(R"(
 RUNSPEC
 DIMENS
@@ -6563,16 +6622,15 @@ ENDBOX
 SOLUTION
 GPTABLE
  1 3 3  0.0 0.10 0.20 0.70 /
- 1 3 3  0.0 0.05 0.15 0.80 /
-/
+GPTABLE
+ 2 3 3  0.0 0.05 0.15 0.80 /
 SCHEDULE
 TSTEP
  10 /
 )");
 
-    const auto& g = sched[0].gptable(1);
-    BOOST_CHECK_EQUAL(g.name(), 1);
-    BOOST_CHECK_CLOSE(g.recovery(0, 0), 0.05, 1.0e-6);
+    BOOST_CHECK_CLOSE(sched[0].gptable(1).recovery(0, 0), 0.10, 1.0e-6);
+    BOOST_CHECK_CLOSE(sched[0].gptable(2).recovery(0, 0), 0.05, 1.0e-6);
 }
 
 BOOST_AUTO_TEST_CASE(FIELDSEP_references_GPTABLE_combined) {
@@ -6608,7 +6666,6 @@ GPTABLE
  1 3 3
    0.0  0.10 0.20 0.70
    0.2  0.15 0.25 0.60 /
-/
 FIELDSEP
  1 60.0 15.0   0 0 0 1 /
  2 15.0  1.013 0 0 0 0 /
