@@ -75,9 +75,13 @@ if(NOT LAPACK_FOUND)
   find_package(LAPACK ${SuiteSparse_QUIET} REQUIRED)
 endif()
 
-# we also need the math part of the runtime library
+# we also need the math part of the runtime library, where it is a
+# separate library
 find_library(MATH_LIBRARY NAMES "m")
-set(SuiteSparse_EXTRA_LIBS ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES} ${MATH_LIBRARY})
+set(SuiteSparse_EXTRA_LIBS ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
+if(MATH_LIBRARY)
+  list(APPEND SuiteSparse_EXTRA_LIBS ${MATH_LIBRARY})
+endif()
 
 # if we don't get any further clues about where to look, then start
 # roaming around the system
