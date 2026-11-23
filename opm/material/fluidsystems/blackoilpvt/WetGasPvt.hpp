@@ -177,8 +177,8 @@ private:
 public:
     void setNumRegions(std::size_t numRegions);
 
-    void setVapPars(const Scalar par1, const Scalar)
-        requires isCpuStorage
+    OPM_HOST_DEVICE void setVapPars(const Scalar par1, const Scalar)
+        requires (isCpuStorage || isGpuView)
     {
         vapPar1_ = par1;
     }

@@ -366,14 +366,23 @@ public:
 
     STATIC_OR_DEVICE void setVapPars(const Scalar par1, const Scalar par2)
     {
-        if (gasPvt_.isActive()) {
-            gasPvt_.setVapPars(par1, par2);
-        }
-        if (oilPvt_.isActive()) {
-            oilPvt_.setVapPars(par1, par2);
-        }
-        if (waterPvt_.isActive()) {
-            waterPvt_.setVapPars(par1, par2);
+        if constexpr (std::is_same_v<PvtApproaches, MultiplexerPvtApproaches>) {
+            if (gasPvt_.isActive()) {
+                gasPvt_.setVapPars(par1, par2);
+            }
+            if (oilPvt_.isActive()) {
+                oilPvt_.setVapPars(par1, par2);
+            }
+            if (waterPvt_.isActive()) {
+                waterPvt_.setVapPars(par1, par2);
+            }
+        } else {
+            if constexpr (PvtApproaches::gas == GasPvtApproach::WetGas) {
+                gasPvt_.setVapPars(par1, par2);
+            }
+            if constexpr (PvtApproaches::oil == OilPvtApproach::LiveOil) {
+                oilPvt_.setVapPars(par1, par2);
+            }
         }
     }
 
