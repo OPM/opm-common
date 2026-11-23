@@ -37,7 +37,6 @@
 #include <array>
 #include <memory>
 #include <optional>
-#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -110,18 +109,12 @@ namespace {
         const auto numComponents = runspec.numComps();
         const auto max_tables = runspec.maxGasPlantTables();
 
-        // Seed every SOLUTION-section GPTABLE occurrence (each may carry several
-        // records), matching how the SCHEDULE handler processes all records. A table
-        // number repeated within a single keyword is an authoring error; map_member
-        // resolves it last-wins downstream, so warn rather than reject.
+        // Seed every SOLUTION-section GPTABLE occurrence, one table per keyword,
+        // as the SCHEDULE handler does.
         for (const auto* keyword : keywords) {
-            std::unordered_set<int> seen_table_nums;
-            for (const auto& record : *keyword) {
-                tables.emplace_back(record, numComponents, keyword->location());
-                const auto table_num = tables.back().name();
-                Opm::GasPlantTable::warnOnTableNumber(seen_table_nums, table_num,
-                                                      max_tables, keyword->location());
-            }
+            tables.emplace_back(keyword->getRecord(0), numComponents, keyword->location());
+            Opm::GasPlantTable::warnOnTableNumber(tables.back().name(), max_tables,
+                                                  keyword->location());
         }
 
         return tables;

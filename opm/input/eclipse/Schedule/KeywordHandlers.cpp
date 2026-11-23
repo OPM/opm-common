@@ -67,7 +67,6 @@
 #include <exception>
 #include <stdexcept>
 #include <string>
-#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -465,21 +464,15 @@ void handleGPTABLE(HandlerContext& handlerContext)
     // The compositional-run requirement (COMPS) is enforced declaratively by the
     // GPTABLE keyword's "requires" clause.
     const auto numComponents = runspec.numComps();
-    const auto max_tables = runspec.maxGasPlantTables();
 
-    // One gas plant table per record. A SOLUTION-section occurrence is seeded into
+    // One gas plant table per keyword. A SOLUTION-section occurrence is seeded into
     // report step 0 separately (see Schedule::create_first). A table number may be
-    // redefined by a LATER GPTABLE keyword (a time update); repeating it within a
-    // single keyword is an authoring error, but map_member resolves it last-wins so
-    // we warn rather than reject.
-    std::unordered_set<int> seen_table_nums;
-    for (const auto& record : handlerContext.keyword) {
-        GasPlantTable table { record, numComponents, handlerContext.keyword.location() };
-        const auto table_num = table.name();
-        GasPlantTable::warnOnTableNumber(seen_table_nums, table_num, max_tables,
-                                         handlerContext.keyword.location());
-        handlerContext.state().gptable.update( std::move(table) );
-    }
+    // redefined by a later GPTABLE keyword (a time update).
+    GasPlantTable table { handlerContext.keyword.getRecord(0), numComponents,
+                          handlerContext.keyword.location() };
+    GasPlantTable::warnOnTableNumber(table.name(), runspec.maxGasPlantTables(),
+                                     handlerContext.keyword.location());
+    handlerContext.state().gptable.update( std::move(table) );
 }
 
 }

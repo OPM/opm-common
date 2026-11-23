@@ -30,7 +30,6 @@
 #include <cassert>
 #include <cmath>
 #include <cstddef>
-#include <unordered_set>
 #include <utility>
 
 #include <fmt/format.h>
@@ -147,19 +146,11 @@ GasPlantTable::GasPlantTable(const DeckRecord& record,
     this->m_data            = std::move(data);
 }
 
-void GasPlantTable::warnOnTableNumber(std::unordered_set<int>& seenTableNumbers,
-                                      const int tableNumber,
+void GasPlantTable::warnOnTableNumber(const int tableNumber,
                                       const std::size_t maxTables,
                                       const KeywordLocation& location)
 {
-    if (! seenTableNumbers.insert(tableNumber).second) {
-        OpmLog::warning(OpmInputError::format(
-            fmt::format("GPTABLE: gas plant table number {} is specified more "
-                        "than once in a single GPTABLE keyword; last entry wins.",
-                        tableNumber),
-            location));
-    }
-    else if ((maxTables > 0) && (tableNumber > static_cast<int>(maxTables))) {
+    if ((maxTables > 0) && (tableNumber > static_cast<int>(maxTables))) {
         OpmLog::warning(OpmInputError::format(
             fmt::format("GPTABLE: gas plant table number {} exceeds the maximum "
                         "declared by GPTDIMS ({}).", tableNumber, maxTables),

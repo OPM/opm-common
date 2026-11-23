@@ -24,7 +24,6 @@
 
 #include <cassert>
 #include <cstddef>
-#include <unordered_set>
 #include <vector>
 
 namespace Opm {
@@ -33,7 +32,7 @@ namespace Opm {
 
     /// A single GPTABLE gas-plant recovery table.
     ///
-    /// One table per GPTABLE record: a gas plant table number, the lower/upper
+    /// One table per GPTABLE keyword: a gas plant table number, the lower/upper
     /// heavy-component indices, and the recovery data whose every row holds one
     /// heavy-component mole fraction followed by one recovery fraction per
     /// component (numComponents + 1 dimensionless values per row). Parse and
@@ -43,7 +42,7 @@ namespace Opm {
     public:
         GasPlantTable() = default;
 
-        /// Build one table from a single GPTABLE record. \p numComponents is the
+        /// Build one table from the record of a GPTABLE keyword. \p numComponents is the
         /// component count (from COMPS); a defaulted lower/upper component index
         /// resolves to it.
         GasPlantTable(const DeckRecord& record,
@@ -52,14 +51,11 @@ namespace Opm {
 
         static GasPlantTable serializationTestObject();
 
-        /// Emit the GPTABLE table-number diagnostics shared by the SCHEDULE
-        /// handler and the SOLUTION-section seeding. \p seenTableNumbers tracks
-        /// the numbers already encountered within a single GPTABLE keyword: a
-        /// repeat warns (map_member resolves it last-wins downstream), and a
-        /// number above the GPTDIMS maximum (\p maxTables, when one is declared)
-        /// warns too. Neither case rejects the table.
-        static void warnOnTableNumber(std::unordered_set<int>& seenTableNumbers,
-                                      int tableNumber,
+        /// Emit the GPTABLE table-number diagnostic shared by the SCHEDULE
+        /// handler and the SOLUTION-section seeding: a number above the GPTDIMS
+        /// maximum (\p maxTables, when one is declared) warns, and the table is
+        /// still accepted.
+        static void warnOnTableNumber(int tableNumber,
                                       std::size_t maxTables,
                                       const KeywordLocation& location);
 

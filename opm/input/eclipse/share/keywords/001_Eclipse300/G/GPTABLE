@@ -5,6 +5,7 @@
     "SCHEDULE"
   ],
   "requires": ["COMPS"],
+  "size": 1,
   "items": [
     {
       "item": 1,
