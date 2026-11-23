@@ -105,6 +105,42 @@ void apply_GRIDUNIT(const UnitSystem& deck_units, const UnitSystem& grid_units, 
                            [scale_factor](const auto& v) { return v * scale_factor; });
 }
 
+// DPGRID with corner-point input may give ZCORN for the matrix layers only. The
+// fracture layers then repeat the matrix layers, stacked below them column by
+// column as with block-centred input, so that every pillar stays monotone. A
+// fracture cell takes its geometry from its matrix twin, so these corners only
+// complete the grid.
+std::vector<double> stackFractureLayers(const std::vector<double>& matrixZcorn,
+                                        const std::size_t nx,
+                                        const std::size_t ny,
+                                        const std::size_t nz)
+{
+    const std::size_t half = nz / 2;
+    const ZcornMapper matrix(nx, ny, half);
+    const ZcornMapper full(nx, ny, nz);
+
+    // The matrix layers come first in the corner point arrays.
+    std::vector<double> zcorn(8 * nx * ny * nz);
+    std::ranges::copy(matrixZcorn, zcorn.begin());
+
+    for (std::size_t j = 0; j < ny; ++j) {
+        for (std::size_t i = 0; i < nx; ++i) {
+            for (int c = 0; c < 4; ++c) {
+                const double thickness = matrixZcorn[matrix.index(i, j, half - 1, c + 4)]
+                                       - matrixZcorn[matrix.index(i, j, 0, c)];
+                for (std::size_t k = 0; k < half; ++k) {
+                    for (const int corner : {c, c + 4}) {
+                        zcorn[full.index(i, j, k + half, corner)] =
+                            zcorn[full.index(i, j, k, corner)] + thickness;
+                    }
+                }
+            }
+        }
+    }
+
+    return zcorn;
+}
+
 }
 EclipseGrid::EclipseGrid()
     : GridDims(),
@@ -334,13 +370,6 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
                                             "layers the fracture cells.", this->getNZ()),
                                 location);
         }
-
-        if (deck.hasKeyword<ParserKeywords::DPGRID>() && deck.hasKeyword<ParserKeywords::ZCORN>()) {
-            throw OpmInputError("DPGRID is supported for block-centred grid input only; "
-                                "with corner-point input specify both halves explicitly.",
-                                deck.get<ParserKeywords::DPGRID>().front().location());
-        }
-
     }
 
     if (deck.hasKeyword<ParserKeywords::MAPAXES>())
@@ -1472,6 +1501,17 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
         const auto& coord = deck.get<ParserKeywords::COORD>().back();
         const auto& zcorn = deck.get<ParserKeywords::ZCORN>().back();
 
+        if (zcorn.getDataSize() < 8 * this->getCartesianSize()) {
+            // ZCORN of the matrix layers only, which assertCornerPointKeywords()
+            // accepts with DPGRID.
+            this->initCornerPointGrid(coord.getSIDoubleData(),
+                                      stackFractureLayers(zcorn.getSIDoubleData(),
+                                                          this->getNX(), this->getNY(),
+                                                          this->getNZ()),
+                                      nullptr);
+            return;
+        }
+
         this->initCornerPointGrid(coord.getSIDoubleData(),
                                   zcorn.getSIDoubleData(),
                                   nullptr);
@@ -1493,11 +1533,22 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
         {
             const auto& ZCORNKeyWord = deck.get<ParserKeywords::ZCORN>().back();
 
-            if (ZCORNKeyWord.getDataSize() != static_cast<std::size_t>(8*nx*ny*nz)) {
-                const std::string msg =
+            // A dual-porosity run with DPGRID may give ZCORN for the matrix
+            // layers, the upper half, only.
+            const bool matrixHalf = this->m_dualPorosity && (nz % 2 == 0)
+                && deck.hasKeyword<ParserKeywords::DPGRID>();
+
+            const auto size = ZCORNKeyWord.getDataSize();
+            const auto fullSize = static_cast<std::size_t>(8*nx*ny*nz);
+            if ((size != fullSize) && !(matrixHalf && (2 * size == fullSize))) {
+                std::string msg =
                     "Wrong size of the ZCORN keyword: Expected 8*nx*ny*nz = "
-                    + std::to_string(static_cast<long long>(8*nx*ny*nz)) + " is "
-                    + std::to_string(static_cast<long long>(ZCORNKeyWord.getDataSize()));
+                    + std::to_string(fullSize);
+                if (matrixHalf) {
+                    msg += ", or with DPGRID 4*nx*ny*nz = " + std::to_string(fullSize / 2)
+                        + " for the matrix layers only,";
+                }
+                msg += " is " + std::to_string(size);
                 OpmLog::error(msg);
                 throw std::invalid_argument(msg);
             }
