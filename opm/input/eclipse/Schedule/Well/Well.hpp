@@ -617,6 +617,10 @@ public:
     bool handleWELSEGS(const DeckKeyword& keyword);
     /// Attach connections to segments from COMPSEGS.
     ///
+    /// \param keyword Keyword to process
+    /// \param grid The grid
+    /// \param parseContext Parse contenxt to use
+    /// \param errors Error guard to use
     /// \param[out] links Optional.  If non-null, receives pairs of
     ///    connection cell (linearised Cartesian index) and segment number
     ///    for each COMPSEGS record applied to an existing connection, in
