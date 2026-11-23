@@ -17,6 +17,8 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <opm/common/utility/TimeService.hpp>
+
 #include <opm/io/eclipse/ERst.hpp>
 
 #include <opm/input/eclipse/Deck/Deck.hpp>
@@ -26,11 +28,21 @@
 #include <opm/input/eclipse/Parser/ParseContext.hpp>
 #include <opm/input/eclipse/Parser/Parser.hpp>
 
+#include <algorithm>
 #include <cstddef>
+#include <cstdlib>
+#include <exception>
+#include <filesystem>
 #include <getopt.h>
+#include <iomanip>
 #include <iostream>
+#include <iterator>
+#include <map>
 #include <memory>
 #include <sstream>
+#include <string>
+#include <tuple>
+#include <vector>
 
 class Node
 {
@@ -238,8 +250,7 @@ public:
     void print_network(int rstep);
 
 private:
-    time_t time_from_rec(const Opm::DeckRecord& rec);
-    time_t time_from_rst(const std::string& rstfile, int rstep);
+    Opm::time_point time_from_rst(const std::filesystem::path& rstfile, int rstep);
 
     bool node_exist(const std::string& name);
 
@@ -247,7 +258,7 @@ private:
     void add_branch(const std::string& downtree, const std::string& uptree, int vfp);
     void delete_branch(const std::string& downtree, const std::string& uptree);
 
-    void br_input_from_rst(const std::string& rstfile,
+    void br_input_from_rst(const std::filesystem::path& rstfile,
                            const std::vector<int>& rstep_vect);
 
     void parse_data_deck(const std::filesystem::path& inputFileName,
@@ -256,17 +267,17 @@ private:
 
     std::stringstream m_netw_str;
 
-    time_t m_start_date;
-    time_t m_rst_time;
+    Opm::time_point m_start_date;
+    Opm::time_point m_rst_time;
 
     bool m_from_unrst = false;
 
-    std::vector<time_t> m_report_time_list;
+    std::vector<Opm::time_point> m_report_time_list;
     std::vector<std::vector<bran_input_type>> m_bran_input_list;
     std::vector<std::vector<node_input_type>> m_node_input_list;
     std::vector<std::vector<well_input_type>> m_well_input_list;
 
-    std::string time_str(time_t t1);
+    std::string time_str(const Opm::time_point& t1);
 
     std::vector<std::shared_ptr<Node>> m_node_list;
     std::vector<std::shared_ptr<Node>> m_top_node_list;
@@ -319,7 +330,7 @@ NetWork::parse_data_deck(const std::filesystem::path& inputFileName,
     bool restart = false;
     bool skiprest = false;
 
-    time_t last_time{};
+    Opm::time_point last_time{};
 
     auto network_keyw = deck_schecule["NETWORK"];
 
@@ -333,14 +344,14 @@ NetWork::parse_data_deck(const std::filesystem::path& inputFileName,
             m_node_input_list.push_back({});
             m_bran_input_list.push_back({});
             m_well_input_list.push_back({});
-            m_start_date = time_from_rec(keyw[0]);
+            m_start_date = Opm::TimeService::timeFromEclipse(keyw[0]);
 
             last_time = m_start_date;
         }
         else if (keyw.name() == "TSTEP") {
             for (std::size_t n = 0; n < keyw[0].getItem(0).data_size(); n++) {
                 auto dt = keyw[0].getItem(0).get<double>(n);
-                last_time = last_time + static_cast<int>(dt * 24.0 * 3600.0);
+                last_time = Opm::TimeService::advance(last_time, dt * 24.0 * 3600.0);
 
                 if (!skiprest) {
                     m_report_time_list.push_back(last_time);
@@ -356,7 +367,7 @@ NetWork::parse_data_deck(const std::filesystem::path& inputFileName,
         }
         else if (keyw.name() == "DATES") {
             for (const auto& rec : keyw) {
-                last_time = time_from_rec(rec);
+                last_time = Opm::TimeService::timeFromEclipse(rec);
 
                 if (m_report_time_list.size() == 0) {
                     if ((last_time <= m_start_date) && (!skiprest)) {
@@ -452,34 +463,17 @@ NetWork::parse_unrst(const std::filesystem::path& inputFileName)
 }
 
 std::string
-NetWork::time_str(time_t t1)
+NetWork::time_str(const Opm::time_point& t1)
 {
-    const std::vector<std::string> mndStr {
-        "JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"
-    };
-
-    const std::tm* date = std::localtime(&t1);
+    const Opm::TimeStampUTC date(t1);
 
     std::stringstream date_str;
 
-    // ignoring daylight saving time
-
-    int hr = date->tm_hour;
-    int day = date->tm_mday;
-
-    if (date->tm_isdst == 1) {
-        hr = hr - 1;
-        if (hr < 0) {
-            hr = hr + 24;
-            day = day - 1;
-        }
-    }
-
-    date_str << std::setw(2) << std::setfill('0') << day;
-    date_str << " '" << mndStr[date->tm_mon] << "' " << date->tm_year + 1900;
-    date_str << " " << std::setw(2) << std::setfill('0') << hr;
-    date_str << ":" << std::setw(2) << std::setfill('0') << date->tm_min;
-    date_str << ":" << std::setw(2) << std::setfill('0') << date->tm_sec;
+    date_str << std::setw(2) << std::setfill('0') << date.day();
+    date_str << " '" << Opm::TimeService::eclipseMonthNames().at(date.month()) << "' " << date.year();
+    date_str << " " << std::setw(2) << std::setfill('0') << date.hour();
+    date_str << ":" << std::setw(2) << std::setfill('0') << date.minutes();
+    date_str << ":" << std::setw(2) << std::setfill('0') << date.seconds();
 
     return date_str.str();
 }
@@ -656,7 +650,7 @@ NetWork::print_network(int rstep)
 {
     std::cout << "\n\n";
 
-    time_t t = m_report_time_list[rstep - 1];
+    const auto t = m_report_time_list[rstep - 1];
 
     std::cout << "Report step : " << time_str(t) << "\n\n";
 
@@ -695,81 +689,8 @@ NetWork::print_report_steps()
     }
 }
 
-time_t
-NetWork::time_from_rec(const Opm::DeckRecord& rec)
-{
-    const std::map<std::string, int> mnd_map {
-        {"JAN", 0},
-        {"FEB", 1},
-        {"MAR", 2},
-        {"APR", 3},
-        {"MAY", 4},
-        {"JUN", 5},
-        {"JUL", 6},
-        {"JLY", 6},
-        {"AUG", 7},
-        {"SEP", 8},
-        {"OCT", 9},
-        {"NOV", 10},
-        {"DEC", 11}
-    };
-
-    auto day = rec.getItem(0).get<int>(0);
-    auto mndStr = rec.getItem(1).get<std::string>(0);
-    auto year = rec.getItem(2).get<int>(0);
-    auto time = rec.getItem(3).get<std::string>(0);
-
-    int sec_frac = 0;
-
-    auto p1 = time.find(".");
-
-    if (p1 != std::string::npos) {
-        auto sec_frac_str = time.substr(p1 + 1);
-        sec_frac = std::stoi(sec_frac_str);
-        time = time.substr(0, p1);
-    }
-
-    if (sec_frac > 0) {
-        std::cout << "\n!Error, fraction of section not supported \n";
-        exit(1);
-    }
-
-    p1 = time.find(":");
-
-    if (p1 == std::string::npos) {
-        std::cout << "\n!Error, invalied format for time " << time << "\n";
-        exit(1);
-    }
-
-    auto p2 = time.find(":", p1 + 1);
-    if (p2 == std::string::npos) {
-        std::cout << "\n!Error, Second invalied format for time " << time << "\n";
-        exit(1);
-    }
-
-    int h = std::stoi(time.substr(0, p1));
-    int min = std::stoi(time.substr(p1 + 1, p2 - p1 - 1));
-    int sec = std::stoi(time.substr(p2 + 1));
-
-    int mnd = mnd_map.at(mndStr);
-
-    // std::tm date1 = {sec, min, h, day, mnd, year - 1900 };
-
-    std::tm date1 = {};
-
-    date1.tm_sec = sec;
-    date1.tm_min = min;
-    date1.tm_hour = h;
-
-    date1.tm_mday = day;
-    date1.tm_mon = mnd;
-    date1.tm_year = year - 1900;
-
-    return std::mktime(&date1);
-}
-
-time_t
-NetWork::time_from_rst(const std::string& rstfile, int rstep)
+Opm::time_point
+NetWork::time_from_rst(const std::filesystem::path& rstfile, int rstep)
 {
     Opm::EclIO::ERst rst1(rstfile);
 
@@ -783,21 +704,11 @@ NetWork::time_from_rst(const std::string& rstfile, int rstep)
     int min = inteh[207];
     int sec = static_cast<int>(inteh[410] / 1000000);
 
-    std::tm date1 = {};
-
-    date1.tm_sec = sec;
-    date1.tm_min = min;
-    date1.tm_hour = h;
-
-    date1.tm_mday = day;
-    date1.tm_mon = mnd - 1;
-    date1.tm_year = year - 1900;
-
-    return std::mktime(&date1);
+    return Opm::TimeService::mkdatetime(year, mnd, day, h, min, sec);
 }
 
 void
-NetWork::br_input_from_rst(const std::string& rstfile,
+NetWork::br_input_from_rst(const std::filesystem::path& rstfile,
                            const std::vector<int>& rstep_vect)
 {
     Opm::EclIO::ERst rst1(rstfile);

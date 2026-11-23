@@ -534,13 +534,13 @@ namespace Opm::ML
     }
 
     template <class Evaluation>
-    bool NNModel<Evaluation>::loadModel(const std::string& filename)
+    bool NNModel<Evaluation>::loadModel(const std::filesystem::path& filename)
     {
-        std::ifstream file(filename.c_str(), std::ios::binary);
+        std::ifstream file(filename, std::ios::binary);
         OPM_ERROR_IF(!file.is_open(),
                      fmt::format(fmt::runtime("\n Unable to open file "
                                  "{}"),
-                                 filename.c_str()));
+                                 filename.generic_string()));
 
         unsigned int num_layers = 0;
         OPM_ERROR_IF(!readFile<unsigned int>(file, num_layers), "Expected number of layers");

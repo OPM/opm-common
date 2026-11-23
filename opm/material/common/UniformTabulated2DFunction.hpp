@@ -42,8 +42,11 @@
 #include <vector>
 
 // forward declaration of the class so the function in the next namespace can be declared
-template <class Scalar, template<class> class Storage = Opm::VectorWithDefaultAllocator>
+// (the default for Storage is given on the definition)
+namespace Opm {
+template <class Scalar, template<class> class Storage>
 class UniformTabulated2DFunction;
+}
 
 #if HAVE_CUDA
 // declaration of make_view in correct namespace so friend function can be declared in the class
