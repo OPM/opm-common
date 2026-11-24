@@ -199,16 +199,18 @@ applySwatinit(unsigned elemIdx,
     bool newSwatInit = false;
     int satRegionIdx = satnumRegionIdx(elemIdx);
     if (enablePpcwmax() && (newMaxPcow > maxAllowPc_[satRegionIdx])) {
-        // Two options in PPCWMAX to modify connate Sw or not.  In both cases, init. Sw needs to be
-        // re-calculated (done in opm-simulators)
-        newSwatInit = true;
+        // Two options in PPCWMAX to modify connate Sw or not
         if (modifySwl_[satRegionIdx] == false) {
-            // Max. cap. pressure set to PCWO in PPCWMAX
+            // Max. cap. pressure set to PCWO in PPCWMAX.  Init. Sw needs to be
+            // re-calculated (done in opm-simulators)
+            newSwatInit = true;
             maxPc = maxAllowPc_[satRegionIdx];
         }
         else {
-            // Max. cap. pressure remains unscaled and connate Sw is set to SWATINIT value
+            // Connate Sw is set to SWATINIT value, which then holds with the max.
+            // cap. pressure scaled down to pcow, never up
             elemScaledEpsInfo.Swl = Sw;
+            maxPc = std::min(maxPc, pcow);
         }
     }
     // Max. cap. pressure adjusted from SWATINIT data

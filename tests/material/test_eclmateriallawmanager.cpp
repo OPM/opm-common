@@ -1384,13 +1384,97 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(SwatinitAtConnatePpcwmax, Scalar, Types)
             }
 
             // PPCWMAX modifying the connate saturation: maximum capillary
-            // pressure unscaled, saturation to be recalculated.
+            // pressure unscaled, saturation at connate.
             {
                 const auto [sw, newSwatInit] = manager.applySwatinit(1, 2*maxPc, 0.1);
                 BOOST_CHECK_CLOSE(sw, Scalar{0.2}, tol);
-                BOOST_CHECK(newSwatInit);
+                BOOST_CHECK(!newSwatInit);
                 BOOST_CHECK_CLOSE(manager.oilWaterScaledEpsInfoDrainage(1).maxPcow, maxPc, tol);
                 BOOST_CHECK_CLOSE(manager.oilWaterScaledEpsInfoDrainage(1).Swl, Scalar{0.2}, tol);
+            }
+        }
+    }
+}
+
+static constexpr const char* swatinitPpcwmaxModifySwlDeckString =
+    "RUNSPEC\n"
+    "DIMENS\n"
+    "   1 1 2 /\n"
+    "TABDIMS\n"
+    "/\n"
+    "OIL\n"
+    "GAS\n"
+    "WATER\n"
+    "METRIC\n"
+    "ENDSCALE\n"
+    "/\n"
+    "GRID\n"
+    "DX\n"
+    "   2*100 /\n"
+    "DY\n"
+    "   2*100 /\n"
+    "DZ\n"
+    "   2*10 /\n"
+    "TOPS\n"
+    "   2000 /\n"
+    "PORO\n"
+    "   2*0.2 /\n"
+    "PROPS\n"
+    "SWOF\n"
+    "0.2  0.0  1.0  2.0\n"
+    "0.5  0.2  0.3  0.5\n"
+    "1.0  1.0  0.0  0.0 /\n"
+    "SGOF\n"
+    "0.0  0.0  1.0  0.0\n"
+    "0.8  1.0  0.0  0.0 /\n"
+    "PPCWMAX\n"
+    "   1.0 YES /\n"
+    "SWATINIT\n"
+    "   0.4 0.4 /\n";
+
+BOOST_AUTO_TEST_CASE_TEMPLATE(SwatinitPpcwmaxModifySwl, Scalar, Types)
+{
+    using MaterialLawManager = typename Fixture<Scalar>::MaterialLawManager;
+
+    Opm::Parser parser;
+    const Opm::EclipseState eclState(parser.parseString(swatinitPpcwmaxModifySwlDeckString));
+    const std::size_t n = eclState.getInputGrid().getCartesianSize();
+
+    // Maximum capillary pressure of the table, at the connate water
+    // saturation 0.2.  The table has 1 bar at SWATINIT = 0.4, so honouring
+    // SWATINIT by scaling exceeds the PPCWMAX limit (1 bar) in both cells,
+    // and PPCWMAX sets the connate saturation to SWATINIT.  In Pascal.
+    const Scalar maxPc = 2.0e5;
+    const Scalar swatinit = 0.4;
+    const Scalar tol = 1.0e-3; // percent
+
+    for (const bool scaleUp : {false, true}) {
+        BOOST_TEST_CONTEXT("Scale up at connate: " << scaleUp) {
+            MaterialLawManager manager;
+            manager.initFromState(eclState);
+            manager.initParamsForElements(eclState, n, doOldLookup, doNothing);
+            manager.setSwatinitScaleUpAtConnate(scaleUp);
+            BOOST_REQUIRE(manager.enablePpcwmax());
+
+            // Requested capillary pressure below the maximum of the table: the
+            // maximum is scaled down to it, so the curve holds SWATINIT.
+            {
+                const auto [sw, newSwatInit] = manager.applySwatinit(0, 0.75*maxPc, swatinit);
+                BOOST_CHECK_CLOSE(sw, swatinit, tol);
+                BOOST_CHECK(!newSwatInit);
+                BOOST_CHECK_CLOSE(manager.oilWaterScaledEpsInfoDrainage(0).Swl, swatinit, tol);
+                BOOST_CHECK_CLOSE(manager.oilWaterScaledEpsInfoDrainage(0).maxPcow, 0.75*maxPc, tol);
+                BOOST_CHECK_CLOSE(waterPc<Scalar>(manager, 0, swatinit, false), 0.75*maxPc, tol);
+            }
+
+            // Requested capillary pressure above the maximum of the table: the
+            // maximum is not scaled up.
+            {
+                const auto [sw, newSwatInit] = manager.applySwatinit(1, 1.5*maxPc, swatinit);
+                BOOST_CHECK_CLOSE(sw, swatinit, tol);
+                BOOST_CHECK(!newSwatInit);
+                BOOST_CHECK_CLOSE(manager.oilWaterScaledEpsInfoDrainage(1).Swl, swatinit, tol);
+                BOOST_CHECK_CLOSE(manager.oilWaterScaledEpsInfoDrainage(1).maxPcow, maxPc, tol);
             }
         }
     }
