@@ -315,6 +315,18 @@ public:
         return 0.0;
     }
 
+    /*!
+     * \brief Gas saturation below which gas is immobile on the current WAG
+     *        imbibition curve, or a negative value if this does not apply.
+     */
+    static Scalar trappedGasSaturationWAG(const Params& params)
+    {
+        OPM_TIMEFUNCTION_LOCAL(Subsystem::SatProps);
+        OPM_ECL_MULTIPLEXER_MATERIAL_CALL(return ActualLaw::trappedGasSaturationWAG(realParams),
+                                          return -1.0);
+        return -1.0;
+    }
+
     static Scalar strandedGasSaturation(const Params& params, Scalar Sg, Scalar Kg)
     {
         OPM_TIMEFUNCTION_LOCAL(Subsystem::SatProps);

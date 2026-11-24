@@ -564,6 +564,23 @@ public:
     Scalar SncrtWAG() const
     { return SncrtWAG_; }
 
+    /*!
+     * \brief Non-wetting saturation below which the non-wetting phase is immobile
+     *        on the current WAG imbibition curve.
+     *
+     * The relative permeability is zero (with a zero derivative) below this
+     * saturation, and it increases steeply above it if the trapped part of the
+     * historical maximum saturation is large. Returns a negative value if WAG
+     * hysteresis is not active, or if nothing is trapped on the current curve.
+     */
+    Scalar SnTrappedWAG() const
+    {
+        if (!gasOilHysteresisWAG() || !(SncrtWAG_ > baseWAG_ + saturationEpsilon_)) {
+            return -1.0;
+        }
+        return SncrtWAG_;
+    }
+
     Scalar Snmaxd() const
     { return Snmaxd_; }
 

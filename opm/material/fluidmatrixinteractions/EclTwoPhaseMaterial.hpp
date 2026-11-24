@@ -267,6 +267,18 @@ public:
         return 0.0; // oil-water case
     }
 
+    /*!
+     * \brief Gas saturation below which gas is immobile on the current WAG
+     *        imbibition curve, or a negative value if this does not apply.
+     */
+    static Scalar trappedGasSaturationWAG(const Params& params)
+    {
+        if (params.approach() == EclTwoPhaseApproach::GasOil) {
+            return params.gasOilParams().SnTrappedWAG();
+        }
+        return -1.0;
+    }
+
     static Scalar strandedGasSaturation(const Params& params, Scalar Sg, Scalar Kg){
         if(params.approach() == EclTwoPhaseApproach::GasOil)
             return params.gasOilParams().SnStranded(Sg, Kg);
