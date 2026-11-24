@@ -883,7 +883,8 @@ public:
                 }
                 else {
                     // Start secondary drainage from the current point on the two-phase curve.
-                    krnImbStartNxt_ = (krnSw <= krnSwMdc_ + tolWAG_)
+                    // Same curve selection as in EclHysteresisTwoPhaseLaw::twoPhaseSatKrn().
+                    krnImbStartNxt_ = (krnSw <= krnSwMdc_)
                         ? EffLawT::twoPhaseSatKrn(drainageParams(), krnSw)
                         : EffLawT::twoPhaseSatKrn(drainageParams(), computeSwf(krnSw));
                     krnSwDrainStart_ = std::min(krnSw, Scalar(1.0 - SncrtWAGImb_));

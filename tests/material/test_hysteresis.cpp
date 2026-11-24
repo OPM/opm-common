@@ -4695,6 +4695,32 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(WagPrimaryImbibition, Scalar, Types)
     }
 }
 
+// The primary imbibition curve is used right below the reversal point, also
+// within the tolerance used to update the hysteresis state. For a small
+// historical maximum gas saturation, the whole imbibition curve is narrower
+// than that tolerance, and krg would otherwise jump from zero to the drainage
+// value.
+BOOST_AUTO_TEST_CASE_TEMPLATE(WagKrgContinuousBelowReversal, Scalar, Types)
+{
+    const double C = 3.0;
+    const double tol = wagTol<Scalar>();
+    for (const double sghy : { 0.011, 0.4 }) {
+        BOOST_TEST_CONTEXT("sghy = " << sghy) {
+            WagCell<Scalar> cell(wagHysterDeck(C, 0.5, 1.0e-6, 0.001, 0.0));
+            const Scalar sw = cell.swco;
+            for (int i = 0; i <= 20; ++i) {
+                cell.step(sw, sghy * i / 20.0);
+            }
+            const double sgt = wagTrapped(sghy, C, 0.0);
+            for (int i = 0; i <= 30; ++i) {
+                const double sg = sghy - 0.0015 + i * 0.0001;
+                const double expected = (sg >= sghy) ? wagK(sg) : wagK(wagFree(sg - sgt, C));
+                BOOST_CHECK_SMALL(cell.krg(sw, sg) - expected, tol);
+            }
+        }
+    }
+}
+
 // Gas saturation below which gas is immobile on the WAG imbibition curve, as
 // used to limit Newton updates of the gas saturation.
 BOOST_AUTO_TEST_CASE_TEMPLATE(WagTrappedGasSaturation, Scalar, Types)
@@ -4718,7 +4744,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(WagTrappedGasSaturation, Scalar, Types)
     }
     const double sgt = wagTrapped(0.011, C, 0.0);
     BOOST_CHECK_SMALL(trappedWAG() - sgt, tol);
-    BOOST_CHECK_SMALL(trappedWAG() - cell.trappedGas(), tol);
+    BOOST_CHECK_SMALL(double(trappedWAG() - cell.trappedGas()), tol);
 
     // The threshold is unchanged on the imbibition curve, gas is immobile below
     // it and mobile above it.
@@ -4957,3 +4983,4 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(WagTinyFreeGasAtReversal, Scalar, Types)
         }
     }
 }
+

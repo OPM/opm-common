@@ -442,9 +442,14 @@ public:
         // If WAG hysteresis is enabled, the convential hysteresis model is ignored.
         // (Two-phase model, non-wetting: only gas in oil.)
         if (params.gasOilHysteresisWAG()) {
+            // The curves are selected without the tolerance used when updating the
+            // hysteresis state, since each scanning curve starts at its reversal
+            // point. Otherwise, krg would jump at the tolerance from the scanning
+            // curve to the drainage curve, by up to the full drainage value if the
+            // scanning curve is narrower than the tolerance.
 
             // Primary drainage
-            if (Sw <= params.krnSwMdc() + params.tolWAG() && params.nState() == 1) {
+            if (Sw <= params.krnSwMdc() && params.nState() == 1) {
                 return EffectiveLaw::template twoPhaseSatKrn<Evaluation, Args...>(params.drainageParams(), Sw);
             }
 
@@ -456,14 +461,14 @@ public:
             }
 
             // Three-phase drainage along current secondary drainage curve
-            if (Sw <= params.krnSwDrainRevert()+params.tolWAG() /*&& params.nState()>=1 */) {
+            if (Sw <= params.krnSwDrainRevert() /*&& params.nState()>=1 */) {
                 Evaluation Krg = EffectiveLaw::template twoPhaseSatKrn<Evaluation, Args...>(params.drainageParams(), Sw);
                 Evaluation KrgDrain2 = (Krg-params.krnDrainStart())*params.reductionDrain() + params.krnImbStart();
                 return max(KrgDrain2, Evaluation(0.0));
             }
 
             // Subsequent imbibition: Scanning curve derived from previous secondary drainage
-            if (Sw >= params.krnSwWAG()-params.tolWAG() /*&& Sw > params.krnSwDrainRevert() && params.nState()>=1 */) {
+            if (Sw >= params.krnSwWAG() /*&& Sw > params.krnSwDrainRevert() && params.nState()>=1 */) {
                 Evaluation KrgImb2 = params.computeKrImbWAG(Sw);
                 return KrgImb2;
             }
