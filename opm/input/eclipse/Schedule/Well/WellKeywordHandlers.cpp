@@ -64,6 +64,7 @@
 #include <functional>
 #include <memory>
 #include <optional>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <unordered_map>
@@ -1447,10 +1448,20 @@ void handleWSEED(HandlerContext& handlerContext)
 
         // Subtract one to convert one-based input indices to zero-based
         // internal processing indices.
-        const auto cellSeedIndex = grid->getGlobalIndex
-            (record.getItem<ParserKeywords::WSEED::I>().get<int>(0) - 1,
-             record.getItem<ParserKeywords::WSEED::J>().get<int>(0) - 1,
-             record.getItem<ParserKeywords::WSEED::K>().get<int>(0) - 1);
+        const auto seedI = record.getItem<ParserKeywords::WSEED::I>().get<int>(0) - 1;
+        const auto seedJ = record.getItem<ParserKeywords::WSEED::J>().get<int>(0) - 1;
+        const auto seedK = record.getItem<ParserKeywords::WSEED::K>().get<int>(0) - 1;
+
+        // getGlobalIndex() does not check bounds; an out-of-range I or J
+        // would alias another cell.
+        try {
+            grid->assertIJK(seedI, seedJ, seedK);
+        }
+        catch (const std::invalid_argument& e) {
+            throw OpmInputError(e.what(), handlerContext.keyword.location());
+        }
+
+        const auto cellSeedIndex = grid->getGlobalIndex(seedI, seedJ, seedK);
 
         const auto cellSeedNormal = WellFractureSeeds::NormalVector {
             record.getItem<ParserKeywords::WSEED::NORMAL_X>().getSIDouble(0),

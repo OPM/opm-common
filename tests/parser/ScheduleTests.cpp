@@ -8003,6 +8003,55 @@ END
     BOOST_CHECK(text.find("(9,9,1)") == std::string::npos);  // (9,9,1) matches OP_1, so no warning
 }
 
+BOOST_AUTO_TEST_CASE(Well_Fracture_Seeds_Outside_Grid_Throws)
+{
+    // (11,1,1) on a 10x10 grid would alias cell (1,2,1), a connection of OP_1.
+    const auto deck = Parser{}.parseString(R"(RUNSPEC
+DIMENS
+  10 10 10 /
+START
+10 MAI 2007 /
+MECH
+GRID
+DXV
+10*100.0 /
+DYV
+10*100.0 /
+DZV
+10*10.0 /
+DEPTHZ
+121*2000.0 /
+PORO
+    1000*0.1 /
+PERMX
+    1000*1 /
+PERMY
+    1000*1 /
+PERMZ
+    1000*1 /
+SCHEDULE
+WELSPECS
+    'OP_1' 'OP' 1 2 1* 'OIL' /
+/
+COMPDAT
+ 'OP_1'  1  2   1   1 'OPEN' 1* 32.948 0.311 3047.839 1* 1* 'X' 22.100 /
+/
+DATES
+  10 JUN 2007 /
+/
+WSEED
+  'OP_1'  11 1 1   1.0 0.0 0.0 /
+/
+DATES
+  1 SEP 2007 /
+/
+END
+)");
+
+    const auto es = EclipseState { deck };
+    BOOST_CHECK_THROW(Schedule(deck, es), OpmInputError);
+}
+
 BOOST_AUTO_TEST_CASE(Well_Fracture_Seeds_With_Size)
 {
     const auto deck = Parser{}.parseString(R"(RUNSPEC
