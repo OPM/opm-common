@@ -425,8 +425,18 @@ namespace Opm {
 
         private:
             /// Collection of change flags for run's well lists.
-            using ListChangeStatus = std::array
-                <bool, static_cast<std::underlying_type_t<Ix>>(Ix::Num)>;
+            ///
+            /// The extent is spelled as a literal rather than in terms of
+            /// the private enumerator Ix::Num.  nvcc 12.9 (with host gcc >= 11)
+            /// otherwise emits that private expression for every
+            /// std::array<bool, 2> in a CUDA translation unit including this
+            /// header, which the host compiler then rejects as an access
+            /// violation.  See https://godbolt.org/z/hY6rh74vd
+            using ListChangeStatus = std::array<bool, 2>;
+
+            static_assert(ListChangeStatus{}.size() ==
+                          static_cast<std::underlying_type_t<Ix>>(Ix::Num),
+                          "ListChangeStatus extent must match Ix::Num");
 
             /// Change flags for run's well lists.
             ///
