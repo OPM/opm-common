@@ -1346,13 +1346,14 @@ Connection (2,1,2) (direction 'Y') for well P ignored because
 
 namespace {
 
-    /// Build a deck around \p schedule with a 5x5x3 grid of 100x100x10 m
-    /// cells whose top layer starts at 2000 m.  Keywords in \p extra_grid
-    /// are added to the end of the GRID section.
+    /// Build a deck around \p schedule with a 5x5x3 grid of 100x100x10
+    /// cells whose top layer starts at 2000, in \p units (METRIC by default).
+    /// Keywords in \p extra_grid are added to the end of the GRID section.
     Opm::Deck comptrajDeck(const std::string& schedule,
-                           const std::string& extra_grid = {})
+                           const std::string& extra_grid = {},
+                           const std::string& units = "METRIC")
     {
-        return Opm::Parser{}.parseString(R"(RUNSPEC
+        return Opm::Parser{}.parseString("RUNSPEC\n" + units + R"(
 START
   18 MAR 2026 /
 OIL
@@ -1872,34 +1873,55 @@ BOOST_AUTO_TEST_CASE(Comptraj_Shutting_A_Shared_Cell_Shuts_It_For_All_Branches)
 
 BOOST_AUTO_TEST_CASE(Comptraj_Perforation_Interval_Must_Lie_On_The_Branch)
 {
-    // Past the end of the branch's trajectory.
-    {
-        const auto deck = comptrajDeck(weltraj_two_branches + R"(COMPTRAJ
-  'W1'    1    2000   2100   2*     1*    1*   10.0  0.25  100  0 /
+    for (const auto* units : {"METRIC", "FIELD"}) {
+        for (const auto& [branch, top, bottom, first_md, last_md] : {
+                std::array{1, 2000, 2100, 2000, 2030}, // Past the end.
+                std::array{2, 2000, 2100, 2015, 2215}, // Before the start.
+                std::array{1, 2020, 2010, 2000, 2030}, // Reversed.
+            })
+        {
+            BOOST_TEST_CONTEXT(units << ", branch " << branch
+                               << ", interval " << top << " to " << bottom)
+            {
+                const auto deck = comptrajDeck(weltraj_two_branches + fmt::format(R"(COMPTRAJ
+  'W1'    {}    {}   {}   2*     1*    1*   10.0  0.25  100  0 /
 /
-)");
+)", branch, top, bottom), {}, units);
 
-        BOOST_CHECK_THROW(comptrajSchedule(deck), Opm::OpmInputError);
+                const auto& location = deck["COMPTRAJ"].back().location();
+                const auto expected = fmt::format(
+                    "Problem with keyword COMPTRAJ\nIn {} line {}\n"
+                    "The perforation interval from {} to {} of branch {} of well W1 "
+                    "is not contained in the branch's trajectory, which covers measured "
+                    "depths {} to {}.",
+                    location.filename, location.lineno,
+                    top, bottom, branch, first_md, last_md);
+
+                BOOST_CHECK_EXCEPTION(comptrajSchedule(deck), Opm::OpmInputError,
+                    [&expected](const Opm::OpmInputError& error)
+                    { return std::string{error.what()} == expected; });
+            }
+        }
     }
+}
 
-    // Before its start.
-    {
-        const auto deck = comptrajDeck(weltraj_two_branches + R"(COMPTRAJ
-  'W1'    2    2000   2100   2*     1*    1*   10.0  0.25  100  0 /
+BOOST_AUTO_TEST_CASE(Comptraj_CF_And_Kh_Must_Be_Specified_Together)
+{
+    for (const auto* values : {"10.0 0.25 1*", "1* 0.25 100"}) {
+        const auto deck = comptrajDeck(weltraj_two_branches + fmt::format(R"(COMPTRAJ
+  'W1'    1    2000   2030   2*     1*    1*   {}  0 /
 /
-)");
+)", values));
 
-        BOOST_CHECK_THROW(comptrajSchedule(deck), Opm::OpmInputError);
-    }
+        const auto& location = deck["COMPTRAJ"].back().location();
+        const auto expected = fmt::format(
+            "Problem with keyword COMPTRAJ\nIn {} line {}\n"
+            "CF and Kh items for well W1 must both be specified or both defaulted/negative",
+            location.filename, location.lineno);
 
-    // Reversed.
-    {
-        const auto deck = comptrajDeck(weltraj_two_branches + R"(COMPTRAJ
-  'W1'    1    2020   2010   2*     1*    1*   10.0  0.25  100  0 /
-/
-)");
-
-        BOOST_CHECK_THROW(comptrajSchedule(deck), Opm::OpmInputError);
+        BOOST_CHECK_EXCEPTION(comptrajSchedule(deck), Opm::OpmInputError,
+            [&expected](const Opm::OpmInputError& error)
+            { return std::string{error.what()} == expected; });
     }
 }
 

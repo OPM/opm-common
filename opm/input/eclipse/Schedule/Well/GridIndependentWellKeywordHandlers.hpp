@@ -48,6 +48,9 @@ std::vector<std::pair<std::string,KeywordHandlers::handler_function>> getGridInd
 ///
 /// \param[in] bot_opt Measured depth at which the interval ends.  Defaults
 /// to the end of the branch trajectory.
+///
+/// \pre The interval lies within the branch trajectory and its start does
+/// not exceed its end.
 void initWellPathGeometry(external::cvf::ref<external::RigWellPath>& wellPathGeometry,
                           const std::array<std::vector<double>, 3>&  coords,
                           const std::vector<double>&                 mds,

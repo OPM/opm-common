@@ -39,6 +39,7 @@
 #include <opm/input/eclipse/Schedule/Well/TrackOrderingTSP.hpp>
 #include <opm/input/eclipse/Schedule/Well/WDFAC.hpp>
 
+#include <opm/input/eclipse/Units/Dimension.hpp>
 #include <opm/input/eclipse/Units/Units.hpp>
 
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
@@ -840,6 +841,30 @@ The cell ({},{},{}) in well {} is not active and the connection will be ignored)
             };
         }
 
+        const auto& perf_top = record.getItem<Kw::PERF_TOP>();
+        const auto& perf_bot = record.getItem<Kw::PERF_BOT>();
+        const auto interval = Connection::PerforationInterval {
+            .branch = branch,
+            .top = perf_top.getSIDouble(0),
+            .bottom = perf_bot.getSIDouble(0),
+        };
+        const auto& mds = this->md.at(branch);
+
+        if (! ((mds.front() <= interval.top) && (interval.top <= interval.bottom) &&
+               (interval.bottom <= mds.back())))
+        {
+            const auto& length = perf_top.getActiveDimensions().front();
+            throw OpmInputError {
+                fmt::format("The perforation interval from {:g} to {:g} of branch {} of well {} "
+                            "is not contained in the branch's trajectory, which covers measured "
+                            "depths {:g} to {:g}.",
+                            length.convertSiToRaw(interval.top), length.convertSiToRaw(interval.bottom),
+                            branch, wname, length.convertSiToRaw(mds.front()),
+                            length.convertSiToRaw(mds.back())),
+                location
+            };
+        }
+
         // When WELSPECS defaults the well head's I/J location, it is that
         // of the first active cell entered by the main branch's trajectory,
         // irrespective of the perforation intervals and record order.
@@ -852,9 +877,6 @@ The cell ({},{},{}) in well {} is not active and the connection will be ignored)
                 if (this->headJ < 0) { this->headJ = (*head)[1]; }
             }
         }
-
-        const auto& perf_top = record.getItem<Kw::PERF_TOP>();
-        const auto& perf_bot = record.getItem<Kw::PERF_BOT>();
 
         const auto& CFItem = record.getItem<Kw::CONNECTION_TRANSMISSIBILITY_FACTOR>();
         const auto& diameterItem = record.getItem<Kw::DIAMETER>();
@@ -901,19 +923,12 @@ The cell ({},{},{}) in well {} is not active and the connection will be ignored)
         if ((ctf_kind == Connection::CTFKind::DeckValue) &&
             ! ((deck_CF > 0.0) && (deck_Kh > 0.0)))
         {
-            auto msg = fmt::format(R"(Problem with COMPTRAJ keyword
-In {} line {}
-CF and Kh items for well {} must both be specified or both defaulted/negative)",
-                                   location.filename, location.lineno, wname);
-
-            throw std::logic_error(msg);
+            throw OpmInputError {
+                fmt::format("CF and Kh items for well {} must both be specified "
+                            "or both defaulted/negative", wname),
+                location
+            };
         }
-
-        const auto interval = Connection::PerforationInterval {
-            .branch = branch,
-            .top = perf_top.getSIDouble(0),
-            .bottom = perf_bot.getSIDouble(0),
-        };
 
         // A record repeating the perforation interval of an earlier one
         // replaces all of that interval's contributions, including those to
@@ -927,7 +942,7 @@ CF and Kh items for well {} must both be specified or both defaulted/negative)",
 
         // Calulate the x,y,z coordinates of the begin and end of a perforation
         initWellPathGeometry(wellTraj.wellPathGeometry,
-                             this->coord.at(branch), this->md.at(branch),
+                             this->coord.at(branch), mds,
                              interval.top, interval.bottom);
 
         external::cvf::ref<external::RigEclipseWellLogExtractor> e {
