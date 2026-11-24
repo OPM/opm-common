@@ -1813,6 +1813,7 @@ BOOST_AUTO_TEST_CASE(FactliTest)
 
         check_vectors_close(comp_config.liCorrelationFactors(), {1.0}, tolerance);
         BOOST_CHECK(!comp_config.liCorrelationFactorsSpecified());
+        BOOST_CHECK(!comp_config.liCorrelationFactorGiven(0));
     }
 
     // The repeat count form used by decks that only spell out the default.
@@ -1824,6 +1825,7 @@ BOOST_AUTO_TEST_CASE(FactliTest)
         check_vectors_close(comp_config.liCorrelationFactors(), {1.0}, tolerance);
         BOOST_CHECK_CLOSE(comp_config.liCorrelationFactor(0), 1.0, tolerance);
         BOOST_CHECK(comp_config.liCorrelationFactorsSpecified());
+        BOOST_CHECK(comp_config.liCorrelationFactorGiven(0));
     }
 
     // One value per equilibration region.
@@ -1836,6 +1838,9 @@ BOOST_AUTO_TEST_CASE(FactliTest)
         check_vectors_close(comp_config.liCorrelationFactors(),
                             {0.98, 0.87, 1.3}, tolerance);
         BOOST_CHECK_CLOSE(comp_config.liCorrelationFactor(2), 1.3, tolerance);
+        for (std::size_t region = 0; region < 3; ++region) {
+            BOOST_CHECK(comp_config.liCorrelationFactorGiven(region));
+        }
     }
 
     // Trailing regions the keyword does not reach, and defaulted items, both
@@ -1848,6 +1853,10 @@ BOOST_AUTO_TEST_CASE(FactliTest)
 
         check_vectors_close(comp_config.liCorrelationFactors(),
                             {1.0, 0.87, 1.0}, tolerance);
+        // Only the value spelled out counts as given.
+        BOOST_CHECK(!comp_config.liCorrelationFactorGiven(0));
+        BOOST_CHECK(comp_config.liCorrelationFactorGiven(1));
+        BOOST_CHECK(!comp_config.liCorrelationFactorGiven(2));
     }
 
     // More values than there are equilibration regions is an input error.

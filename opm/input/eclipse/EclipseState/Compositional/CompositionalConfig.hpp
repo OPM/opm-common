@@ -130,6 +130,9 @@ public:
     double liCorrelationFactor(std::size_t equil_region) const;
     // Whether the multipliers come from FACTLI rather than the default.
     bool liCorrelationFactorsSpecified() const;
+    // Whether FACTLI gives the region a value, rather than leaving it to the
+    // default by a defaulted item or by not reaching it.
+    bool liCorrelationFactorGiven(std::size_t equil_region) const;
 
     // Accessors for surface EOS regions.
     EOSType eosTypeSurf(std::size_t eos_region) const;
@@ -159,6 +162,7 @@ public:
         serializer(lbc_coefficients);
         serializer(li_correlation_factors);
         serializer(li_correlation_factors_specified);
+        serializer(li_correlation_factors_given);
     }
 
 private:
@@ -178,6 +182,7 @@ private:
     // makes single phase cells more likely to be labelled gas, above one oil.
     std::vector<double> li_correlation_factors;
     bool li_correlation_factors_specified = false;
+    std::vector<bool> li_correlation_factors_given;
 
     // One set of properties for each reservoir condition EOS region
     std::vector<EOSProps> reservoir_props;

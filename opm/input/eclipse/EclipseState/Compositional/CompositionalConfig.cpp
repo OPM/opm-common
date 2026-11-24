@@ -741,9 +741,11 @@ CompositionalConfig::CompositionalConfig(const Deck& deck, const Runspec& runspe
 
         const auto num_equil_regions = runspec.eqldims().getNumEquilRegions();
         this->li_correlation_factors.assign(num_equil_regions, KW::DATA::defaultValue);
+        this->li_correlation_factors_given.assign(num_equil_regions, false);
 
         if (const auto* kw = getSinglePropsKeyword<KW>(props_section); kw != nullptr) {
-            const auto& data = kw->getRecord(0).getItem<KW::DATA>().getSIDoubleData();
+            const auto& item = kw->getRecord(0).getItem<KW::DATA>();
+            const auto& data = item.getSIDoubleData();
 
             if (data.size() > num_equil_regions) {
                 throw OpmInputError {
@@ -755,6 +757,9 @@ CompositionalConfig::CompositionalConfig(const Deck& deck, const Runspec& runspe
             }
 
             std::ranges::copy(data, this->li_correlation_factors.begin());
+            for (std::size_t region = 0; region < data.size(); ++region) {
+                this->li_correlation_factors_given[region] = !item.defaultApplied(region);
+            }
             this->li_correlation_factors_specified = true;
         }
     }
@@ -785,7 +790,8 @@ bool CompositionalConfig::operator==(const CompositionalConfig& other) const {
            this->surface_props == other.surface_props &&
            this->lbc_coefficients == other.lbc_coefficients &&
            this->li_correlation_factors == other.li_correlation_factors &&
-           this->li_correlation_factors_specified == other.li_correlation_factors_specified;
+           this->li_correlation_factors_specified == other.li_correlation_factors_specified &&
+           this->li_correlation_factors_given == other.li_correlation_factors_given;
 }
 
 
@@ -799,6 +805,7 @@ CompositionalConfig CompositionalConfig::serializationTestObject() {
     result.lbc_coefficients = {1.234, -17.29, 3.1415, -2.718, 16.18};
     result.li_correlation_factors = {0.8, 1.0, 1.3};
     result.li_correlation_factors_specified = true;
+    result.li_correlation_factors_given = {true, false, true};
 
     const std::size_t bic_size = result.num_comps * (result.num_comps - 1) / 2;
 
@@ -952,6 +959,10 @@ double CompositionalConfig::liCorrelationFactor(std::size_t equil_region) const 
 
 bool CompositionalConfig::liCorrelationFactorsSpecified() const {
     return this->li_correlation_factors_specified;
+}
+
+bool CompositionalConfig::liCorrelationFactorGiven(std::size_t equil_region) const {
+    return this->li_correlation_factors_given[equil_region];
 }
 
 CompositionalConfig::EOSType CompositionalConfig::eosTypeSurf(std::size_t eos_region) const {
