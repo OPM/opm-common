@@ -475,13 +475,16 @@ void assign_deck(const Fieldprops::keywords::keyword_info<T>& kw_info,
 {
     verify_deck_data(kw_info, keyword, deck_data, box);
 
+    // The deck data runs value by value over the box cells, the field data
+    // over all active cells.
+    const auto num_cells = field_data.numCells();
     for (const auto& cell_index : box.index_list()) {
         auto active_index = cell_index.active_index;
         auto data_index = cell_index.data_index;
         for (std::size_t i = 0; i < kw_info.num_value; ++i) {
             auto deck_data_index = i* box.size() + data_index;
             if (value::has_value(deck_status[deck_data_index])) {
-                auto data_active_index = i * box.size() + active_index;
+                auto data_active_index = i * num_cells + active_index;
                 if (deck_status[deck_data_index] == value::status::deck_value ||
                     field_data.value_status[data_active_index] == value::status::uninitialized) {
                     field_data.data[data_active_index] = deck_data[deck_data_index];
