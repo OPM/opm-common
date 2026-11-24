@@ -285,7 +285,9 @@ Connection ({},{},{}) (direction '{}') for well {} ignored because
         return perm_thickness;
     }
 
-    // Calculate directional (x,y,z) peaceman connection factors CFx, CFy, CFz
+    // Calculate directional (x,y,z) peaceman connection factors CFx, CFy,
+    // CFz.  A direction that the trajectory does not cross, or that has no
+    // permeability across it, contributes nothing.
     std::array<double, 3>
     connectionFactor(const std::array<double,3>& cell_perm,
                      const std::array<double,3>& cell_size,
@@ -310,6 +312,10 @@ Connection ({},{},{}) (direction '{}') for well {} ignored because
                                    constexpr auto angle = 2 * std::numbers::pi;
 
                                    const auto K = permComponents(d, cell_perm);
+                                   if (! ((kh > 0.0) && (K[0] > 0.0) && (K[1] > 0.0))) {
+                                       return 0.0;
+                                   }
+
                                    const auto D = effectiveExtent(d, ntg, cell_size);
                                    const auto r0 = effectiveRadius(K, D);
 
@@ -1079,14 +1085,15 @@ The cell ({},{},{}) in well {} is not active and the connection will be ignored)
             }
 
             if (! (std::isfinite(ctf_props.CF) && std::isfinite(ctf_props.Kh) &&
-                   (ctf_props.CF >= 0.0) && (ctf_props.Kh >= 0.0)))
+                   (ctf_props.CF > 0.0) && (ctf_props.Kh >= 0.0)))
             {
-                // Degenerate cell geometry, e.g. a zero thickness cell.  A
-                // single such contribution would poison the combined CTF of
-                // every interval reaching this cell, so leave it out entirely.
+                // No permeability across the trajectory, or degenerate cell
+                // geometry.  A single non-finite contribution would poison
+                // the combined CTF of every interval reaching this cell, so
+                // leave it out entirely.
                 OpmLog::warning(fmt::format(R"(Problem with COMPTRAJ keyword
 In {} line {}
-Branch {} of well {} yields a non-representable connection transmissibility factor ({}) or Kh ({}) in cell ({},{},{}). The connection will be ignored)",
+Branch {} of well {} yields a zero or non-representable connection transmissibility factor ({}) or Kh ({}) in cell ({},{},{}). The connection will be ignored)",
                                             location.filename, location.lineno,
                                             branch, wname,
                                             ctf_props.CF, ctf_props.Kh,

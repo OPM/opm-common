@@ -2356,8 +2356,8 @@ BOOST_AUTO_TEST_CASE(Comptraj_Earlier_Intervals_Can_Only_Be_Respecified_As_A_Who
 BOOST_AUTO_TEST_CASE(Comptraj_Respecified_Interval_Releases_Cells_It_No_Longer_Perforates)
 {
     // Cell (3,3,2) has no lateral permeability, so a connection factor
-    // calculated from the cell properties is not representable.  An
-    // interval only perforates the cell with a factor given in the input.
+    // calculated from the cell properties is zero.  An interval only
+    // perforates the cell with a factor given in the input.
     const auto zero_perm = std::string { R"(EQUALS
   PERMX 0 3 3 3 3 2 2 /
   PERMY 0 3 3 3 3 2 2 /
@@ -2430,6 +2430,31 @@ BOOST_AUTO_TEST_CASE(Comptraj_Respecified_Interval_Releases_Cells_It_No_Longer_P
         BOOST_CHECK_CLOSE(shared.CF(), siCF(deck, 30.0), 1.0e-8);
         BOOST_CHECK_CLOSE(shared.Kh(), siKh(deck, 300.0), 1.0e-8);
     }
+}
+
+BOOST_AUTO_TEST_CASE(Comptraj_Zero_Perm_Along_Trajectory_Keeps_Connection)
+{
+    // The main branch runs vertically through the middle layer, which has
+    // no vertical permeability.  As for COMPDAT, the connection factor only
+    // depends on the permeabilities across the trajectory.
+    const auto deck = comptrajDeck(weltraj_two_branches + R"(COMPTRAJ
+-- WELL BRANCH  TOP    BOT   REF NO STATE SAT   CF   DIAM   KH  SKIN
+  'W1'    1    2000   2030   2*     1*    1*    1*  0.25   1*  0 /
+/
+)", R"(EQUALS
+  PERMZ 0 1 5 1 5 2 2 /
+/
+)");
+
+    const auto sched = comptrajSchedule(deck);
+    const auto& connections = sched.getWell("W1", 0).getConnections();
+
+    BOOST_REQUIRE_EQUAL(connections.size(), std::size_t{3});
+
+    const auto& conn = connectionAt(connections, 2, 2, 1);
+    BOOST_CHECK(conn.dir() == Opm::Connection::Direction::Z);
+    BOOST_CHECK_CLOSE(conn.CF(), siCF(deck, 10.5777), 1.0e-3);
+    BOOST_CHECK_CLOSE(conn.Kh(), siKh(deck, 1000.0), 1.0e-8);
 }
 
 namespace {
