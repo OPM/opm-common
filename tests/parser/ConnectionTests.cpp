@@ -2461,6 +2461,94 @@ BOOST_AUTO_TEST_CASE(Comptraj_Zero_Perm_Along_Trajectory_Keeps_Connection)
     BOOST_CHECK_CLOSE(conn.Kh(), siKh(deck, 1000.0), 1.0e-8);
 }
 
+BOOST_AUTO_TEST_CASE(Comptraj_Zero_Projected_Cell_Dimension_IsIgnored)
+{
+    const auto deck = Opm::Parser{}.parseString(R"(
+RUNSPEC
+METRIC
+START
+  18 MAR 2026 /
+OIL
+WATER
+DIMENS
+  1 1 1 /
+TABDIMS
+/
+EQLDIMS
+/
+WELLDIMS
+  1 10 1 1 /
+GRID
+COORD
+  100   0 2000   0   0 2010
+  100   0 2010   0   0 2020
+  100 100 2000   0 100 2010
+  100 100 2010   0 100 2020 /
+ZCORN
+  2000 2010 2000 2010 2010 2020 2010 2020 /
+EQUALS
+  PERMX 100 /
+  PERMY 100 /
+  PERMZ 10 /
+  PORO 0.3 /
+/
+PROPS
+DENSITY
+  800 1000 1 /
+SOLUTION
+EQUIL
+  2010 200 2010 1.23 1995 0.0 1* 1* -5 /
+SCHEDULE
+WELSPECS
+  'W1' 'G' 1 1 2000 OIL /
+/
+WELTRAJ
+  'W1' 1 50 50 2004 2004 /
+  'W1' 1 50 50 2016 2016 /
+/
+COMPTRAJ
+  'W1' 1 2004 2016 2* 1* 1* 10.0 0.25 100 0 /
+/
+TSTEP
+  1 /
+END
+)");
+
+    const auto es = Opm::EclipseState{deck};
+    const auto& grid = es.getInputGrid();
+    const auto cell_dims = grid.getCellDims(0);
+
+    BOOST_REQUIRE(grid.cellActive(0));
+    BOOST_REQUIRE(grid.isValidCellGeomtry(0, deck.getActiveUnitSystem()));
+    BOOST_REQUIRE_EQUAL(cell_dims[0], 0.0);
+    BOOST_REQUIRE_GT(grid.getCellVolume(0), 0.0);
+
+    std::ostringstream warnings;
+    Opm::OpmLog::addBackend("STREAM",
+                            std::make_shared<Opm::StreamLog>(warnings, Opm::Log::MessageType::Warning));
+
+    try {
+        Opm::ErrorGuard errors;
+        const auto sched = Opm::Schedule {
+            deck, es, Opm::ParseContext{}, errors, std::make_shared<Opm::Python>()
+        };
+        BOOST_CHECK(sched.getWell("W1", 0).getConnections().empty());
+    }
+    catch (...) {
+        Opm::OpmLog::removeBackend("STREAM");
+        throw;
+    }
+
+    Opm::OpmLog::removeBackend("STREAM");
+
+    const auto expected = std::string {
+        "cell (1,1,1) of well W1 has non-finite or zero dimensions. "
+        "The connection will be ignored"
+    };
+    BOOST_CHECK_MESSAGE(warnings.str().find(expected) != std::string::npos,
+                        warnings.str());
+}
+
 BOOST_AUTO_TEST_CASE(Comptraj_Ignored_Connection_Warning_Uses_Deck_Units)
 {
     // A wellbore radius beyond Peaceman's effective radius, without skin,
