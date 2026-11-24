@@ -8109,6 +8109,67 @@ END
     BOOST_CHECK_THROW(Schedule(deck, es), OpmInputError);
 }
 
+BOOST_AUTO_TEST_CASE(Well_Fracture_Seeds_Invalid_Seed_Throws)
+{
+    const auto make_deck = [](const std::string& record)
+    {
+        return Parser{}.parseString(R"(RUNSPEC
+DIMENS
+  10 10 10 /
+START
+10 MAI 2007 /
+MECH
+GRID
+DXV
+10*100.0 /
+DYV
+10*100.0 /
+DZV
+10*10.0 /
+DEPTHZ
+121*2000.0 /
+PORO
+    1000*0.1 /
+PERMX
+    1000*1 /
+PERMY
+    1000*1 /
+PERMZ
+    1000*1 /
+SCHEDULE
+WELSPECS
+    'OP_1' 'OP' 9 9 1* 'OIL' /
+/
+COMPDAT
+ 'OP_1'  9  9   1   1 'OPEN' 1* 32.948 0.311 3047.839 1* 1* 'X' 22.100 /
+/
+DATES
+  10 JUN 2007 /
+/
+WSEED
+)" + record + R"(
+/
+DATES
+  1 SEP 2007 /
+/
+END
+)");
+    };
+
+    for (const auto* record : { " 'OP_1'  9 9 1   0.0 0.0 0.0 /",
+                                " 'OP_1'  9 9 1   1.0 0.0 0.0  0.0 /",
+                                " 'OP_1'  9 9 1   1.0 0.0 0.0  1* 1* 0.0 /" })
+    {
+        const auto deck = make_deck(record);
+        const auto es = EclipseState { deck };
+        BOOST_CHECK_THROW(Schedule(deck, es), OpmInputError);
+    }
+
+    const auto deck = make_deck(" 'OP_1'  9 9 1   1.0 0.0 0.0 /");
+    const auto es = EclipseState { deck };
+    BOOST_CHECK_NO_THROW(Schedule(deck, es));
+}
+
 BOOST_AUTO_TEST_CASE(Well_Fracture_Seeds_With_Size)
 {
     const auto deck = Parser{}.parseString(R"(RUNSPEC

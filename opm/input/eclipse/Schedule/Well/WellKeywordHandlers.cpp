@@ -1474,6 +1474,18 @@ void handleWSEED(HandlerContext& handlerContext)
             .horizontalExtent(record.getItem<ParserKeywords::WSEED::SIZE_H>().getSIDouble(0))
             .width           (record.getItem<ParserKeywords::WSEED::WIDTH> ().getSIDouble(0));
 
+        const auto normSq = cellSeedNormal[0]*cellSeedNormal[0]
+            + cellSeedNormal[1]*cellSeedNormal[1]
+            + cellSeedNormal[2]*cellSeedNormal[2];
+        if (!(normSq > 0.0)) {
+            throw OpmInputError("WSEED fracture normal must be a nonzero vector",
+                                handlerContext.keyword.location());
+        }
+        if (!(cellSeedSize.verticalExtent() > 0.0) || !(cellSeedSize.width() > 0.0)) {
+            throw OpmInputError("WSEED SIZE_Z and WIDTH must be positive",
+                                handlerContext.keyword.location());
+        }
+
         bool anyConn = false;
         for (const auto& well_name : well_names) {
             const auto& wconns = handlerContext.state()
