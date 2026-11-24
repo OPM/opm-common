@@ -61,6 +61,17 @@ namespace Opm {
         this->perm = record.getItem<ParserKeywords::WINJDAM::FILTER_CAKE_PERM>().getSIDouble(0);
         this->poro = record.getItem<ParserKeywords::WINJDAM::FILTER_CAKE_PORO>().getSIDouble(0);
 
+        // The cake thickness divides by 1 - poro and the skin by perm.
+        if (!(this->perm > 0.0)) {
+            throw OpmInputError(fmt::format("WINJDAM filter cake permeability must be positive, got {}",
+                                            record.getItem<ParserKeywords::WINJDAM::FILTER_CAKE_PERM>().get<double>(0)),
+                                location);
+        }
+        if (!(this->poro >= 0.0 && this->poro < 1.0)) {
+            throw OpmInputError(fmt::format("WINJDAM filter cake porosity must be in [0, 1), got {}", this->poro),
+                                location);
+        }
+
         const auto& item_radius = record.getItem<ParserKeywords::WINJDAM::FILTER_CAKE_RADIUS>();
         if (!item_radius.defaultApplied(0)) {
             this->radius = item_radius.getSIDouble(0);

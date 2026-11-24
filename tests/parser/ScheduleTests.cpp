@@ -7934,6 +7934,63 @@ END
                         "Expected one WINJDAM warning, got: " << w);
 }
 
+BOOST_AUTO_TEST_CASE(WINJDAM_Invalid_Cake_Throws)
+{
+    const auto make_deck = [](const std::string& record)
+    {
+        return Parser{}.parseString(R"(RUNSPEC
+DIMENS
+  10 10 10 /
+START
+10 MAI 2007 /
+GRID
+DXV
+10*100.0 /
+DYV
+10*100.0 /
+DZV
+10*10.0 /
+DEPTHZ
+121*2000.0 /
+PORO
+    1000*0.1 /
+PERMX
+    1000*1 /
+PERMY
+    1000*1 /
+PERMZ
+    1000*1 /
+SCHEDULE
+WELSPECS
+    'INJ1' 'I' 9 9 1* 'WATER' /
+/
+COMPDAT
+ 'INJ1'  9  9   1   1 'OPEN' 1* 32.948 0.311 3047.839 1* 1* 'X' 22.100 /
+/
+WINJDAM
+)" + record + R"(
+/
+DATES
+  10 JUN 2007 /
+/
+END
+)");
+    };
+
+    for (const auto* record : { " 'INJ1' 'LINEAR' 0.0    0.2 1* 30.0 9 9 1 /",
+                                " 'INJ1' 'LINEAR' 1.0e-3 1.0 1* 30.0 9 9 1 /",
+                                " 'INJ1' 'LINEAR' 1.0e-3 -0.1 1* 30.0 9 9 1 /" })
+    {
+        const auto deck = make_deck(record);
+        const auto es = EclipseState { deck };
+        BOOST_CHECK_THROW(Schedule(deck, es), OpmInputError);
+    }
+
+    const auto deck = make_deck(" 'INJ1' 'LINEAR' 1.0e-3 0.2 1* 30.0 9 9 1 /");
+    const auto es = EclipseState { deck };
+    BOOST_CHECK_NO_THROW(Schedule(deck, es));
+}
+
 BOOST_AUTO_TEST_CASE(Well_Fracture_Seeds_Not_Connection_Warns)
 {
     const auto deck = Parser{}.parseString(R"(RUNSPEC
