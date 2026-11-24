@@ -4505,32 +4505,15 @@ BOOST_AUTO_TEST_CASE(DualPorosityGdfileRejected) {
     BOOST_CHECK_THROW( Opm::EclipseGrid{ deck }, Opm::OpmInputError );
 }
 
-BOOST_AUTO_TEST_CASE(DPGRIDCornerPointRejected) {
-    // Corner-point input with DPGRID is not supported — both halves must be
-    // written out explicitly.
-    const char* deckData =
-        "RUNSPEC\n"
-        "OIL\nWATER\n"
-        "DIMENS\n 1 1 2 /\n"
-        "DUALPORO\n"
-        "GRID\n"
-        "DPGRID\n"
-        "COORD\n 24*1 /\n"
-        "ZCORN\n 16*1 /\n"
-        "PORO\n 2*0.2 /\n"
-        "PERMX\n 2*1.0 /\n"
-        "\n";
-    auto deck = Opm::Parser{}.parseString(deckData);
-    BOOST_CHECK_THROW(Opm::EclipseGrid{ deck }, Opm::OpmInputError);
-}
-
 namespace {
 
 // 2x1x4 dual-porosity corner-point grid: two matrix layers on top of two
 // stacked fracture layers. The pillars are not parallel, so cells at
 // different depths have different volumes and the stacked fracture layers
-// differ from their matrix twins.
-Opm::Deck createDualContinuumCornerPointDeck()
+// differ from their matrix twins. gridKeywords go into the GRID section as
+// given, and ZCORN is written for the top zcornLayers layers.
+Opm::Deck createDualContinuumCornerPointDeck(const std::string& gridKeywords = "",
+                                             const int zcornLayers = 4)
 {
     constexpr int nx = 2;
     constexpr int ny = 1;
@@ -4551,7 +4534,7 @@ Opm::Deck createDualContinuumCornerPointDeck()
     }
 
     std::ostringstream zcorn;
-    for (int k = 0; k < nz; ++k) {
+    for (int k = 0; k < zcornLayers; ++k) {
         for (int face = 0; face < 2; ++face) {
             for (int j = 0; j < ny; ++j) {
                 for (int jj = 0; jj < 2; ++jj) {
@@ -4566,7 +4549,7 @@ Opm::Deck createDualContinuumCornerPointDeck()
 
     const std::string deckData =
         "RUNSPEC\nOIL\nWATER\nDIMENS\n 2 1 4 /\nDUALPORO\n"
-        "GRID\nCOORD\n" + coord.str() + "/\nZCORN\n" + zcorn.str() + "/\n"
+        "GRID\n" + gridKeywords + "COORD\n" + coord.str() + "/\nZCORN\n" + zcorn.str() + "/\n"
         "PORO\n 8*0.2 /\nPERMX\n 8*1.0 /\n";
     return Opm::Parser{}.parseString(deckData);
 }
@@ -4584,6 +4567,61 @@ void checkSameGeometry(const Opm::EclipseGrid& a, const std::size_t cellA,
 }
 
 } // anonymous namespace
+
+BOOST_AUTO_TEST_CASE(DPGRIDCornerPointMatrixHalf) {
+    // DPGRID with corner-point input: ZCORN and ACTNUM may be given for the
+    // matrix layers only, as model exports do. The fracture layers repeat the
+    // matrix layers, stacked below them, and take the activity of their matrix
+    // cells: the grid is the one of the same deck written out in full.
+    const auto full = createDualContinuumCornerPointDeck("ACTNUM\n 1 0 1 1 1 0 1 1 /\n");
+    const auto half = createDualContinuumCornerPointDeck("DPGRID\nACTNUM\n 1 0 1 1 /\n", 2);
+    const Opm::EclipseGrid fullGrid(full);
+    Opm::EclipseGrid halfGrid(half);
+
+    BOOST_CHECK(halfGrid.getZCORN() == fullGrid.getZCORN());
+    BOOST_CHECK(halfGrid.getACTNUM() == fullGrid.getACTNUM());
+    BOOST_CHECK_EQUAL(halfGrid.getNumActive(), 6U);
+    BOOST_CHECK_EQUAL(halfGrid.getZcornFixed(), 0U);   // the stacked layers need no repair
+
+    // EclipseState reads ACTNUM once more, through the field properties.
+    const Opm::EclipseState es(half);
+    BOOST_CHECK(es.getInputGrid().getACTNUM() == fullGrid.getACTNUM());
+
+    // Both halves given explicitly with DPGRID: the deck's grid, as without it.
+    const Opm::EclipseGrid explicitGrid(
+        createDualContinuumCornerPointDeck("DPGRID\nACTNUM\n 1 0 1 1 1 0 1 1 /\n"));
+    BOOST_CHECK(explicitGrid.getZCORN() == fullGrid.getZCORN());
+    BOOST_CHECK(explicitGrid.getACTNUM() == fullGrid.getACTNUM());
+}
+
+BOOST_AUTO_TEST_CASE(DPGRIDCornerPointMatrixHalfOnlyWithDPGRID) {
+    // The matrix half alone is refused without DPGRID, for ZCORN and for ACTNUM,
+    // and with DPGRID a ZCORN of any size other than the full grid or its half.
+    BOOST_CHECK_THROW(Opm::EclipseGrid{ createDualContinuumCornerPointDeck("", 2) },
+                      std::invalid_argument);
+    BOOST_CHECK_THROW(
+        Opm::EclipseGrid{ createDualContinuumCornerPointDeck("ACTNUM\n 1 0 1 1 /\n") },
+        std::invalid_argument);
+    BOOST_CHECK_THROW(Opm::EclipseGrid{ createDualContinuumCornerPointDeck("DPGRID\n", 3) },
+                      std::invalid_argument);
+}
+
+BOOST_AUTO_TEST_CASE(DPGRIDCornerPointMatrixHalfContinuumGrids) {
+    // ZCORN and ACTNUM for the matrix layers only: both continuum grids
+    // have the geometry and the activity of the matrix layers.
+    const Opm::EclipseState es(
+        createDualContinuumCornerPointDeck("DPGRID\nACTNUM\n 1 0 1 1 /\n", 2));
+    const auto& grid = es.getInputGrid();
+    const auto matrix = grid.continuumGrid(Opm::EclipseGrid::Continuum::Matrix);
+    const auto fracture = grid.continuumGrid(Opm::EclipseGrid::Continuum::Fracture);
+
+    BOOST_CHECK_EQUAL(matrix.getNumActive(), 3U);
+    BOOST_CHECK_EQUAL(fracture.getNumActive(), 3U);
+    BOOST_CHECK(matrix.getACTNUM() == fracture.getACTNUM());
+    for (std::size_t c = 0; c < 4; ++c) {
+        checkSameGeometry(fracture, c, matrix, c);
+    }
+}
 
 BOOST_AUTO_TEST_CASE(ContinuumGridBlockCentred) {
     // The deck gives the fracture half different sizes. The continuum grids

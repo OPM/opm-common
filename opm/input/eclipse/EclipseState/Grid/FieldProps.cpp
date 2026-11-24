@@ -30,6 +30,7 @@
 #include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp> // Layering violation.  Needed for apply_tran() function.
 #include <opm/input/eclipse/EclipseState/Grid/Keywords.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/SatfuncPropertyInitializers.hpp>
+#include <opm/input/eclipse/EclipseState/PorosityModel.hpp>
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/RtempvdTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TableManager.hpp>
@@ -1009,6 +1010,9 @@ FieldProps::FieldProps(const Deck& deck, const EclipseGrid& grid)
     }
 
     if (DeckSection::hasGRID(deck)) {
+        // This grid carries no dual-continuum layout, so take DPGRID and the
+        // run mode from the deck.
+        this->dpgrid_ = deck.hasKeyword("DPGRID") && PorosityModel{ deck }.dualContinuum();
         this->scanGRIDSectionOnlyACTNUM(GRIDSection(deck));
     }
 }
@@ -1550,6 +1554,20 @@ void FieldProps::handle_int_keyword(const Fieldprops::keywords::keyword_info<int
 
     const auto& deck_data = keyword.getIntData();
     const auto& deck_status = keyword.getValueStatus();
+
+    // DPGRID: ACTNUM may be given for the matrix layers only, as ZCORN may.
+    // The fracture cells then take the activity of their matrix cells.
+    if (this->dpgrid_ && (keyword.name() == "ACTNUM") &&
+        (box.size() == this->global_size) && (2 * deck_data.size() == box.size()))
+    {
+        const auto repeated = [](const auto& half) {
+            auto values = half;
+            values.insert(values.end(), half.begin(), half.end());
+            return values;
+        };
+        assign_deck(kw_info, keyword, field_data, repeated(deck_data), repeated(deck_status), box);
+        return;
+    }
 
     assign_deck(kw_info, keyword, field_data, deck_data, deck_status, box);
 }
