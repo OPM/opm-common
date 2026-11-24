@@ -6,7 +6,7 @@
 
 #include <opm/input/eclipse/Parser/Parser.hpp>
 
-#include <stdlib.h>
+#include <cstdlib>
 
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -41,6 +41,9 @@ void test_exit(Opm::InputErrorAction action)
     pid_t pid = fork();
     if (pid == 0) {
         exit1(action);
+        // Only reached if exit1() did not exit. Leave with status 0, which
+        // the parent reports as a failure, rather than run the parent's code.
+        std::_Exit(EXIT_SUCCESS);
     }
 
     int wait_status{};
