@@ -2192,12 +2192,12 @@ BOOST_AUTO_TEST_CASE(Comptraj_Interval_Wholly_Within_One_Cell_Creates_Connection
 /
 WELTRAJ
   'W1'    1     250    250    2002    2002 /
-  'W1'    1     260    250    2004    2004 /
-  'W1'    1     260    260    2008    2008 /
+  'W1'    1     260    250    2004    2012.198 /
+  'W1'    1     260    260    2008    2022.968 /
 /
 COMPTRAJ
 -- CF and Kh defaulted, so they are calculated from the cell properties.
-  'W1'    1    2002   2008   2*     1*    1*   1*  0.25  1*  0 /
+  'W1'    1    2002   2022.968   2*     1*    1*   1*  0.25  1*  0 /
 /
 )";
     const auto deck = comptrajDeck(schedule);
@@ -2207,8 +2207,8 @@ COMPTRAJ
     BOOST_REQUIRE_EQUAL(connections.size(), std::size_t{1});
     const auto& conn = connectionAt(connections, 2, 2, 0);
     BOOST_REQUIRE_EQUAL(conn.intervalContributions().size(), std::size_t{1});
-    BOOST_CHECK(conn.CF() > 0.0);
-    BOOST_CHECK(conn.Kh() > 0.0);
+    BOOST_CHECK_CLOSE(conn.CF(), siCF(deck, 8.69319), 1.0e-4);
+    BOOST_CHECK_CLOSE(conn.Kh(), siKh(deck, 748.331), 1.0e-4);
     // A single straight piece from the first to the last point of the interval.
     BOOST_CHECK_CLOSE(conn.ctfProperties().connection_length,
                       std::hypot(10.0, 10.0, 6.0),
