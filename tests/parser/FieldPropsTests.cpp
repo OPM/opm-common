@@ -529,6 +529,134 @@ ADD
                       OpmInputError);
 }
 
+namespace {
+
+// Message of the input error raised by an operation that follows ZMF in the
+// SOLUTION section of a three-component deck, or an empty string if none is.
+std::string compositionOperationMessage(const std::string& operation)
+{
+    const auto deck = Opm::Parser{}.parseString(R"(RUNSPEC
+OIL
+GAS
+DIMENS
+ 4 1 1 /
+COMPS
+ 3 /
+GRID
+DX
+ 4*10 /
+DY
+ 4*10 /
+DZ
+ 4*1 /
+TOPS
+ 4*2000 /
+PORO
+ 4*0.2 /
+OPERNUM
+ 4*1 /
+SOLUTION
+PRESSURE
+ 4*100 /
+ZMF
+ 4*0.1 4*0.3 4*0.6 /
+)" + operation);
+
+    // Note: 'grid' must be mutable.
+    auto grid = Opm::EclipseGrid { deck };
+    const auto runspec = Opm::Runspec { deck };
+
+    try {
+        Opm::FieldPropsManager(deck, runspec.phases(), grid,
+                               Opm::TableManager{}, runspec.numComps());
+    }
+    catch (const Opm::OpmInputError& e) {
+        return e.what();
+    }
+
+    return {};
+}
+
+void checkCompositionOperationRejected(const std::string& array,
+                                       const std::string& operation)
+{
+    const auto msg = compositionOperationMessage(operation);
+
+    BOOST_CHECK_MESSAGE(msg.find("Array " + array + " holds one value per "
+                                 "component in each cell") != std::string::npos,
+                        "Operation:\n" << operation << "Message was: " << msg);
+}
+
+} // Anonymous namespace
+
+BOOST_AUTO_TEST_CASE(INVALID_COMPOSITION_SCALAR_OPERATION)
+{
+    checkCompositionOperationRejected("ZMF", R"(EQUALS
+ ZMF 0.5 /
+/
+)");
+
+    checkCompositionOperationRejected("ZMF", R"(MULTIPLY
+ ZMF 2 /
+/
+)");
+
+    // YMF has no values yet.
+    checkCompositionOperationRejected("YMF", R"(EQUALS
+ YMF 0.5 /
+/
+)");
+}
+
+BOOST_AUTO_TEST_CASE(INVALID_COMPOSITION_COPY)
+{
+    checkCompositionOperationRejected("ZMF", R"(COPY
+ ZMF PRESSURE /
+/
+)");
+
+    checkCompositionOperationRejected("ZMF", R"(COPY
+ PRESSURE ZMF /
+/
+)");
+}
+
+BOOST_AUTO_TEST_CASE(INVALID_COMPOSITION_OPERATE)
+{
+    checkCompositionOperationRejected("ZMF", R"(OPERATE
+ ZMF 1 4 1 1 1 1 MULTA PRESSURE 0.001 0 /
+/
+)");
+
+    checkCompositionOperationRejected("ZMF", R"(OPERATE
+ PRESSURE 1 4 1 1 1 1 MULTA ZMF 100 0 /
+/
+)");
+}
+
+BOOST_AUTO_TEST_CASE(INVALID_COMPOSITION_REGION_OPERATION)
+{
+    checkCompositionOperationRejected("ZMF", R"(EQUALREG
+ ZMF 0.5 1 O /
+/
+)");
+
+    checkCompositionOperationRejected("ZMF", R"(COPYREG
+ ZMF PRESSURE 1 O /
+/
+)");
+
+    checkCompositionOperationRejected("ZMF", R"(OPERATER
+ ZMF 1 MULTA PRESSURE 0.001 0 /
+/
+)");
+
+    checkCompositionOperationRejected("ZMF", R"(OPERATER
+ PRESSURE 1 MULTA ZMF 100 0 /
+/
+)");
+}
+
 BOOST_AUTO_TEST_CASE(Multiply_Defaulted_MultX)
 {
     const auto deck = Parser{}.parseString(R"(RUNSPEC
