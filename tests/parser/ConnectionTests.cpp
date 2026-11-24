@@ -1811,6 +1811,41 @@ COMPTRAJ
     BOOST_CHECK_NO_THROW(comptrajSchedule(deck));
 }
 
+BOOST_AUTO_TEST_CASE(Comptraj_MultiSegment_Well_Requires_One_Main_Branch_Record)
+{
+    const auto msw_schedule = weltraj_two_branches + R"(WELSEGS
+  'W1' 2000.0 0.0 1* INC 'HF-' /
+/
+)";
+    const auto check_unsupported = [](const std::string& schedule) {
+        const auto deck = comptrajDeck(schedule);
+        const auto& location = deck["COMPTRAJ"].back().location();
+        const auto expected = fmt::format(
+            "Problem with keyword COMPTRAJ\nIn {} line {}\n"
+            "Multi-segment well W1 supports only one COMPTRAJ record on branch 1.",
+            location.filename, location.lineno);
+
+        BOOST_CHECK_EXCEPTION(comptrajSchedule(deck), Opm::OpmInputError,
+            [&expected](const Opm::OpmInputError& error)
+            { return std::string{error.what()} == expected; });
+    };
+
+    // A later COMPTRAJ keyword cannot add a second interval to an MSW.
+    check_unsupported(msw_schedule + R"(COMPTRAJ
+  'W1'    1    2000   2010   2*     1*    1*   10.0  0.25  100  0 /
+/
+COMPTRAJ
+  'W1'    1    2020   2030   2*     1*    1*   30.0  0.25  300  0 /
+/
+)");
+
+    // A single record on a lateral branch is not supported either.
+    check_unsupported(msw_schedule + R"(COMPTRAJ
+  'W1'    2    2015   2115   2*     1*    1*   10.0  0.25  100  0 /
+/
+)");
+}
+
 BOOST_AUTO_TEST_CASE(Comptraj_Branch_Number_Must_Be_Positive)
 {
     // WELTRAJ.

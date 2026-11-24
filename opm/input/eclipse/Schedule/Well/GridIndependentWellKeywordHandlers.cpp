@@ -279,6 +279,16 @@ namespace
                                           handlerContext.keyword.location(),
                                           wellTraj);
 
+                if (well.isMultiSegment() &&
+                    ((interval.branch != 1) || handlerContext.comptraj_was_handled(name)))
+                {
+                    throw OpmInputError {
+                        fmt::format("Multi-segment well {} supports only one COMPTRAJ "
+                                    "record on branch 1.", name),
+                        handlerContext.keyword.location()
+                    };
+                }
+
                 // In the case that defaults are used in WELSPECS for headI/J
                 // the headI/J are calculated based on the well trajectory data
                 well.updateHead(connections->getHeadI(), connections->getHeadJ());
