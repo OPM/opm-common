@@ -1190,6 +1190,23 @@ Branch {} of well {} yields a zero or non-representable connection transmissibil
                 const auto others = prev->intervalContributions();
                 const auto shared = ! others.empty();
 
+                // Positive D-factors are well-level and negative D-factors
+                // are connection-level values, which cannot be combined.
+                const auto opposite_d_factor =
+                    std::ranges::any_of(others, [d_factor](const auto& other)
+                                        { return other.ctf.d_factor * d_factor < 0.0; });
+                if (opposite_d_factor) {
+                    throw OpmInputError {
+                        fmt::format("Cell ({},{},{}) of well {} is perforated by several "
+                                    "COMPTRAJ intervals with D-factors of opposite sign. "
+                                    "A positive D-factor is a well-level value and a "
+                                    "negative D-factor a connection-level value; they "
+                                    "cannot be combined in one connection.",
+                                    ijk[0] + 1, ijk[1] + 1, ijk[2] + 1, wname),
+                        location
+                    };
+                }
+
                 // There is only one state and saturation table per
                 // connection, so this record changes those of the other
                 // intervals perforating the cell too.

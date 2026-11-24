@@ -2153,6 +2153,38 @@ BOOST_AUTO_TEST_CASE(Comptraj_Same_Branch_Intervals_Sharing_A_Cell)
     BOOST_CHECK(reversed.ctfProperties() == conn.ctfProperties());
 }
 
+BOOST_AUTO_TEST_CASE(Comptraj_D_Factor_Combination_Depends_On_Sign)
+{
+    const auto visits = [](const double d1, const double d2)
+    {
+        return fmt::format(R"(COMPTRAJ
+-- WELL BRANCH  TOP    BOT   REF NO STATE SAT   CF   DIAM   KH  SKIN  D
+  'W1'    1    2002   2012   2*     1*    1*   10.0  0.20  100  1.0 {} /
+  'W1'    1    2028   2035   2*     1*    1*   30.0  0.40  300  5.0 {} /
+/
+)", d1, d2);
+    };
+
+    // Well-level D-factors: CF-weighted mean, since WDFAC distributes the
+    // value using the CF of the combined connection.
+    {
+        const auto sched = comptrajSchedule(comptrajDeck(weltraj_u_shape + visits(2.0, 4.0)));
+        BOOST_CHECK_CLOSE(reenteredConnection(sched).dFactor(),
+                          (10.0*2.0 + 30.0*4.0) / 40.0, 1.0e-8);
+    }
+
+    // Connection-level D-factors: CF-weighted mean divided by the number
+    // of contributions.
+    {
+        const auto sched = comptrajSchedule(comptrajDeck(weltraj_u_shape + visits(-2.0, -4.0)));
+        BOOST_CHECK_CLOSE(reenteredConnection(sched).dFactor(),
+                          -(10.0*2.0 + 30.0*4.0) / (2 * 40.0), 1.0e-8);
+    }
+
+    BOOST_CHECK_THROW(comptrajSchedule(comptrajDeck(weltraj_u_shape + visits(2.0, -4.0))),
+                      Opm::OpmInputError);
+}
+
 BOOST_AUTO_TEST_CASE(Comptraj_Interval_Wholly_Within_One_Cell_Creates_Connection)
 {
     const auto schedule = R"(WELSPECS

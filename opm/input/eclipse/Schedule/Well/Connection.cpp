@@ -446,6 +446,31 @@ namespace Opm
         ///
         /// Mirrors the export-side combination rules ResInsight applies when
         /// it writes COMPDAT for a multi-lateral well (OPM/ResInsight#7049).
+        /// CF, Kh and perforated length are summed. Wellbore radius and skin
+        /// are CF-weighted means.
+        ///
+        /// The D-factor depends on its sign, which sets its meaning:
+        ///
+        /// - A positive D-factor is a well-level value, which WDFAC later
+        ///   distributes over the connections as D * sum(CF_well) / CF.
+        ///   The larger CF of the combined connection already accounts
+        ///   for the merge, so the combined value is the CF-weighted mean.
+        ///
+        /// - A negative D-factor is a connection-level value, used as is.
+        ///   The combined value is the CF-weighted mean divided by the
+        ///   number N of contributions: sum(CF_i * D_i) / (N * sum(CF_i)),
+        ///   as in ResInsight's combineEclipseCellCompletions()
+        ///   (OPM/ResInsight#7049), which exports negative D-factors. N
+        ///   parallel connections under the same drawdown act like one
+        ///   connection with D = sum(CF_i^2 * D_i) / sum(CF_i)^2. The
+        ///   ResInsight rule reproduces this when all CF_i are equal, or
+        ///   when CF_i * D_i is the same for all i, as when a well-level
+        ///   D-factor is distributed over the connections.
+        ///
+        /// The caller ensures that the D-factors of the contributions do not
+        /// have opposite signs.
+        ///
+        /// If total CF is not positive, use equal weights for all means.
         Connection::CTFProperties
         combineContributionCTFs(const std::vector<Connection::IntervalContribution>& contributions)
         {
@@ -455,7 +480,6 @@ namespace Opm
 
             auto combined = Connection::CTFProperties{};
 
-            // Transmissibility, Kh and perforated length are additive.
             auto cf_total = 0.0;
             for (const auto& contribution : contributions) {
                 const auto& ctf = contribution.ctf;
@@ -467,8 +491,6 @@ namespace Opm
                 cf_total += ctf.CF;
             }
 
-            // Wellbore radius, skin and D-factor are CF-weighted averages.
-            // Fall back to an unweighted average if not possible.
             const auto weighted = cf_total > 0.0;
             for (const auto& contribution : contributions) {
                 const auto& ctf = contribution.ctf;
@@ -485,8 +507,14 @@ namespace Opm
             combined.rw /= norm;
             combined.skin_factor /= norm;
 
-            // The D-factor is also divided by the number of contributions.
-            combined.d_factor /= norm * num_contributions;
+            combined.d_factor /= norm;
+
+            const auto connection_level =
+                std::ranges::any_of(contributions, [](const auto& contribution)
+                                    { return contribution.ctf.d_factor < 0.0; });
+            if (connection_level) {
+                combined.d_factor /= num_contributions;
+            }
 
             // Radii are taken as is. Effective permeability is set to that
             // of the strongest crossing by combineIntervalContributions().
