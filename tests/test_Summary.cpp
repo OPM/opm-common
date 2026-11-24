@@ -351,7 +351,8 @@ data::Wells result_wells(const bool w3_injector = true)
         .avg_filter_width =   3.4*prefix::centi*unit::meter,
         .inj_pressure     =  34.56*unit::barsa,
         .inj_bhp          =  45.67*unit::barsa,
-        .inj_wellrate     = 512.1024*sm3_pr_day()
+        .inj_wellrate     = 512.1024*sm3_pr_day(),
+        .open_area        =   7.5*unit::square(unit::meter)
     };
 
     const auto& w3_con_filtrate = w3_injector ? con_filtrate : zero_filtrate;
@@ -2422,6 +2423,7 @@ BOOST_AUTO_TEST_CASE(connection_kewords)
 
     BOOST_CHECK_CLOSE(0.0, ecl_sum_get_well_connection_var(resp, 1, "W_1", "CFRAREA", 1, 1, 1), 1.0e-5);
     BOOST_CHECK_CLOSE(0.0, ecl_sum_get_well_connection_var(resp, 2, "W_1", "CFRAREA", 1, 1, 1), 1.0e-5);
+    BOOST_CHECK_CLOSE(0.0, ecl_sum_get_well_connection_var(resp, 1, "W_1", "CFROAREA", 1, 1, 1), 1.0e-5);
 
     BOOST_CHECK_CLOSE(0.0, ecl_sum_get_well_connection_var(resp, 1, "W_1", "CFRFLUX", 1, 1, 1), 1.0e-5);
     BOOST_CHECK_CLOSE(0.0, ecl_sum_get_well_connection_var(resp, 2, "W_1", "CFRFLUX", 1, 1, 1), 1.0e-5);
@@ -2504,6 +2506,8 @@ BOOST_AUTO_TEST_CASE(connection_kewords)
 
     BOOST_CHECK_CLOSE(12.34, ecl_sum_get_well_connection_var(resp, 1, "W_3", "CFRAREA", 3, 1, 1), 1.0e-5);
     BOOST_CHECK_CLOSE(12.34, ecl_sum_get_well_connection_var(resp, 2, "W_3", "CFRAREA", 3, 1, 1), 1.0e-5);
+    BOOST_CHECK_CLOSE(7.5, ecl_sum_get_well_connection_var(resp, 1, "W_3", "CFROAREA", 3, 1, 1), 1.0e-5);
+    BOOST_CHECK_CLOSE(7.5, ecl_sum_get_well_connection_var(resp, 2, "W_3", "CFROAREA", 3, 1, 1), 1.0e-5);
 
     BOOST_CHECK_CLOSE(4.56, ecl_sum_get_well_connection_var(resp, 1, "W_3", "CFRFLUX", 3, 1, 1), 1.0e-5);
     BOOST_CHECK_CLOSE(4.56, ecl_sum_get_well_connection_var(resp, 2, "W_3", "CFRFLUX", 3, 1, 1), 1.0e-5);

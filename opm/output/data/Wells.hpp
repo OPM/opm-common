@@ -291,6 +291,7 @@ namespace Opm { namespace data {
         double inj_pressure{};
         double inj_bhp{};
         double inj_wellrate{};
+        double open_area{};
 
         template <class Serializer>
         void serializeOp(Serializer& serializer)
@@ -307,6 +308,7 @@ namespace Opm { namespace data {
             serializer(inj_pressure);
             serializer(inj_bhp);
             serializer(inj_wellrate);
+            serializer(open_area);
         }
 
         bool operator==(const ConnectionFracture& fraccon) const
@@ -323,12 +325,13 @@ namespace Opm { namespace data {
                 && (this->inj_pressure == fraccon.inj_pressure)
                 && (this->inj_bhp == fraccon.inj_bhp)
                 && (this->inj_wellrate == fraccon.inj_wellrate)
+                && (this->open_area == fraccon.open_area)
                 ;
         }
 
         static ConnectionFracture serializationTestObject()
         {
-            return {0.8, 100.0, 1.3, 1.4, 10.0, 4.0, 0.4, 0.5, 0.05, 200.0, 150.0, 500.0};
+            return {0.8, 100.0, 1.3, 1.4, 10.0, 4.0, 0.4, 0.5, 0.05, 200.0, 150.0, 500.0, 0.6};
         }
 
         template <class MessageBufferType>
@@ -346,6 +349,7 @@ namespace Opm { namespace data {
             buffer.write(this->inj_pressure);
             buffer.write(this->inj_bhp);
             buffer.write(this->inj_wellrate);
+            buffer.write(this->open_area);
         }
 
         template <class MessageBufferType>
@@ -363,6 +367,7 @@ namespace Opm { namespace data {
             buffer.read(this->inj_pressure);
             buffer.read(this->inj_bhp);
             buffer.read(this->inj_wellrate);
+            buffer.read(this->open_area);
         }
     };
 

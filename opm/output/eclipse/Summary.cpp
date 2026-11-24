@@ -3638,6 +3638,8 @@ static const auto funs = std::unordered_map<std::string, ofun> {
     // Per fracture characteristics
     { "CFRAREA", fracture_connection_quantities<&Opm::data::ConnectionFracture::area,
       measure::area, injector> },
+    { "CFROAREA", fracture_connection_quantities<&Opm::data::ConnectionFracture::open_area,
+      measure::area, injector> },
     { "CFRFLUX", fracture_connection_quantities<&Opm::data::ConnectionFracture::flux,
       measure::geometric_volume_rate, injector> },
     { "CFRHEIGH", fracture_connection_quantities<&Opm::data::ConnectionFracture::height,

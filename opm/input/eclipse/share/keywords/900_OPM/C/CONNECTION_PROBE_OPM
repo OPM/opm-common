@@ -38,6 +38,7 @@
     "CFCRAD",
     "CFCAOF",
     "CFRAREA",
+    "CFROAREA",
     "CFRFLUX",
     "CFRHEIGH",
     "CFRLENGT",
