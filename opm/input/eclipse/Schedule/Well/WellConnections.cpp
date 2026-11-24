@@ -1093,10 +1093,13 @@ The cell ({},{},{}) in well {} is not active and the connection will be ignored)
                 // leave it out entirely.
                 OpmLog::warning(fmt::format(R"(Problem with COMPTRAJ keyword
 In {} line {}
-Branch {} of well {} yields a zero or non-representable connection transmissibility factor ({}) or Kh ({}) in cell ({},{},{}). The connection will be ignored)",
+Branch {} of well {} yields a zero or non-representable connection transmissibility factor ({:g}) or Kh ({:g}) in cell ({},{},{}). The connection will be ignored)",
                                             location.filename, location.lineno,
                                             branch, wname,
-                                            ctf_props.CF, ctf_props.Kh,
+                                            CFItem.getActiveDimensions().front()
+                                                .convertSiToRaw(ctf_props.CF),
+                                            KhItem.getActiveDimensions().front()
+                                                .convertSiToRaw(ctf_props.Kh),
                                             ijk[0] + 1, ijk[1] + 1, ijk[2] + 1));
 
                 continue;

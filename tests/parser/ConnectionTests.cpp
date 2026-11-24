@@ -40,6 +40,9 @@
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
 
 #include <opm/common/OpmLog/KeywordLocation.hpp>
+#include <opm/common/OpmLog/LogUtil.hpp>
+#include <opm/common/OpmLog/OpmLog.hpp>
+#include <opm/common/OpmLog/StreamLog.hpp>
 
 #include <opm/input/eclipse/Units/Units.hpp>
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
@@ -59,6 +62,7 @@
 #include <numeric>
 #include <ostream>
 #include <set>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -2455,6 +2459,43 @@ BOOST_AUTO_TEST_CASE(Comptraj_Zero_Perm_Along_Trajectory_Keeps_Connection)
     BOOST_CHECK(conn.dir() == Opm::Connection::Direction::Z);
     BOOST_CHECK_CLOSE(conn.CF(), siCF(deck, 10.5777), 1.0e-3);
     BOOST_CHECK_CLOSE(conn.Kh(), siKh(deck, 1000.0), 1.0e-8);
+}
+
+BOOST_AUTO_TEST_CASE(Comptraj_Ignored_Connection_Warning_Uses_Deck_Units)
+{
+    // A wellbore radius beyond Peaceman's effective radius, without skin,
+    // makes the connection factor of the vertical main branch
+    // non-representable, while its Kh remains finite.  The grid is in the
+    // deck's units, so the Kh of 8 length units through cell (3,3,1) is 800
+    // mD times that length unit in both unit systems.
+    for (const auto* units : { "METRIC", "FIELD" }) {
+        BOOST_TEST_CONTEXT(units) {
+            const auto deck = comptrajDeck(weltraj_two_branches + R"(COMPTRAJ
+-- WELL BRANCH  TOP    BOT   REF NO STATE SAT   CF   DIAM   KH  SKIN
+  'W1'    1    2001   2009   2*     1*    1*    1*  200    1*  0 /
+/
+)", {}, units);
+
+            std::ostringstream warnings;
+            Opm::OpmLog::addBackend("STREAM",
+                                    std::make_shared<Opm::StreamLog>(warnings, Opm::Log::MessageType::Warning));
+
+            try {
+                const auto sched = comptrajSchedule(deck);
+                BOOST_CHECK(sched.getWell("W1", 0).getConnections().empty());
+            }
+            catch (...) {
+                Opm::OpmLog::removeBackend("STREAM");
+                throw;
+            }
+
+            Opm::OpmLog::removeBackend("STREAM");
+
+            const auto expected = std::string { "or Kh (800) in cell (3,3,1)" };
+            BOOST_CHECK_MESSAGE(warnings.str().find(expected) != std::string::npos,
+                                warnings.str());
+        }
+    }
 }
 
 namespace {
