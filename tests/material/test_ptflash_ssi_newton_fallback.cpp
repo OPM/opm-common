@@ -91,10 +91,13 @@ public:
     using ViscosityModel = ViscosityModels<Scalar, C1C10TestFluidSystem<Scalar>>;
     using CubicEOS = ::Opm::CubicEOS<Scalar, C1C10TestFluidSystem<Scalar>>;
 
+    static CompositionalConfig::EOSType eosType(unsigned /*eosRegionIdx*/ = 0)
+    { return CompositionalConfig::EOSType::PR; }
+
     static bool phaseIsActive(unsigned phaseIdx)
     { return phaseIdx == oilPhaseIdx || phaseIdx == gasPhaseIdx; }
 
-    static Scalar acentricFactor(unsigned compIdx)
+    static Scalar acentricFactor(unsigned compIdx, unsigned /*eosRegionIdx*/ = 0)
     {
         switch (compIdx) {
         case Comp0Idx: return Comp0::acentricFactor();
@@ -103,7 +106,7 @@ public:
         }
     }
 
-    static Scalar criticalTemperature(unsigned compIdx)
+    static Scalar criticalTemperature(unsigned compIdx, unsigned /*eosRegionIdx*/ = 0)
     {
         switch (compIdx) {
         case Comp0Idx: return Comp0::criticalTemperature();
@@ -112,7 +115,7 @@ public:
         }
     }
 
-    static Scalar criticalPressure(unsigned compIdx)
+    static Scalar criticalPressure(unsigned compIdx, unsigned /*eosRegionIdx*/ = 0)
     {
         switch (compIdx) {
         case Comp0Idx: return Comp0::criticalPressure();
@@ -121,7 +124,7 @@ public:
         }
     }
 
-    static Scalar criticalVolume(unsigned compIdx)
+    static Scalar criticalVolume(unsigned compIdx, unsigned /*eosRegionIdx*/ = 0)
     {
         switch (compIdx) {
         case Comp0Idx: return Comp0::criticalVolume();
@@ -140,7 +143,8 @@ public:
     }
 
     //! standard PR literature value for the methane/n-decane pair
-    static Scalar interactionCoefficient(unsigned comp1Idx, unsigned comp2Idx)
+    static Scalar interactionCoefficient(unsigned comp1Idx, unsigned comp2Idx,
+                                         unsigned /*eosRegionIdx*/ = 0)
     { return (comp1Idx != comp2Idx) ? 0.0411 : 0.0; }
 
     static std::string_view phaseName(unsigned phaseIdx)
@@ -170,7 +174,10 @@ public:
     static LhsEval viscosity(const FluidState& fluidState,
                              const ParameterCache<ParamCacheEval>& paramCache,
                              unsigned phaseIdx)
-    { return decay<LhsEval>(ViscosityModel::LBC(fluidState, paramCache, phaseIdx)); }
+    {
+        return decay<LhsEval>(
+            ViscosityModel::LBC(fluidState, phaseIdx, paramCache.eosRegionIndex()));
+    }
 
     template <class FluidState, class LhsEval = typename FluidState::ValueType, class ParamCacheEval = LhsEval>
     static LhsEval fugacityCoefficient(const FluidState& fluidState,
@@ -283,7 +290,6 @@ using FluidSystem = Opm::C1C10TestFluidSystem<Scalar>;
 using Evaluation = Opm::DenseAd::Evaluation<Scalar, 3>;
 using FluidState = Opm::CompositionalFluidState<Evaluation, FluidSystem>;
 using PtFlash = Opm::PTFlash<Scalar, FluidSystem, true>;
-using EOSType = Opm::CompositionalConfig::EOSType;
 using PTFlashMethod = Opm::PTFlashMethod;
 
 using SingularFluidSystem = Opm::SingularJacobianTestFluidSystem<Scalar>;
@@ -323,7 +329,7 @@ FluidState makeState(const Scalar p, const Scalar t, const Scalar first_componen
     fs.setMoleFraction(0, first_component);
     fs.setMoleFraction(1, 1.0 - first_component);
     for (int compIdx = 0; compIdx < 2; ++compIdx)
-        fs.setKvalue(compIdx, fs.wilsonK_(compIdx));
+        fs.setKvalue(compIdx, fs.wilsonK_(compIdx, /*eosRegionIdx=*/0));
     fs.setLvalue(-1.0);
     return fs;
 }
@@ -357,7 +363,7 @@ SingularComponentVector makeInitialK()
     const auto fs = makeSingularState();
     SingularComponentVector K;
     for (int compIdx = 0; compIdx < SingularFluidSystem::numComponents; ++compIdx) {
-        K[compIdx] = fs.wilsonK_(compIdx);
+        K[compIdx] = fs.wilsonK_(compIdx, /*eosRegionIdx=*/0);
     }
     return K;
 }
@@ -370,7 +376,7 @@ SingularComponentVector makeInitialK()
 BOOST_AUTO_TEST_CASE(FallbackConvergesWhereNewtonStalled)
 {
     auto fs = makeState(50e5, 295.0);
-    BOOST_CHECK_NO_THROW(PtFlash::solve(fs, PTFlashMethod::SsiNewton, 1e-8, EOSType::PR));
+    BOOST_CHECK_NO_THROW(PtFlash::solve(fs, PTFlashMethod::SsiNewton, 1e-8, /*eosRegionIdx=*/0));
 }
 
 // and the fallback answer is THE answer: it must match the plain "ssi"
@@ -378,10 +384,10 @@ BOOST_AUTO_TEST_CASE(FallbackConvergesWhereNewtonStalled)
 BOOST_AUTO_TEST_CASE(FallbackMatchesSsi)
 {
     auto fsSsi = makeState(50e5, 295.0);
-    PtFlash::solve(fsSsi, PTFlashMethod::Ssi, 1e-8, EOSType::PR);
+    PtFlash::solve(fsSsi, PTFlashMethod::Ssi, 1e-8, /*eosRegionIdx=*/0);
 
     auto fsFallback = makeState(50e5, 295.0);
-    PtFlash::solve(fsFallback, PTFlashMethod::SsiNewton, 1e-8, EOSType::PR);
+    PtFlash::solve(fsFallback, PTFlashMethod::SsiNewton, 1e-8, /*eosRegionIdx=*/0);
 
     BOOST_CHECK_SMALL(std::abs(Opm::getValue(fsFallback.L()) - Opm::getValue(fsSsi.L())), 1e-8);
     for (unsigned phaseIdx = 0; phaseIdx < FluidSystem::numPhases; ++phaseIdx) {
@@ -398,7 +404,7 @@ BOOST_AUTO_TEST_CASE(FallbackMatchesSsi)
 BOOST_AUTO_TEST_CASE(BenignStateUnaffected)
 {
     auto fs = makeState(50e5, 300.0);
-    BOOST_CHECK_NO_THROW(PtFlash::solve(fs, PTFlashMethod::SsiNewton, 1e-8, EOSType::PR));
+    BOOST_CHECK_NO_THROW(PtFlash::solve(fs, PTFlashMethod::SsiNewton, 1e-8, /*eosRegionIdx=*/0));
 }
 
 // A finite negative-flash root is the single-phase criterion used by well
@@ -409,7 +415,7 @@ BOOST_AUTO_TEST_CASE(SurfaceNegativeFlashIsSingleLiquid)
         auto fs = makeState(1.01325e5, 288.71, 1.e-3);
         fs.setLvalue(initial_liquid_fraction);
 
-        BOOST_REQUIRE(PtFlash::solve(fs, PTFlashMethod::Ssi, 1.e-8, EOSType::PR));
+        BOOST_REQUIRE(PtFlash::solve(fs, PTFlashMethod::Ssi, 1.e-8, /*eosRegionIdx=*/0));
         BOOST_CHECK_SMALL(Opm::getValue(fs.L()) - 1.0, 1.e-8);
     }
 }
@@ -423,7 +429,7 @@ BOOST_AUTO_TEST_CASE(NewtonRecoveryRetriesFromStabilityEstimate)
     fs.setKvalue(0, 4.0);
     fs.setKvalue(1, 4.0);
 
-    BOOST_REQUIRE(!PtFlash::solve(fs, PTFlashMethod::Newton, 1.e-8, EOSType::PR));
+    BOOST_REQUIRE(!PtFlash::solve(fs, PTFlashMethod::Newton, 1.e-8, /*eosRegionIdx=*/0));
     BOOST_CHECK_GT(Opm::getValue(fs.L()), 0.0);
     BOOST_CHECK_LT(Opm::getValue(fs.L()), 1.0);
 }
@@ -443,13 +449,14 @@ BOOST_AUTO_TEST_CASE(SingularJacobianFallsBackToSsi)
                                                  newtonL,
                                                  newtonState,
                                                  1.e-8,
-                                                 EOSType::PR),
+                                                 /*eosRegionIdx=*/0),
                       Dune::FMatrixError);
 
     auto ssiState = makeSingularState();
     auto ssiK = makeInitialK();
     Scalar ssiL = 0.5;
-    SingularPtFlash::flash_2ph(z, PTFlashMethod::Ssi, ssiK, ssiL, ssiState, 1.e-8, EOSType::PR);
+    SingularPtFlash::flash_2ph(z, PTFlashMethod::Ssi, ssiK, ssiL, ssiState, 1.e-8,
+                               /*eosRegionIdx=*/0);
 
     auto hybridState = makeSingularState();
     auto hybridK = makeInitialK();
@@ -461,7 +468,7 @@ BOOST_AUTO_TEST_CASE(SingularJacobianFallsBackToSsi)
                                                       hybridL,
                                                       hybridState,
                                                       1.e-8,
-                                                      EOSType::PR));
+                                                      /*eosRegionIdx=*/0));
     BOOST_CHECK_GT(SingularFluidSystem::adFugacityCalls, 0);
 
     BOOST_CHECK_SMALL(std::abs(hybridL - ssiL), 1.e-8);
@@ -495,11 +502,12 @@ BOOST_AUTO_TEST_CASE(ColdStartCollapsedEndpointIsSinglePhase)
             fs.setMoleFraction(0, 0.5);
             fs.setMoleFraction(1, 0.5);
             for (int compIdx = 0; compIdx < ClampedFluidSystem::numComponents; ++compIdx) {
-                fs.setKvalue(compIdx, fs.wilsonK_(compIdx));
+                fs.setKvalue(compIdx, fs.wilsonK_(compIdx, /*eosRegionIdx=*/0));
             }
             fs.setLvalue(-1.0);
 
-            BOOST_REQUIRE(ClampedPtFlash::flash_solve_scalar(fs, method, 1.e-8, EOSType::PR));
+            BOOST_REQUIRE(
+                ClampedPtFlash::flash_solve_scalar(fs, method, 1.e-8, /*eosRegionIdx=*/0));
             BOOST_CHECK_EQUAL(fs.L(), 0.0);
         }
     }
@@ -522,7 +530,7 @@ BOOST_AUTO_TEST_CASE(RejectedSubstitutionIterateKeepsRatios)
     Scalar L = Opm::RachfordRice::solve(K, z);
 
     BOOST_CHECK_EXCEPTION(
-        ExposedPtFlash::flash_2ph(z, PTFlashMethod::Ssi, K, L, fs, 1.e-8, EOSType::PR),
+        ExposedPtFlash::flash_2ph(z, PTFlashMethod::Ssi, K, L, fs, 1.e-8, /*eosRegionIdx=*/0),
         Opm::NumericalProblem,
         [](const Opm::NumericalProblem& error) {
             return std::string {error.what()}.find("Rachford-Rice rejected") != std::string::npos;
@@ -542,14 +550,15 @@ BOOST_AUTO_TEST_CASE(EndpointHybridContinuesSubstitution)
     auto ssiState = makeSingularState();
     auto ssiK = initialK;
     Scalar ssiL = 1.0;
-    SingularPtFlash::flash_2ph(z, PTFlashMethod::Ssi, ssiK, ssiL, ssiState, 1.e-8, EOSType::PR);
+    SingularPtFlash::flash_2ph(
+        z, PTFlashMethod::Ssi, ssiK, ssiL, ssiState, 1.e-8, /*eosRegionIdx=*/0);
 
     auto hybridState = makeSingularState();
     auto hybridK = initialK;
     Scalar hybridL = 1.0;
     SingularFluidSystem::adFugacityCalls = 0;
     BOOST_REQUIRE_NO_THROW(SingularPtFlash::flash_2ph(
-        z, PTFlashMethod::SsiNewton, hybridK, hybridL, hybridState, 1.e-8, EOSType::PR));
+        z, PTFlashMethod::SsiNewton, hybridK, hybridL, hybridState, 1.e-8, /*eosRegionIdx=*/0));
     BOOST_CHECK_EQUAL(SingularFluidSystem::adFugacityCalls, 0);
     BOOST_CHECK_SMALL(hybridL - ssiL, 1.e-8);
     for (unsigned phase = 0; phase < SingularFluidSystem::numPhases; ++phase) {
@@ -583,7 +592,7 @@ BOOST_AUTO_TEST_CASE(NegativeFlashLiquidFractionIsNotACompositionFailure)
 
         Scalar L = 2.12;
         BOOST_REQUIRE_NO_THROW(
-            CoincidentPtFlash::flash_2ph(z, method, K, L, fs, 1.e-8, EOSType::PR));
+            CoincidentPtFlash::flash_2ph(z, method, K, L, fs, 1.e-8, /*eosRegionIdx=*/0));
         BOOST_CHECK_SMALL(L - 2.12, 1.e-12);
     }
 }

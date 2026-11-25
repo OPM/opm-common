@@ -113,15 +113,15 @@ for (const auto& sample : test_methods) {
     // TODO: should we set these?
     // Set initial K and L
     for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
-        const Evaluation Ktmp = fluid_state.wilsonK_(compIdx);
+        const Evaluation Ktmp = fluid_state.wilsonK_(compIdx, /*eosRegionIdx=*/0);
         fluid_state.setKvalue(compIdx, Ktmp);
     }
     const Evaluation Ltmp = 1.;
     fluid_state.setLvalue(Ltmp);
 
     using Flash = Opm::PTFlash<double, FluidSystem>;
-    auto eos_type = EOSType::PRCORR;
-    Flash::solve(fluid_state, sample, flash_tolerance, eos_type, flash_verbosity);
+    FluidSystem::setEosType(EOSType::PRCORR);
+    Flash::solve(fluid_state, sample, flash_tolerance, /*eosRegionIdx=*/0, flash_verbosity);
 
     ComponentVector x, y;
     const Evaluation L = fluid_state.L();
@@ -200,15 +200,15 @@ for (const auto& sample : test_methods) {
     // TODO: should we set these?
     // Set initial K and L
     for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
-        const Evaluation Ktmp = fluid_state.wilsonK_(compIdx);
+        const Evaluation Ktmp = fluid_state.wilsonK_(compIdx, /*eosRegionIdx=*/0);
         fluid_state.setKvalue(compIdx, Ktmp);
     }
     const Evaluation Ltmp = 1.;
     fluid_state.setLvalue(Ltmp);
 
     using Flash = Opm::PTFlash<double, FluidSystem>;
-    auto eos_type = EOSType::PRCORR;
-    Flash::solve(fluid_state, sample, flash_tolerance, eos_type, flash_verbosity);
+    FluidSystem::setEosType(EOSType::PRCORR);
+    Flash::solve(fluid_state, sample, flash_tolerance, /*eosRegionIdx=*/0, flash_verbosity);
 
     ComponentVector x, y;
     const Evaluation L = fluid_state.L();

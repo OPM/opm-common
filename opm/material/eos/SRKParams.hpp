@@ -45,10 +45,10 @@ public:
         return 0.4274802;
     }
 
-    static Scalar calcOmegaA(Scalar temperature, unsigned compIdx)
+    static Scalar calcOmegaA(Scalar temperature, unsigned compIdx, unsigned eosRegionIdx)
     {
-        Scalar Tr = temperature / FluidSystem::criticalTemperature(compIdx);
-        Scalar omega = FluidSystem::acentricFactor(compIdx);
+        Scalar Tr = temperature / FluidSystem::criticalTemperature(compIdx, eosRegionIdx);
+        Scalar omega = FluidSystem::acentricFactor(compIdx, eosRegionIdx);
         Scalar f_omega = 0.48 + omega * (1.574 + omega * (-0.176));
         Valgrind::CheckDefined(f_omega);
 

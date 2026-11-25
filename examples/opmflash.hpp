@@ -993,6 +993,9 @@ struct FlashRunner {
     using PhFlash = PHFlash<double, FluidSystem>;
     using Enthalpy = MixtureEnthalpy<double, FluidSystem>;
 
+    // The fluid system holds the mixture as its one EOS region.
+    static constexpr unsigned eosRegionIdx = 0;
+
     // The properties of a phase, in SI units; Z of the equation-of-state root.
     struct Phase {
         double density, viscosity, compressibility;
@@ -1024,6 +1027,7 @@ struct FlashRunner {
                 e.name, e.molarMass, e.criticalTemperature, e.criticalPressure,
                 e.criticalVolume, e.acentricFactor, e.volumeShift, e.omegaA, e.omegaB});
         }
+        FluidSystem::setEosType(mixture.eos);
         FluidSystem::setInteractionCoefficients(mixture.bic);
         FluidSystem::setLbcCoefficients(mixture.lbc);
         cpTable_.reset();
@@ -1049,7 +1053,7 @@ struct FlashRunner {
             fs.setMoleFraction(compIdx, z[compIdx]);
         }
         for (int compIdx = 0; compIdx < N; ++compIdx) {
-            fs.setKvalue(compIdx, fs.wilsonK_(compIdx));
+            fs.setKvalue(compIdx, fs.wilsonK_(compIdx, eosRegionIdx));
         }
         fs.setLvalue(-1.0);
         return fs;
@@ -1068,10 +1072,10 @@ struct FlashRunner {
         return cfg;
     }
 
-    static std::optional<Phase> phase(const FluidState& fs, EOSType eos, unsigned phaseIdx)
+    static std::optional<Phase> phase(const FluidState& fs, unsigned phaseIdx)
     {
         try {
-            ParameterCache cache(eos);
+            ParameterCache cache(eosRegionIdx);
             cache.updatePhase(fs, phaseIdx);
             const double p = getValue(fs.pressure(phaseIdx));
             const double t = getValue(fs.temperature(phaseIdx));
@@ -1086,7 +1090,7 @@ struct FlashRunner {
 
     // The enthalpies need a converged state, the heat capacities (fit) and a
     // temperature inside their fit range.
-    static Result collect(const FluidState& fs, bool singlePhase, bool ok, EOSType eos,
+    static Result collect(const FluidState& fs, bool singlePhase, bool ok,
                           const std::optional<FitRange>& fit)
     {
         Result r{};
@@ -1098,12 +1102,12 @@ struct FlashRunner {
             r.x[c] = getValue(fs.moleFraction(FluidSystem::oilPhaseIdx, c));
             r.y[c] = getValue(fs.moleFraction(FluidSystem::gasPhaseIdx, c));
         }
-        if (r.hasLiquid()) { r.liquid = phase(fs, eos, FluidSystem::oilPhaseIdx); }
-        if (r.hasVapour()) { r.vapour = phase(fs, eos, FluidSystem::gasPhaseIdx); }
+        if (r.hasLiquid()) { r.liquid = phase(fs, FluidSystem::oilPhaseIdx); }
+        if (r.hasVapour()) { r.vapour = phase(fs, FluidSystem::gasPhaseIdx); }
         if (ok && fit && r.temperature >= fit->min && r.temperature <= fit->max) {
-            r.hCaloric = getValue(Enthalpy::mixtureEnthalpy(fs, *cpTable_, eos,
+            r.hCaloric = getValue(Enthalpy::mixtureEnthalpy(fs, *cpTable_, eosRegionIdx,
                                                             EnthalpyModel::caloric));
-            r.hDeparture = getValue(Enthalpy::mixtureEnthalpy(fs, *cpTable_, eos,
+            r.hDeparture = getValue(Enthalpy::mixtureEnthalpy(fs, *cpTable_, eosRegionIdx,
                                                               EnthalpyModel::eos_departure));
         }
         return r;
@@ -1119,7 +1123,7 @@ struct FlashRunner {
         bool singlePhase = false;
         try {
             singlePhase = PtFlash::solve(fs, settings.twoPhaseMethod, settings.flashTolerance,
-                                         run.mixture.eos, settings.flashVerbosity);
+                                         eosRegionIdx, settings.flashVerbosity);
         }
         catch (const std::runtime_error&) {
             ok = false;
@@ -1127,7 +1131,7 @@ struct FlashRunner {
         catch (const Dune::FMatrixError&) {
             ok = false;
         }
-        return collect(fs, singlePhase, ok, run.mixture.eos, run.fit);
+        return collect(fs, singlePhase, ok, run.fit);
     }
 
     static Result runPh(const Run& run, const State& state, const FitRange& search)
@@ -1137,9 +1141,9 @@ struct FlashRunner {
         FluidState fs = makeState(state.p, 0.5 * (search.min + search.max), state.z);
         const bool ok = PhFlash::solve(fs, state.value, phConfig(settings, search),
                                        settings.twoPhaseMethod, settings.flashTolerance,
-                                       run.mixture.eos, settings.flashVerbosity);
+                                       eosRegionIdx, settings.flashVerbosity);
         const bool singlePhase = !(getValue(fs.L()) > 0.0 && getValue(fs.L()) < 1.0);
-        return collect(fs, singlePhase, ok, run.mixture.eos, run.fit);
+        return collect(fs, singlePhase, ok, run.fit);
     }
 
     static Result runState(const Run& run, const State& state)

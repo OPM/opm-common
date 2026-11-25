@@ -44,7 +44,6 @@
 #include <opm/material/constraintsolvers/PHFlash.hpp>
 #include <opm/material/constraintsolvers/PTFlashMethod.hpp>
 
-#include <opm/input/eclipse/EclipseState/Compositional/CompositionalConfig.hpp>
 
 #include <dune/common/fmatrix.hh>
 
@@ -57,7 +56,6 @@
 #include <stdexcept>
 
 using Scalar = double;
-using EOSType = Opm::CompositionalConfig::EOSType;
 using Opm::EnthalpyModel;
 using Opm::PTFlashMethod;
 using Opm::FlashTest::FlashCase;
@@ -120,7 +118,7 @@ double enthalpyF1(const double pressure, const double temperature, const Enthalp
     FlashCase<numComponentsF1> probe{"enthalpy probe", pressure, temperature, z};
     const auto outcome = runFlash<FluidSystemF1, EvaluationF1>(probe);
     return EnthalpyF1::mixtureEnthalpy(outcome.state, Opm::FlashTest::f1CpTable(),
-                                       EOSType::PR, model);
+                                       /*eosRegionIdx=*/0, model);
 }
 
 template <class Flash>
@@ -129,7 +127,8 @@ double recoverTemperatureF1(const double pressure, const double hSpec,
                             const std::array<double, 2>& z = f1Z)
 {
     auto fs = makeInitialState<FluidSystemF1, EvaluationF1>(pressure, f1Temperature, z);
-    const bool ok = Flash::solve(fs, hSpec, cfg, PTFlashMethod::Ssi, ptTolerance, EOSType::PR);
+    const bool ok = Flash::solve(fs, hSpec, cfg, PTFlashMethod::Ssi, ptTolerance,
+                                 /*eosRegionIdx=*/0);
     BOOST_REQUIRE_MESSAGE(ok, "PHFlash found no solution for hSpec = " << hSpec);
     return Opm::getValue(fs.temperature(0));
 }
@@ -148,13 +147,13 @@ struct RecordingEnthalpyF1
     template <class FluidState>
     static Scalar mixtureEnthalpy(const FluidState& fs,
                                   const Opm::CpTable<Scalar, numComponentsF1>& cpTable,
-                                  const EOSType& eosType,
+                                  const unsigned eosRegionIdx,
                                   const EnthalpyModel model)
     {
         const double T = Opm::getValue(fs.temperature(0));
         lowest = std::min(lowest, T);
         highest = std::max(highest, T);
-        return EnthalpyF1::mixtureEnthalpy(fs, cpTable, eosType, model);
+        return EnthalpyF1::mixtureEnthalpy(fs, cpTable, eosRegionIdx, model);
     }
 };
 
@@ -167,12 +166,12 @@ struct EnthalpyUpTo420KF1
     template <class FluidState>
     static Scalar mixtureEnthalpy(const FluidState& fs,
                                   const Opm::CpTable<Scalar, numComponentsF1>& cpTable,
-                                  const EOSType& eosType,
+                                  const unsigned eosRegionIdx,
                                   const EnthalpyModel model)
     {
         if (Opm::getValue(fs.temperature(0)) > limit)
             throw std::runtime_error("no enthalpy above 420 K");
-        return EnthalpyF1::mixtureEnthalpy(fs, cpTable, eosType, model);
+        return EnthalpyF1::mixtureEnthalpy(fs, cpTable, eosRegionIdx, model);
     }
 };
 
@@ -188,13 +187,13 @@ struct EnthalpyFailingCallsF1
     template <class FluidState>
     static Scalar mixtureEnthalpy(const FluidState& fs,
                                   const Opm::CpTable<Scalar, numComponentsF1>& cpTable,
-                                  const EOSType& eosType,
+                                  const unsigned eosRegionIdx,
                                   const EnthalpyModel model)
     {
         ++calls;
         if (calls >= firstFailure && calls <= lastFailure)
             throw std::runtime_error("no enthalpy at this trial");
-        return EnthalpyF1::mixtureEnthalpy(fs, cpTable, eosType, model);
+        return EnthalpyF1::mixtureEnthalpy(fs, cpTable, eosRegionIdx, model);
     }
 };
 
@@ -208,10 +207,10 @@ struct EnthalpyStepAt350KF1
     template <class FluidState>
     static Scalar mixtureEnthalpy(const FluidState& fs,
                                   const Opm::CpTable<Scalar, numComponentsF1>& cpTable,
-                                  const EOSType& eosType,
+                                  const unsigned eosRegionIdx,
                                   const EnthalpyModel model)
     {
-        const double h = EnthalpyF1::mixtureEnthalpy(fs, cpTable, eosType, model);
+        const double h = EnthalpyF1::mixtureEnthalpy(fs, cpTable, eosRegionIdx, model);
         return Opm::getValue(fs.temperature(0)) > stepTemperature ? h + step : h;
     }
 };
@@ -223,10 +222,10 @@ struct PassThroughEnthalpyF1
     template <class FluidState>
     static Scalar mixtureEnthalpy(const FluidState& fs,
                                   const Opm::CpTable<Scalar, numComponentsF1>& cpTable,
-                                  const EOSType& eosType,
+                                  const unsigned eosRegionIdx,
                                   const EnthalpyModel model)
     {
-        return EnthalpyF1::mixtureEnthalpy(fs, cpTable, eosType, model);
+        return EnthalpyF1::mixtureEnthalpy(fs, cpTable, eosRegionIdx, model);
     }
 };
 
@@ -247,7 +246,7 @@ struct EnthalpyWithFailingRangeF1
     template <class FluidState>
     static Scalar mixtureEnthalpy(const FluidState& fs,
                                   const Opm::CpTable<Scalar, numComponentsF1>&,
-                                  const EOSType&,
+                                  const unsigned,
                                   const EnthalpyModel)
     {
         const double T = Opm::getValue(fs.temperature(0));
@@ -267,7 +266,7 @@ struct LinearEnthalpyFrom365KF1
     template <class FluidState>
     static Scalar mixtureEnthalpy(const FluidState& fs,
                                   const Opm::CpTable<Scalar, numComponentsF1>&,
-                                  const EOSType&,
+                                  const unsigned,
                                   const EnthalpyModel)
     {
         const double T = Opm::getValue(fs.temperature(0));
@@ -290,7 +289,7 @@ struct EnthalpyBadCallF1
     template <class FluidState>
     static Scalar mixtureEnthalpy(const FluidState& fs,
                                   const Opm::CpTable<Scalar, numComponentsF1>& cpTable,
-                                  const EOSType& eosType,
+                                  const unsigned eosRegionIdx,
                                   const EnthalpyModel model)
     {
         if (++calls == badCall) {
@@ -298,7 +297,7 @@ struct EnthalpyBadCallF1
                 DUNE_THROW(Dune::FMatrixError, "singular matrix at this trial");
             return std::numeric_limits<Scalar>::quiet_NaN();
         }
-        return EnthalpyF1::mixtureEnthalpy(fs, cpTable, eosType, model);
+        return EnthalpyF1::mixtureEnthalpy(fs, cpTable, eosRegionIdx, model);
     }
 };
 
@@ -354,11 +353,11 @@ BOOST_AUTO_TEST_CASE(TernaryF2)
         FlashCase<numComponentsF2> probe{"F2 enthalpy probe", f2Pressure, Tstar, f2Z};
         const auto outcome = runFlash<FluidSystemF2, EvaluationF2>(probe);
         const double hSpec = EnthalpyF2::mixtureEnthalpy(outcome.state, cfg.cpTable,
-                                                         EOSType::PR, model);
+                                                         /*eosRegionIdx=*/0, model);
 
         auto fs = makeInitialState<FluidSystemF2, EvaluationF2>(f2Pressure, 350., f2Z);
         const bool ok = PhFlashF2::solve(fs, hSpec, cfg, PTFlashMethod::Ssi,
-                                         ptTolerance, EOSType::PR);
+                                         ptTolerance, /*eosRegionIdx=*/0);
         BOOST_REQUIRE(ok);
         BOOST_CHECK_MESSAGE(std::abs(Opm::getValue(fs.temperature(0)) - Tstar) < roundTripTolerance,
                             "F2 round trip failed for model " << static_cast<int>(model));
@@ -411,14 +410,16 @@ BOOST_AUTO_TEST_CASE(OutsideCpFitRangeReturnsFalse)
     const double hSpec = enthalpyF1(f1Pressure, 300., EnthalpyModel::caloric);
 
     auto fs = makeInitialState<FluidSystemF1, EvaluationF1>(f1Pressure, f1Temperature, f1Z);
-    BOOST_CHECK(!PhFlashF1::solve(fs, hSpec, cfg, PTFlashMethod::Ssi, ptTolerance, EOSType::PR));
+    BOOST_CHECK(!PhFlashF1::solve(fs, hSpec, cfg, PTFlashMethod::Ssi, ptTolerance,
+                                  /*eosRegionIdx=*/0));
 }
 
 BOOST_AUTO_TEST_CASE(UnpopulatedCpTableReturnsFalse)
 {
     PhFlashF1::Config cfg; // all-zero cp table: H(T) = 0 everywhere
     auto fs = makeInitialState<FluidSystemF1, EvaluationF1>(f1Pressure, f1Temperature, f1Z);
-    BOOST_CHECK(!PhFlashF1::solve(fs, 0.0, cfg, PTFlashMethod::Ssi, ptTolerance, EOSType::PR));
+    BOOST_CHECK(!PhFlashF1::solve(fs, 0.0, cfg, PTFlashMethod::Ssi, ptTolerance,
+                                  /*eosRegionIdx=*/0));
 }
 
 BOOST_AUTO_TEST_CASE(EnthalpyAboveRangeReturnsFalse)
@@ -427,7 +428,8 @@ BOOST_AUTO_TEST_CASE(EnthalpyAboveRangeReturnsFalse)
     const double hAboveMax = enthalpyF1(f1Pressure, cfg.tempMax, EnthalpyModel::caloric) + 1e6;
 
     auto fs = makeInitialState<FluidSystemF1, EvaluationF1>(f1Pressure, f1Temperature, f1Z);
-    BOOST_CHECK(!PhFlashF1::solve(fs, hAboveMax, cfg, PTFlashMethod::Ssi, ptTolerance, EOSType::PR));
+    BOOST_CHECK(!PhFlashF1::solve(fs, hAboveMax, cfg, PTFlashMethod::Ssi, ptTolerance,
+                                  /*eosRegionIdx=*/0));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
@@ -460,7 +462,8 @@ BOOST_AUTO_TEST_CASE(RootBeyondEvaluableRangeReturnsFalse)
     const double hSpec = enthalpyF1(f1Pressure, 440., EnthalpyModel::caloric);
 
     auto fs = makeInitialState<FluidSystemF1, EvaluationF1>(f1Pressure, f1Temperature, f1Z);
-    BOOST_CHECK(!FlashUpTo420K::solve(fs, hSpec, cfg, PTFlashMethod::Ssi, ptTolerance, EOSType::PR));
+    BOOST_CHECK(!FlashUpTo420K::solve(fs, hSpec, cfg, PTFlashMethod::Ssi, ptTolerance,
+                                      /*eosRegionIdx=*/0));
 }
 
 BOOST_AUTO_TEST_CASE(NoEvaluableTemperatureReturnsFalse)
@@ -473,7 +476,8 @@ BOOST_AUTO_TEST_CASE(NoEvaluableTemperatureReturnsFalse)
     const double hSpec = enthalpyF1(f1Pressure, 550., EnthalpyModel::caloric);
 
     auto fs = makeInitialState<FluidSystemF1, EvaluationF1>(f1Pressure, f1Temperature, f1Z);
-    BOOST_CHECK(!FlashUpTo420K::solve(fs, hSpec, cfg, PTFlashMethod::Ssi, ptTolerance, EOSType::PR));
+    BOOST_CHECK(!FlashUpTo420K::solve(fs, hSpec, cfg, PTFlashMethod::Ssi, ptTolerance,
+                                      /*eosRegionIdx=*/0));
 }
 
 BOOST_AUTO_TEST_CASE(RecoversRootNextToFailingEndLeanFeed)
@@ -554,7 +558,7 @@ BOOST_AUTO_TEST_CASE(TargetBelowEvaluableRangeReturnsFalse)
     for (const double hSpec : {364.5, 364.999}) {
         auto fs = makeInitialState<FluidSystemF1, EvaluationF1>(f1Pressure, f1Temperature, f1Z);
         BOOST_CHECK_MESSAGE(!FlashFrom365K::solve(fs, hSpec, cfg, PTFlashMethod::Ssi,
-                                                  ptTolerance, EOSType::PR),
+                                                  ptTolerance, /*eosRegionIdx=*/0),
                             "hSpec = " << hSpec << " accepted at "
                             << Opm::getValue(fs.temperature(0)) << " K");
     }
@@ -658,7 +662,7 @@ BOOST_AUTO_TEST_CASE(NoEvaluableReplacementReturnsFalse)
     const double hSpec = enthalpyF1(f1Pressure, 340., EnthalpyModel::caloric);
     auto fs = makeInitialState<FluidSystemF1, EvaluationF1>(f1Pressure, f1Temperature, f1Z);
     BOOST_CHECK(!FlashFailingCalls::solve(fs, hSpec, makeConfigF1(EnthalpyModel::caloric),
-                                          PTFlashMethod::Ssi, ptTolerance, EOSType::PR));
+                                          PTFlashMethod::Ssi, ptTolerance, /*eosRegionIdx=*/0));
 }
 
 using FlashBadCall = Opm::PHFlash<Scalar, FluidSystemF1, EnthalpyBadCallF1>;
@@ -718,7 +722,7 @@ BOOST_AUTO_TEST_CASE(MatrixErrorIsNotEvaluable)
     auto fs = makeInitialState<FluidSystemF1, EvaluationF1>(f1Pressure, f1Temperature, f1Z);
     bool solved = true;
     BOOST_CHECK_NO_THROW(solved = FlashBadCall::solve(fs, hSpec, cfg, PTFlashMethod::Ssi,
-                                                      ptTolerance, EOSType::PR));
+                                                      ptTolerance, /*eosRegionIdx=*/0));
     BOOST_CHECK(!solved);
 }
 
@@ -738,7 +742,7 @@ BOOST_AUTO_TEST_CASE(EnthalpyStepReturnsFalse)
                        + 0.5 * EnthalpyStepAt350KF1::step;
 
     auto fs = makeInitialState<FluidSystemF1, EvaluationF1>(f1Pressure, f1Temperature, f1Z);
-    BOOST_CHECK(!Flash::solve(fs, hSpec, cfg, PTFlashMethod::Ssi, ptTolerance, EOSType::PR));
+    BOOST_CHECK(!Flash::solve(fs, hSpec, cfg, PTFlashMethod::Ssi, ptTolerance, /*eosRegionIdx=*/0));
     BOOST_CHECK_SMALL(Opm::getValue(fs.temperature(0)) - EnthalpyStepAt350KF1::stepTemperature,
                       cfg.temperatureTolerance);
 }
