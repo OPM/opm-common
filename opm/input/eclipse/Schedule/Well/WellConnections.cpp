@@ -26,6 +26,7 @@
 #include <opm/common/OpmLog/KeywordLocation.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/utility/OpmInputError.hpp>
+#include <opm/common/utility/numeric/linearInterpolation.hpp>
 
 #include <opm/common/utility/ActiveGridCells.hpp>
 
@@ -38,6 +39,7 @@
 #include <opm/input/eclipse/Schedule/Well/TrackOrderingTSP.hpp>
 #include <opm/input/eclipse/Schedule/Well/WDFAC.hpp>
 
+#include <opm/input/eclipse/Units/Dimension.hpp>
 #include <opm/input/eclipse/Units/Units.hpp>
 
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
@@ -235,6 +237,24 @@ Connection ({},{},{}) (direction '{}') for well {} ignored because
             * ctf_props.Ke / (ctf_props.connection_length * ctf_props.rw);
     }
 
+    // ResInsight's calculateCellMainDirection: compare fractions of the cell
+    // crossed along each local axis. All ties fall back to Z.
+    Opm::Connection::Direction
+    trajectoryDirection(const external::cvf::Vec3d& lengths,
+                        const std::array<double, 3>& dimensions)
+    {
+        const auto x = std::abs(lengths[0] / dimensions[0]);
+        const auto y = std::abs(lengths[1] / dimensions[1]);
+        const auto z = std::abs(lengths[2] / dimensions[2]);
+        if ((x > y) && (x > z)) {
+            return Opm::Connection::Direction::X;
+        }
+        if ((y > x) && (y > z)) {
+            return Opm::Connection::Direction::Y;
+        }
+        return Opm::Connection::Direction::Z;
+    }
+
     // Calculate permeability thickness Kh for line segment in a cell for x,y,z directions
     std::array<double, 3>
     permThickness(const external::cvf::Vec3d& effective_connection,
@@ -297,6 +317,34 @@ Connection ({},{},{}) (direction '{}') for well {} ignored because
                                });
 
         return connection_factor;
+    }
+
+    // The (I,J,K) location of the first active cell that a trajectory
+    // enters, if it enters any.
+    std::optional<std::array<int, 3>>
+    firstActiveCell(const std::array<std::vector<double>, 3>& coords,
+                    const std::vector<double>&                mds,
+                    const Opm::ScheduleGrid&                  grid,
+                    external::RigEclipseGridSearchData&       gridSearchData)
+    {
+        external::cvf::ref<external::RigWellPath> path { new external::RigWellPath };
+        Opm::initWellPathGeometry(path, coords, mds);
+
+        const auto* ecl_grid = grid.get_grid();
+
+        external::cvf::ref<external::RigEclipseWellLogExtractor> e {
+            new external::RigEclipseWellLogExtractor { path.p(), *ecl_grid, gridSearchData }
+        };
+
+        for (const auto& intersection : e->cellIntersectionInfosAlongWellPath()) {
+            const auto ijk = ecl_grid->getIJK(intersection.globCellIndex);
+
+            if (grid.get_cell(ijk[0], ijk[1], ijk[2]).is_active()) {
+                return ijk;
+            }
+        }
+
+        return std::nullopt;
     }
 
 } // anonymous namespace
@@ -795,6 +843,40 @@ The cell ({},{},{}) in well {} is not active and the connection will be ignored)
 
         const auto& perf_top = record.getItem<Kw::PERF_TOP>();
         const auto& perf_bot = record.getItem<Kw::PERF_BOT>();
+        const auto interval = Connection::PerforationInterval {
+            .branch = branch,
+            .top = perf_top.getSIDouble(0),
+            .bottom = perf_bot.getSIDouble(0),
+        };
+        const auto& mds = this->md.at(branch);
+
+        if (! ((mds.front() <= interval.top) && (interval.top <= interval.bottom) &&
+               (interval.bottom <= mds.back())))
+        {
+            const auto& length = perf_top.getActiveDimensions().front();
+            throw OpmInputError {
+                fmt::format("The perforation interval from {:g} to {:g} of branch {} of well {} "
+                            "is not contained in the branch's trajectory, which covers measured "
+                            "depths {:g} to {:g}.",
+                            length.convertSiToRaw(interval.top), length.convertSiToRaw(interval.bottom),
+                            branch, wname, length.convertSiToRaw(mds.front()),
+                            length.convertSiToRaw(mds.back())),
+                location
+            };
+        }
+
+        // When WELSPECS defaults the well head's I/J location, it is that
+        // of the first active cell entered by the main branch's trajectory,
+        // irrespective of the perforation intervals and record order.
+        if (((this->headI < 0) || (this->headJ < 0)) && this->coord.contains(1)) {
+            const auto head = firstActiveCell(this->coord.at(1), this->md.at(1),
+                                              grid, wellTraj.gridSearchData);
+
+            if (head.has_value()) {
+                if (this->headI < 0) { this->headI = (*head)[0]; }
+                if (this->headJ < 0) { this->headJ = (*head)[1]; }
+            }
+        }
 
         const auto& CFItem = record.getItem<Kw::CONNECTION_TRANSMISSIBILITY_FACTOR>();
         const auto& diameterItem = record.getItem<Kw::DIAMETER>();
@@ -841,12 +923,18 @@ The cell ({},{},{}) in well {} is not active and the connection will be ignored)
         if ((ctf_kind == Connection::CTFKind::DeckValue) &&
             ! ((deck_CF > 0.0) && (deck_Kh > 0.0)))
         {
-            auto msg = fmt::format(R"(Problem with COMPTRAJ keyword
-In {} line {}
-CF and Kh items for well {} must both be specified or both defaulted/negative)",
-                                   location.filename, location.lineno, wname);
+            throw OpmInputError {
+                fmt::format("CF and Kh items for well {} must both be specified "
+                            "or both defaulted/negative", wname),
+                location
+            };
+        }
 
-            throw std::logic_error(msg);
+        // A record repeating the perforation interval of an earlier one
+        // replaces all of that interval's contributions, including those to
+        // cells that it no longer perforates.
+        for (auto& connection : this->m_connections) {
+            connection.removeIntervalContribution(interval);
         }
 
         // Get the grid
@@ -854,8 +942,8 @@ CF and Kh items for well {} must both be specified or both defaulted/negative)",
 
         // Calulate the x,y,z coordinates of the begin and end of a perforation
         initWellPathGeometry(wellTraj.wellPathGeometry,
-                             this->coord.at(branch), this->md.at(branch),
-                             perf_top.getSIDouble(0), perf_bot.getSIDouble(0));
+                             this->coord.at(branch), mds,
+                             interval.top, interval.bottom);
 
         external::cvf::ref<external::RigEclipseWellLogExtractor> e {
             new external::RigEclipseWellLogExtractor {
@@ -888,21 +976,20 @@ CF and Kh items for well {} must both be specified or both defaulted/negative)",
             }
         }
 
+        // Number new connections past the existing ones.  Counting the
+        // existing connections does not do, as re-specifying an interval
+        // may have removed some of them.
+        auto next_complnum = 1;
+        auto next_sort_value = std::size_t{0};
+        for (const auto& connection : this->m_connections) {
+            next_complnum = std::max(next_complnum, connection.complnum() + 1);
+            next_sort_value = std::max(next_sort_value, connection.sort_value() + 1);
+        }
+
         for (std::size_t ic = 0; ic < cell_pieces.size(); ++ic) {
             const auto& pieces = cell_pieces[ic];
             const auto global_index = intersections[pieces.front()].globCellIndex;
             const auto ijk = ecl_grid->getIJK(global_index);
-
-            // When using WELTRAJ & COMPTRAJ one may use default settings in
-            // WELSPECS for headI/J and let the headI/J be calculated by the
-            // trajectory data.
-            //
-            // If these defaults are used the headI/J are set to the first
-            // intersection.
-            if (ic == 0) {
-                if (this->headI < 0) { this->headI = ijk[0]; }
-                if (this->headJ < 0) { this->headJ = ijk[1]; }
-            }
 
             const auto& cell = grid.get_cell(ijk[0], ijk[1], ijk[2]);
 
@@ -937,11 +1024,27 @@ The cell ({},{},{}) in well {} is not active and the connection will be ignored)
                 props->permx, props->permy, props->permz
             };
 
+            if (!std::ranges::all_of(cell.dimensions, [](const double d)
+                                    { return std::isfinite(d) && (d != 0.0); }))
+            {
+                OpmLog::warning(fmt::format(
+                    "COMPTRAJ in {} line {}: cell ({},{},{}) of well {} has "
+                    "non-finite or zero dimensions. The connection will be ignored",
+                    location.filename, location.lineno,
+                    ijk[0] + 1, ijk[1] + 1, ijk[2] + 1, wname));
+                continue;
+            }
+
+            auto direction = trajectoryDirection(
+                intersections[pieces.front()].intersectionLengthsInCellCS, cell.dimensions);
+            auto strongest_crossing_cf = -1.0;
+
             if (ctf_kind == Connection::CTFKind::DeckValue) {
                 // The values given in the record apply once to each cell,
                 // however often the trajectory enters it.
                 ctf_props.CF = deck_CF;
                 ctf_props.Kh = deck_Kh;
+                strongest_crossing_cf = deck_CF;
             }
             else {
                 // We must calculate CF and Kh from the items in the
@@ -960,9 +1063,14 @@ The cell ({},{},{}) in well {} is not active and the connection will be ignored)
 
                     ctf_props.connection_length += connection_vector.length();
 
-                    ctf_props.CF += std::hypot(connection_factor[0],
-                                               connection_factor[1],
-                                               connection_factor[2]);
+                    const auto crossing_cf = std::hypot(connection_factor[0],
+                                                        connection_factor[1],
+                                                        connection_factor[2]);
+                    ctf_props.CF += crossing_cf;
+                    if (crossing_cf > strongest_crossing_cf) {
+                        strongest_crossing_cf = crossing_cf;
+                        direction = trajectoryDirection(connection_vector, cell.dimensions);
+                    }
 
                     ctf_props.Kh += std::hypot(perm_thickness[0],
                                                perm_thickness[1],
@@ -990,12 +1098,18 @@ Branch {} of well {} yields a non-representable connection transmissibility fact
             // Todo: check what needs to be done for polymerMW module, see
             // loadCOMPDAT used by the PolymerMW module
 
-            const auto direction = ::Opm::Connection::Direction::Z;
-
             {
                 const auto K = permComponents(direction, cell_perm);
                 ctf_props.Ke = std::sqrt(K[0] * K[1]);
             }
+
+            const auto contribution = Connection::IntervalContribution {
+                .interval = interval,
+                .kind = ctf_kind,
+                .ctf = ctf_props,
+                .direction = direction,
+                .strongest_crossing_cf = strongest_crossing_cf,
+            };
 
             const auto prev =
                 std::ranges::find_if(this->m_connections,
@@ -1003,13 +1117,14 @@ Branch {} of well {} yields a non-representable connection transmissibility fact
                                      { return c.sameCoordinate(ijk[0], ijk[1], ijk[2]); });
 
             if (prev == this->m_connections.end()) {
-                const std::size_t noConn = this->m_connections.size();
                 this->addConnection(ijk[0], ijk[1], ijk[2],
-                                    cell.global_index, state,
+                                    cell.global_index, next_complnum++, state,
                                     cell.depth, ctf_props, satTableId,
                                     direction, ctf_kind,
-                                    noConn, 0,
+                                    next_sort_value++, 0,
                                     defaultSatTable);
+
+                this->m_connections.back().addIntervalContribution(contribution);
             }
             else {
                 const auto compl_num = prev->complnum();
@@ -1017,6 +1132,38 @@ Branch {} of well {} yields a non-representable connection transmissibility fact
                 const auto conSegNo = prev->segment();
                 const auto perf_range = prev->perf_range();
                 const auto thermal_length = prev->thermalLength();
+
+                // The connection is rebuilt so that this record's state and
+                // saturation table win.  The contributions of the other
+                // intervals perforating the cell are kept.  This record's
+                // interval was removed from them above.
+                const auto others = prev->intervalContributions();
+                const auto shared = ! others.empty();
+
+                // There is only one state and saturation table per
+                // connection, so this record changes those of the other
+                // intervals perforating the cell too.
+                if (shared && (state != prev->state())) {
+                    OpmLog::warning(fmt::format(R"(Problem with COMPTRAJ keyword
+In {} line {}
+Cell ({},{},{}) of well {} is perforated by several COMPTRAJ intervals. The interval from {} to {} of branch {} changes the state of the cell from {} to {}, for all of them)",
+                                                location.filename, location.lineno,
+                                                ijk[0] + 1, ijk[1] + 1, ijk[2] + 1, wname,
+                                                perf_top.get<double>(0), perf_bot.get<double>(0),
+                                                branch,
+                                                Connection::State2String(prev->state()),
+                                                Connection::State2String(state)));
+                }
+
+                if (shared && (satTableId != prev->satTableId())) {
+                    OpmLog::warning(fmt::format(R"(Problem with COMPTRAJ keyword
+In {} line {}
+Cell ({},{},{}) of well {} is perforated by several COMPTRAJ intervals. The interval from {} to {} of branch {} changes the saturation table of the cell from {} to {}, for all of them)",
+                                                location.filename, location.lineno,
+                                                ijk[0] + 1, ijk[1] + 1, ijk[2] + 1, wname,
+                                                perf_top.get<double>(0), perf_bot.get<double>(0),
+                                                branch, prev->satTableId(), satTableId));
+                }
 
                 *prev = Connection {
                     ijk[0], ijk[1], ijk[2],
@@ -1027,9 +1174,35 @@ Branch {} of well {} yields a non-representable connection transmissibility fact
                 };
 
                 prev->updateSegment(conSegNo, cell.depth, thermal_length,
-                                    css_ind, *perf_range);
+                                    css_ind, perf_range);
+
+                for (const auto& other : others) {
+                    prev->addIntervalContribution(other);
+                }
+                prev->addIntervalContribution(contribution);
             }
         }
+
+        // The old interval's contributions were removed before adding its
+        // replacements. Warn about and remove connections that now have no
+        // contributions from any interval; keep those still perforated.
+        for (const auto& connection : this->m_connections) {
+            if (!connection.intervalContributions().empty()) {
+                continue;
+            }
+
+            OpmLog::warning(fmt::format(R"(Problem with COMPTRAJ keyword
+In {} line {}
+The interval from {} to {} of branch {} of well {} no longer perforates cell ({},{},{}), which no other COMPTRAJ interval perforates. The connection is removed)",
+                                        location.filename, location.lineno,
+                                        perf_top.get<double>(0), perf_bot.get<double>(0),
+                                        branch, wname,
+                                        connection.getI() + 1, connection.getJ() + 1,
+                                        connection.getK() + 1));
+        }
+
+        std::erase_if(this->m_connections,
+                      [](const Connection& c) { return c.intervalContributions().empty(); });
     }
 
     void WellConnections::loadWELTRAJ(const DeckRecord& record,
