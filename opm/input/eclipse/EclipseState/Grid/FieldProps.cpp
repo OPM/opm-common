@@ -2521,7 +2521,8 @@ void FieldProps::scanGridKeywords(const DeckView& keywords)
 // natural order of the matrix half; a fracture cell takes the value of its
 // matrix twin.  Where the deck sets SIGMAV for some cells (by BOX, EQUALS,
 // OPERATE or a plain array), those cells keep their value and SIGMA fills the
-// others.
+// others.  A defaulted value is 0, which leaves its cells without coupling; a
+// warning says how many values are defaulted.
 void FieldProps::applyDualPorosityScalars(const GRIDSection& grid_section)
 {
     if (!this->grid_ptr->dualPorosity()) {
@@ -2530,7 +2531,8 @@ void FieldProps::applyDualPorosityScalars(const GRIDSection& grid_section)
 
     if (grid_section.hasKeyword("SIGMA")) {
         const auto& keyword = grid_section["SIGMA"].back();
-        const auto& values = keyword.getRecord(0).getItem("COUPLING").getSIDoubleData();
+        const auto& item = keyword.getRecord(0).getItem("COUPLING");
+        const auto& values = item.getSIDoubleData();
         const auto& grid = *this->grid_ptr;
         const std::size_t matrix_cells = grid.getCartesianSize() / 2;
         if ((values.size() != 1) && (values.size() != matrix_cells)) {
@@ -2551,6 +2553,18 @@ void FieldProps::applyDualPorosityScalars(const GRIDSection& grid_section)
                                             "(cell ({}, {}, {}) has {}).",
                                             ijk[0] + 1, ijk[1] + 1, ijk[2] + 1, *bad),
                                 keyword.location());
+        }
+
+        std::size_t defaulted = 0;
+        for (std::size_t i = 0; i < values.size(); ++i) {
+            defaulted += item.defaultApplied(i) ? 1 : 0;
+        }
+        if (defaulted > 0) {
+            const auto message = fmt::format("SIGMA: {} of {} values are defaulted and taken as 0, "
+                                             "which leaves those cells without matrix-fracture "
+                                             "coupling; give the values if that is not intended.",
+                                             defaulted, values.size());
+            OpmLog::warning(Log::fileMessage(keyword.location(), message));
         }
 
         std::vector<double> sigma(this->active_size, values.front());
