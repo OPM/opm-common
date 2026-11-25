@@ -24,11 +24,35 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <array>
+#include <optional>
+
+#include <external/resinsight/ReservoirDataModel/RigWellPath.h>
 
 namespace Opm {
 
 //! \brief Obtain a list of grid independent well keyword handlers.
 std::vector<std::pair<std::string,KeywordHandlers::handler_function>> getGridIndependentWellKeywordHandlers();
+
+/// Populate a well path geometry from a branch trajectory.
+///
+/// \param[in,out] wellPathGeometry Geometry object to fill with the
+/// trajectory points and measured depths of the requested interval.
+///
+/// \param[in] coords Trajectory X/Y/Z coordinate columns of a single branch.
+///
+/// \param[in] mds Trajectory measured depths of a single branch.
+///
+/// \param[in] top_opt Measured depth at which the interval starts.
+/// Defaults to the start of the branch trajectory.
+///
+/// \param[in] bot_opt Measured depth at which the interval ends.  Defaults
+/// to the end of the branch trajectory.
+void initWellPathGeometry(external::cvf::ref<external::RigWellPath>& wellPathGeometry,
+                          const std::array<std::vector<double>, 3>&  coords,
+                          const std::vector<double>&                 mds,
+                          std::optional<double>                      top_opt = std::nullopt,
+                          std::optional<double>                      bot_opt = std::nullopt);
 
 }
 
