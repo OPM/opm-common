@@ -4878,6 +4878,39 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(WagThreePhaseCycles, Scalar, Types)
     BOOST_CHECK_EQUAL(cell.gasOil().nState(), 5);
 }
 
+// A reversal from drainage to imbibition, followed by a gas saturation increase
+// smaller than the state update tolerance. The next drainage curve must then
+// start at the current point of the imbibition curve, also right after the
+// first imbibition update.
+BOOST_AUTO_TEST_CASE_TEMPLATE(WagNextDrainageAfterFirstImbibitionUpdate, Scalar, Types)
+{
+    const double C = 2.0;
+    const double alpha = 0.5;
+    const double tol = wagTol<Scalar>();
+    WagCell<Scalar> cell(wagHysterDeck(C, alpha, 1.0e-6, 0.001, 0.0));
+    const Scalar sw = 0.3;
+
+    cell.step(sw, 0.0);
+    cell.step(sw, 0.0);
+    for (int i = 2; i <= 40; i += 2) {
+        cell.step(sw, i / 100.0);
+    }
+    BOOST_CHECK_EQUAL(cell.gasOil().nState(), 2);
+
+    // First imbibition update, then krg must be continuous at the reversal.
+    const double sgRev = 0.39;
+    const Scalar krgRev = cell.step(sw, sgRev);
+    for (const double dsg : { 1.0e-6, 1.0e-5, 1.0e-4, 5.0e-4 }) {
+        BOOST_TEST_CONTEXT("dsg = " << dsg) {
+            BOOST_CHECK_SMALL(double(cell.krg(sw, sgRev + dsg) - krgRev), 2.0 * dsg + tol);
+            BOOST_CHECK_SMALL(double(cell.krg(sw, sgRev - dsg) - krgRev), 2.0 * dsg + tol);
+        }
+    }
+    // A sub-tolerance increase continues the imbibition state.
+    const Scalar krgUp = cell.step(sw, sgRev + 5.0e-4);
+    BOOST_CHECK_SMALL(double(krgUp - krgRev), 2.0 * 5.0e-4 + tol);
+}
+
 // Gas arriving after a period without mobile gas: the drainage starts at the
 // critical saturation and uses the water saturation at gas arrival.
 BOOST_AUTO_TEST_CASE_TEMPLATE(WagGasArrival, Scalar, Types)

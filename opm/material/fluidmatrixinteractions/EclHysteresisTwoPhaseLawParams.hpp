@@ -840,6 +840,10 @@ public:
                     isDrain_ = false;
                     SncrtWAGImb_ = SncrtWAG_;
                     krnSwWAG_ = krnSw;
+                    // A next drainage curve may start right away, also for a gas
+                    // saturation increase below the tolerance.
+                    krnSwDrainStartNxt_ = krnSw;
+                    swatImbStartNxt_ = std::max(Swco_, swCur);
                     updateParams = true;
                 }
             }
@@ -1138,7 +1142,7 @@ private:
             }
         }
 
-        if (!wasDrain_ && !isDrain_) { //Moving along current imb curve
+        if (!isDrain_) { // Starting or moving along current imb curve
             krnDrainStartNxt_ = EffLawT::twoPhaseSatKrn(drainageParams(), std::min(krnSwWAG_, Scalar(1.0 - SncrtWAG_)));
             if (nState_ > 1) {
                 krnImbStartNxt_ = computeKrImbWAG(krnSwWAG_);
