@@ -214,6 +214,24 @@ BOOST_AUTO_TEST_CASE(SinglePhaseVaporF1)
     checkExpectedPhase(testCase, outcome.summary);
 }
 
+// FACTLI scales the Li critical temperature: 1.1 * 558.24 K puts 600 K below
+// the threshold (liquid), 0.85 * 558.24 K puts 500 K above it (vapor).
+BOOST_AUTO_TEST_CASE(SinglePhaseLabelScaledF1)
+{
+    using Flash = Opm::PTFlash<double, FluidSystemF1, true>;
+    BOOST_CHECK_CLOSE(Flash::li_critical_temperature(f1Z), 558.24, 1.e-3);
+
+    FlashCase<numComponentsF1> liquid{"FACTLI 1.1 liquid F1", 1e5, 600., f1Z};
+    liquid.expected = ExpectedPhase::single_liquid;
+    liquid.li_factor = 1.1;
+    checkExpectedPhase(liquid, runFlash<FluidSystemF1, EvaluationF1>(liquid).summary);
+
+    FlashCase<numComponentsF1> vapor{"FACTLI 0.85 vapor F1", 1e5, 500., f1Z};
+    vapor.expected = ExpectedPhase::single_vapor;
+    vapor.li_factor = 0.85;
+    checkExpectedPhase(vapor, runFlash<FluidSystemF1, EvaluationF1>(vapor).summary);
+}
+
 // Two-phase split invariants: normalization, mass balance, equal fugacity
 BOOST_AUTO_TEST_CASE(TwoPhaseInvariantsF1)
 {
