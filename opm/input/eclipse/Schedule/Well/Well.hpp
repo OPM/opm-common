@@ -629,7 +629,9 @@ public:
     bool handleCOMPLUMP(const DeckRecord& record);
     bool handleWPIMULT(const DeckRecord& record);
     bool handleWINJCLN(const DeckRecord& record, const KeywordLocation& location);
-    bool handleWINJDAM(const DeckRecord& record, const KeywordLocation& location);
+    // Sets matched to true if a connection matches the record's I,J,K.
+    bool handleWINJDAM(const DeckRecord& record, const KeywordLocation& location,
+                       bool& matched);
     bool handleWINJMULT(const DeckRecord& record, const KeywordLocation& location);
     void setFilterConc(const UDAValue& conc);
     double evalFilterConc(const SummaryState& summary_sate) const;

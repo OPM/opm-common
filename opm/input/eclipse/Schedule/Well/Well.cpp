@@ -1881,7 +1881,8 @@ bool Well::handleWINJCLN(const DeckRecord& record, const KeywordLocation& locati
     return this->updateConnections(std::move(new_connections), false);
 }
 
-bool Well::handleWINJDAM(const DeckRecord& record, const KeywordLocation& location)
+bool Well::handleWINJDAM(const DeckRecord& record, const KeywordLocation& location,
+                         bool& matched)
 {
     auto match = [&record](const Connection& c) -> bool {
         if (!match_eq(c.getI(), record, "I", -1)) { return false; }
@@ -1904,6 +1905,7 @@ bool Well::handleWINJDAM(const DeckRecord& record, const KeywordLocation& locati
 
         auto connection_copy = connection;
         connection_copy.setFilterCake(filter_cake);
+        matched = true;
 
         new_connections->add(connection_copy);
     }

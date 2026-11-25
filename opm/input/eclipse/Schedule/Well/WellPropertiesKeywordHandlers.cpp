@@ -48,6 +48,8 @@
 #include <string>
 #include <vector>
 
+#include <opm/common/OpmLog/OpmLog.hpp>
+
 #include <fmt/format.h>
 
 namespace Opm {
@@ -333,11 +335,24 @@ void handleWINJDAM(HandlerContext& handlerContext)
         const std::string& wellNamePattern = record.getItem<ParserKeywords::WINJDAM::WELL_NAME>().getTrimmedString(0);
         const auto well_names = handlerContext.wellNames(wellNamePattern, true);
 
+        bool matched = false;
         for (const auto& well_name : well_names) {
             auto well = handlerContext.state().wells(well_name);
-            if (well.handleWINJDAM(record, handlerContext.keyword.location())) {
+            if (well.handleWINJDAM(record, handlerContext.keyword.location(), matched)) {
                 handlerContext.state().wells.update( std::move(well) );
             }
+        }
+
+        if (! matched && ! well_names.empty()) {
+            const auto& location = handlerContext.keyword.location();
+            OpmLog::warning(fmt::format("WINJDAM in file {} line {}: cell ({},{},{}) "
+                                        "is not a connection of well {}; "
+                                        "the filter cake is ignored.",
+                                        location.filename, location.lineno,
+                                        record.getItem<ParserKeywords::WINJDAM::I>().get<int>(0),
+                                        record.getItem<ParserKeywords::WINJDAM::J>().get<int>(0),
+                                        record.getItem<ParserKeywords::WINJDAM::K>().get<int>(0),
+                                        wellNamePattern));
         }
     }
 }

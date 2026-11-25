@@ -7868,6 +7868,141 @@ END
     }
 }
 
+BOOST_AUTO_TEST_CASE(WINJDAM_Not_Connection_Warns)
+{
+    const auto deck = Parser{}.parseString(R"(RUNSPEC
+DIMENS
+  10 10 10 /
+START
+10 MAI 2007 /
+GRID
+DXV
+10*100.0 /
+DYV
+10*100.0 /
+DZV
+10*10.0 /
+DEPTHZ
+121*2000.0 /
+PORO
+    1000*0.1 /
+PERMX
+    1000*1 /
+PERMY
+    1000*1 /
+PERMZ
+    1000*1 /
+SCHEDULE
+WELSPECS
+    'INJ1' 'I' 9 9 1* 'WATER' /
+    'INJ2' 'I' 5 5 1* 'WATER' /
+/
+COMPDAT
+ 'INJ1'  9  9   1   1 'OPEN' 1* 32.948 0.311 3047.839 1* 1* 'X' 22.100 /
+ 'INJ2'  5  5   1   1 'OPEN' 1* 32.948 0.311 3047.839 1* 1* 'X' 22.100 /
+/
+WINJDAM
+ 'INJ*' 'LINEAR' 1.0e-3 0.2 1* 30.0 9 9 1 /
+ 'INJ*' 'LINEAR' 1.0e-3 0.2 1* 30.0 5 5 5 /
+/
+DATES
+  10 JUN 2007 /
+/
+END
+)");
+
+    std::ostringstream warnings;
+    OpmLog::addBackend("STREAM", std::make_shared<StreamLog>(warnings, Log::MessageType::Warning));
+
+    try {
+        const auto es    = EclipseState { deck };
+        const auto sched = Schedule { deck, es };
+
+        BOOST_CHECK(sched[0].wells("INJ1").getConnections()[0].filterCakeActive());
+        BOOST_CHECK(!sched[0].wells("INJ2").getConnections()[0].filterCakeActive());
+    }
+    catch (...) {
+        OpmLog::removeBackend("STREAM");
+        throw;
+    }
+    OpmLog::removeBackend("STREAM");
+
+    // One warning: the pattern record for (9,9,1) matches INJ1 and must not warn for INJ2.
+    const auto w = warnings.str();
+    BOOST_CHECK_MESSAGE(w.find("(5,5,5) is not a connection of well INJ*") != std::string::npos &&
+                        w.find("WINJDAM") == w.rfind("WINJDAM"),
+                        "Expected one WINJDAM warning, got: " << w);
+}
+
+BOOST_AUTO_TEST_CASE(Well_Fracture_Seeds_Not_Connection_Warns)
+{
+    const auto deck = Parser{}.parseString(R"(RUNSPEC
+DIMENS
+  10 10 10 /
+START
+10 MAI 2007 /
+MECH
+GRID
+DXV
+10*100.0 /
+DYV
+10*100.0 /
+DZV
+10*10.0 /
+DEPTHZ
+121*2000.0 /
+PORO
+    1000*0.1 /
+PERMX
+    1000*1 /
+PERMY
+    1000*1 /
+PERMZ
+    1000*1 /
+SCHEDULE
+WELSPECS
+    'OP_1' 'OP' 9 9 1* 'OIL' /
+    'OP_2' 'OP' 2 2 1* 'OIL' /
+/
+COMPDAT
+ 'OP_1'  9  9   1   1 'OPEN' 1* 32.948 0.311 3047.839 1* 1* 'X' 22.100 /
+ 'OP_2'  2  2   1   1 'OPEN' 1* 32.948 0.311 3047.839 1* 1* 'X' 22.100 /
+/
+DATES
+  10 JUN 2007 /
+/
+WSEED
+  'OP*'   9 9 1   1.0 0.0 0.0 /
+  'OP_1'  5 5 5   1.0 0.0 0.0 /
+/
+DATES
+  1 SEP 2007 /
+/
+END
+)");
+
+    std::ostringstream warnings;
+    OpmLog::addBackend("STREAM", std::make_shared<StreamLog>(warnings, Log::MessageType::Warning));
+
+    try {
+        const auto es    = EclipseState { deck };
+        const auto sched = Schedule { deck, es };
+
+        BOOST_REQUIRE(sched[1].wseed.has("OP_1"));
+        BOOST_CHECK_EQUAL(sched[1].wseed("OP_1").seedCells().size(), std::size_t{1});
+        BOOST_CHECK(!sched[1].wseed.has("OP_2"));
+    }
+    catch (...) {
+        OpmLog::removeBackend("STREAM");
+        throw;
+    }
+    OpmLog::removeBackend("STREAM");
+
+    const std::string text = warnings.str();
+    BOOST_CHECK(text.find("(5,5,5) is not a connection of well OP_1") != std::string::npos);
+    BOOST_CHECK(text.find("(9,9,1)") == std::string::npos);  // (9,9,1) matches OP_1, so no warning
+}
+
 BOOST_AUTO_TEST_CASE(Well_Fracture_Seeds_With_Size)
 {
     const auto deck = Parser{}.parseString(R"(RUNSPEC

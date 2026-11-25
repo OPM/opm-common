@@ -1463,6 +1463,7 @@ void handleWSEED(HandlerContext& handlerContext)
             .horizontalExtent(record.getItem<ParserKeywords::WSEED::SIZE_H>().getSIDouble(0))
             .width           (record.getItem<ParserKeywords::WSEED::WIDTH> ().getSIDouble(0));
 
+        bool anyConn = false;
         for (const auto& well_name : well_names) {
             const auto& wconns = handlerContext.state()
                 .wells(well_name)
@@ -1490,7 +1491,10 @@ void handleWSEED(HandlerContext& handlerContext)
                     });
             }
 
-            if (! hasConn) { continue; }
+            if (! hasConn) {
+                continue;
+            }
+            anyConn = true;
 
             auto seed = seeds.has(well_name)
                 ? std::make_shared<WellFractureSeeds>(seeds(well_name))
@@ -1500,6 +1504,18 @@ void handleWSEED(HandlerContext& handlerContext)
                 updated_seed_wells.insert(well_name);
                 seeds.update(well_name, std::move(seed));
             }
+        }
+
+        if (! anyConn) {
+            const auto& location = handlerContext.keyword.location();
+            OpmLog::warning(fmt::format("WSEED in file {} line {}: cell ({},{},{}) "
+                                        "is not a connection of well {}; "
+                                        "the fracture seed is ignored.",
+                                        location.filename, location.lineno,
+                                        record.getItem<ParserKeywords::WSEED::I>().get<int>(0),
+                                        record.getItem<ParserKeywords::WSEED::J>().get<int>(0),
+                                        record.getItem<ParserKeywords::WSEED::K>().get<int>(0),
+                                        wellNamePattern));
         }
     }
 
