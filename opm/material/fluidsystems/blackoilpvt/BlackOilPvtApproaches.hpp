@@ -70,8 +70,8 @@ using Co2StorePvtApproaches = BlackOilPvtApproaches<GasPvtApproach::Co2Gas,
                                                     OilPvtApproach::NoOil,
                                                     WaterPvtApproach::BrineCo2>;
 
-//! Live oil with dry gas: dissolved gas, no vaporized oil (PVTO, PVDG and PVTW). Used by
-//! for example SPE1 and SPE9.
+//! Live oil with dry gas: dissolved gas, no vaporized oil (PVTO, PVDG and PVTW).
+//! Used for example by SPE1 and SPE9.
 using LiveOilDryGasPvtApproaches = BlackOilPvtApproaches<GasPvtApproach::DryGas,
                                                          OilPvtApproach::LiveOil,
                                                          WaterPvtApproach::ConstantCompressibilityWater>;
