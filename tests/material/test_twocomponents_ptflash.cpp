@@ -214,6 +214,36 @@ BOOST_AUTO_TEST_CASE(SinglePhaseVaporF1)
     checkExpectedPhase(testCase, outcome.summary);
 }
 
+// A lean feed (10 % C1) at 1 bar is a single vapour from 447 to 549 K, where
+// the stability test still finds a trial phase. The split failed there at
+// every temperature (#5533); substitution now returns the single vapour.
+// Newton is left out: from the trial's ratios it converges to L > 1 here.
+BOOST_AUTO_TEST_CASE(LeanFeedSingleVapourF1)
+{
+    const std::array<double, numComponentsF1> leanZ = {0.1, 0.9};
+    for (const auto method : {Opm::PTFlashMethod::Ssi, Opm::PTFlashMethod::SsiNewton}) {
+        std::vector<double> failed;
+        for (double T = 447.; T <= 549.; T += 1.) {
+            FlashCase<numComponentsF1> testCase{"lean feed F1", 1e5, T, leanZ};
+            testCase.method = method;
+            try {
+                const auto result = runFlash<FluidSystemF1, EvaluationF1>(testCase).summary;
+                if (!result.single_phase || std::abs(result.L) > SINGLE_PHASE_L_TOLERANCE) {
+                    failed.push_back(T);
+                }
+            }
+            catch (const std::exception&) {
+                failed.push_back(T);
+            }
+        }
+        BOOST_CHECK_MESSAGE(failed.empty(),
+                            Opm::ptFlashMethodToString(method)
+                                << ": no single vapour at " << failed.size()
+                                << " temperatures, the first at "
+                                << (failed.empty() ? 0. : failed.front()) << " K");
+    }
+}
+
 // Two-phase split invariants: normalization, mass balance, equal fugacity
 BOOST_AUTO_TEST_CASE(TwoPhaseInvariantsF1)
 {
