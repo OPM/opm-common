@@ -2485,6 +2485,7 @@ void FieldProps::scanGRIDSection(const GRIDSection& grid_section)
 
     this->applyDPGRID(grid_section);
     this->applyDualPorosityScalars(grid_section);
+    this->applyMatrixBlockHeight(grid_section);
 }
 
 void FieldProps::scanGridKeywords(const DeckView& keywords)
@@ -2601,6 +2602,57 @@ void FieldProps::applyDualPorosityScalars(const GRIDSection& grid_section)
                                         ijk[0] + 1, ijk[1] + 1, ijk[2] + 1, *bad),
                             grid_section.hasKeyword("SIGMAV")
                                 ? grid_section["SIGMAV"].back().location()
+                                : KeywordLocation{});
+    }
+}
+
+// The whole-grid matrix block height DZMTRX fills the per-cell array DZMTRXV,
+// as SIGMA fills SIGMAV: cells that the deck sets through DZMTRXV keep their
+// value.  The gravity drainage models read the height from DZMTRXV.
+void FieldProps::applyMatrixBlockHeight(const GRIDSection& grid_section)
+{
+    if (!this->grid_ptr->dualPorosity()) {
+        return;
+    }
+
+    if (grid_section.hasKeyword("DZMTRX")) {
+        const auto& keyword = grid_section["DZMTRX"].back();
+        const auto& values = keyword.getSIDoubleData();
+        if (values.size() != 1) {
+            throw OpmInputError(fmt::format("DZMTRX takes one value for the whole grid, not {}; "
+                                            "give per-cell heights through DZMTRXV.",
+                                            values.size()),
+                                keyword.location());
+        }
+        if (values.front() < 0.0) {
+            throw OpmInputError("The DZMTRX value cannot be negative.", keyword.location());
+        }
+
+        if (this->double_data.find("DZMTRXV") == this->double_data.end()) {
+            this->init_get<double>("DZMTRXV").default_assign(values.front());
+        }
+        else {
+            auto& dzmtrxv = this->init_get<double>("DZMTRXV");
+            dzmtrxv.default_update(std::vector<double>(dzmtrxv.dataSize(), values.front()));
+        }
+    }
+
+    const auto it = this->double_data.find("DZMTRXV");
+    if (it == this->double_data.end()) {
+        return;
+    }
+
+    const auto& values = it->second.data;
+    const auto  bad    = std::find_if(values.begin(), values.end(),
+                                      [](const double v) { return v < 0.0; });
+    if (bad != values.end()) {
+        const auto active_index = static_cast<std::size_t>(std::distance(values.begin(), bad));
+        const auto ijk = this->grid_ptr->getIJK(this->grid_ptr->getGlobalIndex(active_index));
+        throw OpmInputError(fmt::format("The DZMTRXV value cannot be negative "
+                                        "(cell ({}, {}, {}) has {}).",
+                                        ijk[0] + 1, ijk[1] + 1, ijk[2] + 1, *bad),
+                            grid_section.hasKeyword("DZMTRXV")
+                                ? grid_section["DZMTRXV"].back().location()
                                 : KeywordLocation{});
     }
 }

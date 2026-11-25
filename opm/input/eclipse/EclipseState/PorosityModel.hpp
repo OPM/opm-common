@@ -52,6 +52,17 @@ public:
         DualPermeability,
     };
 
+    /// How gravity acts on the flow between a matrix cell and its fracture
+    /// twin.
+    enum class GravityDrainage {
+        /// No gravity term in the matrix-fracture flow.
+        None,
+
+        /// The standard model (GRAVDR): a gravity head built from the
+        /// matrix block height joins the matrix-fracture flow.
+        Standard,
+    };
+
     /// Single porosity.
     PorosityModel() = default;
 
@@ -79,6 +90,11 @@ public:
     /// must take the answer from here rather than derive its own.
     bool fracturePermeabilityScalingActive() const noexcept;
 
+    /// Gravity drainage model of the run.  GRAVDR selects the standard
+    /// model in the dual-continuum models; never active in single
+    /// porosity.
+    GravityDrainage gravityDrainage() const noexcept;
+
     static PorosityModel serializationTestObject();
 
     bool operator==(const PorosityModel& other) const;
@@ -88,6 +104,7 @@ public:
     {
         serializer(this->m_type);
         serializer(this->m_scale_fracture_perm);
+        serializer(this->m_gravity_drainage);
     }
 
 private:
@@ -96,6 +113,10 @@ private:
     /// Fracture permeability scaling as requested by the deck.  Only
     /// meaningful in the dual-continuum models; NODPPM turns it off.
     bool m_scale_fracture_perm{true};
+
+    /// Gravity drainage model as requested by the deck.  Only meaningful
+    /// in the dual-continuum models.
+    GravityDrainage m_gravity_drainage{GravityDrainage::None};
 };
 
 } // namespace Opm

@@ -4162,6 +4162,40 @@ BOOST_AUTO_TEST_CASE(DefaultedSigmaValueGivesNoCoupling) {
     BOOST_CHECK_EQUAL(warningsBuilding(deckData("0.1 0.2")), 0U);
 }
 
+BOOST_AUTO_TEST_CASE(DzmtrxFillsTheCellsDzmtrxvLeavesUnset) {
+    // The whole-grid block height DZMTRX fills DZMTRXV, and a cell that the
+    // deck sets through DZMTRXV keeps its value.
+    const Opm::EclipseState es{ sigmaArrayDeck("DZMTRX\n 5.0 /\n"
+                                               "EQUALS\n"
+                                               " 'DZMTRXV' 8.0 3 3 1 1 1 1 /\n"
+                                               "/\n") };
+
+    const auto& dzmtrxv = es.fieldProps().get_double("DZMTRXV");
+    BOOST_REQUIRE_EQUAL(dzmtrxv.size(), 6U);
+    BOOST_CHECK_CLOSE(dzmtrxv[0], 5.0, 1e-10);     // from DZMTRX
+    BOOST_CHECK_CLOSE(dzmtrxv[1], 5.0, 1e-10);     // from DZMTRX
+    BOOST_CHECK_CLOSE(dzmtrxv[2], 8.0, 1e-10);     // set by EQUALS
+    BOOST_CHECK_CLOSE(dzmtrxv[3], 5.0, 1e-10);     // fracture cell, from DZMTRX
+}
+
+BOOST_AUTO_TEST_CASE(DzmtrxAndDzmtrxvInputErrors) {
+    // DZMTRX takes one value; neither a DZMTRX nor a DZMTRXV value may be
+    // negative, and a negative DZMTRXV value names its cell as (I, J, K).
+    const auto refusedWith = [](const std::string& gridKeywords, const std::string& text)
+    {
+        BOOST_CHECK_EXCEPTION(Opm::EclipseState{ sigmaArrayDeck(gridKeywords) },
+                              Opm::OpmInputError,
+                              [&text](const Opm::OpmInputError& e)
+                              {
+                                  return std::string{ e.what() }.find(text) != std::string::npos;
+                              });
+    };
+
+    refusedWith("DZMTRX\n 2*5.0 /\n", "DZMTRX takes one value for the whole grid, not 2");
+    refusedWith("DZMTRX\n -1.0 /\n", "The DZMTRX value cannot be negative");
+    refusedWith("DZMTRXV\n 4*1.0 -2.0 1.0 /\n", "cell (2, 1, 2) has -2");
+}
+
 BOOST_AUTO_TEST_CASE(DPGRIDCopiesDefaultedProperties) {
     // Properties given for the matrix half only follow onto the fracture
     // twins; explicitly-supplied fracture values are kept.
