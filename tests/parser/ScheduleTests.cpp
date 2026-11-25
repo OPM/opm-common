@@ -7588,6 +7588,49 @@ END
     BOOST_CHECK_EQUAL(sd.size(), restart.report_step + std::size_t{3});
 }
 
+BOOST_AUTO_TEST_CASE(ScheduleDeck_SKIPREST_Warns_On_Skipped_GLIFTLIM)
+{
+    const auto start = asTimePoint(TimeStampUTC { TimeStampUTC::YMD { 2025, 12, 24 }, 17, 0, 0, 0 });
+
+    auto restart = ScheduleRestartInfo{};
+    restart.time = asTimePoint(TimeStampUTC { TimeStampUTC::YMD { 2026, 2, 3 }, 10, 0, 0, 0 });
+    restart.report_step = 42;
+    restart.skiprest = true;
+
+    const auto deck = Parser{}.parseString(R"(SCHEDULE
+GLIFTLIM
+  'FIELD' 1000.0 /
+/
+DATES
+  3 FEB 2026 10:00:00 /
+/
+GLIFTLIM
+  'FIELD' 1200.0 /
+/
+DATES
+  4 FEB 2026 00:00:00 /
+/
+END
+)");
+
+    std::ostringstream warnings;
+    OpmLog::addBackend("GLIFTLIM_SKIPREST",
+                       std::make_shared<StreamLog>(warnings, Log::MessageType::Warning));
+    const auto sd = ScheduleDeck { start, deck, restart };
+    OpmLog::removeBackend("GLIFTLIM_SKIPREST");
+
+    // The restart file does not hold the GLIFTLIM limits, so the skipped
+    // keyword is reported ...
+    const auto reported = warnings.str();
+    BOOST_CHECK(reported.find("Keyword GLIFTLIM") != std::string::npos);
+    BOOST_CHECK(reported.find("line 2") != std::string::npos);
+
+    // ... and only that one: the keyword after the restart date is kept.
+    BOOST_CHECK_EQUAL(reported.find("Keyword GLIFTLIM"), reported.rfind("Keyword GLIFTLIM"));
+    BOOST_CHECK(!sd[0].get("GLIFTLIM").has_value());
+    BOOST_CHECK(sd[restart.report_step].get("GLIFTLIM").has_value());
+}
+
 BOOST_AUTO_TEST_CASE(WCONPROD_UDA) {
     const std::string deck_string = R"(
 RUNSPEC

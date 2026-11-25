@@ -127,6 +127,18 @@ ScheduleDeck::ScheduleDeck(const time_point&          start_time,
             if (skiprest_include.find(keyword.name()) != skiprest_include.end()) {
                 this->m_blocks.front().push_back(keyword);
             }
+            else if (keyword.name() == "GLIFTLIM") {
+                // The restart file has no place for the GLIFTLIM limits, so
+                // they are lost unless the keyword is repeated after the
+                // restart date.
+                OpmLog::warning(OpmInputError::format(
+                    "Keyword {keyword} in {file} line {line} is before the "
+                    "restart date and is skipped (SKIPREST).\n"
+                    "The restart file does not hold the GLIFTLIM limits, so "
+                    "they are not active after the restart.\n"
+                    "Repeat GLIFTLIM after the restart date to keep them.",
+                    keyword.location()));
+            }
         }
         else {
             this->m_blocks.back().push_back(keyword);
