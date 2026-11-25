@@ -21,7 +21,6 @@
 
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/utility/OpmInputError.hpp>
-#include <opm/common/utility/numeric/linearInterpolation.hpp>
 
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 
@@ -42,6 +41,7 @@
 #include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
 
 #include <external/resinsight/LibGeometry/cvfBoundingBoxTree.h>
+#include <external/resinsight/ReservoirDataModel/RigWellPath.h>
 
 #include "../HandlerContext.hpp"
 #include "WellTrajInfo.hpp"
@@ -422,46 +422,6 @@ getGridIndependentWellKeywordHandlers()
         {"COMPTRAJ", &handleCOMPTRAJ},
         {"WELTRAJ", &handleWELTRAJ},
     };
-}
-
-void initWellPathGeometry(external::cvf::ref<external::RigWellPath>& wellPathGeometry,
-                          const std::array<std::vector<double>, 3>&  coords,
-                          const std::vector<double>&                 mds,
-                          std::optional<double>                      top_opt,
-                          std::optional<double>                      bot_opt)
-{
-    const double top = top_opt.value_or(mds.front());
-    const double bot = bot_opt.value_or(mds.back());
-
-    assert((mds.front() <= top) && (top <= bot) && (bot <= mds.back()));
-
-    std::vector<external::cvf::Vec3d> points;
-    std::vector<double> measured_depths;
-
-    points.reserve(coords[0].size());
-    measured_depths.reserve(coords[0].size());
-
-    // Calculate the x,y,z coordinates of the begin and end of the interval
-    external::cvf::Vec3d p_top, p_bot;
-    for (std::size_t i = 0; i < 3; ++i) {
-        p_top[i] = linearInterpolation(mds, coords[i], top);
-        p_bot[i] = linearInterpolation(mds, coords[i], bot);
-    }
-
-    points.push_back(p_top);
-    measured_depths.push_back(top);
-
-    for (std::size_t i = 0; i < coords[0].size(); ++i) {
-        if ((mds[i] > top) && (mds[i] < bot)) {
-            points.push_back(external::cvf::Vec3d(coords[0][i], coords[1][i], coords[2][i]));
-            measured_depths.push_back(mds[i]);
-        }
-    }
-
-    points.push_back(p_bot);
-    measured_depths.push_back(bot);
-
-    wellPathGeometry->setWellPathPoints(points, measured_depths);
 }
 
 } // namespace Opm

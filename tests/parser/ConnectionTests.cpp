@@ -40,6 +40,9 @@
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
 
 #include <opm/common/OpmLog/KeywordLocation.hpp>
+#include <opm/common/OpmLog/LogUtil.hpp>
+#include <opm/common/OpmLog/OpmLog.hpp>
+#include <opm/common/OpmLog/StreamLog.hpp>
 
 #include <opm/input/eclipse/Units/Units.hpp>
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
@@ -59,10 +62,10 @@
 #include <numeric>
 #include <ostream>
 #include <set>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <utility>
-#include <vector>
 #include <vector>
 
 #include <fmt/format.h>
@@ -2149,6 +2152,38 @@ BOOST_AUTO_TEST_CASE(Comptraj_Same_Branch_Intervals_Sharing_A_Cell)
     BOOST_CHECK(reversed.ctfProperties() == conn.ctfProperties());
 }
 
+BOOST_AUTO_TEST_CASE(Comptraj_D_Factor_Combination_Depends_On_Sign)
+{
+    const auto visits = [](const double d1, const double d2)
+    {
+        return fmt::format(R"(COMPTRAJ
+-- WELL BRANCH  TOP    BOT   REF NO STATE SAT   CF   DIAM   KH  SKIN  D
+  'W1'    1    2002   2012   2*     1*    1*   10.0  0.20  100  1.0 {} /
+  'W1'    1    2028   2035   2*     1*    1*   30.0  0.40  300  5.0 {} /
+/
+)", d1, d2);
+    };
+
+    // Well-level D-factors: CF-weighted mean, since WDFAC distributes the
+    // value using the CF of the combined connection.
+    {
+        const auto sched = comptrajSchedule(comptrajDeck(weltraj_u_shape + visits(2.0, 4.0)));
+        BOOST_CHECK_CLOSE(reenteredConnection(sched).dFactor(),
+                          (10.0*2.0 + 30.0*4.0) / 40.0, 1.0e-8);
+    }
+
+    // Connection-level D-factors: CF-weighted mean divided by the number
+    // of contributions.
+    {
+        const auto sched = comptrajSchedule(comptrajDeck(weltraj_u_shape + visits(-2.0, -4.0)));
+        BOOST_CHECK_CLOSE(reenteredConnection(sched).dFactor(),
+                          -(10.0*2.0 + 30.0*4.0) / (2 * 40.0), 1.0e-8);
+    }
+
+    BOOST_CHECK_THROW(comptrajSchedule(comptrajDeck(weltraj_u_shape + visits(2.0, -4.0))),
+                      Opm::OpmInputError);
+}
+
 BOOST_AUTO_TEST_CASE(Comptraj_Interval_Wholly_Within_One_Cell_Creates_Connection)
 {
     const auto schedule = R"(WELSPECS
@@ -2156,12 +2191,12 @@ BOOST_AUTO_TEST_CASE(Comptraj_Interval_Wholly_Within_One_Cell_Creates_Connection
 /
 WELTRAJ
   'W1'    1     250    250    2002    2002 /
-  'W1'    1     260    250    2004    2004 /
-  'W1'    1     260    260    2008    2008 /
+  'W1'    1     260    250    2004    2012.198 /
+  'W1'    1     260    260    2008    2022.968 /
 /
 COMPTRAJ
 -- CF and Kh defaulted, so they are calculated from the cell properties.
-  'W1'    1    2002   2008   2*     1*    1*   1*  0.25  1*  0 /
+  'W1'    1    2002   2022.968   2*     1*    1*   1*  0.25  1*  0 /
 /
 )";
     const auto deck = comptrajDeck(schedule);
@@ -2171,8 +2206,8 @@ COMPTRAJ
     BOOST_REQUIRE_EQUAL(connections.size(), std::size_t{1});
     const auto& conn = connectionAt(connections, 2, 2, 0);
     BOOST_REQUIRE_EQUAL(conn.intervalContributions().size(), std::size_t{1});
-    BOOST_CHECK(conn.CF() > 0.0);
-    BOOST_CHECK(conn.Kh() > 0.0);
+    BOOST_CHECK_CLOSE(conn.CF(), siCF(deck, 8.69319), 1.0e-4);
+    BOOST_CHECK_CLOSE(conn.Kh(), siKh(deck, 748.331), 1.0e-4);
     // A single straight piece from the first to the last point of the interval.
     BOOST_CHECK_CLOSE(conn.ctfProperties().connection_length,
                       std::hypot(10.0, 10.0, 6.0),
@@ -2356,8 +2391,8 @@ BOOST_AUTO_TEST_CASE(Comptraj_Earlier_Intervals_Can_Only_Be_Respecified_As_A_Who
 BOOST_AUTO_TEST_CASE(Comptraj_Respecified_Interval_Releases_Cells_It_No_Longer_Perforates)
 {
     // Cell (3,3,2) has no lateral permeability, so a connection factor
-    // calculated from the cell properties is not representable.  An
-    // interval only perforates the cell with a factor given in the input.
+    // calculated from the cell properties is zero.  An interval only
+    // perforates the cell with a factor given in the input.
     const auto zero_perm = std::string { R"(EQUALS
   PERMX 0 3 3 3 3 2 2 /
   PERMY 0 3 3 3 3 2 2 /
@@ -2429,6 +2464,156 @@ BOOST_AUTO_TEST_CASE(Comptraj_Respecified_Interval_Releases_Cells_It_No_Longer_P
         BOOST_CHECK_EQUAL(shared.intervalContributions().front().interval.branch, 2);
         BOOST_CHECK_CLOSE(shared.CF(), siCF(deck, 30.0), 1.0e-8);
         BOOST_CHECK_CLOSE(shared.Kh(), siKh(deck, 300.0), 1.0e-8);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(Comptraj_Zero_Perm_Along_Trajectory_Keeps_Connection)
+{
+    // The main branch runs vertically through the middle layer, which has
+    // no vertical permeability.  As for COMPDAT, the connection factor only
+    // depends on the permeabilities across the trajectory.
+    const auto deck = comptrajDeck(weltraj_two_branches + R"(COMPTRAJ
+-- WELL BRANCH  TOP    BOT   REF NO STATE SAT   CF   DIAM   KH  SKIN
+  'W1'    1    2000   2030   2*     1*    1*    1*  0.25   1*  0 /
+/
+)", R"(EQUALS
+  PERMZ 0 1 5 1 5 2 2 /
+/
+)");
+
+    const auto sched = comptrajSchedule(deck);
+    const auto& connections = sched.getWell("W1", 0).getConnections();
+
+    BOOST_REQUIRE_EQUAL(connections.size(), std::size_t{3});
+
+    const auto& conn = connectionAt(connections, 2, 2, 1);
+    BOOST_CHECK(conn.dir() == Opm::Connection::Direction::Z);
+    BOOST_CHECK_CLOSE(conn.CF(), siCF(deck, 10.5777), 1.0e-3);
+    BOOST_CHECK_CLOSE(conn.Kh(), siKh(deck, 1000.0), 1.0e-8);
+}
+
+BOOST_AUTO_TEST_CASE(Comptraj_Zero_Projected_Cell_Dimension_IsIgnored)
+{
+    const auto deck = Opm::Parser{}.parseString(R"(
+RUNSPEC
+METRIC
+START
+  18 MAR 2026 /
+OIL
+WATER
+DIMENS
+  1 1 1 /
+TABDIMS
+/
+EQLDIMS
+/
+WELLDIMS
+  1 10 1 1 /
+GRID
+COORD
+  100   0 2000   0   0 2010
+  100   0 2010   0   0 2020
+  100 100 2000   0 100 2010
+  100 100 2010   0 100 2020 /
+ZCORN
+  2000 2010 2000 2010 2010 2020 2010 2020 /
+EQUALS
+  PERMX 100 /
+  PERMY 100 /
+  PERMZ 10 /
+  PORO 0.3 /
+/
+PROPS
+DENSITY
+  800 1000 1 /
+SOLUTION
+EQUIL
+  2010 200 2010 1.23 1995 0.0 1* 1* -5 /
+SCHEDULE
+WELSPECS
+  'W1' 'G' 1 1 2000 OIL /
+/
+WELTRAJ
+  'W1' 1 50 50 2004 2004 /
+  'W1' 1 50 50 2016 2016 /
+/
+COMPTRAJ
+  'W1' 1 2004 2016 2* 1* 1* 10.0 0.25 100 0 /
+/
+TSTEP
+  1 /
+END
+)");
+
+    const auto es = Opm::EclipseState{deck};
+    const auto& grid = es.getInputGrid();
+    const auto cell_dims = grid.getCellDims(0);
+
+    BOOST_REQUIRE(grid.cellActive(0));
+    BOOST_REQUIRE(grid.isValidCellGeomtry(0, deck.getActiveUnitSystem()));
+    BOOST_REQUIRE_EQUAL(cell_dims[0], 0.0);
+    BOOST_REQUIRE_GT(grid.getCellVolume(0), 0.0);
+
+    std::ostringstream warnings;
+    Opm::OpmLog::addBackend("STREAM",
+                            std::make_shared<Opm::StreamLog>(warnings, Opm::Log::MessageType::Warning));
+
+    try {
+        Opm::ErrorGuard errors;
+        const auto sched = Opm::Schedule {
+            deck, es, Opm::ParseContext{}, errors, std::make_shared<Opm::Python>()
+        };
+        BOOST_CHECK(sched.getWell("W1", 0).getConnections().empty());
+    }
+    catch (...) {
+        Opm::OpmLog::removeBackend("STREAM");
+        throw;
+    }
+
+    Opm::OpmLog::removeBackend("STREAM");
+
+    const auto expected = std::string {
+        "cell (1,1,1) of well W1 has non-finite or zero dimensions. "
+        "The connection will be ignored"
+    };
+    BOOST_CHECK_MESSAGE(warnings.str().find(expected) != std::string::npos,
+                        warnings.str());
+}
+
+BOOST_AUTO_TEST_CASE(Comptraj_Ignored_Connection_Warning_Uses_Deck_Units)
+{
+    // A wellbore radius beyond Peaceman's effective radius, without skin,
+    // makes the connection factor of the vertical main branch
+    // non-representable, while its Kh remains finite.  The grid is in the
+    // deck's units, so the Kh of 8 length units through cell (3,3,1) is 800
+    // mD times that length unit in both unit systems.
+    for (const auto* units : { "METRIC", "FIELD" }) {
+        BOOST_TEST_CONTEXT(units) {
+            const auto deck = comptrajDeck(weltraj_two_branches + R"(COMPTRAJ
+-- WELL BRANCH  TOP    BOT   REF NO STATE SAT   CF   DIAM   KH  SKIN
+  'W1'    1    2001   2009   2*     1*    1*    1*  200    1*  0 /
+/
+)", {}, units);
+
+            std::ostringstream warnings;
+            Opm::OpmLog::addBackend("STREAM",
+                                    std::make_shared<Opm::StreamLog>(warnings, Opm::Log::MessageType::Warning));
+
+            try {
+                const auto sched = comptrajSchedule(deck);
+                BOOST_CHECK(sched.getWell("W1", 0).getConnections().empty());
+            }
+            catch (...) {
+                Opm::OpmLog::removeBackend("STREAM");
+                throw;
+            }
+
+            Opm::OpmLog::removeBackend("STREAM");
+
+            const auto expected = std::string { "or Kh (800) in cell (3,3,1)" };
+            BOOST_CHECK_MESSAGE(warnings.str().find(expected) != std::string::npos,
+                                warnings.str());
+        }
     }
 }
 

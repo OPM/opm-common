@@ -50,18 +50,18 @@
 #include <opm/input/eclipse/Parser/ParserKeywords/C.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
 
-#include <opm/input/eclipse/Schedule/Well/GridIndependentWellKeywordHandlers.hpp>
-
 #include <external/resinsight/LibCore/cvfVector3.h>
 #include <external/resinsight/ReservoirDataModel/RigHexIntersectionTools.h>
 #include <external/resinsight/ReservoirDataModel/RigWellLogExtractionTools.h>
 #include <external/resinsight/ReservoirDataModel/RigWellLogExtractor.h>
+#include <external/resinsight/ReservoirDataModel/RigWellPath.h>
 
 #include "../WellTraj/RigEclipseWellLogExtractor.hpp"
 #include "WellTrajInfo.hpp"
 
 #include <algorithm>
 #include <array>
+#include <cassert>
 #include <cmath>
 #include <cstddef>
 #include <iterator>
@@ -285,7 +285,9 @@ Connection ({},{},{}) (direction '{}') for well {} ignored because
         return perm_thickness;
     }
 
-    // Calculate directional (x,y,z) peaceman connection factors CFx, CFy, CFz
+    // Calculate directional (x,y,z) peaceman connection factors CFx, CFy,
+    // CFz.  A direction that the trajectory does not cross, or that has no
+    // permeability across it, contributes nothing.
     std::array<double, 3>
     connectionFactor(const std::array<double,3>& cell_perm,
                      const std::array<double,3>& cell_size,
@@ -310,6 +312,10 @@ Connection ({},{},{}) (direction '{}') for well {} ignored because
                                    constexpr auto angle = 2 * std::numbers::pi;
 
                                    const auto K = permComponents(d, cell_perm);
+                                   if (! ((kh > 0.0) && (K[0] > 0.0) && (K[1] > 0.0))) {
+                                       return 0.0;
+                                   }
+
                                    const auto D = effectiveExtent(d, ntg, cell_size);
                                    const auto r0 = effectiveRadius(K, D);
 
@@ -317,6 +323,46 @@ Connection ({},{},{}) (direction '{}') for well {} ignored because
                                });
 
         return connection_factor;
+    }
+
+    void initWellPathGeometry(external::cvf::ref<external::RigWellPath>& wellPathGeometry,
+                              const std::array<std::vector<double>, 3>&  coords,
+                              const std::vector<double>&                 mds,
+                              std::optional<double>                      top_opt = std::nullopt,
+                              std::optional<double>                      bot_opt = std::nullopt)
+    {
+        const double top = top_opt.value_or(mds.front());
+        const double bot = bot_opt.value_or(mds.back());
+
+        assert((mds.front() <= top) && (top <= bot) && (bot <= mds.back()));
+
+        std::vector<external::cvf::Vec3d> points;
+        std::vector<double> measured_depths;
+
+        points.reserve(coords[0].size());
+        measured_depths.reserve(coords[0].size());
+
+        // Calculate the x,y,z coordinates of the begin and end of the interval
+        external::cvf::Vec3d p_top, p_bot;
+        for (std::size_t i = 0; i < 3; ++i) {
+            p_top[i] = Opm::linearInterpolation(mds, coords[i], top);
+            p_bot[i] = Opm::linearInterpolation(mds, coords[i], bot);
+        }
+
+        points.push_back(p_top);
+        measured_depths.push_back(top);
+
+        for (std::size_t i = 0; i < coords[0].size(); ++i) {
+            if ((mds[i] > top) && (mds[i] < bot)) {
+                points.push_back(external::cvf::Vec3d(coords[0][i], coords[1][i], coords[2][i]));
+                measured_depths.push_back(mds[i]);
+            }
+        }
+
+        points.push_back(p_bot);
+        measured_depths.push_back(bot);
+
+        wellPathGeometry->setWellPathPoints(points, measured_depths);
     }
 
     // The (I,J,K) location of the first active cell that a trajectory
@@ -328,7 +374,7 @@ Connection ({},{},{}) (direction '{}') for well {} ignored because
                     external::RigEclipseGridSearchData&       gridSearchData)
     {
         external::cvf::ref<external::RigWellPath> path { new external::RigWellPath };
-        Opm::initWellPathGeometry(path, coords, mds);
+        initWellPathGeometry(path, coords, mds);
 
         const auto* ecl_grid = grid.get_grid();
 
@@ -1079,17 +1125,21 @@ The cell ({},{},{}) in well {} is not active and the connection will be ignored)
             }
 
             if (! (std::isfinite(ctf_props.CF) && std::isfinite(ctf_props.Kh) &&
-                   (ctf_props.CF >= 0.0) && (ctf_props.Kh >= 0.0)))
+                   (ctf_props.CF > 0.0) && (ctf_props.Kh >= 0.0)))
             {
-                // Degenerate cell geometry, e.g. a zero thickness cell.  A
-                // single such contribution would poison the combined CTF of
-                // every interval reaching this cell, so leave it out entirely.
+                // No permeability across the trajectory, or degenerate cell
+                // geometry.  A single non-finite contribution would poison
+                // the combined CTF of every interval reaching this cell, so
+                // leave it out entirely.
                 OpmLog::warning(fmt::format(R"(Problem with COMPTRAJ keyword
 In {} line {}
-Branch {} of well {} yields a non-representable connection transmissibility factor ({}) or Kh ({}) in cell ({},{},{}). The connection will be ignored)",
+Branch {} of well {} yields a zero or non-representable connection transmissibility factor ({:g}) or Kh ({:g}) in cell ({},{},{}). The connection will be ignored)",
                                             location.filename, location.lineno,
                                             branch, wname,
-                                            ctf_props.CF, ctf_props.Kh,
+                                            CFItem.getActiveDimensions().front()
+                                                .convertSiToRaw(ctf_props.CF),
+                                            KhItem.getActiveDimensions().front()
+                                                .convertSiToRaw(ctf_props.Kh),
                                             ijk[0] + 1, ijk[1] + 1, ijk[2] + 1));
 
                 continue;
@@ -1139,6 +1189,23 @@ Branch {} of well {} yields a non-representable connection transmissibility fact
                 // interval was removed from them above.
                 const auto others = prev->intervalContributions();
                 const auto shared = ! others.empty();
+
+                // Positive D-factors are well-level and negative D-factors
+                // are connection-level values, which cannot be combined.
+                const auto opposite_d_factor =
+                    std::ranges::any_of(others, [d_factor](const auto& other)
+                                        { return other.ctf.d_factor * d_factor < 0.0; });
+                if (opposite_d_factor) {
+                    throw OpmInputError {
+                        fmt::format("Cell ({},{},{}) of well {} is perforated by several "
+                                    "COMPTRAJ intervals with D-factors of opposite sign. "
+                                    "A positive D-factor is a well-level value and a "
+                                    "negative D-factor a connection-level value; they "
+                                    "cannot be combined in one connection.",
+                                    ijk[0] + 1, ijk[1] + 1, ijk[2] + 1, wname),
+                        location
+                    };
+                }
 
                 // There is only one state and saturation table per
                 // connection, so this record changes those of the other

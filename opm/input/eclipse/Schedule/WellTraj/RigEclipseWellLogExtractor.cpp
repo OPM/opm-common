@@ -57,11 +57,11 @@ double signedVolume( const cvf::Vec3d& a, const cvf::Vec3d& b, const cvf::Vec3d&
     return ( b - a ) * ( ( c - a ) ^ ( d - a ) );
 }
 
-// The old ray-casting point-in-cell check misses points vertically below a face
-// centre or a face diagonal. Split the cell into 24 tetrahedra, each formed by
-// the cell centre and one of the face triangles that
-// RigHexIntersectionTools::lineHexCellIntersection uses. Boundary points count
-// as inside.
+// The ray-casting check in RigHexIntersectionTools::isPointInCell() misses
+// points vertically below a face centre or a face diagonal. Split the cell
+// into 24 tetrahedra, each formed by the cell centre and one of the face
+// triangles that RigHexIntersectionTools::lineHexCellIntersection uses.
+// Boundary points count as inside.
 bool isPointInsideCell( const cvf::Vec3d& point, const std::array<cvf::Vec3d, 8>& hexCorners )
 {
     cvf::Vec3d cellCenter = cvf::Vec3d::ZERO;
