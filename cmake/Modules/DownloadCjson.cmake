@@ -10,8 +10,6 @@ target_sources(cjson PRIVATE ${cjson_SOURCE_DIR}/cJSON.c)
 if(OPM_ENABLE_PYTHON)
   set_target_properties(cjson PROPERTIES POSITION_INDEPENDENT_CODE ON)
 endif()
-execute_process(
-  COMMAND
-    ${CMAKE_COMMAND} -E create_symlink ${cjson_SOURCE_DIR} ${CMAKE_BINARY_DIR}/_deps/cjson
-)
+# The sources include the header as <cjson/cJSON.h>.
+configure_file(${cjson_SOURCE_DIR}/cJSON.h ${CMAKE_BINARY_DIR}/_deps/cjson/cJSON.h COPYONLY)
 target_include_directories(cjson INTERFACE ${CMAKE_BINARY_DIR}/_deps)
