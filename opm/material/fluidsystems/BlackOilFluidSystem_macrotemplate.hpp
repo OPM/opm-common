@@ -146,38 +146,6 @@ public:
     #endif
 
     #ifndef COMPILING_STATIC_FLUID_SYSTEM
-    /**
-     * \brief Copy constructor.
-     *
-     * The PVT objects are copy-constructed from those of \p other, so in practice the storage
-     * must be the same. Use gpuistl::copy_to_gpu() and gpuistl::make_view() to get a GPU
-     * fluid system from a CPU one.
-     */
-    template<template<typename> typename StorageT>
-    explicit FLUIDSYSTEM_CLASSNAME(const FLUIDSYSTEM_CLASSNAME<Scalar, IndexTraits, StorageT, PvtApproaches>& other)
-        : surfacePressure(other.surfacePressure)
-        , surfaceTemperature(other.surfaceTemperature)
-        , reservoirTemperature_(other.reservoirTemperature_)
-        , gasPvt_(other.gasPvt_)
-        , oilPvt_(other.oilPvt_)
-        , waterPvt_(other.waterPvt_)
-        , enableDissolvedGas_(other.enableDissolvedGas_)
-        , enableDissolvedGasInWater_(other.enableDissolvedGasInWater_)
-        , enableVaporizedOil_(other.enableVaporizedOil_)
-        , enableVaporizedWater_(other.enableVaporizedWater_)
-        , enableDiffusion_(other.enableDiffusion_)
-        , enableDispersion_(other.enableDispersion_)
-        , referenceDensity_(StorageT<typename decltype(referenceDensity_)::value_type>(other.referenceDensity_))
-        , molarMass_(StorageT<typename decltype(molarMass_)::value_type>(other.molarMass_))
-        , diffusionCoefficients_(StorageT<typename decltype(diffusionCoefficients_)::value_type>(other.diffusionCoefficients_))
-        , phaseUsageInfo_(other.phaseUsageInfo_)
-        , isInitialized_(other.isInitialized_)
-        , useSaturatedTables_(other.useSaturatedTables_)
-        , enthalpy_eq_energy_(other.enthalpy_eq_energy_)
-    {
-    }
-
-
     FLUIDSYSTEM_CLASSNAME(Scalar _surfacePressure_,
                           Scalar _surfaceTemperature_,
                           Scalar _reservoirTemperature_,
