@@ -48,6 +48,28 @@ template <class Exception, class LogCallback>
 }
 
 } // namespace Opm::detail
+#else
+namespace Opm::detail {
+
+// Builds the message and throws out of line, so that the string handling stays
+// out of the callers' inlined code.
+template <class Exception, class Message>
+[[noreturn]]
+#if defined(__GNUC__)
+[[gnu::cold, gnu::noinline]]
+#endif
+void throwWithLocation(const char* file, const int line,
+                       void (*log)(const std::string&), Message&& message)
+{
+    const std::string fullMessage = std::string{"["} + file + ":"
+        + std::to_string(line) + "] " + message();
+    if (log) {
+        log(fullMessage);
+    }
+    throw Exception(fullMessage);
+}
+
+} // namespace Opm::detail
 #endif
 
 // macros for reporting to stderr
@@ -82,14 +104,9 @@ template <class Exception, class LogCallback>
         __builtin_unreachable();                               \
     } else { }
 #else
-#define OPM_THROW(Exception, message)                          \
-    do {                                                       \
-        std::string oss_ = std::string{"["} + __FILE__ + ":" + \
-                           std::to_string(__LINE__) + "] " +   \
-                           message;                            \
-        ::Opm::OpmLog::error(oss_);                            \
-        throw Exception(oss_);                                 \
-    } while (false)
+#define OPM_THROW(Exception, message)                                                      \
+    ::Opm::detail::throwWithLocation<Exception>(__FILE__, __LINE__, &::Opm::OpmLog::error, \
+        [&] { return std::string{} + message; })
 #endif
 
 // Macro to throw an exception that only counts as a problem in PRT file.
@@ -111,14 +128,9 @@ template <class Exception, class LogCallback>
         __builtin_unreachable();                               \
     } else { }
 #else
-#define OPM_THROW_PROBLEM(Exception, message)                          \
-    do {                                                       \
-        std::string oss_ = std::string{"["} + __FILE__ + ":" + \
-                           std::to_string(__LINE__) + "] " +   \
-                           message;                            \
-        ::Opm::OpmLog::problem(oss_);                            \
-        throw Exception(oss_);                                 \
-    } while (false)
+#define OPM_THROW_PROBLEM(Exception, message)                                                \
+    ::Opm::detail::throwWithLocation<Exception>(__FILE__, __LINE__, &::Opm::OpmLog::problem, \
+        [&] { return std::string{} + message; })
 #endif
 
 // Same as OPM_THROW, except for not making an OpmLog::error() call.
@@ -132,13 +144,9 @@ template <class Exception, class LogCallback>
         __builtin_unreachable();                               \
     } else { }
 #else
-#define OPM_THROW_NOLOG(Exception, message)                    \
-    do {                                                       \
-        std::string oss_ = std::string{"["} + __FILE__ + ":" + \
-                           std::to_string(__LINE__) + "] " +   \
-                           message;                            \
-        throw Exception(oss_);                                 \
-    } while (false)
+#define OPM_THROW_NOLOG(Exception, message)                                  \
+    ::Opm::detail::throwWithLocation<Exception>(__FILE__, __LINE__, nullptr, \
+        [&] { return std::string{} + message; })
 #endif
 
 // throw an exception if a condition is true
