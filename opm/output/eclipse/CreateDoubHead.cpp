@@ -78,8 +78,11 @@ namespace {
 
     Opm::RestartIO::DoubHEAD::guideRate
     computeGuideRate(const ::Opm::Schedule& sched,
+                     const Opm::UnitSystem& units,
                      const std::size_t      lookup_step)
     {
+            using M = ::Opm::UnitSystem::measure;
+
             double a = 0.;
             double b = 0.;
             double c = 0.;
@@ -99,7 +102,7 @@ namespace {
                 d = guideRateModel.getD();
                 e = guideRateModel.getE();
                 f = guideRateModel.getF();
-                delay = guideRateModel.update_delay();
+                delay = units.from_si(M::time, guideRateModel.update_delay());
                 damping_fact = guideRateModel.damping_factor();
             }
             return {
@@ -188,7 +191,7 @@ createDoubHead(const EclipseState& es,
         .tuningParameters(sched[lookup_step].tuning(), tconv)
         .timeStamp       (computeTimeStamp(sched, simTime))
         .udq_param       (rspec.udqParams())
-        .guide_rate_param(computeGuideRate(sched, lookup_step))
+        .guide_rate_param(computeGuideRate(sched, usys, lookup_step))
         .lift_opt_param  (computeLiftOptParam(sched, usys, lookup_step))
         .netBalParams    (getNetworkBalanceParameters(sched, usys, report_step, lookup_step))
         ;
