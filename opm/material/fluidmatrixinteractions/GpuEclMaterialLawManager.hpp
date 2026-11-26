@@ -764,7 +764,8 @@ private:
             gasOilConfig = cpu.gasOilConfig();
             oilWaterConfig = cpu.oilWaterConfig();
         }
-        const bool perCell = gasOilConfig.enableSatScaling() || oilWaterConfig.enableSatScaling();
+        const bool perCell = gasOilConfig.enableSatScaling() || gasOilConfig.enablePcScaling()
+            || oilWaterConfig.enableSatScaling() || oilWaterConfig.enablePcScaling();
 
         std::vector<GasOilEffectiveParams> gasOilEffectiveParams(numRegions);
         std::vector<OilWaterEffectiveParams> oilWaterEffectiveParams(numRegions);
