@@ -1158,6 +1158,18 @@ namespace {
             xg_nwrk.nodeData[gname].pressure = node_pressure;
         }
 
+        {
+            const auto& doubhead = rst_view->doubhead();
+
+            if (doubhead.size() > VI::doubhead::GRlastUpd) {
+                const auto last_update = doubhead[VI::doubhead::GRlastUpd];
+
+                if (std::isfinite(last_update) && (last_update >= 0.0)) {
+                    xg_nwrk.guideRateLastUpdate = usys.to_si(M::time, last_update);
+                }
+            }
+        }
+
         return xg_nwrk;
     }
 

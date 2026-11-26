@@ -22,6 +22,7 @@
 
 #include <cstddef>
 #include <map>
+#include <optional>
 #include <string>
 #include <utility>
 
@@ -236,6 +237,10 @@ namespace Opm { namespace data {
         std::map<std::string, BranchData> branchData {};
         std::map<std::string, BranchData> convergedBranchData {};
 
+        /// Time of the last general guide rate update, in seconds since
+        /// the start of the simulation.  Nullopt if not known.
+        std::optional<double> guideRateLastUpdate {};
+
         template <class MessageBufferType>
         void write(MessageBufferType& buffer) const
         {
@@ -243,6 +248,9 @@ namespace Opm { namespace data {
             this->writeMap(this->nodeData, buffer);
             this->writeMap(this->branchData, buffer);
             this->writeMap(this->convergedBranchData, buffer);
+
+            // A time is never negative, so a negative value means nullopt.
+            buffer.write(this->guideRateLastUpdate.value_or(-1.0));
         }
 
         template <class MessageBufferType>
@@ -252,6 +260,20 @@ namespace Opm { namespace data {
             this->readMap(buffer, this->nodeData);
             this->readMap(buffer, this->branchData);
             this->readMap(buffer, this->convergedBranchData);
+
+            // Like the maps, merge into existing values.  The time is the
+            // earliest of the times read, and a buffer without a time does
+            // not clear a time read from another buffer.  This relies on
+            // clear() being called before the data of all processes is
+            // read, so that no time from an earlier exchange is kept.
+            double lastUpdate{};
+            buffer.read(lastUpdate);
+            if ((lastUpdate >= 0.0) &&
+                (! this->guideRateLastUpdate.has_value() ||
+                 (lastUpdate < *this->guideRateLastUpdate)))
+            {
+                this->guideRateLastUpdate = lastUpdate;
+            }
         }
 
         bool operator==(const GroupAndNetworkValues& other) const
@@ -259,7 +281,8 @@ namespace Opm { namespace data {
             return (this->groupData == other.groupData)
                 && (this->nodeData  == other.nodeData)
                 && (this->branchData == other.branchData)
-                && (this->convergedBranchData == other.convergedBranchData);
+                && (this->convergedBranchData == other.convergedBranchData)
+                && (this->guideRateLastUpdate == other.guideRateLastUpdate);
         }
 
         void clear()
@@ -268,6 +291,7 @@ namespace Opm { namespace data {
             this->nodeData.clear();
             this->branchData.clear();
             this->convergedBranchData.clear();
+            this->guideRateLastUpdate.reset();
         }
 
         template<class Serializer>
@@ -277,6 +301,7 @@ namespace Opm { namespace data {
             serializer(nodeData);
             serializer(branchData);
             serializer(convergedBranchData);
+            serializer(guideRateLastUpdate);
         }
 
         static GroupAndNetworkValues serializationTestObject()
@@ -285,7 +310,8 @@ namespace Opm { namespace data {
                         {{"test_data", GroupData::serializationTestObject()}},
                         {{"test_node", NodeData::serializationTestObject()}},
                         {{"test_branch", BranchData::serializationTestObject()}},
-                        {{"test_converged_branch", BranchData::serializationTestObject()}}
+                        {{"test_converged_branch", BranchData::serializationTestObject()}},
+                        123.456
                    };
         }
 

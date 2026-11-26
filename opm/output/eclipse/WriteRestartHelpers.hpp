@@ -21,6 +21,7 @@
 #define OPM_WRITE_RESTART_HELPERS_HPP
 
 #include <cstddef>
+#include <optional>
 #include <vector>
 
 // Forward declarations
@@ -51,7 +52,8 @@ namespace Opm::RestartIO::Helpers {
                    const std::size_t   sim_step,
                    const std::size_t   report_step,
                    const double        simTime,
-                   const double        nextTimeStep);
+                   const double        nextTimeStep,
+                   const std::optional<double>& guideRateLastUpdate = std::nullopt);
 
     std::vector<int>
     createInteHead(const EclipseState& es,

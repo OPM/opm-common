@@ -65,6 +65,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <iterator>
+#include <optional>
 #include <regex>
 #include <stdexcept>
 #include <string>
@@ -159,6 +160,7 @@ namespace {
     writeHeader(const int                     report_step,
                 const int                     sim_step,
                 const double                  next_step_size,
+                const std::optional<double>&  guideRateLastUpdate,
                 const double                  simTime,
                 const Schedule&               schedule,
                 const EclipseGrid&            grid,
@@ -189,7 +191,8 @@ namespace {
         {
             const auto dh = Helpers::createDoubHead(es, schedule,
                                                     sim_step, report_step,
-                                                    simTime, next_step_size);
+                                                    simTime, next_step_size,
+                                                    guideRateLastUpdate);
             rstFile.write("DOUBHEAD", dh);
         }
         // return the inteHead vector
@@ -1050,6 +1053,7 @@ namespace {
         const auto inteHD = writeHeader(report_step,
                                         sim_step,
                                         nextStepSize(values[0]),
+                                        values[0].grp_nwrk.guideRateLastUpdate,
                                         seconds_elapsed,
                                         schedule,
                                         grid,
@@ -1125,6 +1129,7 @@ namespace {
         // Global HEADERS for LGR GRIDS
         const auto inteHD =
         writeHeader(report_step, sim_step, nextStepSize(values[deckIdx+1]),
+        values[0].grp_nwrk.guideRateLastUpdate,
         seconds_elapsed, schedule, lgr_grid, es, rstFile);
 
         if (report_step > 0) {
@@ -1169,6 +1174,7 @@ void save(EclIO::OutputStream::Restart&                 rstFile,
 
     const auto inteHD =
         writeHeader(report_step, sim_step, nextStepSize(value),
+                    value.grp_nwrk.guideRateLastUpdate,
                     seconds_elapsed, schedule, grid, es, rstFile);
     const int norst_value = schedule[sim_step].rst_config().norst.value_or(0);
 
