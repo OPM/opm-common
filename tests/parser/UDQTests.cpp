@@ -3619,6 +3619,92 @@ DEFINE GUITAR (GGOR HELLO) + ((GWCT 'FIELD')/((GOPT 'PR*') + 1.0)) /
                                   expect.begin(), expect.end());
 }
 
+BOOST_AUTO_TEST_CASE(UDQ_GROUP_VARIABLE_WELL_LIST_TARGET_TYPE)
+{
+    // A group level quantity for a single well list is a scalar...
+    BOOST_CHECK_MESSAGE(UDQ::targetType("GGPR", {"*GP_T1"}) == UDQVarType::SCALAR,
+                        R"(GGPR '*GP_T1' must be a scalar)");
+
+    // ...but a group name root is still a set of groups...
+    BOOST_CHECK_MESSAGE(UDQ::targetType("GGPR", {"GP*"}) == UDQVarType::GROUP_VAR,
+                        R"(GGPR 'GP*' must be a group set)");
+
+    // ...and a well list template is not a well list name.
+    BOOST_CHECK_MESSAGE(UDQ::targetType("GGPR", {"*GP*"}) == UDQVarType::GROUP_VAR,
+                        R"(GGPR '*GP*' must be a group set)");
+
+    // At the well level, a well list is a set of wells.
+    BOOST_CHECK_MESSAGE(UDQ::targetType("WOPR", {"*GP_T1"}) == UDQVarType::WELL_VAR,
+                        R"(WOPR '*GP_T1' must be a well set)");
+}
+
+BOOST_AUTO_TEST_CASE(UDQ_GROUP_VARIABLE_WELL_LIST)
+{
+    const auto location = KeywordLocation{};
+    const auto udqp = UDQParams{};
+    const auto udqft = UDQFunctionTable{};
+
+    const auto def = UDQDefine {
+        udqp, "FUGPR_T1", 0, location, { "GGPR", "'*GP_T1'", "*", "2.0" }
+    };
+
+    {
+        auto vectors = RequisiteSummaryVectors{};
+        def.requisiteSummaryVectors(vectors);
+
+        const auto expect = RequisiteSummaryVector { "GGPR", { "*GP_T1" } };
+        BOOST_CHECK_MESSAGE(vectors.contains(expect),
+                            R"(UDQ must require summary vector "GGPR:*GP_T1")");
+    }
+
+    {
+        // A well list may not exist yet when the UDQ is defined, so it must
+        // not be subject to group existence checks.
+        const auto reqObj = def.requiredObjects();
+        BOOST_CHECK_MESSAGE(reqObj.groups.empty(),
+                            "Well list must not be a required group object");
+    }
+
+    auto st = SummaryState { TimeService::now(), udqp.undefinedValue() };
+    auto udq_state = UDQState { udqp.undefinedValue() };
+
+    auto group_order = GroupOrder { std::size_t{3} };
+    group_order.add("G1");
+
+    auto context = UDQContext {
+        udqft, {}, group_order, {}, UDQContext::MatcherFactories{}, st, udq_state
+    };
+
+    st.update_group_var("G1", "GGPR", 5.0);
+    st.update_group_var("*GP_T1", "GGPR", 1234.0);
+
+    const auto res = def.eval(context);
+
+    // Field level UDQs evaluate to scalar UDQ sets, as for any other
+    // single-valued expression such as SUM(WOPR).
+    BOOST_CHECK_MESSAGE(res.var_type() == UDQVarType::SCALAR,
+                        "Result must be a scalar quantity");
+    BOOST_CHECK_CLOSE(res[0].get(), 2.0 * 1234.0, 1.0e-8);
+}
+
+BOOST_AUTO_TEST_CASE(UDQ_DEFINE_GROUP_WELL_LIST_FEASIBLE)
+{
+    // DEFINE must be accepted, even under a strict error policy, for a well
+    // list which is not yet defined.
+    auto ctx = ParseContext{};
+    ctx.update(ParseContext::UDQ_DEFINE_CANNOT_EVAL, InputErrorAction::THROW_EXCEPTION);
+
+    BOOST_CHECK_NO_THROW(make_schedule(R"(RUNSPEC
+UDQDIMS
+   10* 'Y'/
+SCHEDULE
+UDQ
+DEFINE FUGPR_T1 GGPR '*GP_T1' /
+DEFINE FUGOR_T2 GGOR '*GP_T2' /
+/
+)", ctx));
+}
+
 BOOST_AUTO_TEST_CASE(UDQ_REQUIRED_REGION_OBJECTS)
 {
     const auto schedule = make_schedule(R"(RUNSPEC

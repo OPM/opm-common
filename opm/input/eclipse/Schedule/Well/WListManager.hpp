@@ -24,6 +24,7 @@
 #include <cstddef>
 #include <map>
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace Opm::RestartIO {
@@ -268,6 +269,38 @@ private:
     void createNewWList(const std::string& wlistName,
                         const std::vector<std::string>& newWells);
 };
+
+/// Whether or not a string is a well list name, as opposed to a group name
+/// or a well list template.
+///
+/// Well list names have a leading asterisk followed by an upper-case English
+/// letter, and are at most eight characters long.  A name with further
+/// wildcard characters ('*' or '?') is a template matching several lists and
+/// is not considered a well list name here.
+///
+/// Typical use is to distinguish '*WL_PR' from group names in contexts, such
+/// as group level summary vectors, which accept either.
+///
+/// \param[in] name Candidate well list name.
+///
+/// \return Whether or not \p name is a syntactically valid well list name.
+///
+/// Inline, since standalone tools such as genkw use it without linking the
+/// main library.
+inline bool isWellListName(std::string_view name)
+{
+    if ((name.size() < std::string_view::size_type{2}) ||
+        (name.size() > std::string_view::size_type{8}))
+    {
+        return false;
+    }
+
+    if ((name.front() != '*') || (name[1] < 'A') || (name[1] > 'Z')) {
+        return false;
+    }
+
+    return name.find_first_of("*?", 1) == std::string_view::npos;
+}
 
 } // namespace Opm
 

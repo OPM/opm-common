@@ -288,6 +288,10 @@ private:
 
     /// Query whether or not the front of the function argument list (\code
     /// arg_list.front() \endcode) is a name pattern.
+    ///
+    /// A well list name argument to a group level function, e.g., GGPR
+    /// '*GP_T1', is not a pattern since it identifies a single summary
+    /// vector.
     bool argListIsPattern() const;
 
     /// Query whether or not the front of the function argument list (\code

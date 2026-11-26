@@ -21,6 +21,8 @@
 
 #include <opm/common/utility/String.hpp>
 
+#include <opm/input/eclipse/Schedule/Well/WListManager.hpp>
+
 #include <charconv>
 #include <map>
 #include <optional>
@@ -282,6 +284,17 @@ UDQVarType targetType(const std::string&              keyword,
     {
         // Well/group variables that apply to a single well/group are
         // treated as scalar.
+        return UDQVarType::SCALAR;
+    }
+
+    if ((var_type == UDQVarType::GROUP_VAR) &&
+        (selector.size() == 1) && isWellListName(selector.front()))
+    {
+        // Group variables that apply to a single well list, e.g.,
+        //
+        //    GGPR '*GP_T1'
+        //
+        // accumulate over the wells on the list and are treated as scalar.
         return UDQVarType::SCALAR;
     }
 

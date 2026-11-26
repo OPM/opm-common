@@ -25,6 +25,7 @@
 #include <opm/input/eclipse/Schedule/UDQ/UDQFunctionTable.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQSet.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDT.hpp>
+#include <opm/input/eclipse/Schedule/Well/WListManager.hpp>
 
 #include <algorithm>
 #include <cassert>
@@ -345,10 +346,19 @@ void UDQASTNode::requisiteSummaryVectors(RequisiteSummaryVectors& vectors) const
         std::holds_alternative<std::string>(this->value) &&
         ! this->selector.empty())
     {
-        const auto templated = std::any_of(this->selector.begin(),
-                                           this->selector.end(),
-                                           [](const std::string& item)
-                                           { return item.find('*') != std::string::npos; });
+        // A group level quantity for a single well list -- GGPR '*GP_T1' --
+        // does name its vector, despite the asterisk.
+        const auto& keyword = std::get<std::string>(this->value);
+        const auto is_group_wlist =
+            (UDQ::targetType(keyword) == UDQVarType::GROUP_VAR) &&
+            (this->selector.size() == 1) &&
+            isWellListName(this->selector.front());
+
+        const auto templated = !is_group_wlist &&
+            std::any_of(this->selector.begin(),
+                        this->selector.end(),
+                        [](const std::string& item)
+                        { return item.find('*') != std::string::npos; });
 
         if (! templated) {
             vectors.insert({ std::get<std::string>(this->value), this->selector });
@@ -467,7 +477,11 @@ UDQASTNode::eval_group_expression(const std::string& string_value,
 {
     if (! this->selector.empty()) {
         const std::string& group_pattern = this->selector[0];
-        if (group_pattern.find("*") == std::string::npos) {
+        if ((group_pattern.find("*") == std::string::npos) ||
+            isWellListName(group_pattern))
+        {
+            // Single group or single well list.  The latter, e.g., GGPR
+            // '*GP_T1', accumulates over the wells on the list.
             return UDQSet::scalar(string_value, context.get_group_var(group_pattern, string_value));
         }
 
@@ -793,8 +807,16 @@ void UDQASTNode::populateRequiredObjects(UDQ::RequisiteEvaluationObjects& object
 
 void UDQASTNode::populateRequiredGroupObjects(UDQ::RequisiteEvaluationObjects& objects) const
 {
-    // The selector is a group name like 'G' or a group name root like 'G*'.
+    // The selector is a group name like 'G', a group name root like 'G*',
+    // or a well list name like '*WL'.
     assert (this->selector.size() == 1);
+
+    if (isWellListName(this->selector.front())) {
+        // A well list need not exist when the UDQ is defined.  It may be
+        // created later, possibly by an ACTIONX block, and the quantity is
+        // simply zero until then.  Don't ask for group existence checks.
+        return;
+    }
 
     objects.groups.insert(this->selector.front());
 }

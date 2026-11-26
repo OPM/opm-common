@@ -603,3 +603,145 @@ BOOST_AUTO_TEST_CASE(reported_target_wins_over_schedule)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+// =====================================================================
+
+BOOST_AUTO_TEST_SUITE(WellListGroupVectors)
+
+namespace {
+
+// Three producers in two groups.  The well list '*WL_PR' initially holds
+// P1 from G1 and P2 from G2 and gets P3 from G2 in the second report step.
+// G1 has an efficiency factor of 0.5 and P2 an efficiency factor of 0.8.
+//
+// The UDQ requires GGPR for the well list, which the SUMMARY section does
+// not request.
+std::string wellListDeck()
+{
+    return targetDeckStart("METRIC") + R"(SUMMARY
+GOPR
+  '*WL_PR' 'G1' /
+GOPT
+  '*WL_PR' /
+GGOR
+  '*WL_PR' /
+GSGT
+  '*WL_PR' /
+SCHEDULE
+GRUPTREE
+  'G1' 'FIELD' /
+  'G2' 'FIELD' /
+/
+WELSPECS
+  'P1' 'G1' 1 1 1* 'OIL' /
+  'P2' 'G2' 2 1 1* 'OIL' /
+  'P3' 'G2' 2 1 1* 'OIL' /
+/
+COMPDAT
+  'P1' 1 1 1 1 'OPEN' 1* 1* 0.5 /
+  'P2' 2 1 1 1 'OPEN' 1* 1* 0.5 /
+/
+GEFAC
+  'G1' 0.5 /
+/
+WEFAC
+  'P2' 0.8 /
+/
+WLIST
+  '*WL_PR' 'NEW' 'P1' 'P2' /
+/
+UDQ
+DEFINE FUGPR_T1 GGPR '*WL_PR' /
+DEFINE FUGPT_T1 GGPT '*WL_PR' /
+/
+TSTEP
+ 1 /
+WLIST
+  '*WL_PR' 'ADD' 'P3' /
+/
+TSTEP
+ 1 /
+END
+)";
+}
+
+data::Wells wellListResults()
+{
+    auto producer = [](const double oil, const double gas)
+    {
+        auto well = data::Well{};
+        well.rates.set(rt::oil, -oil*sm3_pr_day());
+        well.rates.set(rt::gas, -gas*sm3_pr_day());
+        well.rates.set(rt::wat, 0.0);
+        return well;
+    };
+
+    auto wells = data::Wells{};
+    wells["P1"] = producer(100.0, 1000.0);
+    wells["P2"] = producer(200.0, 4000.0);
+    wells["P3"] = producer(400.0,    0.0);
+
+    return wells;
+}
+
+} // Anonymous namespace
+
+BOOST_AUTO_TEST_CASE(accumulate_over_well_list)
+{
+    SlaveGroupSetup cfg{"WELL_LIST_GROUP_VECTORS", wellListDeck()};
+    cfg.wells = wellListResults();
+
+    auto writer = out::Summary {
+        cfg.config, cfg.es, cfg.grid, cfg.schedule, cfg.name
+    };
+
+    auto st = SummaryState { TimeService::now(), 0.0 };
+
+    auto values = out::Summary::DynamicSimulatorState{};
+    values.well_solution = &cfg.wells;
+    values.wbp = &cfg.wbp;
+    values.group_and_nwrk_solution = &cfg.grp_nwrk;
+
+    BOOST_REQUIRE_NO_THROW(writer.eval(/* report_step = */ 1, /* secs_elapsed = */ 1.0*day, values, st));
+
+    // Rate-type group level vector applied to a well list get well
+    // level efficiency factors only.  Cumulative group level vectors
+    // applied to a well list get the full chain of efficiency factors.
+    //
+    // Rate:
+    //   P1: 100, P2: 200 * 0.8 (oil)
+    //   P1: 1000, P2: 4000 * 0.8 (gas)
+    //
+    // Cumulative:
+    //   P1: 100 * 0.5 (GEFAC G1), P2: 200 * 0.8 (WEFAC P2) (oil)
+    //   P1: 1000 * 0.5 (GEFAC G1), P2: 4000 * 0.8 (WEFAC P2) (gas)
+    const auto gopr_1 = 100.0 + 200.0*0.8;
+    const auto ggpr_1 = 1000.0 + 4000.0*0.8;
+    const auto gopt_1 = 100.0*0.5 + 200.0*0.8;
+    const auto ggpt_1 = 1000.0*0.5 + 4000.0*0.8;
+
+    BOOST_CHECK_CLOSE(st.get_group_var("*WL_PR", "GOPR"), gopr_1, 1.0e-8);
+    BOOST_CHECK_CLOSE(st.get_group_var("*WL_PR", "GOPT"), gopt_1 * 1.0, 1.0e-8);
+    BOOST_CHECK_CLOSE(st.get_group_var("*WL_PR", "GGOR"), ggpr_1 / gopr_1, 1.0e-8);
+    BOOST_CHECK_CLOSE(st.get_group_var("*WL_PR", "GGPT"), ggpt_1 * 1.0, 1.0e-8);
+
+    // Ordinary group G1 does not apply its own efficiency factor to rates.
+    BOOST_CHECK_CLOSE(st.get_group_var("G1", "GOPR"), 100.0, 1.0e-8);
+
+    // Requested only by the UDQ.
+    BOOST_REQUIRE_MESSAGE(st.has_group_var("*WL_PR", "GGPR"),
+                          R"(UDQ must make "GGPR:*WL_PR" available)");
+    BOOST_CHECK_CLOSE(st.get_group_var("*WL_PR", "GGPR"), ggpr_1, 1.0e-8);
+
+    // Sales gas total: production less injection, no GCONSUMP for a list.
+    BOOST_CHECK_CLOSE(st.get_group_var("*WL_PR", "GSGT"), ggpt_1, 1.0e-8);
+
+    // P3 joins the well list in the second report step.
+    writer.eval(/* report_step = */ 2, /* secs_elapsed = */ 2.0*day, values, st);
+
+    const auto gopr_2 = gopr_1 + 400.0;
+    BOOST_CHECK_CLOSE(st.get_group_var("*WL_PR", "GOPR"), gopr_2, 1.0e-8);
+    BOOST_CHECK_CLOSE(st.get_group_var("*WL_PR", "GOPT"), 2*gopt_1 + 1.0*400.0, 1.0e-8);
+}
+
+BOOST_AUTO_TEST_SUITE_END()

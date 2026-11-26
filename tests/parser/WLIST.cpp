@@ -343,3 +343,24 @@ BOOST_AUTO_TEST_CASE(WListNewMoveDel) {
         BOOST_CHECK( wells1 == wl1.wells() );
     }
 }
+
+BOOST_AUTO_TEST_CASE(WellListName)
+{
+    // Valid well list names.
+    BOOST_CHECK(Opm::isWellListName("*W"));
+    BOOST_CHECK(Opm::isWellListName("*WL_PR"));
+    BOOST_CHECK(Opm::isWellListName("*GP_T1"));
+    BOOST_CHECK(Opm::isWellListName("*ABCDEFG"));  // 8 characters
+
+    // Not well list names.
+    BOOST_CHECK(! Opm::isWellListName(""));
+    BOOST_CHECK(! Opm::isWellListName("*"));
+    BOOST_CHECK(! Opm::isWellListName("WL_PR"));      // No leading asterisk
+    BOOST_CHECK(! Opm::isWellListName("*wl_pr"));     // Lower case
+    BOOST_CHECK(! Opm::isWellListName("*1WL"));       // Digit after asterisk
+    BOOST_CHECK(! Opm::isWellListName("*_WL"));       // Underscore after asterisk
+    BOOST_CHECK(! Opm::isWellListName("*ABCDEFGH"));  // 9 characters
+    BOOST_CHECK(! Opm::isWellListName("*WL*"));       // Well list template
+    BOOST_CHECK(! Opm::isWellListName("*W?"));        // Well list template
+    BOOST_CHECK(! Opm::isWellListName("G*"));         // Group name root
+}

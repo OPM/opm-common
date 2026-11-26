@@ -52,6 +52,8 @@
 #include <opm/input/eclipse/Schedule/UDQ/UDQParams.hpp>
 #include <opm/input/eclipse/Schedule/VFPProdTable.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
+#include <opm/input/eclipse/Schedule/Well/WList.hpp>
+#include <opm/input/eclipse/Schedule/Well/WListManager.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
 
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
@@ -3015,6 +3017,13 @@ quantity group_efficiency_factor(const fn_args& args)
         return zero;
     }
     const auto& sched = args.schedule[args.sim_step];
+    if (! sched.groups.has(args.group_name)) {
+        // Group level vector for a well list.  The well rates already carry
+        // their full chain of efficiency factors, so there is nothing more
+        // to apply.
+        return { 1.0, measure::identity };
+    }
+
     const auto gefac = sched.groups(args.group_name).getGroupEfficiencyFactor();
 
     return { gefac, measure::identity };
@@ -4488,6 +4497,32 @@ find_group_wells(const Opm::Schedule& schedule,
     return groupwells;
 }
 
+// Wells currently on a named well list.  Empty if the list does not exist
+// (yet) at this time.
+std::vector<const Opm::Well*>
+find_wlist_wells(const Opm::Schedule& schedule,
+                 const std::string&   wlist_name,
+                 const int            sim_step)
+{
+    auto wlistwells = std::vector<const Opm::Well*>{};
+
+    const auto& schedState = schedule[sim_step];
+    const auto& wlm = schedState.wlist_manager();
+    if (! wlm.hasList(wlist_name)) {
+        return wlistwells;      // Empty
+    }
+
+    for (const auto& wname : wlm.getList(wlist_name).wells()) {
+        if (schedState.wells.has(wname)) {
+            wlistwells.push_back(&schedState.wells.get(wname));
+        }
+    }
+
+    sort_wells_by_insert_index(wlistwells);
+
+    return wlistwells;
+}
+
 std::vector<const Opm::Well*>
 find_field_wells(const Opm::Schedule& schedule,
                  const int            sim_step)
@@ -4519,6 +4554,13 @@ find_wells(const Opm::Schedule&           schedule,
         return find_single_well(schedule, node, sim_step);
 
     case Opm::EclIO::SummaryNode::Category::Group:
+        if (! schedule[sim_step].groups.has(node.wgname) &&
+            Opm::isWellListName(node.wgname))
+        {
+            // Group level vector for a well list, e.g., GOPR '*WL_PR'.
+            return find_wlist_wells(schedule, node.wgname, sim_step);
+        }
+
         return find_group_wells(schedule, node.wgname, sim_step);
 
     case Opm::EclIO::SummaryNode::Category::Field:
@@ -4651,42 +4693,64 @@ void EfficiencyFactor::setFactors(const Opm::EclIO::SummaryNode&       node,
 {
     this->factors.clear();
 
-    const bool is_field  { node.category == Opm::EclIO::SummaryNode::Category::Field  } ;
-    const bool is_group  { node.category == Opm::EclIO::SummaryNode::Category::Group  } ;
-    const bool is_region { node.category == Opm::EclIO::SummaryNode::Category::Region } ;
-    const bool is_rate   { node.type     != Opm::EclIO::SummaryNode::Type::Total      } ;
+    const auto is_field  = node.category == Opm::EclIO::SummaryNode::Category::Field;
+    const auto is_group  = node.category == Opm::EclIO::SummaryNode::Category::Group;
+    const auto is_region = node.category == Opm::EclIO::SummaryNode::Category::Region;
+    const auto is_rate   = node.type     != Opm::EclIO::SummaryNode::Type::Total;
 
-    if (!is_field && !is_group && !is_region && is_rate)
+    if (!is_field && !is_group && !is_region && is_rate) {
         return;
+    }
+
+    const auto is_group_rate = is_group && is_rate;
+    const auto is_group_rate_wlist = is_group_rate
+        && Opm::isWellListName(node.wgname);
+
+    const auto& sched_state = schedule[sim_step];
 
     for (const auto* well : schedule_wells) {
-        if (!well->hasBeenDefined(sim_step))
+        if (!well->hasBeenDefined(sim_step)) {
             continue;
-
-        const auto res_it = sim_res.find(well->name());
-        double efficiency_scaling_factor = 1.0;
-        if (res_it != sim_res.end()) {
-            efficiency_scaling_factor = res_it->second.efficiency_scaling_factor;
         }
 
-        double eff_factor = well->getEfficiencyFactor() * efficiency_scaling_factor;
-        const auto* group_ptr = std::addressof(schedule.getGroup(well->groupName(), sim_step));
+        auto& eff_factor = this->factors.emplace_back
+            (well->name(), well->getEfficiencyFactor())
+            .second;
 
-        while (group_ptr) {
-            if (is_group && is_rate && (group_ptr->name() == node.wgname))
+        if (const auto res_it = sim_res.find(well->name()); res_it != sim_res.end()) {
+            // Efficiency scaling from WCYCLE.
+            eff_factor *= res_it->second.efficiency_scaling_factor;
+        }
+
+        if (is_group_rate_wlist) {
+            // Special case handling for a rate-type group level vector applied
+            // to a well list.  Include only the well-level efficiency factors
+            // (WEFAC), so move on to next well.  For all other cases, we must
+            // also include all applicable group-level efficiency factors (GEFAC).
+            continue;
+        }
+
+        const auto* group_ptr = &sched_state.groups(well->groupName());
+
+        while (group_ptr != nullptr) {
+            if (is_group_rate && (group_ptr->name() == node.wgname)) {
+                // Rate-type group level vector and we've found the
+                // matching group.  Terminate group tree traversal.
                 break;
+            }
 
             eff_factor *= group_ptr->getGroupEfficiencyFactor();
 
-            const auto parent_group = group_ptr->flow_group();
-
-            if (parent_group.has_value())
-                group_ptr = std::addressof(schedule.getGroup( parent_group.value(), sim_step ));
-            else
+            if (const auto parent_group = group_ptr->flow_group();
+                parent_group.has_value())
+            {
+                group_ptr = &sched_state.groups(*parent_group);
+            }
+            else {
+                // No parent group exists.  Terminate group tree traversal.
                 group_ptr = nullptr;
+            }
         }
-
-        this->factors.emplace_back(well->name(), eff_factor);
     }
 }
 
@@ -6994,8 +7058,13 @@ namespace {
             unique_udqs.second.required_summary(summary_keys);
         }
 
-        for (const auto& action : sched.back().actions.get()) {
-            action.required_summary(summary_keys);
+        // Every version of every action: a redefinition under the same name
+        // replaces the earlier one in later snapshots, but the earlier
+        // version may still run before then.
+        for (const auto& actions : sched.unique<Opm::Action::Actions>()) {
+            for (const auto& action : actions.second) {
+                action.required_summary(summary_keys);
+            }
         }
 
         // Individual month names--typically used in ACTIONX conditions
