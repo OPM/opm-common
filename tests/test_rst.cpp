@@ -56,6 +56,7 @@
 #include <opm/input/eclipse/Schedule/Well/WVFPEXP.hpp>
 
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
+#include <opm/input/eclipse/Units/Units.hpp>
 
 #include <opm/common/utility/TimeService.hpp>
 
@@ -396,6 +397,79 @@ TSTEP            -- 4
 END
 )~");
 
+    }
+
+    // Takes an optional unit system keyword, such as LAB.  The update
+    // interval is 30 in the deck's unit of time.
+    Opm::Deck guide_rate_update_interval(const std::string& runspec = "")
+    {
+        return Opm::Parser{}.parseString(R"~(RUNSPEC
+OIL
+GAS
+WATER
+DISGAS
+VAPOIL
+UNIFOUT
+UNIFIN
+)~" + runspec + R"~(DIMENS
+ 10 10 10 /
+WELLDIMS
+ 2 10 2 2 /
+
+START             -- 0
+1 OKT 2008 /
+
+GRID
+DXV
+10*0.25 /
+DYV
+10*0.25 /
+DZV
+10*0.25 /
+BOX
+1 10 1 10 1 1 /
+TOPS
+100*2000.0 /
+ENDBOX
+
+PORO
+1000*0.2 /
+PERMX
+1000*1 /
+PERMY
+1000*0.1 /
+PERMZ
+1000*0.01 /
+
+SOLUTION
+
+SCHEDULE
+RPTRST
+BASIC=2
+/
+TSTEP            -- 1
+10 /
+WELSPECS
+      'OP_1'  'OP'   9   9 1* 'OIL' 1*      1*  1*   1*  1*   1*  1*  /
+/
+COMPDAT
+      'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
+/
+WCONPROD
+      'OP_1' 'OPEN' 'GRUP' 1000.0 4* 50.0 /
+/
+GCONPROD
+      'OP' 'ORAT' 500.0 /
+/
+GUIDERAT
+-- Update interval 30 time units, damping factor 0.5
+      30.0 'OIL' 1.0 0.5 1.0 1.0 0.0 0.0 'YES' 0.5 /
+TSTEP            -- 2
+10 /
+TSTEP            -- 3
+10 /
+END
+)~");
     }
 
     // Takes optional RUNSPEC keywords, such as UDQPARAM.
@@ -1550,4 +1624,57 @@ BOOST_AUTO_TEST_CASE(Shut_Well_Waiting_For_Group_Control)
     const auto wi_1 = restartWell("WI_1");
     BOOST_CHECK(wi_1.isInjector());
     BOOST_CHECK(wi_1.injection_cmode() == Opm::WellInjectorCMode::GRUP);
+}
+
+namespace {
+
+    // The restart file stores the update interval in the output unit of
+    // time, which is the deck's unit of time.  Reading the restart file
+    // gives the interval in SI units (seconds).
+    void checkGuideRateUpdateInterval(const Opm::Deck&   deck,
+                                      const double       interval_si,
+                                      const std::string& baseName,
+                                      const std::string& workArea)
+    {
+        const auto simCase = SimulationCase{ deck };
+
+        const auto rptStep = std::size_t{2};
+
+        {
+            const auto dh = Opm::RestartIO::Helpers::
+                createDoubHead(simCase.es, simCase.sched, rptStep - 1, rptStep,
+                               0.0, 0.0);
+
+            namespace VI = Opm::RestartIO::Helpers::VectorItems;
+
+            BOOST_CHECK_CLOSE(dh[VI::doubhead::GRpar_int], 30.0, 1.0e-8);
+            BOOST_CHECK_CLOSE(dh[VI::doubhead::GRpar_damp], 0.5, 1.0e-8);
+        }
+
+        {
+            const auto state = makeRestartState(simCase, baseName, rptStep,
+                                                workArea);
+
+            BOOST_CHECK_CLOSE(state.header.guide_rate_delay, interval_si, 1.0e-8);
+        }
+    }
+
+} // Anonymous namespace
+
+BOOST_AUTO_TEST_CASE(Guide_Rate_Update_Interval)
+{
+    // METRIC: the unit of time is days.
+    checkGuideRateUpdateInterval(guide_rate_update_interval(),
+                                 Opm::unit::convert::from(30.0, Opm::unit::day),
+                                 "GUIDE_RATE_INTERVAL_RST",
+                                 "guide_rate_interval_rst");
+}
+
+BOOST_AUTO_TEST_CASE(Guide_Rate_Update_Interval_Lab_Units)
+{
+    // LAB: the unit of time is hours.
+    checkGuideRateUpdateInterval(guide_rate_update_interval("LAB\n"),
+                                 Opm::unit::convert::from(30.0, Opm::unit::hour),
+                                 "GUIDE_RATE_INTERVAL_LAB_RST",
+                                 "guide_rate_interval_lab_rst");
 }
