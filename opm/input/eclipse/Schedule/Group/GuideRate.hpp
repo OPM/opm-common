@@ -27,6 +27,7 @@
 #include <ctime>
 #include <limits>
 #include <memory>
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -155,6 +156,16 @@ public:
 
     void updateGuideRateExpiration(const double      sim_time,
                                    const std::size_t report_step);
+
+    /// \brief Time of the last general guide rate update.
+    ///
+    /// This is the earliest time at which any of the stored well and group
+    /// guide rate values was computed, in seconds since the start of the
+    /// simulation.  The guide rates expire when the update interval of the
+    /// guide rate model has passed since this time.
+    ///
+    /// \return Nullopt if there are no stored guide rate values.
+    std::optional<double> lastUpdateTime() const;
 
     template<class Serializer>
     void serializeOp(Serializer& serializer)
