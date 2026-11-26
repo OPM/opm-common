@@ -2003,6 +2003,213 @@ BOOST_AUTO_TEST_SUITE_END()     // Extra_Effects
 
 // ===========================================================================
 
+BOOST_AUTO_TEST_SUITE(Group_Target_Control)
+
+namespace {
+
+    // MANI distributes the oil target of PLAT by its own guide rate.  FIELD
+    // has a water voidage replacement target and INJ a gas rate target.
+    SimulationCase groupTargetCase()
+    {
+        return SimulationCase { Opm::Parser{}.parseString(R"~(
+RUNSPEC
+OIL
+WATER
+GAS
+DISGAS
+
+DIMENS
+ 5 5 3 /
+
+WELLDIMS
+ 5 3 6 5 /
+
+START
+ 1 JAN 2020 /
+
+GRID
+
+DXV
+ 5*100.0 /
+DYV
+ 5*100.0 /
+DZV
+ 3*10.0 /
+DEPTHZ
+36*2000.0 /
+
+PORO
+ 75*0.2 /
+PERMX
+ 75*100 /
+PERMY
+ 75*100 /
+PERMZ
+ 75*10 /
+
+SCHEDULE
+
+GRUPTREE
+ 'PLAT' 'FIELD' /
+ 'MANI' 'PLAT' /
+ 'PROD' 'MANI' /
+ 'INJ'  'FIELD' /
+/
+
+WELSPECS
+ 'P1' 'PROD' 1 1 1* 'OIL' /
+ 'P2' 'PROD' 2 2 1* 'OIL' /
+ 'P3' 'PROD' 3 3 1* 'OIL' /
+ 'WI' 'INJ'  4 4 1* 'WATER' /
+ 'GI' 'INJ'  5 5 1* 'GAS' /
+/
+
+COMPDAT
+ 'P1' 1 1 1 3 'OPEN' 1* 10.0 0.2 /
+ 'P2' 2 2 1 3 'OPEN' 1* 10.0 0.2 /
+ 'P3' 3 3 1 3 'OPEN' 1* 10.0 0.2 /
+ 'WI' 4 4 1 3 'OPEN' 1* 10.0 0.2 /
+ 'GI' 5 5 1 3 'OPEN' 1* 10.0 0.2 /
+/
+
+GCONPROD
+ 'PLAT' 'ORAT' 1000.0 200.0 1* 2000.0 'RATE' /
+ 'MANI' 'FLD' 4* 'RATE' 'YES' 1.0 'OIL' /
+/
+
+GCONINJE
+ 'FIELD' 'WATER' 'VREP' 3* 1.0 /
+ 'INJ' 'GAS' 'RATE' 50000.0 /
+/
+
+WCONPROD
+ 'P1' 'OPEN' 'GRUP' 500.0 4* 50.0 /
+ 'P2' 'OPEN' 'GRUP' 500.0 4* 50.0 /
+ 'P3' 'OPEN' 'ORAT' 100.0 4* 50.0 /
+/
+
+WCONINJE
+ 'WI' 'WATER' 'OPEN' 'GRUP' 1000.0 1* 400.0 /
+ 'GI' 'GAS'   'OPEN' 'GRUP' 100000.0 1* 400.0 /
+/
+
+TSTEP
+ 10 /
+
+END
+)~") };
+    }
+
+    Opm::data::Wells groupTargetWellResults()
+    {
+        using o = ::Opm::data::Rates::opt;
+        using PMode = ::Opm::Well::ProducerCMode;
+        using IMode = ::Opm::Well::InjectorCMode;
+
+        auto xw = ::Opm::data::Wells{};
+
+        for (const auto* wname : { "P1", "P2", "P3", "WI", "GI" }) {
+            auto& c = xw[wname].connections.emplace_back();
+            c.rates.set(o::wat, 1.0).set(o::oil, 2.0).set(o::gas, 3.0);
+        }
+
+        {
+            auto& curr = xw["P1"].current_control;
+            curr.prod = PMode::GRUP;
+            curr.groupTargetProd = PMode::WRAT;
+            curr.controllingGroup = "MANI";
+        }
+
+        // Group control, but no group target known.
+        xw["P2"].current_control.prod = PMode::GRUP;
+
+        xw["P3"].current_control.prod = PMode::ORAT;
+
+        {
+            auto& curr = xw["WI"].current_control;
+            curr.isProducer = false;
+            curr.inj = IMode::GRUP;
+            curr.groupTargetInj = IMode::RESV;
+            curr.controllingGroup = "FIELD";
+        }
+
+        {
+            auto& curr = xw["GI"].current_control;
+            curr.isProducer = false;
+            curr.inj = IMode::GRUP;
+            curr.groupTargetInj = IMode::RATE;
+            curr.controllingGroup = "INJ";
+        }
+
+        return xw;
+    }
+
+} // Anonymous namespace
+
+BOOST_AUTO_TEST_CASE(Active_Control_And_Controlling_Group)
+{
+    using Ix = ::Opm::RestartIO::Helpers::VectorItems::IWell::index;
+    using Ctrl = ::Opm::RestartIO::Helpers::VectorItems::IWell::Value::WellCtrlMode;
+    namespace GrupConValue = ::Opm::RestartIO::Helpers::VectorItems::IWell::Value::WGrupCon;
+
+    const auto cse = groupTargetCase();
+    const auto rptStep = std::size_t{0};
+
+    auto ih = MockIH{ 5 };
+    const auto ngmaxz = 7;
+    ih.value[::Opm::RestartIO::Helpers::VectorItems::intehead::NGMAXZ] = ngmaxz;
+
+    const auto smry = Opm::SummaryState { Opm::TimeService::now(), 0.0 };
+    const auto action_state = Opm::Action::State{};
+    const auto wtest_state = Opm::WellTestState{};
+
+    auto awd = Opm::RestartIO::Helpers::AggregateWellData{ ih.value };
+    awd.captureDeclaredWellData(cse.sched, cse.es.tracer(), rptStep,
+                                action_state, wtest_state, smry, ih.value);
+    awd.captureDynamicWellData(cse.sched, cse.es.tracer(), rptStep,
+                               groupTargetWellResults(), smry);
+
+    const auto& iwell = awd.getIWell();
+    auto item = [&iwell, &ih](const std::size_t wellID, const Ix ix)
+    {
+        return iwell[wellID*ih.niwelz + ix];
+    };
+
+    auto groupIndex = [&cse, rptStep](const std::string& gname)
+    {
+        return static_cast<int>(cse.sched.getGroup(gname, rptStep).insert_index());
+    };
+
+    // P1: Water rate imposed by PLAT's target, handed down by MANI.
+    BOOST_CHECK_EQUAL(item(0, Ix::ActWCtrl), Ctrl::WatRate);
+    BOOST_CHECK_EQUAL(item(0, Ix::item9), Ctrl::WatRate);
+    BOOST_CHECK_EQUAL(item(0, Ix::WGrupConControllable), groupIndex("MANI"));
+
+    // P2: Group control without known group target.
+    BOOST_CHECK_EQUAL(item(1, Ix::ActWCtrl), Ctrl::Group);
+    BOOST_CHECK_EQUAL(item(1, Ix::WGrupConControllable),
+                      GrupConValue::Controllable::Yes);
+
+    // P3: Individual control.
+    BOOST_CHECK_EQUAL(item(2, Ix::ActWCtrl), Ctrl::OilRate);
+    BOOST_CHECK_EQUAL(item(2, Ix::WGrupConControllable),
+                      GrupConValue::Controllable::Yes);
+
+    // WI: Voidage replacement target of FIELD controls reservoir rate.
+    BOOST_CHECK_EQUAL(item(3, Ix::ActWCtrl), Ctrl::ResVRate);
+    BOOST_CHECK_EQUAL(item(3, Ix::item9), Ctrl::ResVRate);
+    BOOST_CHECK_EQUAL(item(3, Ix::WGrupConControllable), ngmaxz);
+
+    // GI: Rate target of gas injection group controls gas rate.
+    BOOST_CHECK_EQUAL(item(4, Ix::ActWCtrl), Ctrl::GasRate);
+    BOOST_CHECK_EQUAL(item(4, Ix::item9), Ctrl::GasRate);
+    BOOST_CHECK_EQUAL(item(4, Ix::WGrupConControllable), groupIndex("INJ"));
+}
+
+BOOST_AUTO_TEST_SUITE_END()     // Group_Target_Control
+
+// ===========================================================================
+
 BOOST_AUTO_TEST_SUITE(Tracer_Values)
 
 namespace {
