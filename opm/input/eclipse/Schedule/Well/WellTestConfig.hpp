@@ -72,6 +72,7 @@ public:
         std::string name{};
         int reasons{};
         double test_interval{};
+        // Zero means no limit and a negative value means no tests left.
         int num_test{};
         double startup_time{};
         // the related WTEST keywords is entered and will begin
