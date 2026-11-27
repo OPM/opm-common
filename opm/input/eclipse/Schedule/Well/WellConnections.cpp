@@ -25,9 +25,9 @@
 
 #include <opm/common/OpmLog/KeywordLocation.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
+#include <opm/common/utility/OpmInputError.hpp>
 
 #include <opm/common/utility/ActiveGridCells.hpp>
-#include <opm/common/utility/numeric/linearInterpolation.hpp>
 
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/EclipseState/Grid/FieldPropsManager.hpp>
@@ -48,11 +48,12 @@
 #include <opm/input/eclipse/Parser/ParserKeywords/C.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/W.hpp>
 
+#include <opm/input/eclipse/Schedule/Well/GridIndependentWellKeywordHandlers.hpp>
+
 #include <external/resinsight/LibCore/cvfVector3.h>
 #include <external/resinsight/ReservoirDataModel/RigHexIntersectionTools.h>
 #include <external/resinsight/ReservoirDataModel/RigWellLogExtractionTools.h>
 #include <external/resinsight/ReservoirDataModel/RigWellLogExtractor.h>
-#include <external/resinsight/ReservoirDataModel/RigWellPath.h>
 
 #include "../WellTraj/RigEclipseWellLogExtractor.hpp"
 #include "WellTrajInfo.hpp"
@@ -69,6 +70,7 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -770,9 +772,26 @@ The cell ({},{},{}) in well {} is not active and the connection will be ignored)
                                   const KeywordLocation& location,
                                   WellTrajInfo&          wellTraj)
     {
-        if (this->coord[0].size() == 0) return;  // No path.
-
         using Kw = ParserKeywords::COMPTRAJ;
+
+        const auto branch = record.getItem<Kw::BRANCH_NUMBER>().get<int>(0);
+
+        if (branch <= 0) {
+            throw OpmInputError {
+                fmt::format("Branch number {} for well {} must be a positive "
+                            "integer. Branch 1 is the main branch.", branch, wname),
+                location
+            };
+        }
+
+        if (! this->coord.contains(branch)) {
+            throw OpmInputError {
+                fmt::format("Well {} has no WELTRAJ trajectory for branch {}. "
+                            "Every branch referenced by COMPTRAJ must first be "
+                            "defined by WELTRAJ.", wname, branch),
+                location
+            };
+        }
 
         const auto& perf_top = record.getItem<Kw::PERF_TOP>();
         const auto& perf_bot = record.getItem<Kw::PERF_BOT>();
@@ -803,54 +822,76 @@ The cell ({},{},{}) in well {} is not active and the connection will be ignored)
             rw = 0.5*unit::feet;
         }
 
+        auto deck_CF = -1.0;
+        if (CFItem.hasValue(0) && (CFItem.getSIDouble(0) > 0.0)) {
+            deck_CF = CFItem.getSIDouble(0);
+        }
+
+        auto deck_Kh = -1.0;
+        if (KhItem.hasValue(0) && (KhItem.getSIDouble(0) > 0.0)) {
+            deck_Kh = KhItem.getSIDouble(0);
+        }
+
+        // Unless both are given in the record, CF and Kh are calculated
+        // from the cell properties.
+        const auto ctf_kind = ((deck_CF < 0.0) && (deck_Kh < 0.0))
+            ? Connection::CTFKind::Defaulted
+            : Connection::CTFKind::DeckValue;
+
+        if ((ctf_kind == Connection::CTFKind::DeckValue) &&
+            ! ((deck_CF > 0.0) && (deck_Kh > 0.0)))
+        {
+            auto msg = fmt::format(R"(Problem with COMPTRAJ keyword
+In {} line {}
+CF and Kh items for well {} must both be specified or both defaulted/negative)",
+                                   location.filename, location.lineno, wname);
+
+            throw std::logic_error(msg);
+        }
+
         // Get the grid
         const auto& ecl_grid = grid.get_grid();
 
-        std::vector<external::cvf::Vec3d> points;
-        std::vector<double> measured_depths;
-
         // Calulate the x,y,z coordinates of the begin and end of a perforation
-        const auto m_top = perf_top.getSIDouble(0);
-        const auto m_bot = perf_bot.getSIDouble(0);
-        external::cvf::Vec3d p_top, p_bot;
-        for (std::size_t i = 0; i < 3 ; ++i) {
-            p_top[i] = linearInterpolation(this->md, this->coord[i], m_top);
-            p_bot[i] = linearInterpolation(this->md, this->coord[i], m_bot);
-        }
-        points.push_back(p_top);
-        measured_depths.push_back(m_top);
-
-        points.reserve(this->coord[0].size());
-        measured_depths.reserve(this->coord[0].size());
-        for (std::size_t i = 0; i < coord[0].size(); ++i) {
-            if (this->md[i] > m_top and this->md[i] < m_bot) {
-                points.push_back(external::cvf::Vec3d(coord[0][i], coord[1][i], coord[2][i]));
-                measured_depths.push_back(this->md[i]);
-            }
-        }
-
-        points.push_back(p_bot);
-        measured_depths.push_back(m_bot);
-
-        wellTraj.wellPathGeometry->setWellPathPoints(points);
-        wellTraj.wellPathGeometry->setMeasuredDepths(measured_depths);
+        initWellPathGeometry(wellTraj.wellPathGeometry,
+                             this->coord.at(branch), this->md.at(branch),
+                             perf_top.getSIDouble(0), perf_bot.getSIDouble(0));
 
         external::cvf::ref<external::RigEclipseWellLogExtractor> e {
             new external::RigEclipseWellLogExtractor {
-                wellTraj.wellPathGeometry.p(), *ecl_grid, wellTraj.cellSearchTree
+                wellTraj.wellPathGeometry.p(), *ecl_grid, wellTraj.gridSearchData
             }
         };
 
-        // Keep the AABB search tree of the grid to avoid redoing an
-        // expensive calulation.
-        wellTraj.cellSearchTree = e->getCellSearchTree();
-
         // This gives the intersected grid cells IJK, cell face entrance &
         // exit cell face point and connection length.
-        wellTraj.intersections = e->cellIntersectionInfosAlongWellPath();
+        const auto intersections = e->cellIntersectionInfosAlongWellPath();
+        wellTraj.intersections = intersections;
 
-        for (std::size_t is = 0; is < wellTraj.intersections.size(); ++is) {
-            const auto ijk = ecl_grid->getIJK(wellTraj.intersections[is].globCellIndex);
+        // The trajectory may enter the same cell more than once.  Collect
+        // the pieces of the trajectory in each cell, with the cells in the
+        // order in which the trajectory first enters them.
+        auto cell_pieces = std::vector<std::vector<std::size_t>>{};
+        {
+            auto cell_slot = std::unordered_map<std::size_t, std::size_t>{};
+
+            for (std::size_t is = 0; is < intersections.size(); ++is) {
+                const auto [slot, is_new] =
+                    cell_slot.try_emplace(intersections[is].globCellIndex,
+                                          cell_pieces.size());
+
+                if (is_new) {
+                    cell_pieces.emplace_back();
+                }
+
+                cell_pieces[slot->second].push_back(is);
+            }
+        }
+
+        for (std::size_t ic = 0; ic < cell_pieces.size(); ++ic) {
+            const auto& pieces = cell_pieces[ic];
+            const auto global_index = intersections[pieces.front()].globCellIndex;
+            const auto ijk = ecl_grid->getIJK(global_index);
 
             // When using WELTRAJ & COMPTRAJ one may use default settings in
             // WELSPECS for headI/J and let the headI/J be calculated by the
@@ -858,7 +899,7 @@ The cell ({},{},{}) in well {} is not active and the connection will be ignored)
             //
             // If these defaults are used the headI/J are set to the first
             // intersection.
-            if (is == 0) {
+            if (ic == 0) {
                 if (this->headI < 0) { this->headI = ijk[0]; }
                 if (this->headJ < 0) { this->headJ = ijk[1]; }
             }
@@ -885,67 +926,71 @@ The cell ({},{},{}) in well {} is not active and the connection will be ignored)
             ctf_props.rw = rw;
             ctf_props.skin_factor = skin_factor;
             ctf_props.d_factor = d_factor;
+            ctf_props.r0 = -1.0;
+            ctf_props.re = -1.0;
 
             if (defaultSatTable) {
                 satTableId = props->satnum;
-            }
-
-            ctf_props.r0 = -1.0;
-            ctf_props.Kh = -1.0;
-            if (KhItem.hasValue(0) && (KhItem.getSIDouble(0) > 0.0)) {
-                ctf_props.Kh = KhItem.getSIDouble(0);
-            }
-
-            ctf_props.CF = -1.0;
-            if (CFItem.hasValue(0) && (CFItem.getSIDouble(0) > 0.0)) {
-                ctf_props.CF = CFItem.getSIDouble(0);
             }
 
             const auto cell_perm = std::array {
                 props->permx, props->permy, props->permz
             };
 
-            auto ctf_kind = ::Opm::Connection::CTFKind::DeckValue;
-            if ((ctf_props.CF < 0.0) && (ctf_props.Kh < 0.0)) {
-                // We must calculate CF and Kh from the items in the
-                // COMPTRAJ record and cell properties.
-                ctf_kind = ::Opm::Connection::CTFKind::Defaulted;
-
-                const auto& connection_vector =
-                    wellTraj.intersections[is].intersectionLengthsInCellCS;
-
-                const auto perm_thickness =
-                    permThickness(connection_vector, cell_perm, props->ntg);
-
-                const auto connection_factor =
-                    connectionFactor(cell_perm, cell.dimensions, props->ntg,
-                                     perm_thickness, rw, skin_factor);
-
-                ctf_props.connection_length = connection_vector.length();
-
-                ctf_props.CF = std::hypot(connection_factor[0],
-                                          connection_factor[1],
-                                          connection_factor[2]);
-
-                ctf_props.Kh = std::hypot(perm_thickness[0],
-                                          perm_thickness[1],
-                                          perm_thickness[2]);
+            if (ctf_kind == Connection::CTFKind::DeckValue) {
+                // The values given in the record apply once to each cell,
+                // however often the trajectory enters it.
+                ctf_props.CF = deck_CF;
+                ctf_props.Kh = deck_Kh;
             }
-            else if (! ((ctf_props.CF > 0.0) && (ctf_props.Kh > 0.0))) {
-                auto msg = fmt::format(R"(Problem with COMPTRAJ keyword
-In {} line {}
-CF and Kh items for well {} must both be specified or both defaulted/negative)",
-                                       location.filename, location.lineno, wname);
+            else {
+                // We must calculate CF and Kh from the items in the
+                // COMPTRAJ record and cell properties.  Every piece of the
+                // trajectory in the cell contributes.
+                for (const auto is : pieces) {
+                    const auto& connection_vector =
+                        intersections[is].intersectionLengthsInCellCS;
 
-                throw std::logic_error(msg);
+                    const auto perm_thickness =
+                        permThickness(connection_vector, cell_perm, props->ntg);
+
+                    const auto connection_factor =
+                        connectionFactor(cell_perm, cell.dimensions, props->ntg,
+                                         perm_thickness, rw, skin_factor);
+
+                    ctf_props.connection_length += connection_vector.length();
+
+                    ctf_props.CF += std::hypot(connection_factor[0],
+                                               connection_factor[1],
+                                               connection_factor[2]);
+
+                    ctf_props.Kh += std::hypot(perm_thickness[0],
+                                               perm_thickness[1],
+                                               perm_thickness[2]);
+                }
+            }
+
+            if (! (std::isfinite(ctf_props.CF) && std::isfinite(ctf_props.Kh) &&
+                   (ctf_props.CF >= 0.0) && (ctf_props.Kh >= 0.0)))
+            {
+                // Degenerate cell geometry, e.g. a zero thickness cell.  A
+                // single such contribution would poison the combined CTF of
+                // every interval reaching this cell, so leave it out entirely.
+                OpmLog::warning(fmt::format(R"(Problem with COMPTRAJ keyword
+In {} line {}
+Branch {} of well {} yields a non-representable connection transmissibility factor ({}) or Kh ({}) in cell ({},{},{}). The connection will be ignored)",
+                                            location.filename, location.lineno,
+                                            branch, wname,
+                                            ctf_props.CF, ctf_props.Kh,
+                                            ijk[0] + 1, ijk[1] + 1, ijk[2] + 1));
+
+                continue;
             }
 
             // Todo: check what needs to be done for polymerMW module, see
             // loadCOMPDAT used by the PolymerMW module
 
             const auto direction = ::Opm::Connection::Direction::Z;
-
-            ctf_props.re = -1;
 
             {
                 const auto K = permComponents(direction, cell_perm);
@@ -994,6 +1039,16 @@ CF and Kh items for well {} must both be specified or both defaulted/negative)",
     {
         using Kw = ParserKeywords::WELTRAJ;
 
+        const auto branch = record.getItem<Kw::BRANCH_NUMBER>().get<int>(0);
+
+        if (branch <= 0) {
+            throw OpmInputError {
+                fmt::format("Branch number {} for well {} must be a positive "
+                            "integer. Branch 1 is the main branch.", branch, wname),
+                location
+            };
+        }
+
         double x = record.getItem<Kw::X>().getSIDouble(0);
         double y = record.getItem<Kw::Y>().getSIDouble(0);
 
@@ -1003,11 +1058,11 @@ CF and Kh items for well {} must both be specified or both defaulted/negative)",
             mapaxes->inv_transform(x, y);
         }
 
-        this->coord[0].push_back(x);
-        this->coord[1].push_back(y);
-        this->coord[2].push_back(record.getItem<Kw::TVD>().getSIDouble(0));
+        this->coord[branch][0].push_back(x);
+        this->coord[branch][1].push_back(y);
+        this->coord[branch][2].push_back(record.getItem<Kw::TVD>().getSIDouble(0));
 
-        this->md.push_back(record.getItem<Kw::MD>().getSIDouble(0));
+        this->md[branch].push_back(record.getItem<Kw::MD>().getSIDouble(0));
     }
 
     void WellConnections::applyDFactorCorrelation(const ScheduleGrid& grid,
@@ -1224,9 +1279,14 @@ CF and Kh items for well {} must both be specified or both defaulted/negative)",
         return this->headJ;
     }
 
-    const std::vector<double>& WellConnections::getMD() const
+    const std::map<int, std::vector<double>>& WellConnections::getMD() const
     {
         return this->md;
+    }
+
+    const std::map<int, std::array<std::vector<double>, 3>>& WellConnections::getCoord() const
+    {
+        return this->coord;
     }
 
     std::optional<int>
