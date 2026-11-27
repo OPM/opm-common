@@ -713,6 +713,7 @@ list(APPEND DUNE_TEST_SOURCE_FILES
   tests/material/test_binarycoefficients.cpp
   tests/test_densead.cpp
   tests/test_EvaluationFormat.cpp
+  tests/test_opmflash.cpp
   tests/test_SymmTensor.cpp
   tests/material/test_blackoilfluidstate.cpp
   tests/material/test_blackoilfluidsystem_nonstatic.cpp
@@ -920,6 +921,7 @@ list(APPEND PROGRAM_SOURCE_FILES
   examples/co2brinepvt.cpp
   examples/hysteresis.cpp
   examples/plot_ms_wells.cpp
+  examples/opmflash.cpp
 )
 
 list(APPEND PUBLIC_HEADER_FILES
