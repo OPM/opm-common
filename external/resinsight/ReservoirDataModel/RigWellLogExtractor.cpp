@@ -16,18 +16,19 @@
 //  for more details.
 //
 /////////////////////////////////////////////////////////////////////////////////
-#include <string>
+
 #include "RigWellLogExtractor.h"
+
+// #include "RiaLogging.h"
 #include "RigWellPath.h"
-#include "../LibCore/cvfTrace.h"
+
+#include "../cafPdmCore/cafAssert.h"
 
 namespace external {
 //--------------------------------------------------------------------------------------------------
 ///
 //--------------------------------------------------------------------------------------------------
-// RigWellLogExtractor::RigWellLogExtractor( gsl::not_null<const RigWellPath*> wellpath,
-RigWellLogExtractor::RigWellLogExtractor( const RigWellPath* wellpath,
-                                          const std::string&                wellCaseErrorMsgName )
+RigWellLogExtractor::RigWellLogExtractor( const RigWellPath* wellpath, const std::string& wellCaseErrorMsgName )
     : m_wellPathGeometry( wellpath )
     , m_wellCaseErrorMsgName( wellCaseErrorMsgName )
 {
@@ -66,7 +67,7 @@ std::vector<WellPathCellIntersectionInfo> RigWellLogExtractor::cellIntersectionI
 
     for ( size_t i = 0; i < m_intersectedCellsGlobIdx.size() - 1; i = i + 2 )
     {
-        CVF_ASSERT( m_intersectedCellsGlobIdx[i] == m_intersectedCellsGlobIdx[i + 1] );
+        CAF_ASSERT( m_intersectedCellsGlobIdx[i] == m_intersectedCellsGlobIdx[i + 1] );
 
         WellPathCellIntersectionInfo cellInfo;
 
@@ -79,13 +80,103 @@ std::vector<WellPathCellIntersectionInfo> RigWellLogExtractor::cellIntersectionI
         cellInfo.intersectedCellFaceIn  = m_intersectedCellFaces[i];
         cellInfo.intersectedCellFaceOut = m_intersectedCellFaces[i + 1];
 
-        cellInfo.intersectionLengthsInCellCS =
-            this->calculateLengthInCell( cellInfo.globCellIndex, cellInfo.startPoint, cellInfo.endPoint );
+        cellInfo.intersectionLengthsInCellCS = calculateLengthInCell( cellInfo.globCellIndex, cellInfo.startPoint, cellInfo.endPoint );
 
         infoVector.push_back( cellInfo );
     }
 
     return infoVector;
+}
+
+//--------------------------------------------------------------------------------------------------
+/// Insert additional intersections if the distance between two intersections is larger than maxDistanceBetweenIntersections
+//--------------------------------------------------------------------------------------------------
+void RigWellLogExtractor::resampleIntersections( double maxDistanceBetweenIntersections )
+{
+    if ( maxDistanceBetweenIntersections <= 0.0 ) return;
+
+    std::vector<cvf::Vec3d>                         resampledIntersections;
+    std::vector<size_t>                             resampledIntersectedCellsGlobIdx;
+    std::vector<cvf::StructGridInterface::FaceType> resampledIntersectedCellFaces;
+    std::vector<double>                             resampledIntersectionMeasuredDepths;
+    std::vector<double>                             resampledIntersectionTVDs;
+
+    if ( m_intersections.size() > 1 )
+    {
+        resampledIntersections.push_back( m_intersections[0] );
+        resampledIntersectedCellsGlobIdx.push_back( m_intersectedCellsGlobIdx[0] );
+        resampledIntersectedCellFaces.push_back( m_intersectedCellFaces[0] );
+        resampledIntersectionMeasuredDepths.push_back( m_intersectionMeasuredDepths[0] );
+        resampledIntersectionTVDs.push_back( m_intersectionTVDs[0] );
+
+        for ( size_t i = 1; i < m_intersections.size(); i++ )
+        {
+            const cvf::Vec3d p1       = m_intersections[i - 1];
+            const cvf::Vec3d p2       = m_intersections[i];
+            const double     distance = ( p2 - p1 ).length();
+            if ( distance > maxDistanceBetweenIntersections )
+            {
+                size_t numberOfPoints = static_cast<size_t>( distance / maxDistanceBetweenIntersections ) + 1;
+                for ( size_t j = 1; j < numberOfPoints; j++ )
+                {
+                    // Insert data twice, as the curve visualization algorithm is based on pairs of intersections
+
+                    resampledIntersectedCellsGlobIdx.push_back( m_intersectedCellsGlobIdx[i] );
+                    resampledIntersectedCellsGlobIdx.push_back( m_intersectedCellsGlobIdx[i] );
+                    resampledIntersectedCellFaces.push_back( m_intersectedCellFaces[i] );
+                    resampledIntersectedCellFaces.push_back( m_intersectedCellFaces[i] );
+
+                    const double     t = static_cast<double>( j ) / static_cast<double>( numberOfPoints );
+                    const cvf::Vec3d p = p1 + ( p2 - p1 ) * t;
+                    resampledIntersections.push_back( p );
+                    resampledIntersections.push_back( p );
+
+                    const double md = m_intersectionMeasuredDepths[i - 1] +
+                                      ( m_intersectionMeasuredDepths[i] - m_intersectionMeasuredDepths[i - 1] ) * t;
+                    resampledIntersectionMeasuredDepths.push_back( md );
+                    resampledIntersectionMeasuredDepths.push_back( md );
+
+                    const double tvd = m_intersectionTVDs[i - 1] + ( m_intersectionTVDs[i] - m_intersectionTVDs[i - 1] ) * t;
+                    resampledIntersectionTVDs.push_back( tvd );
+                    resampledIntersectionTVDs.push_back( tvd );
+                }
+            }
+            resampledIntersections.push_back( p2 );
+            resampledIntersectedCellsGlobIdx.push_back( m_intersectedCellsGlobIdx[i] );
+            resampledIntersectedCellFaces.push_back( m_intersectedCellFaces[i] );
+            resampledIntersectionMeasuredDepths.push_back( m_intersectionMeasuredDepths[i] );
+            resampledIntersectionTVDs.push_back( m_intersectionTVDs[i] );
+        }
+    }
+
+    m_intersectionMeasuredDepths = resampledIntersectionMeasuredDepths;
+    m_intersectionTVDs           = resampledIntersectionTVDs;
+    m_intersections              = resampledIntersections;
+    m_intersectedCellsGlobIdx    = resampledIntersectedCellsGlobIdx;
+    m_intersectedCellFaces       = resampledIntersectedCellFaces;
+}
+
+//--------------------------------------------------------------------------------------------------
+///
+//--------------------------------------------------------------------------------------------------
+std::optional<double> RigWellLogExtractor::averageMdForCell( size_t cellIndex ) const
+{
+    std::vector<size_t> indicesForCell;
+
+    for ( size_t i = 0; i < m_intersectedCellsGlobIdx.size(); i++ )
+    {
+        if ( m_intersectedCellsGlobIdx[i] == cellIndex ) indicesForCell.emplace_back( i );
+    }
+
+    if ( indicesForCell.empty() ) return std::nullopt;
+
+    double sum = 0.0;
+    for ( const auto& i : indicesForCell )
+    {
+        sum += m_intersectionMeasuredDepths[i];
+    }
+
+    return sum / static_cast<double>( indicesForCell.size() );
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -99,6 +190,22 @@ const std::vector<size_t>& RigWellLogExtractor::intersectedCellsGlobIdx() const
 //--------------------------------------------------------------------------------------------------
 ///
 //--------------------------------------------------------------------------------------------------
+const std::vector<cvf::Vec3d>& RigWellLogExtractor::intersections() const
+{
+    return m_intersections;
+}
+
+//--------------------------------------------------------------------------------------------------
+///
+//--------------------------------------------------------------------------------------------------
+const std::vector<cvf::StructGridInterface::FaceType>& RigWellLogExtractor::intersectedCellFaces() const
+{
+    return m_intersectedCellFaces;
+}
+
+//--------------------------------------------------------------------------------------------------
+///
+//--------------------------------------------------------------------------------------------------
 const RigWellPath* RigWellLogExtractor::wellPathGeometry() const
 {
     return m_wellPathGeometry.p();
@@ -107,11 +214,12 @@ const RigWellPath* RigWellLogExtractor::wellPathGeometry() const
 //--------------------------------------------------------------------------------------------------
 ///
 //--------------------------------------------------------------------------------------------------
-void RigWellLogExtractor::insertIntersectionsInMap( const std::vector<HexIntersectionInfo>& intersections,
-                                                    cvf::Vec3d                              p1,
-                                                    double                                  md1,
-                                                    cvf::Vec3d                              p2,
-                                                    double                                  md2,
+void RigWellLogExtractor::insertIntersectionsInMap( const std::vector<HexIntersectionInfo>&                   intersections,
+                                                    cvf::Vec3d                                                p1,
+                                                    double                                                    md1,
+                                                    cvf::Vec3d                                                p2,
+                                                    double                                                    md2,
+                                                    double                                                    tolerance,
                                                     std::map<RigMDCellIdxEnterLeaveKey, HexIntersectionInfo>* uniqueIntersections )
 {
     for ( size_t intIdx = 0; intIdx < intersections.size(); ++intIdx )
@@ -131,11 +239,11 @@ void RigWellLogExtractor::insertIntersectionsInMap( const std::vector<HexInterse
             measuredDepthOfPoint = md1;
         }
 
-        uniqueIntersections->insert(
-            std::make_pair( RigMDCellIdxEnterLeaveKey( measuredDepthOfPoint,
-                                                       intersections[intIdx].m_hexIndex,
-                                                       intersections[intIdx].m_isIntersectionEntering ),
-                            intersections[intIdx] ) );
+        uniqueIntersections->insert( std::make_pair( RigMDCellIdxEnterLeaveKey( measuredDepthOfPoint,
+                                                                                intersections[intIdx].m_hexIndex,
+                                                                                intersections[intIdx].m_isIntersectionEntering,
+                                                                                tolerance ),
+                                                     intersections[intIdx] ) );
     }
 }
 
@@ -157,12 +265,12 @@ void RigWellLogExtractor::populateReturnArrays( std::map<RigMDCellIdxEnterLeaveK
             ++it2;
             if ( it2 != uniqueIntersections.end() )
             {
-                if ( RigWellLogExtractionTools::isEqualDepth( it1->first.measuredDepth, it2->first.measuredDepth ) )
+                if ( RigWellLogExtractionTools::isEqualDepth( it1->first.measuredDepth, it2->first.measuredDepth, it1->first.tolerance ) )
                 {
                     if ( it1->first.hexIndex == it2->first.hexIndex )
                     {
                         // Remove the two from the map, as they just are a touch of the cell surface
-                        CVF_TIGHT_ASSERT( !it1->first.isEnteringCell && it2->first.isEnteringCell );
+                        CAF_ASSERT( !it1->first.isEnteringCell && it2->first.isEnteringCell );
 
                         iteratorsToIntersectonsToErase.push_back( it1 );
                         iteratorsToIntersectonsToErase.push_back( it2 );
@@ -186,10 +294,9 @@ void RigWellLogExtractor::populateReturnArrays( std::map<RigMDCellIdxEnterLeaveK
         std::map<RigMDCellIdxEnterLeaveKey, HexIntersectionInfo>::iterator it = uniqueIntersections.begin();
         while ( it != uniqueIntersections.end() )
         {
-            sortedUniqueIntersections.insert( std::make_pair( RigMDEnterLeaveCellIdxKey( it->first.measuredDepth,
-                                                                                         it->first.isEnteringCell,
-                                                                                         it->first.hexIndex ),
-                                                              it->second ) );
+            sortedUniqueIntersections.insert(
+                std::make_pair( RigMDEnterLeaveCellIdxKey( it->first.measuredDepth, it->first.isEnteringCell, it->first.hexIndex, it->first.tolerance ),
+                                it->second ) );
             ++it;
         }
     }
@@ -208,16 +315,15 @@ void RigWellLogExtractor::populateReturnArrays( std::map<RigMDCellIdxEnterLeaveK
             firstLeavingPoint.m_face                   = cvf::StructGridInterface::NO_FACE;
             firstLeavingPoint.m_isIntersectionEntering = true;
 
-            sortedUniqueIntersections.insert(
-                std::make_pair( RigMDEnterLeaveCellIdxKey( m_wellPathGeometry->measuredDepths()[0],
-                                                           true,
-                                                           firstLeavingPoint.m_hexIndex ),
-                                firstLeavingPoint ) );
+            sortedUniqueIntersections.insert( std::make_pair( RigMDEnterLeaveCellIdxKey( m_wellPathGeometry->measuredDepths()[0],
+                                                                                         true,
+                                                                                         firstLeavingPoint.m_hexIndex,
+                                                                                         it->first.tolerance ),
+                                                              firstLeavingPoint ) );
         }
 
         // Add an intersection for the well endpoint possibly inside the last cell.
-        std::map<RigMDEnterLeaveCellIdxKey, HexIntersectionInfo>::reverse_iterator rit =
-            sortedUniqueIntersections.rbegin();
+        std::map<RigMDEnterLeaveCellIdxKey, HexIntersectionInfo>::reverse_iterator rit = sortedUniqueIntersections.rbegin();
         if ( rit != sortedUniqueIntersections.rend() && rit->first.isEnteringCell ) // Entering a cell as last
                                                                                     // intersection. Well ends inside a
                                                                                     // cell.
@@ -228,11 +334,11 @@ void RigWellLogExtractor::populateReturnArrays( std::map<RigMDCellIdxEnterLeaveK
             lastEnterPoint.m_isIntersectionEntering = false;
             lastEnterPoint.m_face                   = cvf::StructGridInterface::NO_FACE;
 
-            sortedUniqueIntersections.insert(
-                std::make_pair( RigMDEnterLeaveCellIdxKey( m_wellPathGeometry->measuredDepths().back(),
-                                                           false,
-                                                           lastEnterPoint.m_hexIndex ),
-                                lastEnterPoint ) );
+            sortedUniqueIntersections.insert( std::make_pair( RigMDEnterLeaveCellIdxKey( m_wellPathGeometry->measuredDepths().back(),
+                                                                                         false,
+                                                                                         lastEnterPoint.m_hexIndex,
+                                                                                         rit->first.tolerance ),
+                                                              lastEnterPoint ) );
         }
     }
 
@@ -251,9 +357,9 @@ void RigWellLogExtractor::populateReturnArrays( std::map<RigMDCellIdxEnterLeaveK
 
             if ( RigMDEnterLeaveCellIdxKey::isProperCellEnterLeavePair( it1->first, it2->first ) )
             {
-                appendIntersectionToArrays( it1->first.measuredDepth, it1->second /*, &errorMessages*/);
+                appendIntersectionToArrays( it1->first.measuredDepth, it1->second /*, &errorMessages*/ );
                 ++it1;
-                appendIntersectionToArrays( it1->first.measuredDepth, it1->second /*, &errorMessages */);
+                appendIntersectionToArrays( it1->first.measuredDepth, it1->second /*, &errorMessages */ );
                 ++it1;
             }
             else
@@ -273,8 +379,8 @@ void RigWellLogExtractor::populateReturnArrays( std::map<RigMDCellIdxEnterLeaveK
                      RigMDEnterLeaveCellIdxKey::isProperCellEnterLeavePair( it11->first, it21->first ) )
                 {
                     // Found 3 to 5 connection
-                    appendIntersectionToArrays( it11->first.measuredDepth, it11->second /*, &errorMessages */);
-                    appendIntersectionToArrays( it21->first.measuredDepth, it21->second /*, &errorMessages */);
+                    appendIntersectionToArrays( it11->first.measuredDepth, it11->second /*, &errorMessages */ );
+                    appendIntersectionToArrays( it21->first.measuredDepth, it21->second /*, &errorMessages */ );
 
                     ++it11;
                     ++it21;
@@ -318,14 +424,15 @@ void RigWellLogExtractor::populateReturnArrays( std::map<RigMDCellIdxEnterLeaveK
     //     errorMessages.removeDuplicates();
     //     for ( auto message : errorMessages )
     //     {
-    //         RiaLogging::warning( message );
+    //         RiaLogging::warning( message.toStdString() );
     //     }
     // }
 }
 
-void RigWellLogExtractor::appendIntersectionToArrays( double                      measuredDepth,
-                                                      const HexIntersectionInfo&  intersection /*,
-                                                      gsl::not_null<QStringList*> errorMessages */)
+//--------------------------------------------------------------------------------------------------
+///
+//--------------------------------------------------------------------------------------------------
+void RigWellLogExtractor::appendIntersectionToArrays( double measuredDepth, const HexIntersectionInfo& intersection /*, QStringList* errorMessages */ )
 {
     // QString errorMessage; // This error message is currently not displayed anywhere, as the output caused noise in
                           // several situations https://github.com/OPM/ResInsight/issues/7126
@@ -351,7 +458,7 @@ void RigWellLogExtractor::appendIntersectionToArrays( double                    
             }
             measuredDepth = m_intersectionMeasuredDepths.back();
         }
-     }
+    }
 
     m_intersectionMeasuredDepths.push_back( measuredDepth );
     m_intersectionTVDs.push_back( fabs( intersection.m_intersectionPoint[2] ) );

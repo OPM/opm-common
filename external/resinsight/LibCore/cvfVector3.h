@@ -39,6 +39,8 @@
 
 #include "cvfVector2.h"
 
+#include <type_traits>
+
 namespace external {
 namespace cvf {
 
@@ -109,6 +111,22 @@ public:
     inline const S&         operator[](int index) const;            // Get component 0,1,2. E.g. x = v[0];
     inline S&               operator[](int index);                  // Set component 0,1,2. E.g. v[0] = x;
 
+    inline const S& i() const {
+        static_assert(std::is_integral_v<S>, "i() is only available for integral type vector.");
+        return m_v[0];
+    }
+
+    inline const S& j() const {
+        static_assert(std::is_integral_v<S>, "j() is only available for integral type vector.");
+        return m_v[1];
+    }
+
+    inline const S& k() const {
+        static_assert(std::is_integral_v<S>, "k() is only available for integral type vector.");
+        return m_v[2];
+    }
+
+
     inline S*               ptr()           { return m_v; }         ///< Get a raw pointer to the internal c array of type S.
     inline const S*         ptr() const     { return m_v; }         ///< Get a const raw pointer to the internal c array of type S.
 
@@ -157,11 +175,6 @@ typedef Vector3<double> Vec3d;  ///< A vector with double components
 typedef Vector3<int>    Vec3i;  ///< A vector with int components
 typedef Vector3<uint>   Vec3ui;  ///< A vector with uint components
 typedef Vector3<size_t> Vec3st;  ///< A vector with size_t components
-
-template<> Vec3d const Vec3d::UNDEFINED;
-template<> Vec3f const Vec3f::UNDEFINED;
-template<> Vec3i const Vec3i::UNDEFINED;
-template<> Vec3st const Vec3st::UNDEFINED;
 
 }
 } //namespace external
