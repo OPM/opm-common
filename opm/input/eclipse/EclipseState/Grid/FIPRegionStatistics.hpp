@@ -102,6 +102,19 @@ namespace Opm {
         ///   name.
         int maximumRegionID(std::string_view regionSet) const;
 
+        /// Make a region known that the model's own region sets do not
+        /// hold.
+        ///
+        /// For a model that stands in for part of a larger one, whose user
+        /// defined quantities refer to regions of the larger model.
+        ///
+        /// \param[in] regionSet Named region set, with or without the 'FIP'
+        ///   region set name prefix.  Added if not known.
+        ///
+        /// \param[in] regionID Region ID to cover.  The maximum region ID
+        ///   of \p regionSet is raised to it, never lowered.
+        void raiseMaximumRegionID(std::string_view regionSet, int regionID);
+
         /// Serialisation operator
         ///
         /// \tparam Serializer Protocol for serialising and deserialising
