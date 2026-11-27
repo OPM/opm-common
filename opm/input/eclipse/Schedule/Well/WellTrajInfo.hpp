@@ -20,7 +20,8 @@
 #ifndef OPM_WELL_TRAJ_INFO_HPP
 #define OPM_WELL_TRAJ_INFO_HPP
 
-#include <external/resinsight/LibGeometry/cvfBoundingBoxTree.h>
+#include <opm/input/eclipse/Schedule/WellTraj/RigEclipseWellLogExtractor.hpp>
+
 #include <external/resinsight/ReservoirDataModel/RigWellLogExtractor.h>
 #include <external/resinsight/ReservoirDataModel/RigWellPath.h>
 
@@ -29,7 +30,7 @@ namespace Opm {
 struct WellTrajInfo
 {
     std::vector<external::WellPathCellIntersectionInfo> intersections;
-    external::cvf::ref<external::cvf::BoundingBoxTree> cellSearchTree;
+    external::RigEclipseGridSearchData gridSearchData;
     external::cvf::ref<external::RigWellPath> wellPathGeometry;
 };
 

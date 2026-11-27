@@ -148,6 +148,9 @@ public:
     /// \brief Mark that the well occured in a COMPTRAJ keyword.
     void comptraj_handled(const std::string& well_name);
 
+    /// \brief Check whether the well has already occurred in a COMPTRAJ keyword.
+    bool comptraj_was_handled(const std::string& well_name) const;
+
     /// \brief Mark that the connections of a well must be ordered before
     /// the end of the current report step.
     ///

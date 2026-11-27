@@ -23,6 +23,7 @@
 #include <opm/common/utility/OpmInputError.hpp>
 
 #include <opm/input/eclipse/Schedule/ScheduleState.hpp>
+#include <opm/input/eclipse/Schedule/ScheduleStatic.hpp>
 #include <opm/input/eclipse/Schedule/Well/WDFAC.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
@@ -68,6 +69,14 @@ void handleCOMPDATX(HandlerContext&    handlerContext,
             if (newConnsInserted) {
                 connPos->second = std::make_shared<WellConnections>
                     (well.getConnections());
+
+                if (!connPos->second->empty() && (*connPos->second)[0].fromTrajectory()) {
+                    throw OpmInputError(
+                        fmt::format("Well {} already has COMPTRAJ-defined connections and "
+                                    "cannot also be defined using COMPDAT. A well must use "
+                                    "either COMPDAT or COMPTRAJ, never both.", wname),
+                        handlerContext.keyword.location());
+                }
             }
 
             // Connections opened/shut by this record; used to raise/clear

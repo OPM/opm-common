@@ -24,6 +24,7 @@
 #include "../LibCore/cvfVector3.h"
 
 #include <vector>
+
 namespace external {
 namespace cvf
 {
@@ -49,11 +50,8 @@ public:
     const std::vector<double>&     measuredDepths() const;
     std::vector<double>            trueVerticalDepths() const;
 
-    void setWellPathPoints( const std::vector<cvf::Vec3d>& wellPathPoints );
-    void setMeasuredDepths( const std::vector<double>& measuredDepths );
-
-    void addWellPathPoint( const cvf::Vec3d& wellPathPoint );
-    void addMeasuredDepth( double measuredDepth );
+    void setWellPathPoints( const std::vector<cvf::Vec3d>& wellPathPoints, const std::vector<double>& measuredDepths );
+    void addWellPathPoint( const cvf::Vec3d& wellPathPoint, double measuredDepth );
 
     void       setDatumElevation( double value );
     bool       hasDatumElevation() const;
@@ -62,8 +60,7 @@ public:
     cvf::Vec3d interpolatedVectorValuesAlongWellPath( const std::vector<cvf::Vec3d>& vectors,
                                                       double                         measuredDepth,
                                                       double* horizontalLengthAlongWellToStartClipPoint = nullptr ) const;
-    cvf::Vec3d interpolatedPointAlongWellPath( double  measuredDepth,
-                                               double* horizontalLengthAlongWellToStartClipPoint = nullptr ) const;
+    cvf::Vec3d interpolatedPointAlongWellPath( double measuredDepth, double* horizontalLengthAlongWellToStartClipPoint = nullptr ) const;
 
     cvf::Vec3d tangentAlongWellPath( double measuredDepth ) const;
 
@@ -87,9 +84,10 @@ public:
     static bool isAnyPointInsideBoundingBox( const std::vector<cvf::Vec3d>& points, const cvf::BoundingBox& boundingBox );
 
     static std::vector<cvf::Vec3d> clipPolylineStartAboveZ( const std::vector<cvf::Vec3d>& polyLine,
-                                                            double                         maxZ,
-                                                            double* horizontalLengthAlongWellToClipPoint,
-                                                            size_t* indexToFirstVisibleSegment );
+                                                            const double                   maxZ,
+                                                            double&                        horizontalLengthAlongWellToClipPoint,
+                                                            double&                        measuredDepthAtFirstClipPoint,
+                                                            size_t&                        indexToFirstVisibleSegment );
 
 private:
     std::pair<size_t, size_t> closestIndices( const cvf::Vec3d& position ) const;
