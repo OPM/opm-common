@@ -31,10 +31,6 @@
 
 #include <fmt/format.h>
 
-// <iostream> is for std::cerr in assertJFuncPressure().  This should really
-// go away or at least use the logging system instead.
-#include <iostream>
-
 namespace Opm {
 
     SimpleTable::SimpleTable(TableSchema        schema,
@@ -42,14 +38,12 @@ namespace Opm {
                              const DeckItem&    deckItem,
                              const int          tableID)
         : m_schema(std::move(schema))
-        , m_jfunc (false)
     {
         this->init(tableName, deckItem, tableID);
     }
 
     SimpleTable::SimpleTable(TableSchema schema)
         : m_schema(std::move(schema))
-        , m_jfunc (false)
     {
         this->addColumns();
     }
@@ -59,7 +53,6 @@ namespace Opm {
         SimpleTable result;
         result.m_schema = Opm::TableSchema::serializationTestObject();
         result.m_columns.insert({"test3", Opm::TableColumn::serializationTestObject()});
-        result.m_jfunc = true;
 
         return result;
     }
@@ -102,53 +95,6 @@ namespace Opm {
         return this->getColumn(column)[row];
     }
 
-    void SimpleTable::init(const std::string& tableName,
-                           const DeckItem&    deckItem,
-                           const int          tableID,
-                           const double       scaling_factor)
-    {
-        this->addColumns();
-
-        const auto ncol = this->numColumns();
-
-        if ((deckItem.data_size() % ncol) != 0) {
-            throw std::runtime_error {
-                fmt::format("For table {} with ID {}: "
-                            "Number of input table elements ({}) is "
-                            "not a multiple of table's specified number "
-                            "of columns ({})",
-                            tableName, tableID+1, deckItem.data_size(), this->numColumns())
-            };
-        }
-
-        const std::size_t rows = deckItem.data_size() / ncol;
-
-        for (std::size_t colIdx = 0; colIdx < ncol; ++colIdx) {
-            auto& column = this->getColumn(colIdx);
-
-            for (std::size_t rowIdx = 0; rowIdx < rows; ++rowIdx) {
-                const std::size_t deckItemIdx = rowIdx*ncol + colIdx;
-
-                if (deckItem.defaultApplied(deckItemIdx)) {
-                    column.addDefault(tableName);
-                }
-                else if (m_jfunc) {
-                    column.addValue(deckItem.getData<double>()[deckItemIdx], tableName);
-                }
-                else if (scaling_factor > 0.0) {
-                    column.addValue(scaling_factor * deckItem.get<double>(deckItemIdx), tableName);
-                }
-                else {
-                    column.addValue(deckItem.getSIDouble(deckItemIdx), tableName);
-                }
-            }
-
-            if (colIdx > 0) {
-                column.applyDefaults(this->getColumn(0), tableName);
-            }
-        }
-    }
-
     std::size_t SimpleTable::numColumns() const
     {
         return m_schema.size();
@@ -161,14 +107,6 @@ namespace Opm {
 
     const TableColumn& SimpleTable::getColumn(const std::string& name) const
     {
-        if (! this->m_jfunc) {
-            return this->m_columns.get(name);
-        }
-
-        if ((name == "PCOW") || (name == "PCOG")) {
-            assertJFuncPressure(false); // this will throw since m_jfunc=true
-        }
-
         return this->m_columns.get(name);
     }
 
@@ -179,14 +117,6 @@ namespace Opm {
 
     TableColumn& SimpleTable::getColumn(const std::string& name)
     {
-        if (! this->m_jfunc) {
-            return this->m_columns.get(name);
-        }
-
-        if ((name == "PCOW") || (name == "PCOG")) {
-            assertJFuncPressure(false); // this will throw since m_jfunc=true
-        }
-
         return this->m_columns.get(name);
     }
 
@@ -207,31 +137,27 @@ namespace Opm {
         return this->getColumn(columnName).eval(index);
     }
 
-    void SimpleTable::assertJFuncPressure(const bool jf) const
-    {
-        if (jf == this->m_jfunc) {
-            return;
-        }
-
-        // if we reach here, wrong values are read from the deck! (JFUNC is
-        // used incorrectly.)  This function writes to std err for now, but
-        // will after a grace period be rewritten to throw
-        // (std::invalid_argument).
-        if (m_jfunc) {
-            std::cerr << "Developer warning: Pressure column "
-                      << "is read with JFUNC in deck.\n";
-            return;
-        }
-
-        std::cerr << "Developer warning: Raw values from JFUNC column "
-                  << "is read, but JFUNC not provided in deck.\n";
-    }
-
     bool SimpleTable::operator==(const SimpleTable& data) const
     {
         return (this->m_schema == data.m_schema)
             && (this->m_columns == data.m_columns)
-            && (this->m_jfunc == data.m_jfunc)
             ;
+    }
+
+    void SimpleTable::verifyConsistentNumberOfColumns(const std::string& tableName,
+                                                      const int          tableID,
+                                                      const std::size_t  data_size) const
+    {
+        const auto ncol = this->numColumns();
+
+        if ((data_size % ncol) != 0) {
+            throw std::runtime_error {
+                fmt::format("For table {} with ID {}: "
+                            "Number of input table elements ({}) is "
+                            "not a multiple of table's specified number "
+                            "of columns ({}).",
+                            tableName, tableID + 1, data_size, ncol)
+            };
+        }
     }
 }
