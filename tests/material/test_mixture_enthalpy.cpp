@@ -465,7 +465,7 @@ BOOST_AUTO_TEST_CASE(HeavyComponentBelowFugacityLimit)
                     const PhaseProbe<FluidSystemH1> probeAtT(t, h1Pressure, x, oilPhaseIdx);
                     auto lnPhi = cubicLnPhi(probeAtT, x, oilPhaseIdx);
                     for (int compIdx = 0; compIdx < numComponentsH1; ++compIdx) {
-                        lnPhi[compIdx] -= FluidSystemH1::volumeShift(compIdx, /*eosRegionIdx=*/0)
+                        lnPhi[compIdx] -= FluidSystemH1::eosRegion(0).volumeShift(compIdx)
                                           * probeAtT.paramCache.Bi(oilPhaseIdx, compIdx);
                     }
                     return lnPhi;

@@ -384,16 +384,16 @@ protected:
     //! \brief Li's pseudo-critical temperature, the critical temperatures
     //!        weighted by the critical volume each component contributes.
     template <class Composition>
-    static Scalar liPseudoCriticalTemperature_(const unsigned eosRegionIdx,
+    static Scalar liPseudoCriticalTemperature_(const typename FluidSystem::EosRegion& eosRegion,
                                                const Composition& composition)
     {
         Scalar volume = 0;
         Scalar weightedTemperature = 0;
         for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
-            const Scalar share = FluidSystem::criticalVolume(compIdx, eosRegionIdx)
-                * Opm::getValue(composition(compIdx));
+            const Scalar share
+                = eosRegion.criticalVolume(compIdx) * Opm::getValue(composition(compIdx));
             volume += share;
-            weightedTemperature += share * FluidSystem::criticalTemperature(compIdx, eosRegionIdx);
+            weightedTemperature += share * eosRegion.criticalTemperature(compIdx);
         }
         return weightedTemperature / volume;
     }
@@ -424,11 +424,11 @@ protected:
                                            int verbosity,
                                            std::optional<NewtonJacobian>& newton_jacobian)
     {
-        const auto phaseTemperature = [&fluid_state](int phaseIdx) {
-            return liPseudoCriticalTemperature_(
-                fluid_state.eosRegionIndex(), [&fluid_state, phaseIdx](int compIdx) {
-                    return fluid_state.moleFraction(phaseIdx, compIdx);
-                });
+        const auto& eosRegion = FluidSystem::eosRegion(fluid_state.eosRegionIndex());
+        const auto phaseTemperature = [&eosRegion, &fluid_state](int phaseIdx) {
+            return liPseudoCriticalTemperature_(eosRegion, [&fluid_state, phaseIdx](int compIdx) {
+                return fluid_state.moleFraction(phaseIdx, compIdx);
+            });
         };
         const auto phasesSwapped = [&phaseTemperature] {
             return phaseTemperature(gasPhaseIdx) > phaseTemperature(oilPhaseIdx);
@@ -471,7 +471,8 @@ protected:
     template <class Vector, class FlashFluidState>
     static typename Vector::field_type li_single_phase_label_(const FlashFluidState& fluid_state, const Vector& z, int verbosity)
     {
-        const auto Tc_est = liPseudoCriticalTemperature_(fluid_state.eosRegionIndex(),
+        const auto& eosRegion = FluidSystem::eosRegion(fluid_state.eosRegionIndex());
+        const auto Tc_est = liPseudoCriticalTemperature_(eosRegion,
                                                          [&z](int compIdx) { return z[compIdx]; });
 
         // Get temperature

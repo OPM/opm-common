@@ -44,9 +44,10 @@ public:
         return 0.4274802;
     }
 
-    static Scalar calcOmegaA(Scalar temperature, unsigned compIdx, unsigned eosRegionIdx)
+    static Scalar calcOmegaA(Scalar temperature, const typename FluidSystem::EosRegion& eosRegion,
+                             unsigned compIdx)
     {
-        Scalar Tr = temperature / FluidSystem::criticalTemperature(compIdx, eosRegionIdx);
+        Scalar Tr = temperature / eosRegion.criticalTemperature(compIdx);
         return omegaA() / sqrt(Tr);
     }
 

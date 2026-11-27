@@ -74,7 +74,7 @@ namespace Opm {
         using EOSType = CompositionalConfig::EOSType;
 
         //! The equation of state, Peng-Robinson unless set.
-        static EOSType eosType(unsigned /*eosRegionIdx*/ = 0)
+        static EOSType eosType()
         { return eos_type_; }
 
         //! Set the equation of state.
@@ -86,7 +86,7 @@ namespace Opm {
          *
          * \copydetails Doxygen::compIdxParam
          */
-        static Scalar acentricFactor(unsigned compIdx, unsigned /*eosRegionIdx*/ = 0)
+        static Scalar acentricFactor(unsigned compIdx)
         {
             switch (compIdx) {
             case Comp0Idx: return Comp0::acentricFactor();
@@ -99,7 +99,7 @@ namespace Opm {
          *
          * \copydetails Doxygen::compIdxParam
          */
-        static Scalar criticalTemperature(unsigned compIdx, unsigned /*eosRegionIdx*/ = 0)
+        static Scalar criticalTemperature(unsigned compIdx)
         {
             switch (compIdx) {
                 case Comp0Idx: return Comp0::criticalTemperature();
@@ -112,7 +112,7 @@ namespace Opm {
          *
          * \copydetails Doxygen::compIdxParam
          */
-        static Scalar criticalPressure(unsigned compIdx, unsigned /*eosRegionIdx*/ = 0) {
+        static Scalar criticalPressure(unsigned compIdx) {
             switch (compIdx) {
                 case Comp0Idx: return Comp0::criticalPressure();
                 case Comp1Idx: return Comp1::criticalPressure();
@@ -124,7 +124,7 @@ namespace Opm {
         *
         * \copydetails Doxygen::compIdxParam
         */
-        static Scalar criticalVolume(unsigned compIdx, unsigned /*eosRegionIdx*/ = 0)
+        static Scalar criticalVolume(unsigned compIdx)
         {
             switch (compIdx) {
                 case Comp0Idx: return Comp0::criticalVolume();
@@ -147,8 +147,7 @@ namespace Opm {
          * \brief Returns the interaction coefficient for two components.
          *.
          */
-        static Scalar interactionCoefficient(unsigned /*comp1Idx*/, unsigned /*comp2Idx*/,
-                                             unsigned /*eosRegionIdx*/ = 0)
+        static Scalar interactionCoefficient(unsigned /*comp1Idx*/, unsigned /*comp2Idx*/)
         {
             return 0.0;
         }

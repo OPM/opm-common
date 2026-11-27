@@ -87,12 +87,8 @@ public:
     explicit PTFlashParameterCache(const unsigned eosRegionIdx)
         : eosRegionIdx_(eosRegionIdx)
     {
-        if (eosRegionIdx >= FluidSystem::numEosRegions()) {
-            throw std::out_of_range {
-                fmt::format("EOS region {} is selected, but the fluid system has {}.",
-                            eosRegionIdx + 1, FluidSystem::numEosRegions())
-            };
-        }
+        // Rejects a region the fluid system does not have.
+        const auto eos_type = FluidSystem::eosRegion(eosRegionIdx).eosType();
 
         VmUpToDate_[oilPhaseIdx] = false;
         Valgrind::SetUndefined(Vm_[oilPhaseIdx]);
@@ -101,7 +97,6 @@ public:
         Valgrind::SetUndefined(Vm_[gasPhaseIdx]);
         Valgrind::SetUndefined(volumeShift_[gasPhaseIdx]);
 
-        const auto eos_type = FluidSystem::eosType(eosRegionIdx);
         oilPhaseParams_.setEOSType(eos_type);
         gasPhaseParams_.setEOSType(eos_type);
         oilPhaseParams_.setEosRegionIndex(eosRegionIdx);
@@ -114,6 +109,13 @@ public:
      */
     unsigned eosRegionIndex() const
     { return eosRegionIdx_; }
+
+    /*!
+     * \brief The component properties and equation of state of the
+     *        reservoir EOS region of the cache.
+     */
+    decltype(auto) eosRegion() const
+    { return FluidSystem::eosRegion(eosRegionIdx_); }
 
     /*!
      * \brief The PVT region whose water properties the fluid system returns.
@@ -431,10 +433,11 @@ protected:
         const Scalar p = decay<Scalar>(fluidState.pressure(phaseIdx));
         const Scalar RT_p = Constants<Scalar>::R * T / p;
 
+        const auto& eos_region = eosRegion();
         for (unsigned compIdx = 0; compIdx < FluidSystem::numComponents; ++compIdx) {
             const Scalar b = decay<Scalar>(Bi(phaseIdx, compIdx)) * RT_p;
             shift += decay<Scalar>(fluidState.moleFraction(phaseIdx, compIdx))
-                   * FluidSystem::volumeShift(compIdx, eosRegionIdx_) * b;
+                   * eos_region.volumeShift(compIdx) * b;
         }
         return shift;
     }

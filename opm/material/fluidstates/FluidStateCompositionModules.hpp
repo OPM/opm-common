@@ -239,10 +239,11 @@ public:
     */
     ValueType wilsonK_(unsigned compIdx) const
     {
-        const auto& acf = FluidSystem::acentricFactor(compIdx, eosRegionIdx_);
-        const auto& T_crit = FluidSystem::criticalTemperature(compIdx, eosRegionIdx_);
+        const auto& eosRegion = FluidSystem::eosRegion(eosRegionIdx_);
+        const auto& acf = eosRegion.acentricFactor(compIdx);
+        const auto& T_crit = eosRegion.criticalTemperature(compIdx);
         const auto& T = asImp_().temperature(0);
-        const auto& p_crit = FluidSystem::criticalPressure(compIdx, eosRegionIdx_);
+        const auto& p_crit = eosRegion.criticalPressure(compIdx);
         const auto& p = asImp_().pressure(0); //for now assume no capillary pressure
 
         const auto tmp = exp(5.37 * (1+acf) * (1-T_crit/T)) * (p_crit/p);

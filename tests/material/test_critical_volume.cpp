@@ -180,8 +180,7 @@ BOOST_AUTO_TEST_CASE(ZcritSetsTheCriticalVolumes)
         for (int c = 0; c < numComponents; ++c) {
             BOOST_TEST_CONTEXT(keywords << "component " << c)
             {
-                BOOST_CHECK_CLOSE(FluidSystem::criticalVolume(c, /*eosRegionIdx=*/0), expected[c],
-                                  5.0e-3);
+                BOOST_CHECK_CLOSE(FluidSystem::eosRegion(0).criticalVolume(c), expected[c], 5.0e-3);
             }
         }
     }
@@ -194,8 +193,7 @@ BOOST_AUTO_TEST_CASE(VcritAppliesWithoutZcrit)
     for (int c = 0; c < numComponents; ++c) {
         BOOST_TEST_CONTEXT("component " << c)
         {
-            BOOST_CHECK_CLOSE(FluidSystem::criticalVolume(c, /*eosRegionIdx=*/0), vcrit[c],
-                              1.0e-12);
+            BOOST_CHECK_CLOSE(FluidSystem::eosRegion(0).criticalVolume(c), vcrit[c], 1.0e-12);
         }
     }
 }

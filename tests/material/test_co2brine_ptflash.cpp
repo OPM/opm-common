@@ -237,3 +237,26 @@ for (const auto& sample : test_methods) {
 }
 #endif
 }
+
+// A fluid system with a single reservoir EOS region describes it with its own
+// component properties.
+BOOST_AUTO_TEST_CASE(SingleEosRegion)
+{
+    BOOST_CHECK_EQUAL(FluidSystem::numEosRegions(), 1u);
+
+    const auto eosRegion = FluidSystem::eosRegion(0);
+    BOOST_CHECK(eosRegion.eosType() == FluidSystem::eosType());
+    for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
+        BOOST_CHECK_EQUAL(eosRegion.criticalTemperature(compIdx),
+                          FluidSystem::criticalTemperature(compIdx));
+        BOOST_CHECK_EQUAL(eosRegion.criticalPressure(compIdx),
+                          FluidSystem::criticalPressure(compIdx));
+        BOOST_CHECK_EQUAL(eosRegion.acentricFactor(compIdx), FluidSystem::acentricFactor(compIdx));
+        BOOST_CHECK_EQUAL(eosRegion.volumeShift(compIdx), 0.0);
+        BOOST_CHECK(!eosRegion.omegaA(compIdx).has_value());
+        BOOST_CHECK(!eosRegion.omegaB(compIdx).has_value());
+    }
+
+    BOOST_CHECK_THROW(FluidSystem::eosRegion(1), std::out_of_range);
+    BOOST_CHECK_THROW(FluidSystem::ParameterCache<Scalar>(1), std::out_of_range);
+}

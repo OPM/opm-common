@@ -270,7 +270,7 @@ BOOST_AUTO_TEST_CASE(ShiftTranslatesTheFugacityCoefficient)
         const Scalar unshifted =
             UnshiftedSystem::fugacityCoefficient(fsRef, pcRef, UnshiftedSystem::gasPhaseIdx, c);
         const Scalar factor =
-            std::exp(-FluidSystem::volumeShift(c, /*eosRegionIdx=*/0)
+            std::exp(-FluidSystem::eosRegion(0).volumeShift(c)
                      * pc.Bi(FluidSystem::gasPhaseIdx, c));
 
         BOOST_CHECK_CLOSE(shifted, unshifted * factor, 1.0e-8);
@@ -477,7 +477,7 @@ BOOST_AUTO_TEST_CASE(ParsedShiftReachesTheFluidSystem)
 
     const std::array<Scalar, 3> expected{-0.1595, 0.10784, -0.0817};
     for (unsigned c = 0; c < 3; ++c) {
-        BOOST_CHECK_CLOSE(DeckSystem::volumeShift(c, /*eosRegionIdx=*/0), expected[c], 1.0e-10);
+        BOOST_CHECK_CLOSE(DeckSystem::eosRegion(0).volumeShift(c), expected[c], 1.0e-10);
     }
 }
 
@@ -492,9 +492,9 @@ BOOST_AUTO_TEST_CASE(ReinitializationRestoresDefaultCoefficients)
     const auto& loadedLbc = DeckSystem::lbcCoefficients();
     BOOST_REQUIRE_EQUAL_COLLECTIONS(loadedLbc.begin(), loadedLbc.end(),
                                     deckLbc.begin(), deckLbc.end());
-    BOOST_REQUIRE_EQUAL(DeckSystem::interactionCoefficient(0, 1, /*eosRegionIdx=*/0), 0.12);
-    BOOST_REQUIRE_EQUAL(DeckSystem::interactionCoefficient(0, 2, /*eosRegionIdx=*/0), 0.23);
-    BOOST_REQUIRE_EQUAL(DeckSystem::interactionCoefficient(1, 2, /*eosRegionIdx=*/0), 0.34);
+    BOOST_REQUIRE_EQUAL(DeckSystem::eosRegion(0).interactionCoefficient(0, 1), 0.12);
+    BOOST_REQUIRE_EQUAL(DeckSystem::eosRegion(0).interactionCoefficient(0, 2), 0.23);
+    BOOST_REQUIRE_EQUAL(DeckSystem::eosRegion(0).interactionCoefficient(1, 2), 0.34);
 
     // Manual registration after init() must use defaults for properties that
     // are not supplied by ComponentParam, regardless of the previous deck.
@@ -509,9 +509,9 @@ BOOST_AUTO_TEST_CASE(ReinitializationRestoresDefaultCoefficients)
     }
 
     for (unsigned c = 0; c < DeckSystem::numComponents; ++c) {
-        BOOST_CHECK_EQUAL(DeckSystem::volumeShift(c, /*eosRegionIdx=*/0), 0.0);
+        BOOST_CHECK_EQUAL(DeckSystem::eosRegion(0).volumeShift(c), 0.0);
         for (unsigned d = 0; d < DeckSystem::numComponents; ++d) {
-            BOOST_CHECK_EQUAL(DeckSystem::interactionCoefficient(c, d, /*eosRegionIdx=*/0), 0.0);
+            BOOST_CHECK_EQUAL(DeckSystem::eosRegion(0).interactionCoefficient(c, d), 0.0);
         }
     }
     const auto defaultLbc = DeckSystem::ViscosityModel::defaultLBCCoefficients();

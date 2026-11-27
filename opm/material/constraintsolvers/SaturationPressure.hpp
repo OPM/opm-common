@@ -416,15 +416,15 @@ private:
      * values initialise phase-composition iterations and the pressure scan.
      *
      * \param[in] temp Absolute temperature \f$T\f$.
-     * \param[in] eosRegionIdx Reservoir EOS region of the component properties.
+     * \param[in] eosRegion Reservoir EOS region of the component properties.
      */
-    static CompVec wilsonKp_(const Scalar temp, const unsigned eosRegionIdx)
+    static CompVec wilsonKp_(const Scalar temp, const typename FluidSystem::EosRegion& eosRegion)
     {
         CompVec Kp;
         for (int c = 0; c < numComponents; ++c) {
-            Kp[c] = FluidSystem::criticalPressure(c, eosRegionIdx) *
-                    std::exp(5.373 * (1.0 + FluidSystem::acentricFactor(c, eosRegionIdx)) *
-                             (1.0 - FluidSystem::criticalTemperature(c, eosRegionIdx) / temp));
+            Kp[c] = eosRegion.criticalPressure(c) *
+                    std::exp(5.373 * (1.0 + eosRegion.acentricFactor(c)) *
+                             (1.0 - eosRegion.criticalTemperature(c) / temp));
         }
         return Kp;
     }
@@ -780,7 +780,7 @@ private:
             fs.setMoleFraction(gasPhaseIdx, c, z[c]);
             fs.setMoleFraction(oilPhaseIdx, c, z[c]);
         }
-        const auto Kp = wilsonKp_(temp, eosRegionIdx);
+        const auto Kp = wilsonKp_(temp, FluidSystem::eosRegion(eosRegionIdx));
         const auto evaluate = [&fs, &z, &Kp](const Scalar lnp, CompVec& Y, Scalar& f) {
             const Scalar p = std::exp(lnp);
             if (!positiveFinite_(p)) {
@@ -1133,7 +1133,7 @@ private:
         if (!positiveFinite_(temp)) {
             return Outcome::GaveUp;
         }
-        const CompVec wilsonKp = wilsonKp_(temp, eosRegionIdx);
+        const CompVec wilsonKp = wilsonKp_(temp, FluidSystem::eosRegion(eosRegionIdx));
         const bool bubble = (mode == Mode::Bubble);
         // The bubble point and the retrograde dew point are approached from
         // the high-pressure side, the lower dew point from the low-pressure side.

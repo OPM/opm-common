@@ -91,13 +91,13 @@ public:
     using ViscosityModel = ViscosityModels<Scalar, C1C10TestFluidSystem<Scalar>>;
     using CubicEOS = ::Opm::CubicEOS<Scalar, C1C10TestFluidSystem<Scalar>>;
 
-    static CompositionalConfig::EOSType eosType(unsigned /*eosRegionIdx*/ = 0)
+    static CompositionalConfig::EOSType eosType()
     { return CompositionalConfig::EOSType::PR; }
 
     static bool phaseIsActive(unsigned phaseIdx)
     { return phaseIdx == oilPhaseIdx || phaseIdx == gasPhaseIdx; }
 
-    static Scalar acentricFactor(unsigned compIdx, unsigned /*eosRegionIdx*/ = 0)
+    static Scalar acentricFactor(unsigned compIdx)
     {
         switch (compIdx) {
         case Comp0Idx: return Comp0::acentricFactor();
@@ -106,7 +106,7 @@ public:
         }
     }
 
-    static Scalar criticalTemperature(unsigned compIdx, unsigned /*eosRegionIdx*/ = 0)
+    static Scalar criticalTemperature(unsigned compIdx)
     {
         switch (compIdx) {
         case Comp0Idx: return Comp0::criticalTemperature();
@@ -115,7 +115,7 @@ public:
         }
     }
 
-    static Scalar criticalPressure(unsigned compIdx, unsigned /*eosRegionIdx*/ = 0)
+    static Scalar criticalPressure(unsigned compIdx)
     {
         switch (compIdx) {
         case Comp0Idx: return Comp0::criticalPressure();
@@ -124,7 +124,7 @@ public:
         }
     }
 
-    static Scalar criticalVolume(unsigned compIdx, unsigned /*eosRegionIdx*/ = 0)
+    static Scalar criticalVolume(unsigned compIdx)
     {
         switch (compIdx) {
         case Comp0Idx: return Comp0::criticalVolume();
@@ -143,8 +143,7 @@ public:
     }
 
     //! standard PR literature value for the methane/n-decane pair
-    static Scalar interactionCoefficient(unsigned comp1Idx, unsigned comp2Idx,
-                                         unsigned /*eosRegionIdx*/ = 0)
+    static Scalar interactionCoefficient(unsigned comp1Idx, unsigned comp2Idx)
     { return (comp1Idx != comp2Idx) ? 0.0411 : 0.0; }
 
     static std::string_view phaseName(unsigned phaseIdx)

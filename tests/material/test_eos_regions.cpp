@@ -308,38 +308,35 @@ BOOST_FIXTURE_TEST_CASE(CountsTheRegionsOfTheDeck, Fixture)
 
 BOOST_FIXTURE_TEST_CASE(EachRegionHasItsEquationOfState, Fixture)
 {
-    BOOST_CHECK(FluidSystem::eosType(0) == EOSType::PR);
-    BOOST_CHECK(FluidSystem::eosType(1) == EOSType::SRK);
-    BOOST_CHECK(ReferenceSystem::eosType(0) == EOSType::SRK);
+    BOOST_CHECK(FluidSystem::eosRegion(0).eosType() == EOSType::PR);
+    BOOST_CHECK(FluidSystem::eosRegion(1).eosType() == EOSType::SRK);
+    BOOST_CHECK(ReferenceSystem::eosRegion(0).eosType() == EOSType::SRK);
 
     // The OMEGAA and OMEGAB defaults of a deck belong to its equations of state.
     BOOST_CHECK_THROW(FluidSystem::setEosType(EOSType::RK), std::logic_error);
     BOOST_CHECK_THROW(ReferenceSystem::setEosType(EOSType::RK), std::logic_error);
-    BOOST_CHECK(FluidSystem::eosType(0) == EOSType::PR);
-    BOOST_CHECK(ReferenceSystem::eosType(0) == EOSType::SRK);
+    BOOST_CHECK(FluidSystem::eosRegion(0).eosType() == EOSType::PR);
+    BOOST_CHECK(ReferenceSystem::eosRegion(0).eosType() == EOSType::SRK);
 }
 
 BOOST_FIXTURE_TEST_CASE(RegionMatchesADeckOfThatRegionAlone, Fixture)
 {
+    const auto& region = FluidSystem::eosRegion(1);
+    const auto& referenceRegion = ReferenceSystem::eosRegion(0);
     for (unsigned c = 0; c < numComponents; ++c) {
         BOOST_TEST_CONTEXT("component " << c)
         {
-            BOOST_CHECK_EQUAL(FluidSystem::criticalTemperature(c, 1),
-                              ReferenceSystem::criticalTemperature(c, 0));
-            BOOST_CHECK_EQUAL(FluidSystem::criticalPressure(c, 1),
-                              ReferenceSystem::criticalPressure(c, 0));
-            BOOST_CHECK_EQUAL(FluidSystem::criticalVolume(c, 1),
-                              ReferenceSystem::criticalVolume(c, 0));
-            BOOST_CHECK_EQUAL(FluidSystem::acentricFactor(c, 1),
-                              ReferenceSystem::acentricFactor(c, 0));
-            BOOST_CHECK_EQUAL(FluidSystem::volumeShift(c, 1), ReferenceSystem::volumeShift(c, 0));
-            BOOST_CHECK_EQUAL(FluidSystem::omegaA(c, 1).value(),
-                              ReferenceSystem::omegaA(c, 0).value());
-            BOOST_CHECK_EQUAL(FluidSystem::omegaB(c, 1).value(),
-                              ReferenceSystem::omegaB(c, 0).value());
+            BOOST_CHECK_EQUAL(region.criticalTemperature(c),
+                              referenceRegion.criticalTemperature(c));
+            BOOST_CHECK_EQUAL(region.criticalPressure(c), referenceRegion.criticalPressure(c));
+            BOOST_CHECK_EQUAL(region.criticalVolume(c), referenceRegion.criticalVolume(c));
+            BOOST_CHECK_EQUAL(region.acentricFactor(c), referenceRegion.acentricFactor(c));
+            BOOST_CHECK_EQUAL(region.volumeShift(c), referenceRegion.volumeShift(c));
+            BOOST_CHECK_EQUAL(region.omegaA(c).value(), referenceRegion.omegaA(c).value());
+            BOOST_CHECK_EQUAL(region.omegaB(c).value(), referenceRegion.omegaB(c).value());
             for (unsigned other = 0; other < numComponents; ++other) {
-                BOOST_CHECK_EQUAL(FluidSystem::interactionCoefficient(c, other, 1),
-                                  ReferenceSystem::interactionCoefficient(c, other, 0));
+                BOOST_CHECK_EQUAL(region.interactionCoefficient(c, other),
+                                  referenceRegion.interactionCoefficient(c, other));
             }
         }
     }
@@ -356,13 +353,13 @@ BOOST_FIXTURE_TEST_CASE(RegionsKeepTheirOwnProperties, Fixture)
 {
     // Region one differs from region two in every critical temperature.
     for (unsigned c = 0; c < numComponents; ++c) {
-        BOOST_CHECK_NE(FluidSystem::criticalTemperature(c, 0),
-                       FluidSystem::criticalTemperature(c, 1));
+        BOOST_CHECK_NE(FluidSystem::eosRegion(0).criticalTemperature(c),
+                       FluidSystem::eosRegion(1).criticalTemperature(c));
     }
-    BOOST_CHECK_EQUAL(FluidSystem::interactionCoefficient(0, 1, 0), 0.10);
-    BOOST_CHECK_EQUAL(FluidSystem::volumeShift(0, 0), 0.0);
-    BOOST_CHECK_EQUAL(FluidSystem::omegaA(0, 0).value(), 0.4570);
-    BOOST_CHECK_EQUAL(FluidSystem::omegaB(0, 0).value(), 0.0777);
+    BOOST_CHECK_EQUAL(FluidSystem::eosRegion(0).interactionCoefficient(0, 1), 0.10);
+    BOOST_CHECK_EQUAL(FluidSystem::eosRegion(0).volumeShift(0), 0.0);
+    BOOST_CHECK_EQUAL(FluidSystem::eosRegion(0).omegaA(0).value(), 0.4570);
+    BOOST_CHECK_EQUAL(FluidSystem::eosRegion(0).omegaB(0).value(), 0.0777);
 
     const auto densityOne = gasProperties<FluidSystem>(0).first;
     const auto densityTwo = gasProperties<FluidSystem>(1).first;
@@ -478,12 +475,10 @@ BOOST_FIXTURE_TEST_CASE(UnknownRegionIsRejected, Fixture)
     BOOST_CHECK_THROW(ReferenceCache(1), std::out_of_range);
     BOOST_CHECK_NO_THROW(ReferenceCache(0));
 
-    // The fluid system's own accessors reject it too.
-    BOOST_CHECK_THROW(FluidSystem::criticalTemperature(0, 2), std::out_of_range);
-    BOOST_CHECK_THROW(FluidSystem::interactionCoefficient(0, 1, 2), std::out_of_range);
-    BOOST_CHECK_THROW(FluidSystem::eosType(2), std::out_of_range);
-    BOOST_CHECK_THROW(ReferenceSystem::criticalTemperature(0, 1), std::out_of_range);
-    BOOST_CHECK_NO_THROW(FluidSystem::criticalTemperature(0, 1));
+    // The fluid system rejects it too.
+    BOOST_CHECK_THROW(FluidSystem::eosRegion(2), std::out_of_range);
+    BOOST_CHECK_THROW(ReferenceSystem::eosRegion(1), std::out_of_range);
+    BOOST_CHECK_NO_THROW(FluidSystem::eosRegion(1));
 }
 
 BOOST_AUTO_TEST_CASE(RegionsMustShareTheMolecularWeights)
@@ -495,5 +490,5 @@ BOOST_AUTO_TEST_CASE(RegionsMustShareTheMolecularWeights)
 
     // The rejected deck leaves the fluid system as the previous deck set it up.
     BOOST_CHECK_EQUAL(FluidSystem::numEosRegions(), std::size_t {2});
-    BOOST_CHECK_CLOSE(FluidSystem::criticalTemperature(2, 1), 600.0, 1.0e-12);
+    BOOST_CHECK_CLOSE(FluidSystem::eosRegion(1).criticalTemperature(2), 600.0, 1.0e-12);
 }
