@@ -822,14 +822,45 @@ protected:
         const auto composition_method = (at_endpoint() && flash_2p_method == PTFlashMethod::Newton)
             ? PTFlashMethod::Ssi
             : flash_2p_method;
+        // Newton refines a split but cannot grow or reject a trial phase: when
+        // its composition update fails to converge — no physical split may be
+        // near its start — switch to plain successive substitution and finish
+        // the solve with the method that is robust on these states, instead
+        // of failing the whole solve. Newton throws rather than returning a
+        // bad result; it may already have mutated some fluid state (e.g. via
+        // computeLiquidVapor_()) before throwing, but the successive-
+        // substitution fallback re-derives the composition from K and L and
+        // overwrites that state, so restarting it here is safe.
+        const auto newton_or_substitution = [&] {
+            const auto fall_back_to_ssi = [&](const auto& error) {
+                if (verbosity >= 1) {
+                    OpmLog::debug(fmt::format(
+                        "Newton did not finish the composition update ({}); "
+                        "switching to successive substitution.", error.what()));
+                }
+                converged = successiveSubstitutionComposition_(K_scalar, L_scalar, fluid_state_scalar, z_scalar, false, flash_tolerance, eos_type, verbosity);
+            };
+            try {
+                newton_jacobian = newtonComposition_(K_scalar, L_scalar, fluid_state_scalar,
+                                                     z_scalar, flash_tolerance, eos_type,
+                                                     verbosity);
+                converged = true;
+            }
+            catch (const NumericalProblem& error) {
+                fall_back_to_ssi(error);
+            }
+            catch (const Dune::FMatrixError& error) {
+                // FieldMatrix::solve reports a singular Jacobian with
+                // FMatrixError, which is outside the std::runtime_error hierarchy.
+                fall_back_to_ssi(error);
+            }
+        };
         switch (composition_method) {
         case PTFlashMethod::Newton:
             if (verbosity >= 1) {
                 OpmLog::debug("Calculate composition using Newton.");
             }
-            newton_jacobian = newtonComposition_(K_scalar, L_scalar, fluid_state_scalar, z_scalar,
-                                                 flash_tolerance, eos_type, verbosity);
-            converged = true;
+            newton_or_substitution();
             break;
 
         case PTFlashMethod::Ssi:
@@ -855,39 +886,7 @@ protected:
                                                                eos_type,
                                                                verbosity);
             } else if (!converged) {
-                // In this method Newton is an accelerator, not the
-                // guarantee: when its composition update fails to converge —
-                // or a diverged iterate makes the EoS report non-finite
-                // mixing parameters — switch back to plain successive
-                // substitution and finish the solve with the method that is
-                // robust on these states, instead of failing the whole
-                // solve. Newton throws rather than returning a bad result;
-                // it may already have mutated some fluid state (e.g. via
-                // computeLiquidVapor_()) before throwing, but the successive-
-                // substitution fallback re-derives the composition from K and
-                // L and overwrites that state, so restarting it here is safe.
-                const auto fall_back_to_ssi = [&](const auto& error) {
-                    if (verbosity >= 1) {
-                        OpmLog::debug(fmt::format(
-                            "Newton did not finish the composition update ({}); "
-                            "switching back to successive substitution.", error.what()));
-                    }
-                    converged = successiveSubstitutionComposition_(K_scalar, L_scalar, fluid_state_scalar, z_scalar, false, flash_tolerance, eos_type, verbosity);
-                };
-                try {
-                    newton_jacobian = newtonComposition_(K_scalar, L_scalar, fluid_state_scalar,
-                                                         z_scalar, flash_tolerance, eos_type,
-                                                         verbosity);
-                    converged = true;
-                }
-                catch (const NumericalProblem& error) {
-                    fall_back_to_ssi(error);
-                }
-                catch (const Dune::FMatrixError& error) {
-                    // FieldMatrix::solve reports a singular Jacobian with
-                    // FMatrixError, which is outside the std::runtime_error hierarchy.
-                    fall_back_to_ssi(error);
-                }
+                newton_or_substitution();
             }
             break;
         }
@@ -989,7 +988,16 @@ protected:
      * the unknowns. The convergence test follows its assembly, so the
      * Jacobian returned belongs to the converged state.
      *
-     * \throws NumericalProblem when Newton does not converge.
+     * Starting estimates can be far from the split, so each step is first
+     * shortened to keep the mole fractions between 0 and 1. Near a critical
+     * point the residual can be small while the split is still far, and the
+     * first step raises it before Newton converges. Full steps are therefore
+     * taken while they reduce the residual quickly, even above its value at
+     * the last accepted iterate. When they do not, Newton returns there and
+     * from then on halves each step until the residual norm decreases.
+     *
+     * \throws NumericalProblem when Newton does not converge, finds no step
+     *         that reduces the residual, or approaches the trivial solution.
      */
     template <class FlashFluidState, class ComponentVector>
     static auto newtonComposition_(ComponentVector& K,
@@ -1034,30 +1042,33 @@ protected:
             OpmLog::debug(fmt::format("{:>10}{:>16}{:>16}", "Iteration", "Norm2(step)", "Norm2(Residual)"));
         }
 
-        // Each flash unknown is an independent automatic-differentiation variable.
-        using NewtonEval = DenseAd::Evaluation<Scalar, num_unknowns>;
-        std::vector<NewtonEval> liquid_composition(numComponents);
-        std::vector<NewtonEval> vapour_composition(numComponents);
+        // The unknowns (x, y, L) of the current iterate.
+        NewtonVector unknowns;
         for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
-            liquid_composition[compIdx]
-                = NewtonEval(fluid_state.moleFraction(oilPhaseIdx, compIdx), compIdx);
-            const unsigned idx = compIdx + numComponents;
-            vapour_composition[compIdx]
-                = NewtonEval(fluid_state.moleFraction(gasPhaseIdx, compIdx), idx);
+            unknowns[compIdx] = Opm::getValue(fluid_state.moleFraction(oilPhaseIdx, compIdx));
+            unknowns[compIdx + numComponents]
+                = Opm::getValue(fluid_state.moleFraction(gasPhaseIdx, compIdx));
         }
-        auto liquid_fraction = NewtonEval(L, num_unknowns - 1);
+        unknowns[num_unknowns - 1] = Opm::getValue(L);
 
-        // This state carries derivatives with respect to the Newton unknowns.
+        // This state carries derivatives with respect to the Newton unknowns,
+        // each an independent automatic-differentiation variable.
+        using NewtonEval = DenseAd::Evaluation<Scalar, num_unknowns>;
         CompositionalFluidState<NewtonEval, FluidSystem> newton_state;
-        for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
-            newton_state.setMoleFraction(
-                FluidSystem::oilPhaseIdx, compIdx, liquid_composition[compIdx]);
-            newton_state.setMoleFraction(
-                FluidSystem::gasPhaseIdx, compIdx, vapour_composition[compIdx]);
-            newton_state.setKvalue(compIdx,
-                                   vapour_composition[compIdx] / liquid_composition[compIdx]);
-        }
-        newton_state.setLvalue(liquid_fraction);
+        const auto set_unknowns = [&newton_state](const NewtonVector& values) {
+            for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
+                const auto liquid_mole_fraction = NewtonEval(values[compIdx], compIdx);
+                const unsigned idx = compIdx + numComponents;
+                const auto vapour_mole_fraction = NewtonEval(values[idx], idx);
+                newton_state.setMoleFraction(
+                    FluidSystem::oilPhaseIdx, compIdx, liquid_mole_fraction);
+                newton_state.setMoleFraction(
+                    FluidSystem::gasPhaseIdx, compIdx, vapour_mole_fraction);
+                newton_state.setKvalue(compIdx, vapour_mole_fraction / liquid_mole_fraction);
+            }
+            newton_state.setLvalue(NewtonEval(values[num_unknowns - 1], num_unknowns - 1));
+        };
+        set_unknowns(unknowns);
         newton_state.setPressure(FluidSystem::oilPhaseIdx,
                                  fluid_state.pressure(FluidSystem::oilPhaseIdx));
         newton_state.setPressure(FluidSystem::gasPhaseIdx,
@@ -1081,51 +1092,8 @@ protected:
 
         using ParamCache = typename FluidSystem::template ParameterCache<NewtonEval>;
         ParamCache paramCache(eos_type);
-
-        for (unsigned phaseIdx = 0; phaseIdx < numMisciblePhases; ++phaseIdx) {
-            paramCache.updatePhase(newton_state, phaseIdx);
-            for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
-                NewtonEval fugacity_coefficient
-                    = FluidSystem::fugacityCoefficient(newton_state, paramCache, phaseIdx, compIdx);
-                newton_state.setFugacityCoefficient(phaseIdx, compIdx, fugacity_coefficient);
-            }
-        }
-        bool converged = false;
-        unsigned iteration = 0;
-        constexpr unsigned max_iterations = 1000;
-        while (iteration < max_iterations) {
-            assembleNewton_<CompositionalFluidState<NewtonEval, FluidSystem>,
-                            ComponentVector,
-                            num_unknowns,
-                            num_equations>(newton_state, z, jacobian, residual);
-            if (verbosity >= 1) {
-                OpmLog::debug(fmt::format(" newton residual is {}", residual.two_norm()));
-            }
-            converged = residual.two_norm() < tolerance;
-            if (converged) {
-                break;
-            }
-
-            jacobian.solve(newton_step, residual);
-            constexpr Scalar damping_factor = 1.0;
-            // updating x and y
-            for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
-                liquid_composition[compIdx] -= newton_step[compIdx] * damping_factor;
-                vapour_composition[compIdx]
-                    -= newton_step[compIdx + numComponents] * damping_factor;
-            }
-            liquid_fraction -= newton_step[num_equations - 1] * damping_factor;
-
-            for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
-                newton_state.setMoleFraction(
-                    FluidSystem::oilPhaseIdx, compIdx, liquid_composition[compIdx]);
-                newton_state.setMoleFraction(
-                    FluidSystem::gasPhaseIdx, compIdx, vapour_composition[compIdx]);
-                newton_state.setKvalue(compIdx,
-                                       vapour_composition[compIdx] / liquid_composition[compIdx]);
-            }
-            newton_state.setLvalue(liquid_fraction);
-
+        // The residual and Jacobian at the unknowns on the state.
+        const auto assemble = [&] {
             for (unsigned phaseIdx = 0; phaseIdx < numMisciblePhases; ++phaseIdx) {
                 paramCache.updatePhase(newton_state, phaseIdx);
                 for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
@@ -1134,7 +1102,160 @@ protected:
                     newton_state.setFugacityCoefficient(phaseIdx, compIdx, fugacity_coefficient);
                 }
             }
+            assembleNewton_<CompositionalFluidState<NewtonEval, FluidSystem>,
+                            ComponentVector,
+                            num_unknowns,
+                            num_equations>(newton_state, z, jacobian, residual);
+        };
+        assemble();
+
+        bool converged = false;
+        unsigned iteration = 0;
+        // With its steps controlled, Newton converges within a few dozen
+        // iterations or heads for a root it cannot reach.
+        constexpr unsigned max_iterations = 100;
+        // Near a critical point the first full step can raise the residual,
+        // and the following ones then reduce it quadratically to the root.
+        // Full steps are taken past the last accepted iterate as long as at
+        // most this many of them fail to halve the residual; Newton then
+        // returns there, and from then on every step has to decrease it.
+        constexpr unsigned max_slow_steps = 1;
+        constexpr Scalar min_step_length = 1e-4;
+        unsigned relaxed_steps = 0;
+        unsigned slow_steps = 0;
+        bool may_relax = true;
+        NewtonVector accepted_unknowns = unknowns;
+        Scalar accepted_residual_norm = residual.two_norm();
+        const auto return_to_accepted = [&] {
+            may_relax = false;
+            unknowns = accepted_unknowns;
+            set_unknowns(unknowns);
+            assemble();
+            jacobian.solve(newton_step, residual);
+        };
+        // From a poor start a full step can overshoot the root, or leave the
+        // range where the EoS clamps the mole fractions and their derivatives.
+        // No mole fraction moves more than 90 % of the way to 0 or 1.
+        const auto bounded_step_length = [&] {
+            Scalar step_length = 1.0;
+            for (unsigned idx = 0; idx < num_unknowns - 1; ++idx) {
+                const Scalar mole_fraction = unknowns[idx];
+                const Scalar decrease = newton_step[idx];
+                if (decrease > 0 && mole_fraction > 0) {
+                    step_length = std::min(step_length, 0.9 * mole_fraction / decrease);
+                } else if (decrease < 0 && mole_fraction < 1) {
+                    step_length = std::min(step_length, 0.9 * (1 - mole_fraction) / -decrease);
+                }
+            }
+            return step_length;
+        };
+        const auto sufficient_decrease = [&](const Scalar step_length) {
+            return residual.two_norm() <= (1 - 1e-4 * step_length) * accepted_residual_norm;
+        };
+        // Assembles at the given unknowns, unless the EoS has no finite value there.
+        const auto assemble_at = [&](const NewtonVector& values) {
+            try {
+                set_unknowns(values);
+                assemble();
+                return true;
+            }
+            catch (const NumericalProblem&) {
+                return false;
+            }
+        };
+        while (iteration < max_iterations) {
+            const Scalar residual_norm = residual.two_norm();
+            if (verbosity >= 1) {
+                OpmLog::debug(fmt::format(" newton residual is {}", residual_norm));
+            }
+            converged = residual_norm < tolerance;
+            if (converged) {
+                break;
+            }
+
+            // Return to the accepted iterate when too many relaxed steps were
+            // slow, or one left the range where the residual is finite and the
+            // Jacobian regular.
+            bool backtrack = !may_relax || slow_steps > max_slow_steps
+                || (relaxed_steps > 0 && !std::isfinite(residual_norm));
+            if (backtrack && relaxed_steps > 0) {
+                return_to_accepted();
+            } else {
+                try {
+                    jacobian.solve(newton_step, residual);
+                }
+                catch (const Dune::FMatrixError&) {
+                    if (relaxed_steps == 0) {
+                        throw;
+                    }
+                    backtrack = true;
+                    return_to_accepted();
+                }
+            }
+            Scalar step_length = bounded_step_length();
+            NewtonVector trial = unknowns;
+            trial.axpy(-step_length, newton_step);
+            if (!backtrack && !assemble_at(trial)) {
+                // The EoS has no finite value at the full step. Taken from the
+                // accepted iterate, that step is rejected and halved.
+                const bool from_accepted = relaxed_steps == 0;
+                backtrack = true;
+                return_to_accepted();
+                step_length = bounded_step_length();
+                if (from_accepted) {
+                    step_length /= 2;
+                }
+            }
+            if (backtrack) {
+                // Halve the step from the accepted iterate until the residual
+                // decreases. A step where the EoS has no finite value is rejected.
+                while (true) {
+                    if (step_length < min_step_length) {
+                        OPM_THROW_NOLOG(NumericalProblem,
+                                        fmt::format(" Newton composition update found no step "
+                                                    "of length {} or more that reduces the "
+                                                    "residual {}",
+                                                    min_step_length,
+                                                    accepted_residual_norm));
+                    }
+                    trial = unknowns;
+                    trial.axpy(-step_length, newton_step);
+                    if (assemble_at(trial) && sufficient_decrease(step_length)) {
+                        break;
+                    }
+                    step_length /= 2;
+                }
+            }
+            if (backtrack || sufficient_decrease(step_length)) {
+                relaxed_steps = 0;
+                slow_steps = 0;
+                accepted_unknowns = trial;
+                accepted_residual_norm = residual.two_norm();
+            } else {
+                ++relaxed_steps;
+                if (!(residual.two_norm() < 0.5 * residual_norm)) {
+                    ++slow_steps;
+                }
+            }
+            if (verbosity >= 1 && step_length < 1) {
+                OpmLog::debug(fmt::format(" newton step length is {}", step_length));
+            }
+            unknowns = trial;
             ++iteration;
+
+            // x = y solves the equations for every L, so a decreasing residual
+            // can lead there with L growing without bound. A relaxed step that
+            // gets there returns to the accepted iterate instead.
+            if (phasesCoincide_(newton_state)) {
+                if (relaxed_steps == 0) {
+                    OPM_THROW_NOLOG(NumericalProblem,
+                                    " Newton approached the trivial solution, where the "
+                                    "composition Jacobian is singular in the liquid fraction");
+                }
+                return_to_accepted();
+                relaxed_steps = 0;
+                slow_steps = 0;
+            }
         }
         if (verbosity >= 1) {
             fmt::memory_buffer buf;
@@ -1156,13 +1277,13 @@ protected:
 
         // A small equation residual does not enforce composition bounds. A
         // finite L outside [0, 1] remains a valid negative-flash result.
-        if (!std::isfinite(Opm::getValue(liquid_fraction))
+        if (!std::isfinite(unknowns[num_unknowns - 1])
             || !phaseCompositionsArePhysical_(newton_state)) {
             OPM_THROW_NOLOG(
                 NumericalProblem,
                 fmt::format(" Newton composition update converged to a non-physical "
                             "composition with L = {}",
-                            Opm::getValue(liquid_fraction)));
+                            unknowns[num_unknowns - 1]));
         }
 
         // Copy the converged unknowns to the caller and the explicit K/L outputs.
@@ -1177,7 +1298,7 @@ protected:
             fluid_state.setKvalue(idx, equilibrium_ratio);
             K[idx] = equilibrium_ratio;
         }
-        L = Opm::getValue(liquid_fraction);
+        L = unknowns[num_unknowns - 1];
         fluid_state.setLvalue(L);
         return {jacobian, jacobianState_(fluid_state)};
     }

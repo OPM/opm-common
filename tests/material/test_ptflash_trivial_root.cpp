@@ -112,6 +112,7 @@ public:
     using PtFlash::flash_2ph;
     using PtFlash::flashScalar_;
     using PtFlash::jacobianState_;
+    using PtFlash::newtonComposition_;
     using PtFlash::phasesCoincide_;
 };
 
@@ -387,10 +388,40 @@ BOOST_AUTO_TEST_CASE(NewtonRejectsCoincidentInitialPhases)
         return std::string_view{error.what()}.find("started from the trivial solution")
             != std::string_view::npos;
     };
-    BOOST_CHECK_EXCEPTION(ExposedPtFlash::flash_2ph(
-                              z, PTFlashMethod::Newton, K, L, fs, flashTolerance, EOSType::PR),
-                          Opm::NumericalProblem,
-                          reports_initial_trivial_solution);
+    BOOST_CHECK_EXCEPTION(
+        ExposedPtFlash::newtonComposition_(K, L, fs, z, flashTolerance, EOSType::PR, 0),
+        Opm::NumericalProblem,
+        reports_initial_trivial_solution);
+}
+
+// From the recorded state the residual decreases towards x = y while L grows
+// without bound, and Newton reported convergence at L = 8e14. It must stop
+// on the way instead.
+BOOST_AUTO_TEST_CASE(NewtonStopsApproachingTheTrivialRoot)
+{
+    const auto recorded = makeRecordedState();
+    ScalarFluidState fs;
+    ScalarComponentVector z;
+    ScalarComponentVector K;
+    for (unsigned phaseIdx = 0; phaseIdx < FluidSystem::numPhases; ++phaseIdx) {
+        fs.setPressure(phaseIdx, Opm::getValue(recorded.pressure(phaseIdx)));
+        fs.setSaturation(phaseIdx, 0.5);
+    }
+    fs.setTemperature(Opm::getValue(recorded.temperature(0)));
+    for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+        z[compIdx] = Opm::getValue(recorded.moleFraction(compIdx));
+        K[compIdx] = Opm::getValue(recorded.K(compIdx));
+    }
+    Scalar L = Opm::getValue(recorded.L());
+
+    const auto reports_trivial_approach = [](const Opm::NumericalProblem& error) {
+        return std::string_view{error.what()}.find("approached the trivial solution")
+            != std::string_view::npos;
+    };
+    BOOST_CHECK_EXCEPTION(
+        ExposedPtFlash::newtonComposition_(K, L, fs, z, flashTolerance, EOSType::PR, 0),
+        Opm::NumericalProblem,
+        reports_trivial_approach);
 }
 
 // An absent component has x = y = 0 and therefore an undefined K. It must not
