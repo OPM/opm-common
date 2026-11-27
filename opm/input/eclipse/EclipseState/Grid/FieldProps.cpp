@@ -2517,24 +2517,13 @@ void FieldProps::scanGridKeywords(const DeckView& keywords)
 }
 
 // SIGMA fills the per-cell array SIGMAV, so every consumer reads one carrier.
-// SIGMA is one value for the whole grid; per-cell values are given with
-// SIGMAV.  The keyword reads any number of values, so that a list stops here,
-// in every run, with a message that points to SIGMAV.  Where the deck sets
-// SIGMAV for some cells (by BOX, EQUALS, OPERATE or a plain array), those
-// cells keep their value and SIGMA fills the others.  A defaulted value is 0,
-// which leaves the cells it fills without coupling; a warning says so.
+// SIGMA is one value for the whole grid: its keyword takes one item, so the
+// parser refuses a list.  Per-cell values are given with SIGMAV.  Where the
+// deck sets SIGMAV for some cells (by BOX, EQUALS, OPERATE or a plain array),
+// those cells keep their value and SIGMA fills the others.  A defaulted value
+// is 0, which leaves the cells it fills without coupling; a warning says so.
 void FieldProps::applyDualPorosityScalars(const GRIDSection& grid_section)
 {
-    if (grid_section.hasKeyword("SIGMA")) {
-        const auto& keyword = grid_section["SIGMA"].back();
-        const auto count = keyword.getRecord(0).getItem("COUPLING").data_size();
-        if (count != 1) {
-            throw OpmInputError(fmt::format("SIGMA takes one value for the whole grid, not {}; "
-                                            "use SIGMAV for per-cell values.", count),
-                                keyword.location());
-        }
-    }
-
     if (!this->grid_ptr->dualPorosity()) {
         return;
     }
