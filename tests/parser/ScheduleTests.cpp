@@ -5182,6 +5182,170 @@ WLIFTOPT
     BOOST_CHECK(!glo.has_well("NO-WELL"));
 }
 
+BOOST_AUTO_TEST_CASE(GASLIFT_GLIFTLIM_DECK) {
+    const auto input = R"(RUNSPEC
+OIL
+GAS
+WATER
+
+SCHEDULE
+
+GRUPTREE
+ 'PLAT-A'  'FIELD' /
+ 'PLAT-B'  'FIELD' /
+ 'M5S'     'PLAT-A'  /
+ 'M5N'     'PLAT-A'  /
+/
+
+-- GLIFTLIM before LIFTOPT is allowed
+GLIFTLIM
+-- GRPNAME  MXLIFT  MXWELS
+ 'FIELD'   500000 1* /
+ 'PLAT*'   300000 /
+/
+
+LIFTOPT
+-- INCR   MINGRAD  MINTIME  ALLNEWT
+ 12500 5E-3 0.0 YES /
+
+GLIFTOPT
+-- GRPNAME  MXLIFT  MXTOT
+ 'PLAT-A'  200000 /
+ 'M5S'     100000  150000 /
+/
+
+GLIFTLIM
+-- GRPNAME  MXLIFT  MXWELS
+ 'M5S'     50000 0 /
+/
+
+TSTEP
+ 1 /
+
+-- GLIFTOPT after GLIFTLIM keeps the GLIFTLIM value
+GLIFTOPT
+-- GRPNAME  MXLIFT  MXTOT
+ 'PLAT-B'  400000 /
+ 'M5S'     1* /
+/
+
+TSTEP
+ 1 /
+
+-- Zero or default removes the GLIFTLIM limit
+GLIFTLIM
+-- GRPNAME  MXLIFT  MXWELS
+ 'FIELD'   0 /
+ 'PLAT-A'  1* /
+ 'M5N'     0 /
+/
+
+TSTEP
+ 1 /
+)";
+
+    // From sm3/day to SI (sm3/s): 1/86400, about 1.157e-5
+    const auto siFactorG = UnitSystem(UnitSystem::UnitType::UNIT_TYPE_METRIC)
+        .parse("GasSurfaceVolume/Time").getSIScaling();
+    const auto sched = make_schedule(input);
+
+    {
+        const auto& glo = sched.glo(/*report_step=*/0);
+
+        // Group with GLIFTLIM only
+        BOOST_REQUIRE(glo.has_group("FIELD"));
+        const auto& field = glo.group("FIELD");
+        BOOST_CHECK(!field.max_lift_gas().has_value());
+        BOOST_CHECK(!field.max_total_gas().has_value());
+        BOOST_CHECK(!field.has_gliftopt_data());
+        BOOST_CHECK_CLOSE(field.max_lift_capacity().value(), 500000 * siFactorG, 1.0e-8);
+        BOOST_CHECK_CLOSE(field.lift_gas_limit().value(), 500000 * siFactorG, 1.0e-8);
+
+        // Group name pattern, then GLIFTOPT after GLIFTLIM: both kept,
+        // smaller value is the limit.
+        const auto& plat_a = glo.group("PLAT-A");
+        BOOST_CHECK_CLOSE(plat_a.max_lift_gas().value(), 200000 * siFactorG, 1.0e-8);
+        BOOST_CHECK(plat_a.has_gliftopt_data());
+        BOOST_CHECK_CLOSE(plat_a.max_lift_capacity().value(), 300000 * siFactorG, 1.0e-8);
+        BOOST_CHECK_CLOSE(plat_a.lift_gas_limit().value(), 200000 * siFactorG, 1.0e-8);
+
+        const auto& plat_b = glo.group("PLAT-B");
+        BOOST_CHECK(!plat_b.max_lift_gas().has_value());
+        BOOST_CHECK_CLOSE(plat_b.max_lift_capacity().value(), 300000 * siFactorG, 1.0e-8);
+
+        // GLIFTLIM after GLIFTOPT keeps the GLIFTOPT value
+        const auto& m5s = glo.group("M5S");
+        BOOST_CHECK_CLOSE(m5s.max_lift_gas().value(), 100000 * siFactorG, 1.0e-8);
+        BOOST_CHECK_CLOSE(m5s.max_lift_capacity().value(), 50000 * siFactorG, 1.0e-8);
+        BOOST_CHECK_CLOSE(m5s.lift_gas_limit().value(), 50000 * siFactorG, 1.0e-8);
+        BOOST_CHECK_CLOSE(m5s.max_total_gas().value(), 150000 * siFactorG, 1.0e-8);
+
+        BOOST_CHECK(!glo.has_group("M5N"));
+    }
+
+    {
+        const auto& glo = sched.glo(/*report_step=*/1);
+
+        const auto& plat_b = glo.group("PLAT-B");
+        BOOST_CHECK_CLOSE(plat_b.max_lift_gas().value(), 400000 * siFactorG, 1.0e-8);
+        BOOST_CHECK_CLOSE(plat_b.max_lift_capacity().value(), 300000 * siFactorG, 1.0e-8);
+        BOOST_CHECK_CLOSE(plat_b.lift_gas_limit().value(), 300000 * siFactorG, 1.0e-8);
+
+        // GLIFTOPT with defaulted item 2 removes its own limit only
+        const auto& m5s = glo.group("M5S");
+        BOOST_CHECK(!m5s.max_lift_gas().has_value());
+        BOOST_CHECK_CLOSE(m5s.lift_gas_limit().value(), 50000 * siFactorG, 1.0e-8);
+        // A new GLIFTOPT record also resets item 3 to its default
+        BOOST_CHECK(!m5s.max_total_gas().has_value());
+    }
+
+    {
+        const auto& glo = sched.glo(/*report_step=*/2);
+
+        const auto& field = glo.group("FIELD");
+        BOOST_CHECK(!field.max_lift_capacity().has_value());
+        BOOST_CHECK(!field.lift_gas_limit().has_value());
+
+        const auto& plat_a = glo.group("PLAT-A");
+        BOOST_CHECK(!plat_a.max_lift_capacity().has_value());
+        BOOST_CHECK_CLOSE(plat_a.lift_gas_limit().value(), 200000 * siFactorG, 1.0e-8);
+
+        // A record without a limit creates no entry for a group that had none
+        BOOST_CHECK(!glo.has_group("M5N"));
+
+        // Not named in the last GLIFTLIM
+        const auto& plat_b = glo.group("PLAT-B");
+        BOOST_CHECK_CLOSE(plat_b.max_lift_capacity().value(), 300000 * siFactorG, 1.0e-8);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(GASLIFT_GLIFTLIM_FIELD_UNITS) {
+    const auto input = R"(RUNSPEC
+OIL
+GAS
+WATER
+FIELD
+
+SCHEDULE
+
+GLIFTLIM
+-- GRPNAME  MXLIFT  MXWELS
+ 'FIELD'   1000 /
+/
+)";
+
+    // Item 2 is a gas surface rate: Mscf/day in FIELD units, which converts
+    // differently from a liquid rate in stb/day.
+    const auto field_units = UnitSystem(UnitSystem::UnitType::UNIT_TYPE_FIELD);
+    const auto gasFactor = field_units.parse("GasSurfaceVolume/Time").getSIScaling();
+    const auto liquidFactor = field_units.parse("LiquidSurfaceVolume/Time").getSIScaling();
+    BOOST_REQUIRE_GT(gasFactor, 10 * liquidFactor);  // 1 Mscf = 28.3 m3, 1 stb = 0.159 m3
+
+    const auto sched = make_schedule(input);
+    const auto& field = sched.glo(/*report_step=*/0).group("FIELD");
+    BOOST_CHECK_CLOSE(field.max_lift_capacity().value(), 1000 * gasFactor, 1.0e-8);
+}
+
 BOOST_AUTO_TEST_CASE(WellPI) {
     const auto deck = Parser{}.parseString(R"(RUNSPEC
 OIL
@@ -7479,6 +7643,49 @@ END
     const auto sd = ScheduleDeck { start, deck, restart };
 
     BOOST_CHECK_EQUAL(sd.size(), restart.report_step + std::size_t{3});
+}
+
+BOOST_AUTO_TEST_CASE(ScheduleDeck_SKIPREST_Warns_On_Skipped_GLIFTLIM)
+{
+    const auto start = asTimePoint(TimeStampUTC { TimeStampUTC::YMD { 2025, 12, 24 }, 17, 0, 0, 0 });
+
+    auto restart = ScheduleRestartInfo{};
+    restart.time = asTimePoint(TimeStampUTC { TimeStampUTC::YMD { 2026, 2, 3 }, 10, 0, 0, 0 });
+    restart.report_step = 42;
+    restart.skiprest = true;
+
+    const auto deck = Parser{}.parseString(R"(SCHEDULE
+GLIFTLIM
+  'FIELD' 1000.0 /
+/
+DATES
+  3 FEB 2026 10:00:00 /
+/
+GLIFTLIM
+  'FIELD' 1200.0 /
+/
+DATES
+  4 FEB 2026 00:00:00 /
+/
+END
+)");
+
+    std::ostringstream warnings;
+    OpmLog::addBackend("GLIFTLIM_SKIPREST",
+                       std::make_shared<StreamLog>(warnings, Log::MessageType::Warning));
+    const auto sd = ScheduleDeck { start, deck, restart };
+    OpmLog::removeBackend("GLIFTLIM_SKIPREST");
+
+    // The restart file does not hold the GLIFTLIM limits, so the skipped
+    // keyword is reported ...
+    const auto reported = warnings.str();
+    BOOST_CHECK(reported.find("Keyword GLIFTLIM") != std::string::npos);
+    BOOST_CHECK(reported.find("line 2") != std::string::npos);
+
+    // ... and only that one: the keyword after the restart date is kept.
+    BOOST_CHECK_EQUAL(reported.find("Keyword GLIFTLIM"), reported.rfind("Keyword GLIFTLIM"));
+    BOOST_CHECK(!sd[0].get("GLIFTLIM").has_value());
+    BOOST_CHECK(sd[restart.report_step].get("GLIFTLIM").has_value());
 }
 
 BOOST_AUTO_TEST_CASE(WCONPROD_UDA) {

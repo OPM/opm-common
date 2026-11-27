@@ -1038,6 +1038,12 @@ GLIFTOPT
  'C1' 1.0E-8 1.0E-8 /
 /
 
+-- GLIFTLIM data is not written to the restart file
+GLIFTLIM
+ 'PLAT-A' 1000 /
+ 'F1' 50000 /
+/
+
 GCONPROD
  'PLAT-A' ORAT 10000 /
 /
@@ -1136,6 +1142,15 @@ END
 
         BOOST_CHECK_CLOSE(sgrpValue(groupID, Ix::GLOMaxSupply), 1.0e-8f, 1.0e-5f); // >= threshold -> preserve
         BOOST_CHECK_CLOSE(sgrpValue(groupID, Ix::GLOMaxRate)  , 1.0e-8f, 1.0e-5f); // >= threshold -> preserve
+    }
+
+    // F1: GLIFTLIM only, so no gas lift optimisation data in the restart file
+    {
+        const auto groupID = 5;
+        requireGroup(groupID, "F1      "s);
+
+        BOOST_CHECK_EQUAL(sgrpValue(groupID, Ix::GLOMaxSupply), 0.0f);
+        BOOST_CHECK_EQUAL(sgrpValue(groupID, Ix::GLOMaxRate)  , 0.0f);
     }
 }
 
