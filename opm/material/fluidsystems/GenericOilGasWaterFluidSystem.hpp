@@ -28,6 +28,7 @@
 
 #include <opm/common/OpmLog/OpmLog.hpp>
 
+#include <opm/input/eclipse/EclipseState/Compositional/CompositionalConfig.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 
@@ -46,11 +47,133 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
-#include <type_traits>
+#include <utility>
+#include <vector>
 
 #include <fmt/format.h>
 
 namespace Opm {
+
+/*!
+ * \ingroup FluidSystem
+ *
+ * \brief The parameters of a component of GenericOilGasWaterFluidSystem.
+ */
+template <class Scalar>
+struct CompositionalComponentParam {
+    std::string name;
+    Scalar molar_mass; // unit: kg/mol
+    Scalar critic_temp; // unit: K
+    Scalar critic_pres; // unit: parscal
+    Scalar critic_vol; // unit: m^3/kmol
+    Scalar acentric_factor; // unit: dimension less
+    Scalar volume_shift; // dimensionless SSHIFT coefficient
+    // OMEGAA and OMEGAB; unset for the constants of the equation of state
+    std::optional<Scalar> omega_a;
+    std::optional<Scalar> omega_b;
+
+    CompositionalComponentParam(const std::string_view name_,
+                                const Scalar molar_mass_,
+                                const Scalar critic_temp_,
+                                const Scalar critic_pres_,
+                                const Scalar critic_vol_,
+                                const Scalar acentric_factor_,
+                                const Scalar volume_shift_ = 0.0,
+                                const std::optional<Scalar> omega_a_ = std::nullopt,
+                                const std::optional<Scalar> omega_b_ = std::nullopt)
+        : name(name_)
+        , molar_mass(molar_mass_)
+        , critic_temp(critic_temp_)
+        , critic_pres(critic_pres_)
+        , critic_vol(critic_vol_)
+        , acentric_factor(acentric_factor_)
+        , volume_shift(volume_shift_)
+        , omega_a(omega_a_)
+        , omega_b(omega_b_)
+    {}
+};
+
+/*!
+ * \ingroup FluidSystem
+ *
+ * \brief The fluid of one equation-of-state region of a compositional deck,
+ *        as GenericOilGasWaterFluidSystem takes it.
+ */
+template <class Scalar>
+struct CompositionalRegionParams {
+    std::vector<CompositionalComponentParam<Scalar>> components;
+    //! As a packed lower triangle (1,0), (2,0), (2,1), ...; empty without BIC.
+    std::vector<Scalar> interaction_coefficients;
+    //! The coefficients of the Lorentz-Bray-Clark viscosity correlation.
+    //! The same for every region: a deck has one LBCCOEF for all of them.
+    std::array<Scalar, 5> lbc_coefficients;
+};
+
+/*!
+ * \ingroup FluidSystem
+ *
+ * \brief The component parameters, the binary interaction coefficients and
+ *        the LBC viscosity coefficients of an equation-of-state region of a
+ *        deck. GenericOilGasWaterFluidSystem::initFromState() takes region 0.
+ *
+ * It does not depend on the number of components of the fluid system, so a
+ * program can read a deck before it knows that number.
+ *
+ * \param config the compositional configuration of the deck
+ * \param eos_region the zero-based region, below the number of
+ *        equation-of-state regions of the deck (TABDIMS item 9)
+ *
+ * \throw std::runtime_error if the deck gives neither VCRIT nor ZCRIT
+ */
+template <class Scalar>
+CompositionalRegionParams<Scalar>
+compositionalRegionParams(const CompositionalConfig& config, const std::size_t eos_region)
+{
+    const auto& names = config.compName();
+    const auto& eos_props = config.eosProps(eos_region);
+    // Absent OMEGAA and OMEGAB entries hold the constants of the EOS type.
+    const auto& omega_a = config.omegaA(eos_region);
+    const auto& omega_b = config.omegaB(eos_region);
+
+    // Critical volume [m^3/mol] of a component. ZCRIT, when given, takes
+    // precedence over VCRIT: Vc = Zc R Tc / Pc.
+    const auto critical_volume = [&eos_props](const std::size_t compIdx) {
+        if (!eos_props.critical_z_factor.empty()) {
+            return eos_props.critical_z_factor[compIdx] * Constants<double>::R
+                * eos_props.critical_temperature[compIdx] / eos_props.critical_pressure[compIdx];
+        }
+        if (eos_props.critical_volume.empty()) {
+            throw std::runtime_error("The equation of state needs the critical volumes "
+                                     "from VCRIT or the critical Z-factors from ZCRIT.");
+        }
+        return eos_props.critical_volume[compIdx];
+    };
+
+    CompositionalRegionParams<Scalar> params;
+    for (std::size_t c = 0; c < config.numComps(); ++c) {
+        // we use m^3/kmol for the critic volume in the flash calculation, so we multiply 1.e3
+        // for the critic volume
+        params.components.emplace_back(names[c],
+                                       static_cast<Scalar>(eos_props.molecular_weights[c]),
+                                       static_cast<Scalar>(eos_props.critical_temperature[c]),
+                                       static_cast<Scalar>(eos_props.critical_pressure[c]),
+                                       static_cast<Scalar>(critical_volume(c) * 1.e3),
+                                       static_cast<Scalar>(eos_props.acentric_factors[c]),
+                                       c < eos_props.volume_shifts.size()
+                                           ? static_cast<Scalar>(eos_props.volume_shifts[c])
+                                           : Scalar {0},
+                                       static_cast<Scalar>(omega_a[c]),
+                                       static_cast<Scalar>(omega_b[c]));
+    }
+
+    const auto& bic = eos_props.binary_interaction_coefficient;
+    params.interaction_coefficients.assign(bic.begin(), bic.end());
+
+    const auto& lbc = config.lbcCoefficients();
+    std::ranges::copy(lbc, params.lbc_coefficients.begin());
+
+    return params;
+}
 
 /*!
  * \ingroup FluidSystem
@@ -88,38 +211,7 @@ namespace Opm {
         using CubicEOS = Opm::CubicEOS<Scalar, GenericOilGasWaterFluidSystem<Scalar, NumComp, enableWater>>;
         using WaterPvt = WaterPvtMultiplexer<Scalar>;
 
-        struct ComponentParam {
-            std::string name;
-            Scalar molar_mass; // unit: g/mol
-            Scalar critic_temp; // unit: K
-            Scalar critic_pres; // unit: parscal
-            Scalar critic_vol; // unit: m^3/kmol
-            Scalar acentric_factor; // unit: dimension less
-            Scalar volume_shift; // dimensionless SSHIFT coefficient
-            // OMEGAA and OMEGAB; unset for the constants of the equation of state
-            std::optional<Scalar> omega_a;
-            std::optional<Scalar> omega_b;
-
-            ComponentParam(const std::string_view name_,
-                           const Scalar molar_mass_,
-                           const Scalar critic_temp_,
-                           const Scalar critic_pres_,
-                           const Scalar critic_vol_,
-                           const Scalar acentric_factor_,
-                           const Scalar volume_shift_ = 0.0,
-                           const std::optional<Scalar> omega_a_ = std::nullopt,
-                           const std::optional<Scalar> omega_b_ = std::nullopt)
-                : name(name_)
-                , molar_mass(molar_mass_)
-                , critic_temp(critic_temp_)
-                , critic_pres(critic_pres_)
-                , critic_vol(critic_vol_)
-                , acentric_factor(acentric_factor_)
-                , volume_shift(volume_shift_)
-                , omega_a(omega_a_)
-                , omega_b(omega_b_)
-            {}
-        };
+        using ComponentParam = CompositionalComponentParam<Scalar>;
 
         static bool phaseIsActive(unsigned phaseIdx)
         {
@@ -149,6 +241,42 @@ namespace Opm {
                                 NumComp, param.name)
                 };
             }
+        }
+
+        /*!
+         * \brief Set the binary interaction coefficients of the components,
+         *        for a fluid system that is configured without a deck.
+         *
+         * \param bic the coefficients as a packed lower triangle in the order
+         *        (1,0), (2,0), (2,1), (3,0), ..., the order in which
+         *        interactionCoefficient() reads them. An empty vector sets all
+         *        coefficients to zero.
+         *
+         * \throw std::invalid_argument if bic is neither empty nor of size
+         *        numComponents * (numComponents - 1) / 2
+         */
+        static void setInteractionCoefficients(std::vector<Scalar> bic)
+        {
+            const auto expected = static_cast<std::size_t>(numComponents) * (numComponents - 1) / 2;
+            if (!bic.empty() && bic.size() != expected) {
+                throw std::invalid_argument {
+                    fmt::format("Expected {} binary interaction coefficients for {} "
+                                "components, or none, got {}.",
+                                expected, NumComp, bic.size())
+                };
+            }
+            interaction_coefficients_ = std::move(bic);
+        }
+
+        /*!
+         * \brief Set the coefficients of the Lorentz-Bray-Clark viscosity
+         *        correlation, for a fluid system that is configured without
+         *        a deck. From a deck, they come from the LBCCOEF keyword.
+         *        init() restores the defaults.
+         */
+        static void setLbcCoefficients(const std::array<Scalar, 5>& lbc)
+        {
+            lbc_coefficients_ = lbc;
         }
 
         /*!
@@ -183,39 +311,13 @@ namespace Opm {
                 };
             }
 
-            const auto& names = comp_config.compName();
-            const auto& eos_props = comp_config.eosProps(0);
-            // Absent OMEGAA and OMEGAB entries hold the constants of the EOS type.
-            const auto& omega_a = comp_config.omegaA(0);
-            const auto& omega_b = comp_config.omegaB(0);
+            auto params = compositionalRegionParams<Scalar>(comp_config, 0);
             FluidSystem::init();
-            using CompParm = typename FluidSystem::ComponentParam;
-            for (std::size_t c = 0; c < num_comps; ++c) {
-                // we use m^3/kmol for the critic volume in the flash calculation, so we multiply 1.e3 for the critic volume
-                FluidSystem::addComponent(
-                    CompParm {names[c],
-                              static_cast<Scalar>(eos_props.molecular_weights[c]),
-                              static_cast<Scalar>(eos_props.critical_temperature[c]),
-                              static_cast<Scalar>(eos_props.critical_pressure[c]),
-                              static_cast<Scalar>(criticalVolume_(eos_props, c) * 1.e3),
-                              static_cast<Scalar>(eos_props.acentric_factors[c]),
-                              c < eos_props.volume_shifts.size()
-                                  ? static_cast<Scalar>(eos_props.volume_shifts[c])
-                                  : Scalar {0},
-                              static_cast<Scalar>(omega_a[c]),
-                              static_cast<Scalar>(omega_b[c])});
+            for (const auto& component : params.components) {
+                FluidSystem::addComponent(component);
             }
-
-            const auto& bic = eos_props.binary_interaction_coefficient;
-            if constexpr (std::is_same_v<Scalar, double>) {
-                interaction_coefficients_ = bic;
-            } else {
-                interaction_coefficients_.resize(bic.size());
-                std::ranges::copy(bic, interaction_coefficients_.begin());
-            }
-
-            const auto& lbc = comp_config.lbcCoefficients();
-            std::ranges::copy(lbc, lbc_coefficients_.begin());
+            interaction_coefficients_ = std::move(params.interaction_coefficients);
+            lbc_coefficients_ = params.lbc_coefficients;
 
             // Init. water pvt from deck
             waterPvt_->initFromState(eclState, schedule);
@@ -580,22 +682,6 @@ namespace Opm {
             return component_param_.size() == NumComp;
         }
 
-        // Critical volume [m^3/mol] of a component. ZCRIT, when given, takes
-        // precedence over VCRIT: Vc = Zc R Tc / Pc.
-        static double criticalVolume_(const CompositionalConfig::EOSProps& props,
-                                      const std::size_t compIdx)
-        {
-            if (!props.critical_z_factor.empty()) {
-                return props.critical_z_factor[compIdx] * Constants<double>::R
-                    * props.critical_temperature[compIdx] / props.critical_pressure[compIdx];
-            }
-            if (props.critical_volume.empty()) {
-                throw std::runtime_error("The equation of state needs the critical volumes "
-                                         "from VCRIT or the critical Z-factors from ZCRIT.");
-            }
-            return props.critical_volume[compIdx];
-        }
-
         static std::vector<ComponentParam> component_param_;
         static std::vector<Scalar> interaction_coefficients_;
         static std::array<Scalar, 5> lbc_coefficients_;
@@ -606,7 +692,7 @@ namespace Opm {
             std::string result = "Components Information:\n";
             for (const auto& param : component_param_) {
                 result += fmt::format("Name: {}\n", param.name);
-                result += fmt::format("Molar Mass: {} g/mol\n", param.molar_mass);
+                result += fmt::format("Molar Mass: {} kg/mol\n", param.molar_mass);
                 result += fmt::format("Critical Temperature: {} K\n", param.critic_temp);
                 result += fmt::format("Critical Pressure: {} Pascal\n", param.critic_pres);
                 result += fmt::format("Critical Volume: {} m^3/kmol\n", param.critic_vol);
