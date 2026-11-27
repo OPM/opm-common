@@ -22,20 +22,17 @@
 #include "../LibCore/cvfVector3.h"
 
 #include <array>
-
-namespace external {
+#include <list>
 
 //==================================================================================================
 ///  Internal class for intersection point info
 //==================================================================================================
 
+namespace external {
 struct HexIntersectionInfo
 {
 public:
-    HexIntersectionInfo( cvf::Vec3d                         intersectionPoint,
-                         bool                               isIntersectionEntering,
-                         cvf::StructGridInterface::FaceType face,
-                         size_t                             hexIndex )
+    HexIntersectionInfo( cvf::Vec3d intersectionPoint, bool isIntersectionEntering, cvf::StructGridInterface::FaceType face, size_t hexIndex )
         : m_intersectionPoint( intersectionPoint )
         , m_isIntersectionEntering( isIntersectionEntering )
         , m_face( face )
@@ -56,21 +53,19 @@ bool operator<( const HexIntersectionInfo& hi1, const HexIntersectionInfo& hi2 )
 //--------------------------------------------------------------------------------------------------
 struct RigHexIntersectionTools
 {
-    static int lineHexCellIntersection( const cvf::Vec3d                  p1,
-                                        const cvf::Vec3d                  p2,
-                                        const cvf::Vec3d                  hexCorners[8],
+    static int lineHexCellIntersection( const cvf::Vec3d&                 p1,
+                                        const cvf::Vec3d&                 p2,
+                                        const std::array<cvf::Vec3d, 8>&  hexCorners,
                                         const size_t                      hexIndex,
                                         std::vector<HexIntersectionInfo>* intersections );
 
-    static bool lineIntersectsHexCell( const cvf::Vec3d p1, const cvf::Vec3d p2, const cvf::Vec3d hexCorners[8] );
+    static bool lineIntersectsHexCell( const cvf::Vec3d& p1, const cvf::Vec3d& p2, const std::array<cvf::Vec3d, 8>& hexCorners );
 
-    static bool isPointInCell( const cvf::Vec3d point, const cvf::Vec3d hexCorners[8] );
-
-    // static bool planeHexCellIntersection( cvf::Vec3d*                                   hexCorners,
+    // static bool planeHexCellIntersection( const std::array<cvf::Vec3d, 8>&              hexCorners,
     //                                       const cvf::Plane&                             fracturePlane,
     //                                       std::list<std::pair<cvf::Vec3d, cvf::Vec3d>>& intersectionLineSegments );
 
-    static bool planeHexIntersectionPolygons( std::array<cvf::Vec3d, 8>             hexCorners,
+    static bool planeHexIntersectionPolygons( const std::array<cvf::Vec3d, 8>&      hexCorners,
                                               cvf::Mat4d                            transformMatrixForPlane,
                                               std::vector<std::vector<cvf::Vec3d>>& polygons );
 };

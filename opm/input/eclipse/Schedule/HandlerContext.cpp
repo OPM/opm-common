@@ -110,6 +110,11 @@ void HandlerContext::comptraj_handled(const std::string& well_name)
     }
 }
 
+bool HandlerContext::comptraj_was_handled(const std::string& well_name) const
+{
+    return comptraj_wells && comptraj_wells->contains(well_name);
+}
+
 void HandlerContext::well_declared(const std::string& well_name)
 {
     if (well_controls) {
