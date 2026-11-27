@@ -301,20 +301,15 @@ Connection ({},{},{}) (direction '{}') for well {} ignored because
 
 namespace Opm {
 
-    WellConnections::WellConnections(const Connection::Order order,
-                                     const int               headIArg,
-                                     const int               headJArg)
-        : m_ordering(order)
-        , headI     (headIArg)
-        , headJ     (headJArg)
+    WellConnections::WellConnections(const int headIArg, const int headJArg)
+        : headI(headIArg)
+        , headJ(headJArg)
     {}
 
-    WellConnections::WellConnections(const Connection::Order        order,
-                                     const int                      headIArg,
+    WellConnections::WellConnections(const int                      headIArg,
                                      const int                      headJArg,
                                      const std::vector<Connection>& connections)
-        : m_ordering   (order)
-        , headI        (headIArg)
+        : headI        (headIArg)
         , headJ        (headJArg)
         , m_connections(connections)
     {}
@@ -322,7 +317,7 @@ namespace Opm {
     WellConnections WellConnections::serializationTestObject()
     {
         WellConnections result;
-        result.m_ordering = Connection::Order::DEPTH;
+
         result.headI = 1;
         result.headJ = 2;
         result.m_connections = {Connection::serializationTestObject()};
@@ -331,7 +326,7 @@ namespace Opm {
     }
 
     std::vector<std::size_t>
-    WellConnections::output(const EclipseGrid& grid) const
+    WellConnections::output(const EclipseGrid& grid, const Connection::Order ordering) const
     {
         auto out = std::vector<std::size_t>{};
 
@@ -349,7 +344,7 @@ namespace Opm {
         std::ranges::copy(activeConns, std::back_inserter(out));
 
         if (! this->m_connections[0].attachedToSegment() &&
-            (this->m_ordering != Connection::Order::INPUT))
+            (ordering != Connection::Order::INPUT))
         {
             std::ranges::sort(out, [this](const auto c1, const auto c2) {
                 return this->m_connections[c1].sort_value() < this->m_connections[c2].sort_value();
@@ -360,9 +355,16 @@ namespace Opm {
     }
 
     std::vector<const Connection*>
-    WellConnections::output(const EclipseGrid& grid, const int lgr_grid_number) const
+    WellConnections::output(const EclipseGrid&      grid,
+                            const int               lgr_grid_number,
+                            const Connection::Order ordering) const
     {
         auto out = std::vector<const Connection*>{};
+
+        if (this->m_connections.empty()) {
+            return out;
+        }
+
         for (const auto& conn : this->m_connections) {
             if ((conn.get_lgr_level() == lgr_grid_number) &&
                 grid.isCellActive(conn.getI(), conn.getJ(), conn.getK()))
@@ -370,37 +372,50 @@ namespace Opm {
                 out.push_back(&conn);
             }
         }
-        if (!this->m_connections.empty() &&
-            !this->m_connections[0].attachedToSegment() &&
-            (this->m_ordering != Connection::Order::INPUT))
+
+        if (!this->m_connections[0].attachedToSegment() &&
+            (ordering != Connection::Order::INPUT))
         {
             std::ranges::sort(out, [](const Connection* a, const Connection* b)
                               { return a->sort_value() < b->sort_value(); });
         }
+
         return out;
     }
 
     std::vector<std::size_t>
-    WellConnections::outputAllGrids(const EclipseGrid& grid) const
+    WellConnections::outputAllGrids(const EclipseGrid&      grid,
+                                    const Connection::Order ordering) const
     {
         auto out = std::vector<std::size_t>{};
+
+        if (this->m_connections.empty()) {
+            return out;
+        }
+
         for (std::size_t idx = 0; idx < this->m_connections.size(); ++idx) {
             const auto& conn = this->m_connections[idx];
             const auto level = conn.get_lgr_level();
-            // The grid number counts every LGR, nested ones too; getLGRCell(index) only top-level ones.
-            const auto& own = (level > 0) ? grid.getLGRCell(grid.get_lgr_labels_by_number(level)) : grid;
+
+            // The grid number counts every LGR, nested ones too;
+            // getLGRCell(index) only top-level ones.
+            const auto& own = (level > 0)
+                ? grid.getLGRCell(grid.get_lgr_labels_by_number(level))
+                : grid;
+
             if (own.isCellActive(conn.getI(), conn.getJ(), conn.getK())) {
                 out.push_back(idx);
             }
         }
-        if (!this->m_connections.empty() &&
-            !this->m_connections[0].attachedToSegment() &&
-            (this->m_ordering != Connection::Order::INPUT))
+
+        if (!this->m_connections[0].attachedToSegment() &&
+            (ordering != Connection::Order::INPUT))
         {
             std::ranges::sort(out, [this](const auto c1, const auto c2) {
                 return this->m_connections[c1].sort_value() < this->m_connections[c2].sort_value();
             });
         }
+
         return out;
     }
 
@@ -1135,7 +1150,7 @@ CF and Kh items for well {} must both be specified or both defaulted/negative)",
                                    { return c.state() == Connection::State::SHUT; });
     }
 
-    void WellConnections::order()
+    void WellConnections::order(const Connection::Order ordering)
     {
         if (m_connections.empty()) {
             return;
@@ -1144,10 +1159,10 @@ CF and Kh items for well {} must both be specified or both defaulted/negative)",
         if (this->m_connections[0].attachedToSegment()) {
             this->orderMSW();
         }
-        else if (this->m_ordering == Connection::Order::TRACK) {
+        else if (ordering == Connection::Order::TRACK) {
             this->orderTRACK();
         }
-        else if (this->m_ordering == Connection::Order::DEPTH) {
+        else if (ordering == Connection::Order::DEPTH) {
             this->orderDEPTH();
         }
     }
@@ -1406,8 +1421,7 @@ namespace {
 
     bool WellConnections::sameMetaData(const WellConnections& rhs) const
     {
-        return (this->m_ordering == rhs.m_ordering)
-            && (this->headI == rhs.headI)
+        return (this->headI == rhs.headI)
             && (this->headJ == rhs.headJ)
             && (this->coord == rhs.coord)
             && (this->md == rhs.md)

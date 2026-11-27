@@ -28,6 +28,7 @@
 
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
+#include <opm/input/eclipse/Schedule/Well/Connection.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
 
@@ -62,18 +63,19 @@ namespace {
     }
 
     template <class ConnOp>
-    void connectionLoop(const Opm::EclipseGrid& grid,
-                        const Opm::Well&        well,
-                        const Opm::data::Well*  wellRes,
-                        ConnOp&&                connOp,
-                        const bool              global_grid = true)
+    void connectionLoop(const Opm::EclipseGrid&      grid,
+                        const Opm::Well&             well,
+                        const Opm::data::Well*       wellRes,
+                        const Opm::Connection::Order order,
+                        ConnOp&&                     connOp,
+                        const bool                   global_grid = true)
     {
         const auto& wellName = well.name();
         const auto  wellID   = global_grid ? well.seqIndex() : well.seqIndexLGR();
         const auto  isProd   = well.isProducer();
         const auto conns = well.is_lgr_well()
-            ? well.getConnections().outputAllGrids(grid)
-            : well.getConnections().output(grid);
+            ? well.getConnections().outputAllGrids(grid, order)
+            : well.getConnections().output(grid, order);
 
         auto skip_connection = false;
         auto connection_counter = 0;
@@ -126,8 +128,11 @@ namespace {
             const auto* wellRes   = (well_iter == xw.end())
                 ? nullptr : &well_iter->second;
 
+            const auto ordering = sched[sim_step].compord()
+                .getConnectionOrder(wname);
+
             connectionLoop(grid, sched[sim_step].wells(wname),
-                           wellRes,  connOp);
+                           wellRes, ordering, connOp);
         }
     }
 
@@ -137,24 +142,30 @@ namespace {
     // IWEL loop uses. Dynamic results are matched by (LGR, local index), since
     // two LGRs can share a local index.
     template <class ConnOp>
-    void connectionLoopLGR(const Opm::EclipseGrid& lgrid,
-                           const int               lgr_number,
-                           const Opm::Well&        well,
-                           const std::size_t       wellID,
-                           const Opm::data::Well*  wellRes,
-                           ConnOp&&                connOp)
+    void connectionLoopLGR(const Opm::EclipseGrid&      lgrid,
+                           const int                    lgr_number,
+                           const Opm::Well&             well,
+                           const std::size_t            wellID,
+                           const Opm::data::Well*       wellRes,
+                           const Opm::Connection::Order order,
+                           ConnOp&&                     connOp)
     {
         const auto& wellName = well.name();
         const auto  isProd   = well.isProducer();
         std::size_t connID = 0;
-        for (const auto* connPtr : well.getConnections().output(lgrid, lgr_number)) {
+
+        for (const auto* connPtr : well.getConnections().output(lgrid, lgr_number, order)) {
             if (connPtr->kind() == Opm::Connection::CTFKind::DynamicFracturing) {
                 continue;
             }
+
             const auto* dynConnRes = (wellRes == nullptr)
-                ? nullptr : wellRes->find_connection(connPtr->global_index(), lgr_number);
+                ? nullptr
+                : wellRes->find_connection(connPtr->global_index(), lgr_number);
+
             connOp(wellName, wellID, isProd, *connPtr, connID,
                    connPtr->global_index(), dynConnRes);
+
             ++connID;
         }
     }
@@ -183,7 +194,11 @@ namespace {
             const auto* wellRes   = (well_iter == xw.end())
                 ? nullptr : &well_iter->second;
 
-            connectionLoopLGR(lgrid, lgr_number, well, wellID++, wellRes, connOp);
+            const auto ordering = sched[sim_step].compord()
+                .getConnectionOrder(wname);
+
+            connectionLoopLGR(lgrid, lgr_number, well, wellID++,
+                              wellRes, ordering, connOp);
         }
     }
 
