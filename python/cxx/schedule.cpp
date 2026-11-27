@@ -162,6 +162,18 @@ namespace {
         return keywords;
     }
 
+    // Action mode for keywords inserted from PYACTION
+    bool getActionMode() {
+        // false outside PYACTION: opm_embedded can't be imported,
+        // or _action_mode was never set (only PyRunModule::run sets it)
+        try {
+            py::module opm_embedded = py::module::import("opm_embedded");
+            if (py::hasattr(opm_embedded, "_action_mode"))
+                return opm_embedded.attr("_action_mode").cast<bool>();
+        } catch (const py::error_already_set&) {}
+        return false;
+    }
+
     std::pair<std::unordered_map<std::string, double>, bool> getTargetWellPIAndActionMode() {
         py::module opm_embedded = py::module::import("opm_embedded");
         py::object target_wellpi_obj = opm_embedded.attr("_target_wellpi");
@@ -173,29 +185,29 @@ namespace {
         if (deck_string.find("WELPI", 0) != std::string::npos) {
             return getTargetWellPIAndActionMode();
         }
-        // Return an empty map and false if the keyword WELPI, which needs the target_wellpi map, is not in the deck_string
-        return std::make_pair(std::unordered_map<std::string, double>{}, false);
+        // Return an empty map and action_mode if the keyword WELPI, which needs the target_wellpi map, is not in the deck_string
+        return std::make_pair(std::unordered_map<std::string, double>{}, getActionMode());
     }
 
-    void insert_keywords(Schedule& sch, const std::string& deck_string, std::size_t report_step, const UnitSystem& unit_system)
+    void insert_keywords(Schedule& sch, const std::string& deck_string, std::size_t report_step, const UnitSystem& unit_system, const std::vector<std::string>& matched_wells)
     {
         auto kws = parseKeywords(deck_string, unit_system);
         auto twpiaam = possiblyGetTargetWellPIAndActionMode(deck_string);
-        sch.applyKeywords(kws, twpiaam.first, twpiaam.second , report_step);
+        sch.applyKeywords(kws, twpiaam.first, twpiaam.second , report_step, matched_wells);
     }
 
-    void insert_keywords(Schedule& sch, const std::string& deck_string, std::size_t report_step)
+    void insert_keywords(Schedule& sch, const std::string& deck_string, std::size_t report_step, const std::vector<std::string>& matched_wells)
     {
         auto kws = parseKeywords(deck_string,sch.getUnits());
         auto twpiaam = possiblyGetTargetWellPIAndActionMode(deck_string);
-        sch.applyKeywords(kws, twpiaam.first, twpiaam.second , report_step);
+        sch.applyKeywords(kws, twpiaam.first, twpiaam.second , report_step, matched_wells);
     }
 
-    void insert_keywords(Schedule& sch, const std::string& deck_string)
+    void insert_keywords(Schedule& sch, const std::string& deck_string, const std::vector<std::string>& matched_wells)
     {
         auto kws = parseKeywords(deck_string,sch.getUnits());
         auto twpiaam = possiblyGetTargetWellPIAndActionMode(deck_string);
-        sch.applyKeywords(kws, twpiaam.first, twpiaam.second );
+        sch.applyKeywords(kws, twpiaam.first, twpiaam.second, matched_wells);
     }
 
     // NOTE: this overload does currently not work, see PR #2833. The plan
@@ -216,8 +228,8 @@ namespace {
                 contains_wellpi_keywords = true;
             }
         }
-        // Return an empty map and false if the keyword WELPI, which needs the target_wellpi map, is not in the deck_keywords
-        auto twpiaam = contains_wellpi_keywords ? getTargetWellPIAndActionMode() : std::make_pair(std::unordered_map<std::string, double>{}, false);
+        // Return an empty map and action_mode if the keyword WELPI, which needs the target_wellpi map, is not in the deck_keywords
+        auto twpiaam = contains_wellpi_keywords ? getTargetWellPIAndActionMode() : std::make_pair(std::unordered_map<std::string, double>{}, getActionMode());
         sch.applyKeywords(keywords, twpiaam.first, twpiaam.second , report_step);
     }
 }
@@ -259,9 +271,9 @@ void python::common::export_Schedule(py::module& module) {
     .def("well_names", py::overload_cast<const std::string&>(&Schedule::wellNames, py::const_), py::arg("well_name_pattern"), Schedule_well_names_docstring)
     .def("get_well", &get_well, py::arg("well_name"), py::arg("report_step"), Schedule_get_well_docstring)
     .def("insert_keywords", py::overload_cast<Schedule&, py::list&, std::size_t>(&insert_keywords), py::arg("keywords"), py::arg("step"), Schedule_insert_keywords_list_docstring)
-    .def("insert_keywords", py::overload_cast<Schedule&, const std::string&, std::size_t, const UnitSystem&>(&insert_keywords), py::arg("data"), py::arg("step"), py::arg("unit_system"), Schedule_insert_keywords_data_step_unit_system_docstring)
-    .def("insert_keywords", py::overload_cast<Schedule&, const std::string&, std::size_t>(&insert_keywords), py::arg("data"), py::arg("step"), Schedule_insert_keywords_data_step_docstring)
-    .def("insert_keywords", py::overload_cast<Schedule&, const std::string&>(&insert_keywords),py::arg("data"), Schedule_insert_keywords_data_docstring)
+    .def("insert_keywords", py::overload_cast<Schedule&, const std::string&, std::size_t, const UnitSystem&, const std::vector<std::string>&>(&insert_keywords), py::arg("data"), py::arg("step"), py::arg("unit_system"), py::arg("matched_wells") = std::vector<std::string>{}, Schedule_insert_keywords_data_step_unit_system_docstring)
+    .def("insert_keywords", py::overload_cast<Schedule&, const std::string&, std::size_t, const std::vector<std::string>&>(&insert_keywords), py::arg("data"), py::arg("step"), py::arg("matched_wells") = std::vector<std::string>{}, Schedule_insert_keywords_data_step_docstring)
+    .def("insert_keywords", py::overload_cast<Schedule&, const std::string&, const std::vector<std::string>&>(&insert_keywords),py::arg("data"), py::arg("matched_wells") = std::vector<std::string>{}, Schedule_insert_keywords_data_docstring)
     .def("__contains__", &has_well, py::arg("well_name"), Schedule_contains_docstring)
     ;
 }

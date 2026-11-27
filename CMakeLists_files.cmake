@@ -884,6 +884,8 @@ list(APPEND TEST_DATA_FILES
   tests/msim/MSIM_PYACTION_EXIT.DATA
   tests/msim/MSIM_PYACTION_INSERT_INVALID_KEYWORD.DATA
   tests/msim/MSIM_PYACTION_INSERT_KEYWORD.DATA
+  tests/msim/MSIM_PYACTION_INSERT_MATCHED_WELLS.DATA
+  tests/msim/MSIM_PYACTION_INSERT_UDQ_EMPTY_MATCHES.DATA
   tests/msim/MSIM_PYACTION_NO_RUN_FUNCTION.DATA
   tests/msim/MSIM_PYACTION_OPEN_WELL_AT_PAST_REPORT_STEP.DATA
   tests/msim/MSIM_PYACTION_OPEN_WELL_AT_TOO_LATE_REPORT_STEP.DATA
@@ -898,6 +900,8 @@ list(APPEND TEST_DATA_FILES
   tests/msim/exit.py
   tests/msim/insert_invalid_keyword.py
   tests/msim/insert_keyword.py
+  tests/msim/insert_matched_wells.py
+  tests/msim/insert_udq_empty_matches.py
   tests/msim/open_well_past.py
   tests/msim/open_well_too_late.py
   tests/msim/retrieve_info.py

@@ -2074,13 +2074,13 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
         return DurationInSeconds(end_time - start_time).count();
     }
 
-    void Schedule::applyKeywords(std::vector<std::unique_ptr<DeckKeyword>>& keywords, std::unordered_map<std::string, double>& target_wellpi, bool action_mode)
+    void Schedule::applyKeywords(std::vector<std::unique_ptr<DeckKeyword>>& keywords, std::unordered_map<std::string, double>& target_wellpi, bool action_mode, const std::vector<std::string>& matching_wells)
     {
-        Schedule::applyKeywords(keywords, target_wellpi, action_mode, this->current_report_step);
+        Schedule::applyKeywords(keywords, target_wellpi, action_mode, this->current_report_step, matching_wells);
     }
 
     void Schedule::applyKeywords(std::vector<std::unique_ptr<DeckKeyword>>& keywords, std::unordered_map<std::string, double>& target_wellpi,
-                                 bool action_mode, const std::size_t reportStep)
+                                 bool action_mode, const std::size_t reportStep, const std::vector<std::string>& matching_wells)
     {
         if (reportStep < this->current_report_step) {
             throw std::invalid_argument {
@@ -2097,13 +2097,24 @@ File {} line {}.)", pattern, location.keyword, location.filename, location.linen
             };
         }
 
+        // Add matched wells
+        std::vector<std::string> well_names;
+        for (const auto& wname : matching_wells) {
+            if (this->hasWell(wname, reportStep)) {
+                well_names.push_back(wname);
+            }
+            else {
+                OpmLog::error(fmt::format("insert_keywords: unknown matched well '{}'", wname));
+            }
+        }
+        const auto matches = Action::Result{true}.wells(well_names).matches();
+
         ParseContext parseContext;
         ErrorGuard errors;
         ScheduleGrid grid(this->completed_cells, this->completed_cells_lgr, this->completed_cells_lgr_map);
         SimulatorUpdate sim_update;
         std::unordered_map<std::string, double> wpimult_global_factor;
         std::set<std::string> connection_order_wells;
-        const auto matches = Action::Result{false}.matches();
         const std::string prefix = "| "; // logger prefix string
 
         this->snapshots.resize(reportStep + 1);
