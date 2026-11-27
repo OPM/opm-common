@@ -1212,6 +1212,25 @@ BOOST_AUTO_TEST_CASE(PorosityModel_Equality) {
     BOOST_CHECK( !(PorosityModel{ dualporo } == PorosityModel{}) );
 }
 
+BOOST_AUTO_TEST_CASE(PorosityModel_GravityDrainage) {
+    const auto model = [](const std::string& runspecKeywords)
+    {
+        return PorosityModel{ Parser{}.parseString("RUNSPEC\nOIL\nWATER\n" + runspecKeywords) };
+    };
+
+    // GRAVDR selects the standard model in both dual-continuum models.
+    BOOST_CHECK( model("DUALPORO\nGRAVDR\n").gravityDrainage()
+                 == PorosityModel::GravityDrainage::Standard );
+    BOOST_CHECK( model("DUALPERM\nGRAVDR\n").gravityDrainage()
+                 == PorosityModel::GravityDrainage::Standard );
+
+    // No gravity drainage without GRAVDR, and never in single porosity.
+    BOOST_CHECK( model("DUALPORO\n").gravityDrainage() == PorosityModel::GravityDrainage::None );
+    BOOST_CHECK( model("GRAVDR\n").gravityDrainage() == PorosityModel::GravityDrainage::None );
+
+    BOOST_CHECK( !(model("DUALPORO\nGRAVDR\n") == model("DUALPORO\n")) );
+}
+
 BOOST_AUTO_TEST_CASE(H2Storage) {
     const std::string input = R"(
     RUNSPEC

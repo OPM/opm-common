@@ -22,6 +22,7 @@
 #include <opm/input/eclipse/Deck/Deck.hpp>
 
 #include <opm/input/eclipse/Parser/ParserKeywords/D.hpp>
+#include <opm/input/eclipse/Parser/ParserKeywords/G.hpp>
 #include <opm/input/eclipse/Parser/ParserKeywords/N.hpp>
 
 namespace Opm {
@@ -36,6 +37,10 @@ PorosityModel::PorosityModel(const Deck& deck)
 
     if (deck.hasKeyword<ParserKeywords::NODPPM>()) {
         this->m_scale_fracture_perm = false;
+    }
+
+    if (deck.hasKeyword<ParserKeywords::GRAVDR>()) {
+        this->m_gravity_drainage = GravityDrainage::Standard;
     }
 }
 
@@ -59,11 +64,17 @@ bool PorosityModel::fracturePermeabilityScalingActive() const noexcept
     return this->dualContinuum() && this->m_scale_fracture_perm;
 }
 
+PorosityModel::GravityDrainage PorosityModel::gravityDrainage() const noexcept
+{
+    return this->dualContinuum() ? this->m_gravity_drainage : GravityDrainage::None;
+}
+
 PorosityModel PorosityModel::serializationTestObject()
 {
     PorosityModel result;
     result.m_type = Type::DualPermeability;
     result.m_scale_fracture_perm = false;
+    result.m_gravity_drainage = GravityDrainage::Standard;
 
     return result;
 }
@@ -71,7 +82,8 @@ PorosityModel PorosityModel::serializationTestObject()
 bool PorosityModel::operator==(const PorosityModel& other) const
 {
     return (this->m_type == other.m_type)
-        && (this->m_scale_fracture_perm == other.m_scale_fracture_perm);
+        && (this->m_scale_fracture_perm == other.m_scale_fracture_perm)
+        && (this->m_gravity_drainage == other.m_gravity_drainage);
 }
 
 } // namespace Opm
