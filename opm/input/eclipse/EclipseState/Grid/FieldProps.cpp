@@ -2517,12 +2517,11 @@ void FieldProps::scanGridKeywords(const DeckView& keywords)
 }
 
 // SIGMA fills the per-cell array SIGMAV, so every consumer reads one carrier.
-// SIGMA is one value for the whole grid, or one value per matrix cell in the
-// natural order of the matrix half; a fracture cell takes the value of its
-// matrix twin.  Where the deck sets SIGMAV for some cells (by BOX, EQUALS,
-// OPERATE or a plain array), those cells keep their value and SIGMA fills the
-// others.  A defaulted value is 0, which leaves its cells without coupling; a
-// warning says how many values are defaulted.
+// SIGMA is one value for the whole grid: its keyword takes one item, so the
+// parser refuses a list.  Per-cell values are given with SIGMAV.  Where the
+// deck sets SIGMAV for some cells (by BOX, EQUALS, OPERATE or a plain array),
+// those cells keep their value and SIGMA fills the others.  A defaulted value
+// is 0, which leaves the cells it fills without coupling; a warning says so.
 void FieldProps::applyDualPorosityScalars(const GRIDSection& grid_section)
 {
     if (!this->grid_ptr->dualPorosity()) {
@@ -2532,48 +2531,19 @@ void FieldProps::applyDualPorosityScalars(const GRIDSection& grid_section)
     if (grid_section.hasKeyword("SIGMA")) {
         const auto& keyword = grid_section["SIGMA"].back();
         const auto& item = keyword.getRecord(0).getItem("COUPLING");
-        const auto& values = item.getSIDoubleData();
-        const auto& grid = *this->grid_ptr;
-        const std::size_t matrix_cells = grid.getCartesianSize() / 2;
-        if ((values.size() != 1) && (values.size() != matrix_cells)) {
-            throw OpmInputError(fmt::format("SIGMA takes one value, or one value per "
-                                            "matrix cell ({}), not {}.",
-                                            matrix_cells, values.size()),
-                                keyword.location());
+        const double value = item.getSIDouble(0);
+        if (value < 0.0) {
+            throw OpmInputError("The SIGMA value cannot be negative.", keyword.location());
         }
 
-        const auto bad = std::find_if(values.begin(), values.end(),
-                                      [](const double v) { return v < 0.0; });
-        if (bad != values.end()) {
-            if (values.size() == 1) {
-                throw OpmInputError("The SIGMA value cannot be negative.", keyword.location());
-            }
-            const auto ijk = grid.getIJK(static_cast<std::size_t>(std::distance(values.begin(), bad)));
-            throw OpmInputError(fmt::format("The SIGMA value cannot be negative "
-                                            "(cell ({}, {}, {}) has {}).",
-                                            ijk[0] + 1, ijk[1] + 1, ijk[2] + 1, *bad),
-                                keyword.location());
+        if (item.defaultApplied(0)) {
+            OpmLog::warning(Log::fileMessage(keyword.location(),
+                                             "SIGMA is defaulted and taken as 0, which leaves "
+                                             "the cells it fills without matrix-fracture "
+                                             "coupling; give the value if that is not intended."));
         }
 
-        std::size_t defaulted = 0;
-        for (std::size_t i = 0; i < values.size(); ++i) {
-            defaulted += item.defaultApplied(i) ? 1 : 0;
-        }
-        if (defaulted > 0) {
-            const auto message = fmt::format("SIGMA: {} of {} values are defaulted and taken as 0, "
-                                             "which leaves those cells without matrix-fracture "
-                                             "coupling; give the values if that is not intended.",
-                                             defaulted, values.size());
-            OpmLog::warning(Log::fileMessage(keyword.location(), message));
-        }
-
-        std::vector<double> sigma(this->active_size, values.front());
-        if (values.size() > 1) {
-            for (std::size_t active = 0; active < sigma.size(); ++active) {
-                const std::size_t global = grid.getGlobalIndex(active);
-                sigma[active] = values[grid.isFractureCell(global) ? grid.matrixTwin(global) : global];
-            }
-        }
+        const std::vector<double> sigma(this->active_size, value);
 
         if (this->double_data.find("SIGMAV") == this->double_data.end()) {
             this->init_get<double>("SIGMAV").default_assign(sigma);

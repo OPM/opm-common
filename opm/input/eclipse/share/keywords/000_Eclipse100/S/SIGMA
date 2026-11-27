@@ -8,7 +8,6 @@
     {
       "name": "COUPLING",
       "value_type": "DOUBLE",
-      "size_type": "ALL",
       "dimension": "1/Length*Length"
     }
   ]

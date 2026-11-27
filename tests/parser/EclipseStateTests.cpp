@@ -845,40 +845,6 @@ BOOST_AUTO_TEST_CASE(DualPorositySigmaNNCFromSigmav) {
     BOOST_CHECK_CLOSE(nnc[0].trans, dpMinExpectedTrans, 1e-4);
 }
 
-BOOST_AUTO_TEST_CASE(DualPorositySigmaNNCFromSigmaArray) {
-    // SIGMA with one value per matrix cell: each coupling takes the value of
-    // its matrix cell, also when an inactive cell shifts the active indices.
-    const std::string props =
-        "DX\n 4*100 /\n"
-        "DY\n 4*100 /\n"
-        "DZ\n 4*10 /\n"
-        "TOPS\n 4*2000 /\n"
-        "PORO\n 2*0.20 2*0.01 /\n"
-        "PERMX\n 2*1.0 2*1000.0 /\n"
-        "SIGMA\n 0.12 0.24 /\n";
-
-    {
-        EclipseState es(createDualPorosityStateDeck("2 1 2", props));
-        const auto& nnc = es.getInputNNC().input();
-        BOOST_REQUIRE_EQUAL(nnc.size(), 2U);
-        BOOST_CHECK_EQUAL(nnc[0].cell1, 0U);
-        BOOST_CHECK_EQUAL(nnc[0].cell2, 2U);
-        BOOST_CHECK_CLOSE(nnc[0].trans, dpMinExpectedTrans, 1e-4);
-        BOOST_CHECK_EQUAL(nnc[1].cell1, 1U);
-        BOOST_CHECK_EQUAL(nnc[1].cell2, 3U);
-        BOOST_CHECK_CLOSE(nnc[1].trans, 2.0 * dpMinExpectedTrans, 1e-4);
-    }
-
-    {
-        EclipseState es(createDualPorosityStateDeck("2 1 2", props + "ACTNUM\n 0 1 1 1 /\n"));
-        const auto& nnc = es.getInputNNC().input();
-        BOOST_REQUIRE_EQUAL(nnc.size(), 1U);
-        BOOST_CHECK_EQUAL(nnc[0].cell1, 1U);
-        BOOST_CHECK_EQUAL(nnc[0].cell2, 3U);
-        BOOST_CHECK_CLOSE(nnc[0].trans, 2.0 * dpMinExpectedTrans, 1e-4);
-    }
-}
-
 BOOST_AUTO_TEST_CASE(DualPorosityNoSigmaNoCoupling) {
     // Without SIGMA/SIGMAV there is no coupling — and no failure.
     auto deck = createDualPorosityStateDeck("1 1 2", dpMinProps);

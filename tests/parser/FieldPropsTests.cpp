@@ -54,6 +54,9 @@
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/input/eclipse/Deck/DeckSection.hpp>
 
+#include <opm/input/eclipse/Parser/ErrorGuard.hpp>
+#include <opm/input/eclipse/Parser/InputErrorAction.hpp>
+#include <opm/input/eclipse/Parser/ParseContext.hpp>
 #include <opm/input/eclipse/Parser/Parser.hpp>
 
 #include <algorithm>
@@ -183,13 +186,13 @@ SIGMAV
 }
 
 BOOST_AUTO_TEST_CASE(SigmaDeckScalar) {
-    // SIGMA is one record (JSON schema: "size": 1) whose item takes one value, or one
-    // value per matrix cell, not a per-cell array like SIGMAV (schema: "data", no "size").
+    // SIGMA is one record (JSON schema: "size": 1) with one item, not a per-cell array
+    // like SIGMAV (schema: "data", no "size"); the parser refuses a list.
     // FieldProps::GRID::double_keywords is strictly a per-cell array registry:
     // verify_deck_data() in FieldProps.cpp requires deck_data.size() == box.size() * num_value
     // unconditionally, with no broadcast path for a single supplied value. SIGMA is
     // intentionally not registered there; in dual-continuum runs applyDualPorosityScalars
-    // writes its values into the SIGMAV carrier instead.
+    // broadcasts its value into the SIGMAV carrier instead.
     // This test proves the raw parse of a one-value SIGMA works standalone.
     std::string deck_string_sigma = R"(
 GRID
@@ -4077,56 +4080,40 @@ Opm::Deck sigmaArrayDeck(const std::string& gridKeywords)
         + gridKeywords + "\n");
 }
 
+Opm::Deck singlePorositySigmaDeck(const std::string& gridKeywords)
+{
+    return Opm::Parser{}.parseString(
+        "RUNSPEC\n"
+        "OIL\nWATER\n"
+        "DIMENS\n 3 1 1 /\n"
+        "GRID\n"
+        "DX\n 3*100 /\n"
+        "DY\n 3*100 /\n"
+        "DZ\n 3*10 /\n"
+        "TOPS\n 3*2000 /\n"
+        "PORO\n 3*0.20 /\n"
+        "PERMX\n 3*1.0 /\n"
+        + gridKeywords + "\n");
+}
+
 } // anonymous namespace
 
-BOOST_AUTO_TEST_CASE(SigmaArrayGivesOneValuePerMatrixCell) {
-    // SIGMA with one value per matrix cell: each fracture cell takes the
-    // value of its matrix twin, and a cell set by SIGMAV keeps its value.
-    const Opm::EclipseState es{ sigmaArrayDeck("SIGMA\n 0.1 2*0.3 /\n"
-                                               "EQUALS\n"
-                                               " 'SIGMAV' 0.5 3 3 1 1 1 1 /\n"
-                                               "/\n") };
-
-    const auto& sigmav = es.fieldProps().get_double("SIGMAV");
-    BOOST_REQUIRE_EQUAL(sigmav.size(), 6U);
-    BOOST_CHECK_CLOSE(sigmav[0], 0.1, 1e-10);
-    BOOST_CHECK_CLOSE(sigmav[1], 0.3, 1e-10);
-    BOOST_CHECK_CLOSE(sigmav[2], 0.5, 1e-10);      // set by EQUALS
-    BOOST_CHECK_CLOSE(sigmav[3], 0.1, 1e-10);      // fracture twin of cell 1
-    BOOST_CHECK_CLOSE(sigmav[4], 0.3, 1e-10);      // fracture twin of cell 2
-    BOOST_CHECK_CLOSE(sigmav[5], 0.3, 1e-10);      // fracture twin of cell 3
-}
-
-BOOST_AUTO_TEST_CASE(SigmaArrayOfAnotherLengthIsRefused) {
-    // SIGMA takes one value, or one value per matrix cell: not a value per
-    // cell of the whole grid, nor any other number of values.
-    for (const auto* values : { "4*0.1", "6*0.1" }) {
-        BOOST_CHECK_EXCEPTION(Opm::EclipseState{ sigmaArrayDeck(std::string{ "SIGMA\n " } + values + " /\n") },
-                              Opm::OpmInputError,
-                              [](const Opm::OpmInputError& e)
-                              {
-                                  return std::string{ e.what() }.find("one value per matrix cell (3)")
-                                      != std::string::npos;
-                              });
+BOOST_AUTO_TEST_CASE(SigmaListIsRefused) {
+    // SIGMA takes one value for the whole grid: the parser refuses a list,
+    // whether it gives one value per matrix cell or per cell, a repeat count,
+    // two different values or a defaulted second entry.
+    for (const auto* values : { "3*0.1", "6*0.1", "0.1 0.2", "0.1 1*", "2*" }) {
+        BOOST_CHECK_THROW(sigmaArrayDeck(std::string{ "SIGMA\n " } + values + " /\n"), Opm::OpmInputError);
     }
-}
 
-BOOST_AUTO_TEST_CASE(NegativeSigmaArrayNamesTheCell) {
-    // A negative value in SIGMA stops the input, and the message gives the
-    // matrix cell as (I, J, K).
-    BOOST_CHECK_EXCEPTION(Opm::EclipseState{ sigmaArrayDeck("SIGMA\n 0.1 -0.2 0.1 /\n") },
-                          Opm::OpmInputError,
-                          [](const Opm::OpmInputError& e)
-                          {
-                              return std::string{ e.what() }.find("cell (2, 1, 1) has -0.2")
-                                  != std::string::npos;
-                          });
+    // Also in a single-porosity deck, which does not use SIGMA.
+    BOOST_CHECK_THROW(singlePorositySigmaDeck("SIGMA\n 3*0.1 /\n"), Opm::OpmInputError);
 }
 
 BOOST_AUTO_TEST_CASE(DefaultedSigmaValueGivesNoCoupling) {
-    // A defaulted SIGMA value is taken as 0: on a 2x1x2 deck, SIGMA 0.1 1*
-    // leaves the second matrix cell and its fracture twin without coupling,
-    // and a warning says that a value is defaulted.
+    // A defaulted SIGMA value is taken as 0: on a 2x1x2 deck, SIGMA 1*
+    // leaves the grid without coupling, and a warning says that the value is
+    // defaulted.
     const auto deckData = [](const std::string& sigma) {
         return std::string{
             "RUNSPEC\n"
@@ -4144,22 +4131,85 @@ BOOST_AUTO_TEST_CASE(DefaultedSigmaValueGivesNoCoupling) {
         } + sigma + " /\n";
     };
 
-    const Opm::EclipseState es{ Opm::Parser{}.parseString(deckData("0.1 1*")) };
+    const Opm::EclipseState es{ Opm::Parser{}.parseString(deckData("1*")) };
     const auto& sigmav = es.fieldProps().get_double("SIGMAV");
     BOOST_REQUIRE_EQUAL(sigmav.size(), 4U);
-    BOOST_CHECK_CLOSE(sigmav[0], 0.1, 1e-10);
-    BOOST_CHECK_EQUAL(sigmav[1], 0.0);              // defaulted
-    BOOST_CHECK_CLOSE(sigmav[2], 0.1, 1e-10);
-    BOOST_CHECK_EQUAL(sigmav[3], 0.0);              // fracture twin of the defaulted cell
+    for (const auto value : sigmav) {
+        BOOST_CHECK_EQUAL(value, 0.0);
+    }
+    BOOST_CHECK(es.getInputNNC().input().empty());
 
-    const auto& nnc = es.getInputNNC().input();
-    BOOST_REQUIRE_EQUAL(nnc.size(), 1U);
-    BOOST_CHECK_EQUAL(nnc[0].cell1, 0U);
-    BOOST_CHECK_EQUAL(nnc[0].cell2, 2U);
-
-    BOOST_CHECK_EQUAL(warningsBuilding(deckData("0.1 1*")), 1U);
     BOOST_CHECK_EQUAL(warningsBuilding(deckData("1*")), 1U);
-    BOOST_CHECK_EQUAL(warningsBuilding(deckData("0.1 0.2")), 0U);
+    BOOST_CHECK_EQUAL(warningsBuilding(deckData("")), 1U);
+    BOOST_CHECK_EQUAL(warningsBuilding(deckData("0.1")), 0U);
+}
+
+BOOST_AUTO_TEST_CASE(SigmaListMessageGivesTheCount) {
+    // The parser's message names SIGMA and gives the number of values.
+    BOOST_CHECK_EXCEPTION(sigmaArrayDeck("SIGMA\n 3*0.1 /\n"),
+                          Opm::OpmInputError,
+                          [](const Opm::OpmInputError& e)
+                          {
+                              return std::string{ e.what() }.find("Record contains too many items in keyword "
+                                                                  "SIGMA. Expected 1 items, found 3.")
+                                  != std::string::npos;
+                          });
+}
+
+BOOST_AUTO_TEST_CASE(SigmaListWithExtraDataIgnoredTakesTheFirstValue) {
+    // A parse context that ignores extra data keeps the first value of a
+    // list, as for any other keyword that takes one item.
+    Opm::ParseContext parseContext;
+    parseContext.update(Opm::ParseContext::PARSE_EXTRA_DATA, Opm::InputErrorAction::IGNORE);
+    Opm::ErrorGuard errors;
+    const auto deck = Opm::Parser{}.parseString("RUNSPEC\n"
+                                                "OIL\nWATER\n"
+                                                "DIMENS\n 3 1 2 /\n"
+                                                "DUALPORO\n"
+                                                "GRID\n"
+                                                "DX\n 6*100 /\n"
+                                                "DY\n 6*100 /\n"
+                                                "DZ\n 6*10 /\n"
+                                                "TOPS\n 6*2000 /\n"
+                                                "PORO\n 3*0.20 3*0.01 /\n"
+                                                "PERMX\n 3*1.0 3*1000.0 /\n"
+                                                "SIGMA\n 0.1 0.2 /\n",
+                                                parseContext, errors);
+    const Opm::EclipseState es{ deck };
+    const auto& sigmav = es.fieldProps().get_double("SIGMAV");
+    BOOST_REQUIRE_EQUAL(sigmav.size(), 6U);
+    for (const auto value : sigmav) {
+        BOOST_CHECK_CLOSE(value, 0.1, 1e-10);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(SigmaValueFillsEveryCell) {
+    // One SIGMA value fills SIGMAV in every cell, matrix and fracture.
+    const Opm::EclipseState es{ sigmaArrayDeck("SIGMA\n 0.1 /\n") };
+
+    const auto& sigmav = es.fieldProps().get_double("SIGMAV");
+    BOOST_REQUIRE_EQUAL(sigmav.size(), 6U);
+    for (const auto value : sigmav) {
+        BOOST_CHECK_CLOSE(value, 0.1, 1e-10);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(NegativeSigmaIsRefused) {
+    // A negative SIGMA value stops the input.
+    BOOST_CHECK_EXCEPTION(Opm::EclipseState{ sigmaArrayDeck("SIGMA\n -0.1 /\n") },
+                          Opm::OpmInputError,
+                          [](const Opm::OpmInputError& e)
+                          {
+                              return std::string{ e.what() }.find("The SIGMA value cannot be negative.")
+                                  != std::string::npos;
+                          });
+}
+
+BOOST_AUTO_TEST_CASE(SigmaValueWithoutDualPorosityIsAccepted) {
+    // One SIGMA value in a single-porosity deck does not stop the input; that
+    // run does not use SIGMA, so SIGMAV stays unset.
+    const Opm::EclipseState es{ singlePorositySigmaDeck("SIGMA\n 0.1 /\n") };
+    BOOST_CHECK(!es.fieldProps().has_double("SIGMAV"));
 }
 
 BOOST_AUTO_TEST_CASE(DPGRIDCopiesDefaultedProperties) {
