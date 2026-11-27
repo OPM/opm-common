@@ -72,7 +72,10 @@
 
 #include <opm/input/eclipse/Python/Python.hpp>
 #include <opm/input/eclipse/Deck/Deck.hpp>
+#include <opm/input/eclipse/EclipseState/Compositional/CompositionalConfig.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/input/eclipse/EclipseState/Runspec.hpp>
+#include <opm/input/eclipse/Parser/Parser.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 
 #include <array>
@@ -492,4 +495,80 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(GenericFluidSystemLbcCoefficients, Scalar, ScalarT
     BOOST_CHECK(FluidSystem::lbcCoefficients() == lbc);
     FluidSystem::init();
     BOOST_CHECK(FluidSystem::lbcCoefficients() == defaults);
+}
+
+BOOST_AUTO_TEST_CASE_TEMPLATE(GenericFluidSystemRegionParams, Scalar, ScalarTypes)
+{
+    // The fluid of each equation-of-state region of a deck, in the units of
+    // the fluid system: molar mass kg/mol, Pa, critical volume m^3/kmol.
+    // OMEGAA is the deck's where given and the constant of the region's EOS
+    // elsewhere.
+    const auto deck = Opm::Parser{}.parseString(R"(
+RUNSPEC
+METRIC
+OIL
+GAS
+TABDIMS
+8* 2 /
+COMPS
+2 /
+PROPS
+CNAMES
+C1 C10 /
+EOS
+PR /
+SRK /
+MW
+16.04 142.28 /
+16.05 142.29 /
+TCRIT
+190.6 617.7 /
+191.6 618.7 /
+PCRIT
+46.0 21.1 /
+47.0 22.1 /
+VCRIT
+0.099 0.6 /
+0.1 0.61 /
+ACF
+0.011 0.49 /
+0.012 0.5 /
+SSHIFT
+-0.15 0.1 /
+-0.16 0.11 /
+BIC
+0.04 /
+0.05 /
+OMEGAA
+1* 0.5 /
+1* /
+LBCCOEF
+0.1 0.02 0.06 -0.04 0.009 /
+)");
+    const Opm::CompositionalConfig config(deck, Opm::Runspec(deck));
+    const Scalar tol = 1e-4; // [%]
+
+    const auto first = Opm::compositionalRegionParams<Scalar>(config, 0);
+    BOOST_REQUIRE_EQUAL(first.components.size(), 2u);
+    BOOST_CHECK_EQUAL(first.components[1].name, "C10");
+    BOOST_CHECK_CLOSE(first.components[1].molar_mass, Scalar(0.14228), tol);
+    BOOST_CHECK_CLOSE(first.components[1].critic_temp, Scalar(617.7), tol);
+    BOOST_CHECK_CLOSE(first.components[1].critic_pres, Scalar(21.1e5), tol);
+    BOOST_CHECK_CLOSE(first.components[1].critic_vol, Scalar(0.6), tol);
+    BOOST_CHECK_CLOSE(first.components[1].acentric_factor, Scalar(0.49), tol);
+    BOOST_CHECK_CLOSE(first.components[1].volume_shift, Scalar(0.1), tol);
+    BOOST_CHECK_CLOSE(*first.components[1].omega_a, Scalar(0.5), tol);
+    BOOST_CHECK_CLOSE(*first.components[0].omega_a, Scalar(config.omegaA(0)[0]), tol);
+    BOOST_REQUIRE_EQUAL(first.interaction_coefficients.size(), 1u);
+    BOOST_CHECK_CLOSE(first.interaction_coefficients[0], Scalar(0.04), tol);
+    BOOST_CHECK_CLOSE(first.lbc_coefficients[4], Scalar(0.009), tol);
+
+    const auto second = Opm::compositionalRegionParams<Scalar>(config, 1);
+    BOOST_REQUIRE_EQUAL(second.components.size(), 2u);
+    BOOST_CHECK_CLOSE(second.components[1].critic_temp, Scalar(618.7), tol);
+    BOOST_CHECK_CLOSE(second.components[1].critic_vol, Scalar(0.61), tol);
+    BOOST_CHECK_CLOSE(second.components[0].volume_shift, Scalar(-0.16), tol);
+    BOOST_CHECK_CLOSE(second.interaction_coefficients[0], Scalar(0.05), tol);
+    BOOST_CHECK_CLOSE(*second.components[1].omega_a, Scalar(config.omegaA(1)[1]), tol);
+    BOOST_CHECK(*second.components[0].omega_a != *first.components[0].omega_a);
 }
