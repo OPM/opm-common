@@ -436,6 +436,22 @@ void require_defined(const OperationInfo&              info,
     }
 }
 
+// An array operation has no component index, so it cannot apply to the
+// composition arrays, which hold one value per component in each cell.
+void require_one_value_per_cell(const DeckKeyword& keyword,
+                                const std::string& array_name)
+{
+    if (!Fieldprops::keywords::SOLUTION::composition_keywords.contains(array_name)) {
+        return;
+    }
+
+    throw OpmInputError {
+        fmt::format("Array {} holds one value per component in each cell, "
+                    "so it cannot be operated on.", array_name),
+        keyword.location()
+    };
+}
+
 template <typename T>
 void verify_deck_data(const Fieldprops::keywords::keyword_info<T>& kw_info,
                       const DeckKeyword&                           keyword,
@@ -1796,6 +1812,9 @@ void FieldProps::handle_operateR(const Section section,
         const auto reg_name = record.getItem<Kw::REGION_NAME>().getTrimmedString(0);
         const auto src_kw = record.getItem<Kw::ARRAY_PARAMETER>().getTrimmedString(0);
 
+        require_one_value_per_cell(keyword, target_kw);
+        require_one_value_per_cell(keyword, src_kw);
+
         const auto& [index_list, all_active] = this->region_index(reg_name, region_value);
         if (index_list.empty()) {
             log_empty_region(keyword, reg_name, region_value, src_kw);
@@ -1900,6 +1919,8 @@ void FieldProps::handle_region_operation(const Section section,
             };
         }
 
+        require_one_value_per_cell(keyword, target_kw);
+
         const int region_value = record.getItem("REGION_NUMBER").get<int>(0);
 
         if (FieldProps::supported<double>(target_kw)) {
@@ -2001,6 +2022,9 @@ void FieldProps::handle_OPERATE(const Section section,
 
         const auto src_kw = record.getItem<Kw::ARRAY_PARAMETER>().getTrimmedString(0);
 
+        require_one_value_per_cell(keyword, target_kw);
+        require_one_value_per_cell(keyword, src_kw);
+
         if (FieldProps::supported<double>(target_kw) ||
             Fieldprops::keywords::is_work(target_kw))
         {
@@ -2088,6 +2112,8 @@ void FieldProps::handle_operation(const Section      section,
     for (const auto& record : keyword) {
         const auto target_kw = Fieldprops::keywords::
             get_keyword_from_alias(record.getItem(0).getTrimmedString(0));
+
+        require_one_value_per_cell(keyword, target_kw);
 
         box.update(record);
 
@@ -2203,6 +2229,9 @@ void FieldProps::handle_COPY(const Section      section,
     for (const auto& record : keyword) {
         const auto src_kw    = arrayName(record.getItem(0));
         const auto target_kw = arrayName(record.getItem(1));
+
+        require_one_value_per_cell(keyword, src_kw);
+        require_one_value_per_cell(keyword, target_kw);
 
         std::vector<Box::cell_index> index_list;
         auto srcDescr = std::string {};
