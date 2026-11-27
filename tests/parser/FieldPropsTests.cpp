@@ -4193,3 +4193,90 @@ BOOST_AUTO_TEST_CASE(DPGRIDCopiesDefaultedProperties) {
     BOOST_CHECK_CLOSE(poro[2], 0.01, 1e-10);    // explicit fracture value kept
     BOOST_CHECK_CLOSE(poro[0], 0.20, 1e-10);
 }
+
+namespace {
+
+// ZMF of a three-component 4x1x1 grid whose third cell is inactive.  The
+// SOLUTION section is supplied by the caller.
+std::vector<double> activeZMF(const std::string& solution)
+{
+    const auto deck = Opm::Parser{}.parseString(R"(
+RUNSPEC
+OIL
+GAS
+DIMENS
+ 4 1 1 /
+COMPS
+ 3 /
+GRID
+DX
+ 4*10 /
+DY
+ 4*10 /
+DZ
+ 4*1 /
+TOPS
+ 4*2000 /
+ACTNUM
+ 1 1 0 1 /
+PORO
+ 4*0.2 /
+SOLUTION
+)" + solution);
+
+    Opm::EclipseGrid grid(deck);
+    BOOST_REQUIRE_EQUAL(grid.getNumActive(), 3U);
+
+    const Opm::Runspec runspec(deck);
+    const Opm::FieldPropsManager fpm(deck, runspec.phases(), grid,
+                                     Opm::TableManager(), runspec.numComps());
+
+    return fpm.get_double("ZMF");
+}
+
+// Component-major over the active cells: the first component of each
+// active cell, then the second, then the third.
+void checkActiveZMF(const std::vector<double>& zmf)
+{
+    const auto expected = std::vector<double> {
+        0.10, 0.20, 0.40,
+        0.30, 0.50, 0.35,
+        0.60, 0.30, 0.25,
+    };
+
+    BOOST_REQUIRE_EQUAL(zmf.size(), expected.size());
+    for (std::size_t i = 0; i < expected.size(); ++i) {
+        BOOST_CHECK_CLOSE(zmf[i], expected[i], 1e-10);
+    }
+}
+
+} // anonymous namespace
+
+BOOST_AUTO_TEST_CASE(ZMFSkipsInactiveCells) {
+    checkActiveZMF(activeZMF(R"(
+ZMF
+ 0.10 0.20 0.30 0.40
+ 0.30 0.50 0.60 0.35
+ 0.60 0.30 0.10 0.25 /
+)"));
+}
+
+BOOST_AUTO_TEST_CASE(ZMFInBoxes) {
+    // Both boxes are smaller than the grid, and the second one holds the
+    // inactive cell.
+    checkActiveZMF(activeZMF(R"(
+BOX
+ 1 2 1 1 1 1 /
+ZMF
+ 0.10 0.20
+ 0.30 0.50
+ 0.60 0.30 /
+BOX
+ 3 4 1 1 1 1 /
+ZMF
+ 0.30 0.40
+ 0.60 0.35
+ 0.10 0.25 /
+ENDBOX
+)"));
+}
