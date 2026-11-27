@@ -649,3 +649,11 @@ BOOST_AUTO_TEST_CASE(SinglePhaseUsesStableRoot)
 }
 
 BOOST_AUTO_TEST_SUITE_END() // DepartureModel
+
+// The names of the enthalpy models, as a program prints them.
+BOOST_AUTO_TEST_CASE(EnthalpyModelNames)
+{
+    BOOST_CHECK_EQUAL(Opm::enthalpyModelToString(Opm::EnthalpyModel::caloric), "caloric");
+    BOOST_CHECK_EQUAL(Opm::enthalpyModelToString(Opm::EnthalpyModel::eos_departure),
+                      "eos_departure");
+}

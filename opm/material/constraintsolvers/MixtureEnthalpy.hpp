@@ -77,10 +77,27 @@
 
 #include <opm/input/eclipse/EclipseState/Compositional/CompositionalConfig.hpp>
 
+#include <stdexcept>
+#include <string_view>
+
 namespace Opm {
 
 //! Which enthalpy model the P-H stack evaluates.
 enum class EnthalpyModel { caloric, eos_departure };
+
+//! \brief The name of an enthalpy model, as the enumerator: caloric or eos_departure.
+inline std::string_view
+enthalpyModelToString(EnthalpyModel model)
+{
+    switch (model) {
+    case EnthalpyModel::caloric:
+        return "caloric";
+    case EnthalpyModel::eos_departure:
+        return "eos_departure";
+    }
+
+    throw std::invalid_argument("Unknown EnthalpyModel");
+}
 
 /*!
  * \brief Molar mixture enthalpy of a flashed compositional state, under the
