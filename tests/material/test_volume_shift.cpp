@@ -370,8 +370,8 @@ BOOST_AUTO_TEST_CASE(WithoutAShiftTheTwoViscosityPathsAgree)
     const Scalar viaMolarDensity =
         UnshiftedSystem::viscosity(fs, paramCache, UnshiftedSystem::gasPhaseIdx);
     const Scalar viaCompressFactor =
-        Opm::ViscosityModels<Scalar, UnshiftedSystem>::LBC(fs, UnshiftedSystem::gasPhaseIdx,
-                                                           paramCache.eosRegionIndex());
+        Opm::ViscosityModels<Scalar, UnshiftedSystem>::LBC(fs, paramCache,
+                                                           UnshiftedSystem::gasPhaseIdx);
 
     BOOST_CHECK_CLOSE(viaMolarDensity, viaCompressFactor, 1.0e-8);
 }

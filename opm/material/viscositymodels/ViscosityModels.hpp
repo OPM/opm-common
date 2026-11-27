@@ -62,10 +62,10 @@ public:
 
     // Standard LBC model. (Lohrenz, Bray & Clark: "Calculating Viscosities of Reservoir
     //                      fluids from Their Compositions", JPT 16.10 (1964).
-    template <class FluidState, class LhsEval = typename FluidState::ValueType>
+    template <class FluidState, class Params, class LhsEval = typename FluidState::ValueType>
     static LhsEval LBC(const FluidState& fluidState,
-                      unsigned phaseIdx,
-                      unsigned eosRegionIdx)
+                      const Params& paramCache,
+                      unsigned phaseIdx)
     {
         const Scalar R = Opm::Constants<Scalar>::R;
         const auto& T = Opm::decay<LhsEval>(fluidState.temperature(phaseIdx));
@@ -74,7 +74,7 @@ public:
         const LhsEval molarDensity = P / (R * T * Z);
 
         return LBCWithMolarDensity<FluidState, LhsEval, LhsEval>(fluidState, molarDensity, phaseIdx,
-                                                                 eosRegionIdx);
+                                                                 paramCache.eosRegionIndex());
     }
 
     // LBC correlation at the supplied physical molar density [mol/m^3], with
@@ -134,11 +134,12 @@ public:
     }
 
     // Improved LBC model for CO2 rich mixtures. (Lansangan, Taylor, Smith & Kovarik - 1993)
-    template <class FluidState, class LhsEval = typename FluidState::ValueType>
+    template <class FluidState, class Params, class LhsEval = typename FluidState::ValueType>
     static LhsEval LBCco2rich(const FluidState& fluidState,
-                              unsigned phaseIdx,
-                              unsigned eosRegionIdx)
+                              const Params& paramCache,
+                              unsigned phaseIdx)
     {
+        const unsigned eosRegionIdx = paramCache.eosRegionIndex();
         const auto& T = Opm::decay<LhsEval>(fluidState.temperature(phaseIdx));
         const auto& rho = Opm::decay<LhsEval>(fluidState.density(phaseIdx));
 

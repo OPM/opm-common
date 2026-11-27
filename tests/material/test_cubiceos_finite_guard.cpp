@@ -179,7 +179,7 @@ public:
                              unsigned phaseIdx)
     {
         return decay<LhsEval>(
-            ViscosityModel::LBC(fluidState, phaseIdx, paramCache.eosRegionIndex()));
+            ViscosityModel::LBC(fluidState, paramCache, phaseIdx));
     }
 
     template <class FluidState, class LhsEval = typename FluidState::ValueType, class ParamCacheEval = LhsEval>

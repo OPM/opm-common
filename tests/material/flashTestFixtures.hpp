@@ -216,8 +216,7 @@ public:
                              unsigned phaseIdx)
     {
         // Use LBC method to calculate viscosity
-        return decay<LhsEval>(ViscosityModel::LBC(fluidState, phaseIdx,
-                                                  paramCache.eosRegionIndex()));
+        return decay<LhsEval>(ViscosityModel::LBC(fluidState, paramCache, phaseIdx));
     }
 
     //! \copydoc BaseFluidSystem::fugacityCoefficient
