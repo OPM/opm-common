@@ -1,6 +1,6 @@
 {
   "name": "TBLK",
-  "deck_name_regex": "TBLK(F|S).{1,3}",
+  "deck_name_regex": "TBLK.{1,4}",
   "sections": [
     "SOLUTION"
   ],

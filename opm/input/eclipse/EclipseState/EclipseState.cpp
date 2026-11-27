@@ -205,7 +205,7 @@ namespace Opm {
         , species_config(      deck)
         , mineral_config(      deck)
         , ionex_config(        deck)
-        , tracer_config(       m_deckUnitSystem, deck)
+        , tracer_config(       m_deckUnitSystem, deck, m_runspec.compositional())
         , wag_hyst_config(     deck)
         , co2_store_config(    deck)
     {

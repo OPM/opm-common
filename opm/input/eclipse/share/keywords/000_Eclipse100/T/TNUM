@@ -1,6 +1,6 @@
 {
   "name": "TNUM",
-  "deck_name_regex": "TNUM(F|S).{1,3}",
+  "deck_name_regex": "TNUM.{1,4}",
   "sections": [
     "REGIONS"
   ],

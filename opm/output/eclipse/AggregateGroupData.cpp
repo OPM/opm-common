@@ -1539,6 +1539,12 @@ namespace XGrp {
         ix += processTemperature(&xGroup[ix]);
 
         for (const auto& tracer : tracers) {
+            // The restart arrays hold the tracers declared in TRACERS, which
+            // does not cover component tracers.
+            if (tracer.component.has_value()) {
+                continue;
+            }
+
             if (tracer.phase == Opm::Phase::WATER) {
                 ix += processWaterTracer(tracer, &xGroup[ix]);
             }
