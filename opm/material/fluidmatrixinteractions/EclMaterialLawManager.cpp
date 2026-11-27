@@ -146,7 +146,12 @@ applySwatinit(unsigned elemIdx,
     }
 
     auto& elemScaledEpsInfo = params_.oilWaterScaledEpsInfoDrainage[elemIdx];
-    if (Sw <= elemScaledEpsInfo.Swl)
+    // Saturations within this tolerance of the connate saturation are treated
+    // as connate, to be robust against roundoff, e.g., in connate saturations
+    // derived as one minus the maximum gas saturation.
+    constexpr Scalar connateTolerance = 1.0e-6;
+    const bool atConnate = Sw <= elemScaledEpsInfo.Swl + connateTolerance;
+    if (atConnate)
         Sw = elemScaledEpsInfo.Swl;
 
     // Two-phase gas/water runs have no oil/water curve: scale the gas/water
@@ -185,23 +190,28 @@ applySwatinit(unsigned elemIdx,
         return {Sw, /*newSwatInit*/ true};
     }
 
-    // Sufficiently positive value, continue with max. capillary pressure (PCW) scaling to honor SWATINIT value
-    const Scalar newMaxPcow = maxPc * (pcow/pcowAtSw);
+    // Scaled maximum capillary pressure honouring SWATINIT.  Optionally keep
+    // the unscaled maximum at connate saturation if honouring SWATINIT would
+    // require a larger maximum capillary pressure.
+    const bool suppressScaleUp = atConnate && !swatinitScaleUpAtConnate_ && (pcow > pcowAtSw);
+    const Scalar newMaxPcow = suppressScaleUp ? maxPc : maxPc * (pcow/pcowAtSw);
 
     // Limit max. capillary pressure with PPCWMAX
     bool newSwatInit = false;
     int satRegionIdx = satnumRegionIdx(elemIdx);
     if (enablePpcwmax() && (newMaxPcow > maxAllowPc_[satRegionIdx])) {
-        // Two options in PPCWMAX to modify connate Sw or not.  In both cases, init. Sw needs to be
-        // re-calculated (done in opm-simulators)
-        newSwatInit = true;
+        // Two options in PPCWMAX to modify connate Sw or not
         if (modifySwl_[satRegionIdx] == false) {
-            // Max. cap. pressure set to PCWO in PPCWMAX
+            // Max. cap. pressure set to PCWO in PPCWMAX.  Init. Sw needs to be
+            // re-calculated (done in opm-simulators)
+            newSwatInit = true;
             maxPc = maxAllowPc_[satRegionIdx];
         }
         else {
-            // Max. cap. pressure remains unscaled and connate Sw is set to SWATINIT value
+            // Connate Sw is set to SWATINIT value, which then holds with the max.
+            // cap. pressure scaled down to pcow, never up
             elemScaledEpsInfo.Swl = Sw;
+            maxPc = std::min(maxPc, pcow);
         }
     }
     // Max. cap. pressure adjusted from SWATINIT data
