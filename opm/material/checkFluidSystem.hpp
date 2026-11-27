@@ -39,7 +39,6 @@
 #include <opm/material/fluidsystems/H2OAirXyleneFluidSystem.hpp>
 #include <opm/material/fluidsystems/Spe5FluidSystem.hpp>
 #include <opm/material/fluidsystems/PTFlashParameterCache.hpp>
-#include <opm/input/eclipse/EclipseState/Compositional/CompositionalConfig.hpp>
 
 // include all fluid states
 #include <opm/material/fluidstates/CompositionalFluidState.hpp>
@@ -278,8 +277,7 @@ ParameterCache initParamCache()
 {
     constexpr bool is_same = std::is_same<ParameterCache, Opm::PTFlashParameterCache<Scalar, FluidSystem>>::value;
     if constexpr (is_same) {
-        using EOSType = Opm::CompositionalConfig::EOSType;
-        ParameterCache paramCache(EOSType::PR);
+        ParameterCache paramCache(/*eosRegionIdx=*/0);
         return paramCache;
     }
     else {

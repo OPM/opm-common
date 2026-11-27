@@ -76,8 +76,6 @@
 
 #include <opm/common/OpmLog/OpmLog.hpp>
 
-#include <opm/input/eclipse/EclipseState/Compositional/CompositionalConfig.hpp>
-
 #include <dune/common/fmatrix.hh>
 
 #include <algorithm>
@@ -140,7 +138,7 @@ struct PHFlashConfig {
  *        the mixture-enthalpy model selected in the configuration.
  *
  * EnthalpyCalc provides the enthalpy. A replacement needs a static
- * mixtureEnthalpy(fluidState, cpTable, eosType, model) returning the molar
+ * mixtureEnthalpy(fluidState, cpTable, eosRegionIdx, model) returning the molar
  * enthalpy [J/mol] of a flashed state, as MixtureEnthalpy does. A replacement
  * is always evaluated on a state flashed at the trial temperature.
  */
@@ -149,7 +147,6 @@ template <class Scalar, class FluidSystem,
 struct PHFlash {
     static constexpr int numComponents = FluidSystem::numComponents;
 
-    using EOSType = CompositionalConfig::EOSType;
     using Config = PHFlashConfig<Scalar, numComponents>;
 
     /*!
@@ -165,7 +162,7 @@ struct PHFlash {
      * \param cfg the enthalpy model and the temperature search
      * \param twoPhaseMethod iteration scheme of the isothermal flash
      * \param ptTolerance convergence tolerance of the isothermal flash
-     * \param eosType cubic equation of state of the isothermal flash and of
+     * \param eosRegionIdx reservoir EOS region of the isothermal flash and of
      *        the eos_departure enthalpy
      * \param verbosity verbosity of the isothermal flash; at 1 or more a
      *        bracket found next to a temperature that cannot be evaluated is
@@ -187,7 +184,7 @@ struct PHFlash {
                       const Config& cfg,
                       const PTFlashMethod twoPhaseMethod,
                       const Scalar ptTolerance,
-                      const EOSType& eosType,
+                      const unsigned eosRegionIdx,
                       const int verbosity = 0)
     {
         // An all-zero table makes H(T) identically zero, which would let
@@ -216,7 +213,7 @@ struct PHFlash {
 
         auto residualAt = [&](const Scalar T) {
             return flashedResidual(fluidState, T, hSpec, cfg, warmStart,
-                                   twoPhaseMethod, ptTolerance, eosType, verbosity);
+                                   twoPhaseMethod, ptTolerance, eosRegionIdx, verbosity);
         };
 
         // With the caloric model of the built-in provider, H = sum_i z_i h_i(T)
@@ -376,7 +373,7 @@ private:
                                                  WarmStart& warmStart,
                                                  const PTFlashMethod twoPhaseMethod,
                                                  const Scalar ptTolerance,
-                                                 const EOSType& eosType,
+                                                 const unsigned eosRegionIdx,
                                                  const int verbosity)
     {
         using Flash = PTFlash<Scalar, FluidSystem, true>;
@@ -387,7 +384,7 @@ private:
         bool solved = false;
         if (warmStart.seed(fluidState, T)) {
             try {
-                Flash::solve(fluidState, twoPhaseMethod, ptTolerance, eosType, verbosity);
+                Flash::solve(fluidState, twoPhaseMethod, ptTolerance, eosRegionIdx, verbosity);
                 solved = true;
             }
             catch (const std::runtime_error&) {
@@ -401,15 +398,15 @@ private:
         try {
             if (!solved) {
                 for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
-                    fluidState.setKvalue(compIdx, fluidState.wilsonK_(compIdx));
+                    fluidState.setKvalue(compIdx, fluidState.wilsonK_(compIdx, eosRegionIdx));
                 }
                 fluidState.setLvalue(ValueType(-1.0));
-                Flash::solve(fluidState, twoPhaseMethod, ptTolerance, eosType, verbosity);
+                Flash::solve(fluidState, twoPhaseMethod, ptTolerance, eosRegionIdx, verbosity);
             }
             warmStart.store(fluidState, T);
 
             const Scalar r = getValue(EnthalpyCalc::mixtureEnthalpy(
-                fluidState, cfg.cpTable, eosType, cfg.model)) - hSpec;
+                fluidState, cfg.cpTable, eosRegionIdx, cfg.model)) - hSpec;
             if (std::isfinite(r)) {
                 return r;
             }

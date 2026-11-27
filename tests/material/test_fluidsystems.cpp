@@ -467,20 +467,20 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(GenericFluidSystemInteractionCoefficients, Scalar,
     registerComponent<FluidSystem, Opm::C10<Scalar>>();
 
     FluidSystem::setInteractionCoefficients({0.1, 0.2, 0.3});
-    BOOST_CHECK_EQUAL(FluidSystem::interactionCoefficient(1, 0), Scalar(0.1));
-    BOOST_CHECK_EQUAL(FluidSystem::interactionCoefficient(0, 1), Scalar(0.1));
-    BOOST_CHECK_EQUAL(FluidSystem::interactionCoefficient(2, 0), Scalar(0.2));
-    BOOST_CHECK_EQUAL(FluidSystem::interactionCoefficient(2, 1), Scalar(0.3));
-    BOOST_CHECK_EQUAL(FluidSystem::interactionCoefficient(1, 2), Scalar(0.3));
-    BOOST_CHECK_EQUAL(FluidSystem::interactionCoefficient(1, 1), Scalar(0.0));
+    BOOST_CHECK_EQUAL(FluidSystem::interactionCoefficient(1, 0, /*eosRegionIdx=*/0), Scalar(0.1));
+    BOOST_CHECK_EQUAL(FluidSystem::interactionCoefficient(0, 1, /*eosRegionIdx=*/0), Scalar(0.1));
+    BOOST_CHECK_EQUAL(FluidSystem::interactionCoefficient(2, 0, /*eosRegionIdx=*/0), Scalar(0.2));
+    BOOST_CHECK_EQUAL(FluidSystem::interactionCoefficient(2, 1, /*eosRegionIdx=*/0), Scalar(0.3));
+    BOOST_CHECK_EQUAL(FluidSystem::interactionCoefficient(1, 2, /*eosRegionIdx=*/0), Scalar(0.3));
+    BOOST_CHECK_EQUAL(FluidSystem::interactionCoefficient(1, 1, /*eosRegionIdx=*/0), Scalar(0.0));
 
     // An empty vector sets all coefficients to zero; one of the wrong size is
     // rejected and leaves the coefficients unchanged.
     FluidSystem::setInteractionCoefficients({});
-    BOOST_CHECK_EQUAL(FluidSystem::interactionCoefficient(2, 1), Scalar(0.0));
+    BOOST_CHECK_EQUAL(FluidSystem::interactionCoefficient(2, 1, /*eosRegionIdx=*/0), Scalar(0.0));
     FluidSystem::setInteractionCoefficients({0.1, 0.2, 0.3});
     BOOST_CHECK_THROW(FluidSystem::setInteractionCoefficients({0.4, 0.5}), std::invalid_argument);
-    BOOST_CHECK_EQUAL(FluidSystem::interactionCoefficient(2, 1), Scalar(0.3));
+    BOOST_CHECK_EQUAL(FluidSystem::interactionCoefficient(2, 1, /*eosRegionIdx=*/0), Scalar(0.3));
 }
 
 BOOST_AUTO_TEST_CASE_TEMPLATE(GenericFluidSystemLbcCoefficients, Scalar, ScalarTypes)

@@ -37,11 +37,10 @@
 #include <opm/material/eos/CubicEOS.hpp>
 #include <opm/material/eos/CubicEOSParams.hpp>
 
-#include <opm/input/eclipse/EclipseState/Compositional/CompositionalConfig.hpp>
-
 #include <fmt/format.h>
 
 #include <cassert>
+#include <stdexcept>
 
 namespace Opm {
 
@@ -56,7 +55,6 @@ class PTFlashParameterCache
     using ThisType = PTFlashParameterCache<Scalar, FluidSystem>;
     using ParentType = Opm::ParameterCacheBase<ThisType>;
     using CubicEOS = Opm::CubicEOS<Scalar, FluidSystem>;
-    using EOSType = CompositionalConfig::EOSType;
 
     enum { numPhases = FluidSystem::numPhases };
     enum { oilPhaseIdx = FluidSystem::oilPhaseIdx };
@@ -80,8 +78,22 @@ public:
     //! The cached parameters for the gas phase
     using GasPhaseParams = Opm::CubicEOSParams<Scalar, FluidSystem, gasPhaseIdx>;
 
-    explicit PTFlashParameterCache(EOSType eos_type)
+    /*!
+     * \brief Create a cache for the equation of state of a reservoir EOS region.
+     *
+     * \param eosRegionIdx The EOS region whose component properties and
+     *                     equation of state the cache uses.
+     */
+    explicit PTFlashParameterCache(const unsigned eosRegionIdx)
+        : eosRegionIdx_(eosRegionIdx)
     {
+        if (eosRegionIdx >= FluidSystem::numEosRegions()) {
+            throw std::out_of_range {
+                fmt::format("EOS region {} is selected, but the fluid system has {}.",
+                            eosRegionIdx + 1, FluidSystem::numEosRegions())
+            };
+        }
+
         VmUpToDate_[oilPhaseIdx] = false;
         Valgrind::SetUndefined(Vm_[oilPhaseIdx]);
         Valgrind::SetUndefined(volumeShift_[oilPhaseIdx]);
@@ -89,9 +101,19 @@ public:
         Valgrind::SetUndefined(Vm_[gasPhaseIdx]);
         Valgrind::SetUndefined(volumeShift_[gasPhaseIdx]);
 
+        const auto eos_type = FluidSystem::eosType(eosRegionIdx);
         oilPhaseParams_.setEOSType(eos_type);
         gasPhaseParams_.setEOSType(eos_type);
+        oilPhaseParams_.setEosRegionIndex(eosRegionIdx);
+        gasPhaseParams_.setEosRegionIndex(eosRegionIdx);
     }
+
+    /*!
+     * \brief The reservoir EOS region whose component properties and
+     *        equation of state the cache uses.
+     */
+    unsigned eosRegionIndex() const
+    { return eosRegionIdx_; }
 
     /*!
      * \brief The PVT region whose water properties the fluid system returns.
@@ -404,18 +426,15 @@ protected:
     Scalar computeVolumeShift_(const FluidState& fluidState, unsigned phaseIdx) const
     {
         Scalar shift = 0;
-        // Fluid systems without SSHIFT support use a zero translation.
-        if constexpr (requires { FluidSystem::volumeShift(0u); }) {
-            // b_c from the dimensionless B_c = b_c p / (R T).
-            const Scalar T = decay<Scalar>(fluidState.temperature(phaseIdx));
-            const Scalar p = decay<Scalar>(fluidState.pressure(phaseIdx));
-            const Scalar RT_p = Constants<Scalar>::R * T / p;
+        // b_c from the dimensionless B_c = b_c p / (R T).
+        const Scalar T = decay<Scalar>(fluidState.temperature(phaseIdx));
+        const Scalar p = decay<Scalar>(fluidState.pressure(phaseIdx));
+        const Scalar RT_p = Constants<Scalar>::R * T / p;
 
-            for (unsigned compIdx = 0; compIdx < FluidSystem::numComponents; ++compIdx) {
-                const Scalar b = decay<Scalar>(Bi(phaseIdx, compIdx)) * RT_p;
-                shift += decay<Scalar>(fluidState.moleFraction(phaseIdx, compIdx))
-                       * FluidSystem::volumeShift(compIdx) * b;
-            }
+        for (unsigned compIdx = 0; compIdx < FluidSystem::numComponents; ++compIdx) {
+            const Scalar b = decay<Scalar>(Bi(phaseIdx, compIdx)) * RT_p;
+            shift += decay<Scalar>(fluidState.moleFraction(phaseIdx, compIdx))
+                   * FluidSystem::volumeShift(compIdx, eosRegionIdx_) * b;
         }
         return shift;
     }
@@ -428,6 +447,7 @@ protected:
     GasPhaseParams gasPhaseParams_;
 
     unsigned pvtRegionIdx_{0};
+    unsigned eosRegionIdx_;
 };
 
 } // namespace Opm
