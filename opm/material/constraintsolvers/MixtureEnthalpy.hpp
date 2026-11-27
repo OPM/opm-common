@@ -197,18 +197,18 @@ struct MixtureEnthalpy {
      * from AD. This is the sum of the fluid system's ln(phi_i), without the
      * range CubicEOS limits each phi_i to: at that limit phi_i is held
      * constant, and a heavy component in the liquid would lose its whole
-     * contribution to the residual.
+     * contribution to the residual. The equation of state is that of the
+     * state's EOS region.
      *
      * Returns a plain Scalar: derivatives with respect to outer AD variables
      * are not propagated.
      */
     template <class FluidState>
     static Scalar phaseResidualEnthalpy(const FluidState& fluidState,
-                                        const unsigned phaseIdx,
-                                        const unsigned eosRegionIdx)
+                                        const unsigned phaseIdx)
     {
         return residualEnthalpy_(fluidState, phaseIdx,
-                                 sumLnPhi_(fluidState, phaseIdx, phaseIdx, eosRegionIdx));
+                                 sumLnPhi_(fluidState, phaseIdx, phaseIdx));
     }
 
     /*!
@@ -226,12 +226,11 @@ struct MixtureEnthalpy {
     phaseEnthalpy(const FluidState& fluidState,
                   const unsigned phaseIdx,
                   const CpTable<Scalar, numComponents>& cpTable,
-                  const unsigned eosRegionIdx,
                   const EnthalpyModel model)
     {
         Scalar h = Opm::getValue(phaseEnthalpy(fluidState, phaseIdx, cpTable));
         if (model == EnthalpyModel::eos_departure)
-            h += phaseResidualEnthalpy(fluidState, phaseIdx, eosRegionIdx);
+            h += phaseResidualEnthalpy(fluidState, phaseIdx);
         return h;
     }
 
@@ -256,7 +255,6 @@ struct MixtureEnthalpy {
     static Scalar
     mixtureEnthalpy(const FluidState& fluidState,
                     const CpTable<Scalar, numComponents>& cpTable,
-                    const unsigned eosRegionIdx,
                     const EnthalpyModel model)
     {
         const Scalar L = Opm::getValue(fluidState.L());
@@ -265,15 +263,13 @@ struct MixtureEnthalpy {
         Scalar hGas = Opm::getValue(phaseEnthalpy(fluidState, FluidSystem::gasPhaseIdx, cpTable));
         if (model == EnthalpyModel::eos_departure) {
             if (L > 0.0 && L < 1.0) {
-                hOil += phaseResidualEnthalpy(fluidState, FluidSystem::oilPhaseIdx, eosRegionIdx);
-                hGas += phaseResidualEnthalpy(fluidState, FluidSystem::gasPhaseIdx, eosRegionIdx);
+                hOil += phaseResidualEnthalpy(fluidState, FluidSystem::oilPhaseIdx);
+                hGas += phaseResidualEnthalpy(fluidState, FluidSystem::gasPhaseIdx);
             }
             else if (L > 0.0)
-                hOil += stableRootResidualEnthalpy_(fluidState, FluidSystem::oilPhaseIdx,
-                                                    eosRegionIdx);
+                hOil += stableRootResidualEnthalpy_(fluidState, FluidSystem::oilPhaseIdx);
             else
-                hGas += stableRootResidualEnthalpy_(fluidState, FluidSystem::gasPhaseIdx,
-                                                    eosRegionIdx);
+                hGas += stableRootResidualEnthalpy_(fluidState, FluidSystem::gasPhaseIdx);
         }
         return L * hOil + (1.0 - L) * hGas;
     }
@@ -294,6 +290,7 @@ private:
         using Eval1 = DenseAd::Evaluation<Scalar, 1>;
 
         CompositionalFluidState<Eval1, FluidSystem> seeded;
+        seeded.setEosRegionIndex(fluidState.eosRegionIndex());
         seeded.setTemperature(
             Eval1::createVariable(Opm::getValue(fluidState.temperature(phaseIdx)), 0));
         const Eval1 p = Eval1::createConstant(Opm::getValue(fluidState.pressure(phaseIdx)));
@@ -316,14 +313,13 @@ private:
     static DenseAd::Evaluation<Scalar, 1>
     sumLnPhi_(const FluidState& fluidState,
               const unsigned phaseIdx,
-              const unsigned rootIdx,
-              const unsigned eosRegionIdx)
+              const unsigned rootIdx)
     {
         using Eval1 = DenseAd::Evaluation<Scalar, 1>;
         using ParamCache = typename FluidSystem::template ParameterCache<Eval1>;
 
         const auto seeded = temperatureSeededCopy_(fluidState, phaseIdx, rootIdx);
-        ParamCache paramCache(eosRegionIdx);
+        ParamCache paramCache(seeded.eosRegionIndex());
         paramCache.updatePhase(seeded, rootIdx);
 
         const Eval1& T = seeded.temperature(rootIdx);
@@ -358,11 +354,10 @@ private:
      */
     template <class FluidState>
     static Scalar stableRootResidualEnthalpy_(const FluidState& fluidState,
-                                              const unsigned phaseIdx,
-                                              const unsigned eosRegionIdx)
+                                              const unsigned phaseIdx)
     {
-        const auto onLiquidRoot = sumLnPhi_(fluidState, phaseIdx, FluidSystem::oilPhaseIdx, eosRegionIdx);
-        const auto onVapourRoot = sumLnPhi_(fluidState, phaseIdx, FluidSystem::gasPhaseIdx, eosRegionIdx);
+        const auto onLiquidRoot = sumLnPhi_(fluidState, phaseIdx, FluidSystem::oilPhaseIdx);
+        const auto onVapourRoot = sumLnPhi_(fluidState, phaseIdx, FluidSystem::gasPhaseIdx);
         return residualEnthalpy_(fluidState, phaseIdx,
                                  onLiquidRoot.value() <= onVapourRoot.value() ? onLiquidRoot
                                                                               : onVapourRoot);

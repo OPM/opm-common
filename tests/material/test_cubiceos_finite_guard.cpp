@@ -223,7 +223,7 @@ FluidState makeState(const Scalar p, const Scalar t)
     fs.setMoleFraction(0, 0.5);
     fs.setMoleFraction(1, 0.5);
     for (int compIdx = 0; compIdx < 2; ++compIdx)
-        fs.setKvalue(compIdx, fs.wilsonK_(compIdx, /*eosRegionIdx=*/0));
+        fs.setKvalue(compIdx, fs.wilsonK_(compIdx));
     fs.setLvalue(-1.0);
     return fs;
 }
@@ -599,7 +599,7 @@ BOOST_AUTO_TEST_CASE(SupercriticalStateIsSingleVapour)
             // Check rather than require, so that every method reports.
             bool singlePhase = false;
             BOOST_CHECK_NO_THROW(
-                singlePhase = PtFlash::solve(fs, method, 1e-8, /*eosRegionIdx=*/0));
+                singlePhase = PtFlash::solve(fs, method, 1e-8));
             BOOST_CHECK(singlePhase);
             if (singlePhase) {
                 BOOST_CHECK_SMALL(Opm::getValue(fs.L()), 1e-8);
@@ -614,6 +614,6 @@ BOOST_AUTO_TEST_CASE(BenignStateUnaffected)
 {
     for (const auto method : {PTFlashMethod::Ssi, PTFlashMethod::SsiNewton}) {
         auto fs = makeState(100e5, 300.0);
-        BOOST_CHECK_NO_THROW(PtFlash::solve(fs, method, 1e-8, /*eosRegionIdx=*/0));
+        BOOST_CHECK_NO_THROW(PtFlash::solve(fs, method, 1e-8));
     }
 }

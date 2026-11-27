@@ -448,7 +448,7 @@ makeInitialState(double pressure, double temperature,
     // PTFlash input contract: the caller seeds the initial K-values (Wilson)
     // and the liquid fraction L before calling solve.
     for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
-        const Evaluation Ktmp = fluid_state.wilsonK_(compIdx, /*eosRegionIdx=*/0);
+        const Evaluation Ktmp = fluid_state.wilsonK_(compIdx);
         fluid_state.setKvalue(compIdx, Ktmp);
     }
     const Evaluation Ltmp = 1.;
@@ -527,7 +527,7 @@ runFlash(const FlashCase<FluidSystem::numComponents>& testCase)
     // The case's equation of state stays set for checks on the outcome.
     FluidSystem::setEosType(testCase.eos_type);
     outcome.summary.single_phase = Flash::solve(outcome.state, testCase.method,
-                                                testCase.tolerance, /*eosRegionIdx=*/0,
+                                                testCase.tolerance,
                                                 testCase.verbosity);
 
     outcome.summary.L = Opm::getValue(outcome.state.L());

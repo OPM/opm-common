@@ -161,7 +161,7 @@ for (const auto& sample : test_methods) {
         // TODO: should we set these?
         // Set initial K and L
         for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
-            const Evaluation Ktmp = fluid_state.wilsonK_(compIdx, /*eosRegionIdx=*/0);
+            const Evaluation Ktmp = fluid_state.wilsonK_(compIdx);
             fluid_state.setKvalue(compIdx, Ktmp);
         }
         const Evaluation Ltmp = 1.;
@@ -170,7 +170,7 @@ for (const auto& sample : test_methods) {
         // thermal PTFlash
         using Flash = Opm::PTFlash<double, FluidSystem, true>;
         FluidSystem::setEosType(eos_type);
-        Flash::solve(fluid_state, sample, flash_tolerance, /*eosRegionIdx=*/0, flash_verbosity);
+        Flash::solve(fluid_state, sample, flash_tolerance, flash_verbosity);
 
         ComponentVector x, y;
         const Evaluation L = fluid_state.L();
@@ -314,11 +314,11 @@ BOOST_AUTO_TEST_CASE(ScalarFlashStoresFugacityCoefficients)
                     fs.setMoleFraction(compIdx, z[compIdx]);
                 }
                 for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
-                    fs.setKvalue(compIdx, fs.wilsonK_(compIdx, /*eosRegionIdx=*/0));
+                    fs.setKvalue(compIdx, fs.wilsonK_(compIdx));
                 }
                 fs.setLvalue(initialL);
 
-                BOOST_REQUIRE_EQUAL(Flash::flash_solve_scalar(fs, method, 1e-8, /*eosRegionIdx=*/0),
+                BOOST_REQUIRE_EQUAL(Flash::flash_solve_scalar(fs, method, 1e-8),
                                     singlePhase);
                 ParamCache paramCache(/*eosRegionIdx=*/0);
                 for (const auto phaseIdx : {FluidSystem::oilPhaseIdx, FluidSystem::gasPhaseIdx}) {

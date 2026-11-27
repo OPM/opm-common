@@ -69,7 +69,6 @@ constexpr std::array<std::string_view, 2 * numComponents + 1> unknownNames{
     "x0", "x1", "x2", "y0", "y1", "y2", "L"};
 using Unknowns = std::array<Scalar, unknownNames.size()>;
 constexpr Scalar flashTolerance = 1e-10;
-constexpr unsigned eosRegionIdx = 0;
 
 template <class Component>
 void registerComponent()
@@ -150,11 +149,11 @@ Split equalPressureSplit()
         fs.setMoleFraction(compIdx, z[compIdx]);
     }
     for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
-        fs.setKvalue(compIdx, fs.wilsonK_(compIdx, eosRegionIdx));
+        fs.setKvalue(compIdx, fs.wilsonK_(compIdx));
     }
     fs.setLvalue(-1.0);
     BOOST_REQUIRE(!IsothermalFlash::flash_solve_scalar(
-        fs, PTFlashMethod::SsiNewton, flashTolerance, eosRegionIdx));
+        fs, PTFlashMethod::SsiNewton, flashTolerance));
     Split split{};
     for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
         split.K[compIdx]
@@ -176,7 +175,7 @@ Unknowns scalarFlash(const Scalar gasPressure,
                                 gasPressure + step * direction.gasPressure,
                                 baseTemperature + step * direction.temperature,
                                 start);
-    BOOST_REQUIRE(!Flash::flash_solve_scalar(fs, method, flashTolerance, eosRegionIdx));
+    BOOST_REQUIRE(!Flash::flash_solve_scalar(fs, method, flashTolerance));
     Unknowns unknowns{};
     for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
         unknowns[compIdx] = fs.moleFraction(oilPhaseIdx, compIdx);
@@ -204,7 +203,7 @@ void checkDerivatives(const Scalar gasPressure,
         temperature.setDerivative(dirIdx, directions[dirIdx].temperature);
     }
     auto fs = makeState(oilPressure, phaseGasPressure, temperature, start);
-    BOOST_REQUIRE(!Flash::solve(fs, method, flashTolerance, eosRegionIdx));
+    BOOST_REQUIRE(!Flash::solve(fs, method, flashTolerance));
     std::array<Evaluation, unknownNames.size()> unknowns;
     for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
         unknowns[compIdx] = fs.moleFraction(oilPhaseIdx, compIdx);
