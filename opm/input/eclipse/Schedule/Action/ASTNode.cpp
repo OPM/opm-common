@@ -412,8 +412,23 @@ Opm::Action::ASTNode::getWellList(const Context& context) const
 
 bool Opm::Action::ASTNode::argListIsPattern() const
 {
-    return (this->arg_list.size() == 1)
-        && (this->arg_list.front().find("*") != std::string::npos);
+    if (this->arg_list.size() != 1) {
+        return false;
+    }
+
+    const auto& arg = this->arg_list.front();
+
+    if ((this->func_type == FuncType::group) && isWellListName(arg)) {
+        // Group level quantity for a single well list, e.g.,
+        //
+        //    GGPR '*GP_T1' > 400000
+        //
+        // This is a single value accumulated over the wells on the list,
+        // not a pattern.
+        return false;
+    }
+
+    return arg.find("*") != std::string::npos;
 }
 
 bool Opm::Action::ASTNode::argListIsWellList() const

@@ -41,6 +41,7 @@
 #include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>
 #include <opm/input/eclipse/Schedule/Well/Connection.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
+#include <opm/input/eclipse/Schedule/Well/WListManager.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
 
 #include <opm/input/eclipse/Parser/ErrorGuard.hpp>
@@ -484,10 +485,12 @@ namespace {
     //! \details Most requirements arrive as bare keywords, but block,
     //!   connection, segment and node quantities have to name their object to
     //!   mean anything, and that naming is the only record of which vector is
-    //!   wanted. Note that a UDQ ASSIGN contributes nothing here: it gives a
-    //!   numeric value to a selection of objects and never reads a summary
-    //!   vector.
-    RequisiteSummaryVectors FLUXALL_namedVectors(const Schedule& schedule)
+    //!   wanted.  The same goes for group level quantities naming a well list,
+    //!   e.g., GGPR '*GP_T1', since expanding the bare keyword over the run's
+    //!   groups never produces the well list.  Note that a UDQ ASSIGN
+    //!   contributes nothing here: it gives a numeric value to a selection of
+    //!   objects and never reads a summary vector.
+    RequisiteSummaryVectors deckNamedSummaryVectors(const Schedule& schedule)
     {
         auto vectors = RequisiteSummaryVectors{};
 
@@ -800,6 +803,42 @@ namespace {
         };
 
         return is_in_set(nodekw, keyword);
+    }
+
+    //! \brief Group level keywords that have no meaning for a well list.
+    //!
+    //! \details A group level summary vector may name a well list instead of
+    //!   a group, e.g., GOPR '*WL_PR', in which case the vector accumulates
+    //!   the quantity over the wells currently on the list.  That works for
+    //!   anything derived from well level results.  The keywords here
+    //!   instead report a property of the group object itself--its control
+    //!   mode, guide rate, targets, efficiency factor, or GCONSUMP
+    //!   consumption and import--and a well list has none of those.
+    //!
+    //!   Network node keywords such as GPR are handled as node vectors, and a
+    //!   well list is never a network node, so those are not listed here.
+    bool is_wlist_unsupported_group_keyword(const std::string& keyword)
+    {
+        static const auto unsupported = keyword_set {
+            // Efficiency factor
+            "GEFF",
+
+            // Control modes
+            "GMCTP", "GMCTW", "GMCTG",
+
+            // Guide rates
+            "GOPGR", "GGPGR", "GWPGR", "GVPGR",
+            "GOIGR", "GGIGR", "GWIGR", "GVIGR",
+
+            // Production and injection targets
+            "GOPRT", "GWPRT", "GGPRT", "GLPRT", "GVPRT",
+            "GWIRT", "GGIRT", "GVIRT",
+
+            // GCONSUMP gas consumption and import
+            "GGCR", "GGCT", "GGIMR", "GGIMT",
+        };
+
+        return is_in_set(unsupported, keyword);
     }
 
     bool need_node_names(const SUMMARYSection& sect)
@@ -1204,6 +1243,112 @@ void keywordW(SummaryConfig::keyword_list& list,
     }
 }
 
+//! \brief Group level summary vector for a named well list.
+//!
+//! \details Handles requests such as GOPR '*WL_PR', which accumulate a group
+//!   level quantity over the wells currently on the well list.  Keywords
+//!   that report properties of the group object itself are rejected.  A well
+//!   list that no WLIST keyword outside of ACTIONX ever creates is accepted,
+//!   with a warning, since an ACTIONX block may create it while the run is
+//!   in progress.  The vector is zero until the list exists.
+//!
+//! \param[in,out] list Summary vectors.  New vector appended if accepted.
+//! \param[in] param Prototype summary vector for the keyword.
+//! \param[in] wlist Well list name, including the leading asterisk.
+//! \param[in] location Input location of the request.
+//! \param[in] parseContext Error handling policy.
+//! \param[in,out] errors Error collection.
+//! \param[in] schedule Run's dynamic objects.  Used to check whether or not
+//!   the well list exists.
+//! \param[in] warnUnknownList Whether or not to issue a warning if the well
+//!   list is not created outside of ACTIONX blocks.
+void keywordGWellList(SummaryConfig::keyword_list& list,
+                      SummaryConfigNode            param,
+                      const std::string&           wlist,
+                      const KeywordLocation&       location,
+                      const ParseContext&          parseContext,
+                      ErrorGuard&                  errors,
+                      const Schedule&              schedule,
+                      const bool                   warnUnknownList = true)
+{
+    if (is_wlist_unsupported_group_keyword(param.keyword())) {
+        const auto msg = fmt::format("Summary keyword {{keyword}} is not "
+                                     "supported for well list {}\n"
+                                     "In {{file}} line {{line}}", wlist);
+
+        parseContext.handleError(ParseContext::SUMMARY_UNHANDLED_KEYWORD,
+                                 msg, location, errors);
+        return;
+    }
+
+    if (warnUnknownList && ! schedule.back().wlist_manager().hasList(wlist)) {
+        OpmLog::warning(OpmInputError::format
+                        (fmt::format("Well list {} in {{keyword}} is not "
+                                     "created outside of ACTIONX blocks.\n"
+                                     "The summary vector will be zero until "
+                                     "the list exists.\n"
+                                     "In {{file}} line {{line}}", wlist),
+                         location));
+    }
+
+    list.push_back(param.namedEntity(wlist));
+}
+
+//! \brief Group level vectors for well lists named by UDQ or ACTIONX
+//!   expressions.
+//!
+//! \details Expressions such as
+//!
+//!     DEFINE FUGPR_T1 GGPR '*GP_T1' /
+//!     GGPR '*GP_T1' > 400000 /
+//!
+//!   need the summary vector GGPR:*GP_T1, which no expansion of the bare
+//!   keyword GGPR over the run's groups will produce.
+//!
+//! \param[in,out] list Summary vectors.  New vectors appended.
+//! \param[in] named Summary vectors named in full by deck expressions.
+//! \param[in] keyword Restrict to this summary keyword.  Empty to include
+//!   all keywords.
+//! \param[in] location Input location to associate with the new vectors.
+//! \param[in] parseContext Error handling policy.
+//! \param[in,out] errors Error collection.
+//! \param[in] schedule Run's dynamic objects.
+//! \param[in] warnUnknownList Whether or not to issue a warning if a well
+//!   list is not created outside of ACTIONX blocks.
+void requisiteWellListGroupVectors(SummaryConfig::keyword_list&   list,
+                                   const RequisiteSummaryVectors& named,
+                                   const std::string&             keyword,
+                                   const KeywordLocation&         location,
+                                   const ParseContext&            parseContext,
+                                   ErrorGuard&                    errors,
+                                   const Schedule&                schedule,
+                                   const bool                     warnUnknownList)
+{
+    for (const auto& vector : named) {
+        if (! keyword.empty() && (vector.keyword != keyword)) {
+            continue;
+        }
+
+        if ((vector.arguments.size() != 1) ||
+            ! isWellListName(vector.arguments.front()) ||
+            is_udq(vector.keyword) ||
+            (parseKeywordCategory(vector.keyword) != SummaryConfigNode::Category::Group))
+        {
+            continue;
+        }
+
+        auto param = SummaryConfigNode {
+            vector.keyword, SummaryConfigNode::Category::Group, location
+        }
+        .parameterType(parseKeywordType(vector.keyword))
+        .isUserDefined(false);
+
+        keywordGWellList(list, std::move(param), vector.arguments.front(),
+                         location, parseContext, errors, schedule,
+                         warnUnknownList);
+    }
+}
+
 void keywordG(SummaryConfig::keyword_list& list,
               const std::string&           keyword,
               const KeywordLocation&       loc,
@@ -1259,6 +1404,10 @@ void keywordG(SummaryConfig::keyword_list& list,
     for (const auto& group : item.getData<std::string>()) {
         if (schedule.back().groups.has(group)) {
             list.push_back(param.namedEntity(group));
+        }
+        else if (isWellListName(group)) {
+            keywordGWellList(list, param, group, keyword.location(),
+                             parseContext, errors, schedule);
         }
         else {
             handleMissingGroup(parseContext, errors, keyword.location(), group);
@@ -2483,7 +2632,7 @@ void handleFLUXALL(SummaryConfig::keyword_list&    list,
 {
     using Cat = SummaryConfigNode::Category;
 
-    const auto named = FLUXALL_namedVectors(schedule);
+    const auto named = deckNamedSummaryVectors(schedule);
     const auto& udqConfig = schedule.getUDQConfig(schedule.size() - 1);
 
     auto unexpanded = std::vector<std::string>{};
@@ -2523,6 +2672,11 @@ void handleFLUXALL(SummaryConfig::keyword_list&    list,
             // UDQs and ACTIONX conditions may name FIELD as a group.
             keywordG(list, keyword, location, schedule,
                      /* excludeFieldFromGroupKw = */ false);
+
+            // They may also name a well list, e.g., GGPR '*GP_T1'.
+            requisiteWellListGroupVectors(list, named, keyword, location,
+                                          parseContext, errors, schedule,
+                                          /* warnUnknownList = */ true);
             break;
 
         case Cat::Field:
@@ -3166,6 +3320,23 @@ SummaryConfig::registerRequisiteUDQorActionSummaryKeys(const std::vector<std::st
                      extraFracturing,
                      excludeFieldFromGroupKw);
         }
+
+        // Group level quantities for well lists, e.g., GGPR '*GP_T1', are
+        // only identifiable from the expressions that name them.  Only
+        // consider those whose keyword is among the requested ones.
+        const auto requested = std::unordered_set<std::string> {
+            extraKeys.begin(), extraKeys.end()
+        };
+
+        auto wlistNodes = keyword_list{};
+        requisiteWellListGroupVectors(wlistNodes, deckNamedSummaryVectors(sched),
+                                      /* keyword = */ "", KeywordLocation{},
+                                      parseCtx, errors, sched,
+                                      /* warnUnknownList = */ false);
+
+        std::ranges::copy_if(wlistNodes, std::back_inserter(candidateSummaryNodes),
+                             [&requested](const auto& node)
+                             { return requested.contains(node.keyword()); });
     }
 
     std::ranges::sort(candidateSummaryNodes);

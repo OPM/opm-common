@@ -240,6 +240,127 @@ SummaryConfig createSummary(const std::string&  input,
     };
 }
 
+// Deck with two groups and a well list, '*WL_PR', of one well from each
+// group.  An ACTIONX block refers to a well list, '*WL_A', which is created
+// only in a later report step and a UDQ refers to the well list '*WL_PR'.
+std::string wlistDeck(const std::string& summary)
+{
+    return std::string { R"(RUNSPEC
+START
+  21 SEP 2020 /
+
+DIMENS
+  3 3 1 /
+
+OIL
+WATER
+GAS
+
+WELLDIMS
+  4 4 4 4 /
+
+ACTDIMS
+  4 40 20 20 /
+
+UDQDIMS
+  10* 'Y' /
+
+GRID
+
+DXV
+  3*100.0 /
+
+DYV
+  3*100.0 /
+
+DZV
+  5.0 /
+
+DEPTHZ
+  16*2000.0 /
+
+PORO
+  9*0.15 /
+
+PERMX
+  9*100.0 /
+
+COPY
+  PERMX PERMY /
+  PERMX PERMZ /
+/
+
+SUMMARY
+)" } + summary + R"(
+SCHEDULE
+
+GRUPTREE
+  'G1' 'FIELD' /
+  'G2' 'FIELD' /
+/
+
+WELSPECS
+  'P1' 'G1' 1 1 1* 'OIL' /
+  'P2' 'G2' 2 2 1* 'OIL' /
+  'P3' 'G2' 3 3 1* 'OIL' /
+/
+
+COMPDAT
+  'P1' 1 1 1 1 'OPEN' 1* 1* 0.5 /
+  'P2' 2 2 1 1 'OPEN' 1* 1* 0.5 /
+  'P3' 3 3 1 1 'OPEN' 1* 1* 0.5 /
+/
+
+WLIST
+  '*WL_PR' 'NEW' 'P1' 'P2' /
+/
+
+UDQ
+DEFINE FUGPR_T1 GGPR '*WL_PR' /
+/
+
+ACTIONX
+  'ACT1' 10 1 /
+  GGOR '*WL_A' > 1000.0 /
+/
+
+WELOPEN
+  'P3' 'SHUT' /
+/
+
+ENDACTIO
+
+TSTEP
+  10 /
+
+WLIST
+  '*WL_A' 'NEW' 'P3' /
+/
+
+TSTEP
+  10 /
+
+END
+)";
+}
+
+struct WListCase
+{
+    explicit WListCase(const std::string&  summary,
+                       const ParseContext& parseContext = ParseContext{})
+        : deck     { Parser{}.parseString(wlistDeck(summary)) }
+        , es       { deck }
+        , schedule { deck, es, parseContext, errors, std::make_shared<const Python>() }
+        , smry     { deck, schedule, es.fieldProps(), es.aquifer(), parseContext, errors }
+    {}
+
+    ErrorGuard    errors{};
+    Deck          deck;
+    EclipseState  es;
+    Schedule      schedule;
+    SummaryConfig smry;
+};
+
 } // Anonymous namespace
 
 BOOST_AUTO_TEST_CASE(wells_all) {
@@ -835,6 +956,150 @@ BOOST_AUTO_TEST_CASE(INVALID_GROUP) {
 
     parseContext.updateKey( ParseContext::SUMMARY_UNKNOWN_GROUP , InputErrorAction::IGNORE );
     BOOST_CHECK_NO_THROW( createSummary( input , parseContext ));
+}
+
+BOOST_AUTO_TEST_CASE(GROUP_KEYWORD_WELL_LIST)
+{
+    const auto cse = WListCase { R"(
+GOPR
+  '*WL_PR' 'G1' /
+GWCT
+  '*WL_PR' /
+)" };
+
+    BOOST_CHECK_MESSAGE(cse.smry.hasSummaryKey("GOPR:*WL_PR"),
+                        R"(Summary must configure "GOPR" for well list '*WL_PR')");
+    BOOST_CHECK_MESSAGE(cse.smry.hasSummaryKey("GOPR:G1"),
+                        R"(Summary must configure "GOPR" for group 'G1')");
+    BOOST_CHECK_MESSAGE(cse.smry.hasSummaryKey("GWCT:*WL_PR"),
+                        R"(Summary must configure "GWCT" for well list '*WL_PR')");
+    BOOST_CHECK_MESSAGE(! cse.smry.hasSummaryKey("GOPR:G2"),
+                        R"(Summary must NOT configure "GOPR" for group 'G2')");
+
+    // The node is a group level node.
+    const auto pos = std::ranges::find_if(cse.smry, [](const auto& node)
+    { return node.uniqueNodeKey() == "GOPR:*WL_PR"; });
+
+    BOOST_REQUIRE_MESSAGE(pos != cse.smry.end(), R"(Must have "GOPR:*WL_PR")");
+    BOOST_CHECK_MESSAGE(pos->category() == SummaryConfigNode::Category::Group,
+                        R"("GOPR:*WL_PR" must be a group level vector)");
+}
+
+BOOST_AUTO_TEST_CASE(GROUP_KEYWORD_WELL_LIST_DEFINED_IN_ACTIONX)
+{
+    // '*WL_X' is never created, but could have been created by an ACTIONX
+    // block.  Accept the vector, even with a strict error policy.
+    auto parseContext = ParseContext{};
+    parseContext.update(ParseContext::SUMMARY_UNKNOWN_GROUP, InputErrorAction::THROW_EXCEPTION);
+
+    const auto cse = WListCase { R"(
+GOPR
+  '*WL_X' /
+)", parseContext };
+
+    BOOST_CHECK_MESSAGE(cse.smry.hasSummaryKey("GOPR:*WL_X"),
+                        R"(Summary must configure "GOPR" for unknown well list '*WL_X')");
+}
+
+BOOST_AUTO_TEST_CASE(GROUP_KEYWORD_WELL_LIST_UNSUPPORTED)
+{
+    const auto input = std::string { R"(
+GEFF
+  '*WL_PR' /
+GMCTP
+  '*WL_PR' /
+GOPRT
+  '*WL_PR' /
+)" };
+
+    {
+        auto parseContext = ParseContext{};
+        parseContext.update(ParseContext::SUMMARY_UNHANDLED_KEYWORD, InputErrorAction::THROW_EXCEPTION);
+
+        BOOST_CHECK_THROW(WListCase(input, parseContext), OpmInputError);
+    }
+
+    {
+        auto parseContext = ParseContext{};
+        parseContext.update(ParseContext::SUMMARY_UNHANDLED_KEYWORD, InputErrorAction::IGNORE);
+
+        const auto cse = WListCase { input, parseContext };
+
+        for (const auto* key : { "GEFF:*WL_PR", "GMCTP:*WL_PR", "GOPRT:*WL_PR" }) {
+            BOOST_CHECK_MESSAGE(! cse.smry.hasSummaryKey(key),
+                                "Summary must NOT configure " << key);
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(GROUP_KEYWORD_INVALID_WELL_LIST_NAME)
+{
+    // None of these are well list names, so they are missing groups.
+    for (const auto* name : { "'*wl_pr'", "'*WL*'", "'*WL_PROD1'" }) {
+        const auto input = fmt::format("GOPR\n  {} /\n", name);
+
+        {
+            auto parseContext = ParseContext{};
+            parseContext.update(ParseContext::SUMMARY_UNKNOWN_GROUP, InputErrorAction::THROW_EXCEPTION);
+
+            BOOST_CHECK_THROW(WListCase(input, parseContext), OpmInputError);
+        }
+
+        {
+            auto parseContext = ParseContext{};
+            parseContext.update(ParseContext::SUMMARY_UNKNOWN_GROUP, InputErrorAction::IGNORE);
+
+            const auto cse = WListCase { input, parseContext };
+            BOOST_CHECK_MESSAGE(cse.smry.size() == std::size_t{0},
+                                "Summary must not configure vector for " << name);
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(REQUISITE_UDQ_ACTIONX_WELL_LIST)
+{
+    auto cse = WListCase { "FOPR\n" };
+
+    BOOST_CHECK_MESSAGE(! cse.smry.hasSummaryKey("GGPR:*WL_PR"),
+                        R"(Summary must NOT initially configure "GGPR:*WL_PR")");
+
+    const auto newNodes = cse.smry
+        .registerRequisiteUDQorActionSummaryKeys({ "GGPR", "GGOR" }, cse.es, cse.schedule);
+
+    // UDQ: DEFINE FUGPR_T1 GGPR '*WL_PR'
+    BOOST_CHECK_MESSAGE(cse.smry.hasSummaryKey("GGPR:*WL_PR"),
+                        R"(UDQ must configure "GGPR:*WL_PR")");
+
+    // ACTIONX: GGOR '*WL_A' > 1000.0
+    BOOST_CHECK_MESSAGE(cse.smry.hasSummaryKey("GGOR:*WL_A"),
+                        R"(ACTIONX must configure "GGOR:*WL_A")");
+
+    // Bare keyword expansion over the run's groups is unchanged.
+    for (const auto* key : { "GGPR:G1", "GGPR:G2", "GGPR:FIELD", "GGOR:G1" }) {
+        BOOST_CHECK_MESSAGE(cse.smry.hasSummaryKey(key),
+                            "Requisite keys must configure " << key);
+    }
+
+    // No cross product of keywords and well lists.
+    BOOST_CHECK_MESSAGE(! cse.smry.hasSummaryKey("GGOR:*WL_PR"),
+                        R"(Requisite keys must NOT configure "GGOR:*WL_PR")");
+    BOOST_CHECK_MESSAGE(! cse.smry.hasSummaryKey("GGPR:*WL_A"),
+                        R"(Requisite keys must NOT configure "GGPR:*WL_A")");
+
+    const auto wlistNodes = std::ranges::count_if(newNodes, [](const auto& node)
+    { return node.namedEntity().starts_with('*'); });
+
+    BOOST_CHECK_EQUAL(wlistNodes, 2);
+}
+
+BOOST_AUTO_TEST_CASE(FLUXALL_WELL_LIST)
+{
+    const auto cse = WListCase { "FLUXALL\n" };
+
+    BOOST_CHECK_MESSAGE(cse.smry.hasSummaryKey("GGPR:*WL_PR"),
+                        R"(FLUXALL must configure "GGPR:*WL_PR")");
+    BOOST_CHECK_MESSAGE(cse.smry.hasSummaryKey("GGOR:*WL_A"),
+                        R"(FLUXALL must configure "GGOR:*WL_A")");
 }
 
 BOOST_AUTO_TEST_CASE( REMOVE_DUPLICATED_ENTRIES ) {

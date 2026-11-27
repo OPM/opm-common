@@ -899,6 +899,62 @@ BOOST_AUTO_TEST_CASE(TestWLIST)
     }
 }
 
+BOOST_AUTO_TEST_CASE(TestGroupQuantity_WellList)
+{
+    // GGPR '*GP_T1' > 400000 /
+    //
+    // A group level quantity for a well list is a single value accumulated
+    // over the wells on the list, not a set of well values.
+    const auto ast = Action::AST {{ "GGPR", "*GP_T1", ">", "400000" }};
+
+    {
+        auto vectors = RequisiteSummaryVectors{};
+        ast.requisiteSummaryVectors(vectors);
+
+        const auto expect = RequisiteSummaryVector { "GGPR", { "*GP_T1" } };
+        BOOST_CHECK_MESSAGE(vectors.contains(expect),
+                            R"(Condition must require summary vector "GGPR:*GP_T1")");
+    }
+
+    auto st = SummaryState { TimeService::now(), 0.0 };
+    auto wlm = WListManager{};
+    wlm.newList("*GP_T1", { "W1", "W2" });
+
+    // Well level values must not take part in group level evaluation.
+    st.update_well_var("W1", "WGPR", 500000.0);
+    st.update_well_var("W2", "WGPR", 500000.0);
+
+    const auto context = Action::Context { st, wlm };
+
+    st.update_group_var("*GP_T1", "GGPR", 300000.0);
+    {
+        const auto res = ast.eval(context);
+        BOOST_CHECK_MESSAGE(! res.conditionSatisfied(),
+                            "Condition must NOT be satisfied");
+    }
+
+    st.update_group_var("*GP_T1", "GGPR", 500000.0);
+    {
+        const auto res = ast.eval(context);
+        BOOST_CHECK_MESSAGE(res.conditionSatisfied(),
+                            "Condition must be satisfied");
+        BOOST_CHECK_MESSAGE(res.matches().wells().empty(),
+                            "Group level condition must not match any wells");
+    }
+}
+
+BOOST_AUTO_TEST_CASE(TestGroupQuantity_WellListTemplate)
+{
+    // A well list template is still not supported for group quantities.
+    const auto ast = Action::AST {{ "GGPR", "*GP*", ">", "400000" }};
+
+    auto st = SummaryState { TimeService::now(), 0.0 };
+    auto wlm = WListManager{};
+    const auto context = Action::Context { st, wlm };
+
+    BOOST_CHECK_THROW(ast.eval(context), std::logic_error);
+}
+
 BOOST_AUTO_TEST_CASE(TestFieldAND)
 {
     Action::AST ast({"FMWPR", ">=", "4", "AND", "WUPR3", "OP*", "=", "1"});
