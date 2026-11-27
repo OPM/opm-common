@@ -564,6 +564,23 @@ public:
     Scalar SncrtWAG() const
     { return SncrtWAG_; }
 
+    /*!
+     * \brief Non-wetting saturation below which the non-wetting phase is immobile
+     *        on the current WAG imbibition curve.
+     *
+     * The relative permeability is zero (with a zero derivative) below this
+     * saturation, and it increases steeply above it if the trapped part of the
+     * historical maximum saturation is large. Returns a negative value if WAG
+     * hysteresis is not active, or if nothing is trapped on the current curve.
+     */
+    Scalar SnTrappedWAG() const
+    {
+        if (!gasOilHysteresisWAG() || !(SncrtWAG_ > baseWAG_ + saturationEpsilon_)) {
+            return -1.0;
+        }
+        return SncrtWAG_;
+    }
+
     Scalar Snmaxd() const
     { return Snmaxd_; }
 
@@ -823,6 +840,10 @@ public:
                     isDrain_ = false;
                     SncrtWAGImb_ = SncrtWAG_;
                     krnSwWAG_ = krnSw;
+                    // A next drainage curve may start right away, also for a gas
+                    // saturation increase below the tolerance.
+                    krnSwDrainStartNxt_ = krnSw;
+                    swatImbStartNxt_ = std::max(Swco_, swCur);
                     updateParams = true;
                 }
             }
@@ -866,7 +887,8 @@ public:
                 }
                 else {
                     // Start secondary drainage from the current point on the two-phase curve.
-                    krnImbStartNxt_ = (krnSw <= krnSwMdc_ + tolWAG_)
+                    // Same curve selection as in EclHysteresisTwoPhaseLaw::twoPhaseSatKrn().
+                    krnImbStartNxt_ = (krnSw <= krnSwMdc_)
                         ? EffLawT::twoPhaseSatKrn(drainageParams(), krnSw)
                         : EffLawT::twoPhaseSatKrn(drainageParams(), computeSwf(krnSw));
                     krnSwDrainStart_ = std::min(krnSw, Scalar(1.0 - SncrtWAGImb_));
@@ -1120,7 +1142,7 @@ private:
             }
         }
 
-        if (!wasDrain_ && !isDrain_) { //Moving along current imb curve
+        if (!isDrain_) { // Starting or moving along current imb curve
             krnDrainStartNxt_ = EffLawT::twoPhaseSatKrn(drainageParams(), std::min(krnSwWAG_, Scalar(1.0 - SncrtWAG_)));
             if (nState_ > 1) {
                 krnImbStartNxt_ = computeKrImbWAG(krnSwWAG_);

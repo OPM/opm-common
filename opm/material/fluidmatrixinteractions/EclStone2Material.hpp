@@ -233,6 +233,16 @@ public:
         return params.gasOilParams().SnTrapped(maximumTrapping) - Swco;
     }
 
+    /*!
+     * \brief Gas saturation below which gas is immobile on the current WAG
+     *        imbibition curve, or a negative value if this does not apply.
+     */
+    static Scalar trappedGasSaturationWAG(const Params& params)
+    {
+        const Scalar snTrapped = params.gasOilParams().SnTrappedWAG();
+        return snTrapped < 0.0 ? snTrapped : snTrapped - params.Swl();
+    }
+
     static Scalar trappedOilSaturation(const Params& params, bool maximumTrapping)
     {
         return params.oilWaterParams().SnTrapped(maximumTrapping) + params.gasOilParams().SwTrapped();

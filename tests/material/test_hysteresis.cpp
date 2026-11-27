@@ -4695,6 +4695,87 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(WagPrimaryImbibition, Scalar, Types)
     }
 }
 
+// The primary imbibition curve is used right below the reversal point, also
+// within the tolerance used to update the hysteresis state. For a small
+// historical maximum gas saturation, the whole imbibition curve is narrower
+// than that tolerance, and krg would otherwise jump from zero to the drainage
+// value.
+BOOST_AUTO_TEST_CASE_TEMPLATE(WagKrgContinuousBelowReversal, Scalar, Types)
+{
+    const double C = 3.0;
+    const double tol = wagTol<Scalar>();
+    for (const double sghy : { 0.011, 0.4 }) {
+        BOOST_TEST_CONTEXT("sghy = " << sghy) {
+            WagCell<Scalar> cell(wagHysterDeck(C, 0.5, 1.0e-6, 0.001, 0.0));
+            const Scalar sw = cell.swco;
+            for (int i = 0; i <= 20; ++i) {
+                cell.step(sw, sghy * i / 20.0);
+            }
+            const double sgt = wagTrapped(sghy, C, 0.0);
+            for (int i = 0; i <= 30; ++i) {
+                const double sg = sghy - 0.0015 + i * 0.0001;
+                const double expected = (sg >= sghy) ? wagK(sg) : wagK(wagFree(sg - sgt, C));
+                BOOST_CHECK_SMALL(cell.krg(sw, sg) - expected, tol);
+            }
+        }
+    }
+}
+
+// Gas saturation below which gas is immobile on the WAG imbibition curve, as
+// used to limit Newton updates of the gas saturation.
+BOOST_AUTO_TEST_CASE_TEMPLATE(WagTrappedGasSaturation, Scalar, Types)
+{
+    using MaterialLaw = typename WagCell<Scalar>::MaterialLaw;
+    const double C = 3.0;
+    const double tol = wagTol<Scalar>();
+    WagCell<Scalar> cell(wagHysterDeck(C, 0.5, 0.1, 0.001, 0.0));
+    const Scalar sw = cell.swco;
+    const auto trappedWAG = [&cell]() {
+        return MaterialLaw::trappedGasSaturationWAG(cell.manager.materialLawParams(0));
+    };
+
+    // Nothing trapped before the gas arrives.
+    cell.step(sw, 0.0);
+    BOOST_CHECK_LT(trappedWAG(), 0.0);
+
+    // Small historical maximum gas saturation: steep imbibition curve.
+    for (const double sg : { 0.005, 0.01, 0.011 }) {
+        cell.step(sw, sg);
+    }
+    const double sgt = wagTrapped(0.011, C, 0.0);
+    BOOST_CHECK_SMALL(trappedWAG() - sgt, tol);
+    BOOST_CHECK_SMALL(double(trappedWAG() - cell.trappedGas()), tol);
+
+    // The threshold is unchanged on the imbibition curve, gas is immobile below
+    // it and mobile above it.
+    cell.step(sw, 0.0108);
+    BOOST_CHECK_SMALL(trappedWAG() - sgt, tol);
+    BOOST_CHECK_SMALL(double(cell.krg(sw, sgt - 1.0e-4)), 1.0e-10);
+    BOOST_CHECK_GT(double(cell.krg(sw, sgt + 1.0e-4)), 1.0e-3);
+
+    // Three-phase cycle: the threshold follows the trapped saturation.
+    WagCell<Scalar> cell3(wagHysterDeck(C, 0.5, 0.1, 0.001, 0.0));
+    for (int i = 0; i <= 30; i += 2) {
+        cell3.step(0.3, i / 100.0);
+    }
+    cell3.step(0.3, 0.25);
+    BOOST_CHECK_EQUAL(cell3.gasOil().nState(), 2);
+    BOOST_CHECK_GT(double(MaterialLaw::trappedGasSaturationWAG(cell3.manager.materialLawParams(0))), 0.0);
+    BOOST_CHECK_SMALL(MaterialLaw::trappedGasSaturationWAG(cell3.manager.materialLawParams(0))
+                      - cell3.trappedGas(), Scalar(tol));
+
+    // Not applicable without WAG hysteresis.
+    std::string deck = wagHysterDeck(C, 0.5, 0.1, 0.001, 0.0);
+    const auto pos = deck.find("WAGHYSTR");
+    deck.erase(pos, deck.find("/\n", pos) + 2 - pos);
+    WagCell<Scalar> noWag(deck);
+    for (int i = 0; i <= 40; i += 2) {
+        noWag.step(sw, i / 100.0);
+    }
+    noWag.step(sw, 0.3);
+    BOOST_CHECK_LT(MaterialLaw::trappedGasSaturationWAG(noWag.manager.materialLawParams(0)), 0.0);
+}
+
 // Three-phase cycles beyond nState = 2: secondary drainage with reduction,
 // imbibition curves based on the trapped saturation of the previous cycle,
 // fallback below the start of the drainage curve, and zero relperm at the
@@ -4795,6 +4876,39 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(WagThreePhaseCycles, Scalar, Types)
         BOOST_CHECK_SMALL(cell.step(sw, sg) - expected, tol);
     }
     BOOST_CHECK_EQUAL(cell.gasOil().nState(), 5);
+}
+
+// A reversal from drainage to imbibition, followed by a gas saturation increase
+// smaller than the state update tolerance. The next drainage curve must then
+// start at the current point of the imbibition curve, also right after the
+// first imbibition update.
+BOOST_AUTO_TEST_CASE_TEMPLATE(WagNextDrainageAfterFirstImbibitionUpdate, Scalar, Types)
+{
+    const double C = 2.0;
+    const double alpha = 0.5;
+    const double tol = wagTol<Scalar>();
+    WagCell<Scalar> cell(wagHysterDeck(C, alpha, 1.0e-6, 0.001, 0.0));
+    const Scalar sw = 0.3;
+
+    cell.step(sw, 0.0);
+    cell.step(sw, 0.0);
+    for (int i = 2; i <= 40; i += 2) {
+        cell.step(sw, i / 100.0);
+    }
+    BOOST_CHECK_EQUAL(cell.gasOil().nState(), 2);
+
+    // First imbibition update, then krg must be continuous at the reversal.
+    const double sgRev = 0.39;
+    const Scalar krgRev = cell.step(sw, sgRev);
+    for (const double dsg : { 1.0e-6, 1.0e-5, 1.0e-4, 5.0e-4 }) {
+        BOOST_TEST_CONTEXT("dsg = " << dsg) {
+            BOOST_CHECK_SMALL(double(cell.krg(sw, sgRev + dsg) - krgRev), 2.0 * dsg + tol);
+            BOOST_CHECK_SMALL(double(cell.krg(sw, sgRev - dsg) - krgRev), 2.0 * dsg + tol);
+        }
+    }
+    // A sub-tolerance increase continues the imbibition state.
+    const Scalar krgUp = cell.step(sw, sgRev + 5.0e-4);
+    BOOST_CHECK_SMALL(double(krgUp - krgRev), 2.0 * 5.0e-4 + tol);
 }
 
 // Gas arriving after a period without mobile gas: the drainage starts at the
@@ -4902,3 +5016,4 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(WagTinyFreeGasAtReversal, Scalar, Types)
         }
     }
 }
+
