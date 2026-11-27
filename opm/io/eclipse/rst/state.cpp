@@ -555,8 +555,12 @@ RstState RstState::load(std::shared_ptr<EclIO::RestartFileView> rstView,
             .z = rstView->getKeyword<std::string>("ZACN")
         };
 
+        const auto xact = rstView->hasKeyword<double>("XACT")
+            ? std::span<const double> { rstView->getKeyword<double>("XACT") }
+            : std::span<const double> {};
+
         state.add_actions(parser, actionArrays, conditions,
-                          rstView->getKeyword<std::string>("ZLACT"));
+                          rstView->getKeyword<std::string>("ZLACT"), xact);
     }
 
     return state;
@@ -796,14 +800,18 @@ void RstState::add_udqs(std::shared_ptr<EclIO::RestartFileView> rstView)
 void RstState::add_actions(const Parser&                parser,
                            ActionData<float>            actionArrays,
                            ActionData<double>           conditions,
-                           std::span<const std::string> zlact)
+                           std::span<const std::string> zlact,
+                           std::span<const double>      xact)
 {
     const auto num_actions = static_cast<std::size_t>(this->header.num_action);
     const auto zlact_action_size = zlact.size() / num_actions;
+    const auto xact_action_size = xact.size() / num_actions;
 
     for (std::size_t index = 0; index < num_actions; ++index) {
         auto actionConditions = this->restore_conditions(conditions, index);
-        this->create_action(actionArrays, index, std::move(actionConditions));
+        this->create_action(actionArrays,
+                            xact.subspan(index * xact_action_size, xact_action_size),
+                            index, std::move(actionConditions));
 
         this->restore_action_keywords(parser,
                                       zlact.subspan(index * zlact_action_size, zlact_action_size));
@@ -871,6 +879,7 @@ RstState::restore_conditions(ActionData<double> conditions,
 
 void
 RstState::create_action(ActionData<float>                   actionArrays,
+                        std::span<const double>             xact,
                         const std::size_t                   index,
                         std::vector<RstAction::Condition>&& conditions)
 {
@@ -886,7 +895,12 @@ RstState::create_action(ActionData<float>                   actionArrays,
     const auto max_run = iact[5];
     const auto run_count = iact[2] - 1;
 
-    const auto min_wait = minWait(sact[3], this->unit_system);
+    // XACT holds the minimum wait and last run in seconds, exactly.
+    const auto precise = xact.size() > 4;
+
+    const auto min_wait = precise
+        ? xact[3]
+        : minWait(sact[3], this->unit_system);
 
     if (!this->header.inferred_start_from_elapsed_simtime.has_value()) {
         throw std::runtime_error {
@@ -897,8 +911,11 @@ RstState::create_action(ActionData<float>                   actionArrays,
 
     const auto start_time = *this->header.inferred_start_from_elapsed_simtime;
 
-    const auto last_run_time = asTimePoint(start_time)
-        + lastRunElapsed(sact[4], this->unit_system);
+    const auto last_run_elapsed = precise
+        ? std::chrono::round<std::chrono::milliseconds>(std::chrono::duration<double> { xact[4] })
+        : lastRunElapsed(sact[4], this->unit_system);
+
+    const auto last_run_time = asTimePoint(start_time) + last_run_elapsed;
 
     this->actions.emplace_back(name, max_run, run_count, min_wait,
                                this->header.sim_time(),
