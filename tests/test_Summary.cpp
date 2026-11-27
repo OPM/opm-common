@@ -3544,6 +3544,21 @@ BOOST_AUTO_TEST_CASE(inter_region_flows_user_def_regset)
     BOOST_CHECK_CLOSE(ecl_sum_get_general_var(resp, 0, "RWFT-ABC:1-2"), 0 * 86400.0f * 0.0f, 1.0e-6f);
     BOOST_CHECK_CLOSE(ecl_sum_get_general_var(resp, 1, "RWFT-ABC:1-2"), 1 * 86400.0f * 0.0f, 1.0e-6f);
     BOOST_CHECK_CLOSE(ecl_sum_get_general_var(resp, 2, "RWFT-ABC:1-2"), 2 * 86400.0f * 0.0f, 1.0e-6f);
+
+    BOOST_CHECK_MESSAGE(ecl_sum_has_general_var(resp, "ROFR_ABC:2-12"),
+                        "Summary data must have ROFR_ABC:2-12");
+    BOOST_CHECK_CLOSE(ecl_sum_get_general_var(resp, 0, "ROFR_ABC:2-12"),
+                      86400.0f * 4.32f, 1.0e-6f);
+
+    BOOST_CHECK_MESSAGE(ecl_sum_has_general_var(resp, "RGFR_ABC:2-12"),
+                        "Summary data must have RGFR_ABC:2-12");
+    BOOST_CHECK_CLOSE(ecl_sum_get_general_var(resp, 0, "RGFR_ABC:2-12"),
+                      86400.0f * 10.98f, 1.0e-6f);
+
+    BOOST_CHECK_MESSAGE(ecl_sum_has_general_var(resp, "RWFR_ABC:2-12"),
+                        "Summary data must have RWFR_ABC:2-12");
+    BOOST_CHECK_CLOSE(ecl_sum_get_general_var(resp, 0, "RWFR_ABC:2-12"),
+                      86400.0f * 54.321f, 5.0e-6f);
 }
 
 BOOST_AUTO_TEST_CASE(BLOCK_VARIABLES)

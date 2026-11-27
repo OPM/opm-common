@@ -2818,6 +2818,15 @@ RGFR+XYZ
 1 3 /
 2 3 /
 /
+ROFR_XYZ
+1 3 /
+/
+RGFR_XYZ
+1 3 /
+/
+RWFR_XYZ
+1 3 /
+/
 
 RGFTL
 2 3 /
@@ -2826,12 +2835,15 @@ RGFTL
 
     const auto summary_config = createSummary(deck_string);
 
-    BOOST_CHECK_EQUAL(summary_config.size(), 8);
+    BOOST_CHECK_EQUAL(summary_config.size(), 11);
     BOOST_CHECK(summary_config.hasKeyword("ROFT"));
     BOOST_CHECK(summary_config.hasKeyword("ROFTGXYZ"));
     BOOST_CHECK(summary_config.hasKeyword("RGFT_XYZ"));
     BOOST_CHECK(summary_config.hasKeyword("RWFR-XYZ"));
     BOOST_CHECK(summary_config.hasKeyword("RGFR+XYZ"));
+    BOOST_CHECK(summary_config.hasKeyword("ROFR_XYZ"));
+    BOOST_CHECK(summary_config.hasKeyword("RGFR_XYZ"));
+    BOOST_CHECK(summary_config.hasKeyword("RWFR_XYZ"));
     BOOST_CHECK(summary_config.hasKeyword("RGFTL"));
 
     const auto fip_regions_ireg = summary_config.fip_regions_interreg_flow();
