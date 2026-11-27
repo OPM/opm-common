@@ -389,6 +389,10 @@ ROFT-ABC
   1 2 /
 /
 
+ROFR_ABC
+  2 12 /
+/
+
 RGFT+ABC
   1 2 /
 /
@@ -397,12 +401,20 @@ RGFT-ABC
   1 2 /
 /
 
+RGFR_ABC
+  2 12 /
+/
+
 RWFT+ABC
   1 2 /
 /
 
 RWFT-ABC
   1 2 /
+/
+
+RWFR_ABC
+  2 12 /
 /
 
 RWFR-
