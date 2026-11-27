@@ -755,6 +755,7 @@ private:
     };
     void switchToInjector();
     void switchToProducer();
+    void restoreInjMultFromRestart(const RestartIO::RstWell& rst_well);
 
     GuideRateTarget preferredPhaseAsGuideRatePhase() const;
 

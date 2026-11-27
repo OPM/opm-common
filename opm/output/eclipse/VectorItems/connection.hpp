@@ -66,6 +66,9 @@ namespace Opm::RestartIO::Helpers::VectorItems {
 
             EffectiveLength = 31, // Effective length of connection's perforation interval.
 
+            InjMultGradient  = 35, // WINJMULT(3) multiplier gradient in CREV/CIRR mode
+            InjMultFracPress = 36, // WINJMULT(2) fracture pressure in CREV/CIRR mode
+
             StaticDFacCorrCoeff = 37, // Static component of Forchheimer
                                       // D-factor correlation.
 
@@ -97,6 +100,11 @@ namespace Opm::RestartIO::Helpers::VectorItems {
             GasRate_Copy    =  19,  // Surface Flow rate (gas)
 
             Pressure   = 34,  // Connection pressure value
+
+            InjMult    = 47,  // Injectivity multiplier (WINJMULT).  1.0
+                              // when the well has WINJMULT, 0 otherwise.
+            InjMultMax = 48,  // Injectivity multiplier, retained
+                              // (maximum) value for CIRR.
 
             ResVRate     = 49,  // Reservoir voidage rate
             VoidPrTotal  = 50,  // Total cumulative reservoir voidage volume production

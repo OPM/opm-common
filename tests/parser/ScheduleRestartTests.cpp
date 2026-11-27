@@ -27,6 +27,7 @@
 #include <opm/io/eclipse/RestartFileView.hpp>
 
 #include <opm/output/data/Cells.hpp>
+#include <opm/output/data/Wells.hpp>
 #include <opm/output/eclipse/AggregateAquiferData.hpp>
 #include <opm/output/eclipse/RestartIO.hpp>
 #include <opm/output/eclipse/RestartValue.hpp>
@@ -48,6 +49,7 @@
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQState.hpp>
+#include <opm/input/eclipse/Schedule/Well/WINJMULT.hpp>
 #include <opm/input/eclipse/Schedule/Well/WListManager.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
@@ -1467,6 +1469,290 @@ TSTEP
 
             BOOST_CHECK_EQUAL(restarted[1].actions()["A"].min_wait(),
                               base[1].actions()["A"].min_wait());
+        }
+    }
+}
+
+namespace {
+
+std::string winjmult_deck(const std::string& solution_body,
+                          const std::string& schedule_body)
+{
+    return R"(RUNSPEC
+DIMENS
+  5 5 3 /
+OIL
+WATER
+METRIC
+START
+  1 'JAN' 2020 /
+WELLDIMS
+  2 3 1 2 /
+GRID
+DXV
+  5*100 /
+DYV
+  5*100 /
+DZV
+  3*10 /
+DEPTHZ
+  36*2000 /
+PORO
+  75*0.3 /
+PERMX
+  75*100 /
+PERMY
+  75*100 /
+PERMZ
+  75*10 /
+SOLUTION
+)" + solution_body + R"(
+SCHEDULE
+)" + schedule_body;
+}
+
+const std::string winjmult_schedule = R"(
+WELSPECS
+  'WI1' 'G1' 5 5 1* 'WATER' /
+  'WI2' 'G1' 1 1 1* 'WATER' /
+/
+COMPDAT
+  'WI1' 5 5 1 3 'OPEN' /
+  'WI2' 1 1 1 3 'OPEN' /
+/
+WCONINJE
+  'WI1' 'WATER' 'OPEN' 'BHP' 1* 1* 400 /
+  'WI2' 'WATER' 'OPEN' 'BHP' 1* 1* 400 /
+/
+WINJMULT
+  'WI1' 350.0 0.001 'CIRR' 5 5 1 /
+  'WI1' 300.0 0.002 'CIRR' 5 5 2 /
+  'WI1' 360.0 0.003 'CIRR' 5 5 3 /
+  'WI2' 360.0 0.004 'WREV' /
+/
+TSTEP
+  3*1.0 /
+)";
+
+void write_winjmult_restart_file(const std::string& case_name,
+                                 const int          report_step)
+{
+    namespace OS = EclIO::OutputStream;
+    using measure = UnitSystem::measure;
+
+    const auto deck = Parser{}.parseFile(case_name + ".DATA");
+    const auto es = EclipseState { deck };
+    const auto sched = Schedule { deck, es, std::make_shared<Python>() };
+    const auto& grid = es.getInputGrid();
+
+    const auto num_cells = grid.getNumActive();
+    auto solution = data::Solution {
+        { "PRESSURE", data::CellData { measure::pressure, {}, data::TargetType::RESTART_SOLUTION } },
+        { "SWAT",     data::CellData { measure::identity, {}, data::TargetType::RESTART_SOLUTION } },
+    };
+    solution.data<double>("PRESSURE").assign(num_cells, 250.0);
+    solution.data<double>("SWAT").assign(num_cells, 0.3);
+
+    auto wells = data::Wells {};
+    {
+        auto& wi1 = wells["WI1"];
+        for (auto k = 0; k < 3; ++k) {
+            auto& conn = wi1.connections.emplace_back();
+            conn.index = grid.getGlobalIndex(4, 4, k);
+            conn.inj_mult = 1.5 + k;
+        }
+    }
+
+    auto summary_state = SummaryState { TimeService::now(), 0.0 };
+
+    auto aquifer_data = std::optional<RestartIO::Helpers::AggregateAquiferData>{};
+    auto rst_file = OS::Restart {
+        OS::ResultSet { "./", case_name }, report_step,
+        OS::Formatted { false }, OS::Unified { false }
+    };
+
+    RestartIO::save(rst_file, report_step, sched.seconds(report_step),
+                    RestartValue { std::move(solution), std::move(wells), {}, {} },
+                    es, grid, sched,
+                    Action::State{}, WellTestState{},
+                    summary_state, UDQState{ 1 },
+                    aquifer_data);
+}
+
+} // Anonymous namespace
+
+BOOST_AUTO_TEST_CASE(RestartWINJMULT)
+{
+    WorkArea work {};
+
+    const auto report_step = 2;
+    write_file("BASE.DATA", winjmult_deck("", winjmult_schedule));
+    write_winjmult_restart_file("BASE", report_step);
+    write_file("RESTART.DATA",
+               winjmult_deck(fmt::format("RESTART\n  'BASE' {} /\n", report_step),
+                             "SKIPREST\n" + winjmult_schedule));
+
+    const auto& [sched, restart_sched, rst_state] =
+        load_schedule_pair("BASE.DATA", "RESTART.DATA",
+                           fmt::format("BASE.X{:04d}", report_step), report_step);
+
+    // Restart file contents
+    {
+        const auto& wi1 = rst_state.get_well("WI1");
+        BOOST_CHECK_EQUAL(wi1.inj_mult_mode, 2);
+        BOOST_REQUIRE_EQUAL(wi1.connections.size(), std::size_t{3});
+        for (auto k = 0; k < 3; ++k) {
+            BOOST_CHECK_CLOSE(wi1.connections[k].inj_mult, 1.5 + k, 1.0e-8);
+        }
+        BOOST_CHECK_CLOSE(wi1.connections[0].inj_mult_frac_press, 350.0e5, 1.0e-5);
+        BOOST_CHECK_CLOSE(wi1.connections[1].inj_mult_frac_press, 300.0e5, 1.0e-5);
+        BOOST_CHECK_CLOSE(wi1.connections[2].inj_mult_frac_press, 360.0e5, 1.0e-5);
+        BOOST_CHECK_CLOSE(wi1.connections[2].inj_mult_gradient, 0.003e-5, 1.0e-5);
+
+        const auto& wi2 = rst_state.get_well("WI2");
+        BOOST_CHECK_EQUAL(wi2.inj_mult_mode, 0);
+        BOOST_CHECK_CLOSE(wi2.inj_mult_frac_press, 360.0e5, 1.0e-5);
+        BOOST_CHECK_CLOSE(wi2.inj_mult_gradient, 0.004e-5, 1.0e-5);
+        for (const auto& conn : wi2.connections) {
+            BOOST_CHECK_EQUAL(conn.inj_mult_frac_press, 0.0);
+            BOOST_CHECK_CLOSE(conn.inj_mult, 1.0, 1.0e-8);
+        }
+    }
+
+    // Restored WINJMULT configuration
+    {
+        const auto& wi1 = restart_sched.getWell("WI1", report_step);
+        BOOST_CHECK(wi1.getInjMultMode() == Well::InjMultMode::CIRR);
+
+        const auto& conns = wi1.getConnections();
+        BOOST_REQUIRE_EQUAL(conns.size(), std::size_t{3});
+
+        BOOST_CHECK_CLOSE(conns[0].injmult().fracture_pressure, 350.0e5, 1.0e-5);
+        BOOST_CHECK_CLOSE(conns[0].injmult().multiplier_gradient, 0.001e-5, 1.0e-5);
+
+        BOOST_CHECK_CLOSE(conns[1].injmult().fracture_pressure, 300.0e5, 1.0e-5);
+        BOOST_CHECK_CLOSE(conns[1].injmult().multiplier_gradient, 0.002e-5, 1.0e-5);
+
+        BOOST_CHECK_CLOSE(conns[2].injmult().fracture_pressure, 360.0e5, 1.0e-5);
+        BOOST_CHECK_CLOSE(conns[2].injmult().multiplier_gradient, 0.003e-5, 1.0e-5);
+
+        const auto& wi2 = restart_sched.getWell("WI2", report_step);
+        BOOST_CHECK(wi2.getInjMultMode() == Well::InjMultMode::WREV);
+        BOOST_REQUIRE(wi2.aciveWellInjMult());
+        BOOST_CHECK_CLOSE(wi2.getWellInjMult().fracture_pressure, 360.0e5, 1.0e-5);
+        BOOST_CHECK_CLOSE(wi2.getWellInjMult().multiplier_gradient, 0.004e-5, 1.0e-5);
+        for (const auto& conn : wi2.getConnections()) {
+            BOOST_CHECK(!conn.activeInjMult());
+        }
+    }
+
+    for (const auto* wname : { "WI1", "WI2" }) {
+        BOOST_CHECK(sched.getWell(wname, report_step).getInjMultMode() ==
+                    restart_sched.getWell(wname, report_step).getInjMultMode());
+    }
+
+}
+
+namespace {
+
+// Connection level data must survive a period of well level (WREV) mode,
+// and well level data a period of connection level (CIRR) mode.
+const std::string winjmult_mode_switch_schedule = R"(
+WELSPECS
+  'WI1' 'G1' 5 5 1* 'WATER' /
+  'WI2' 'G1' 1 1 1* 'WATER' /
+/
+COMPDAT
+  'WI1' 5 5 1 3 'OPEN' /
+  'WI2' 1 1 1 3 'OPEN' /
+/
+WCONINJE
+  'WI1' 'WATER' 'OPEN' 'BHP' 1* 1* 400 /
+  'WI2' 'WATER' 'OPEN' 'BHP' 1* 1* 400 /
+/
+WINJMULT
+  'WI1' 350.0 0.001 'CREV' 5 5 1 /
+  'WI1' 300.0 0.002 'CREV' 5 5 2 /
+/
+TSTEP
+  1.0 /
+WINJMULT
+  'WI1' 360.0 0.003 'WREV' /
+/
+TSTEP
+  1.0 /
+WINJMULT
+  'WI1' 340.0 0.004 'CIRR' 5 5 1 /
+/
+TSTEP
+  1.0 /
+TSTEP
+  1.0 /
+)";
+
+void check_injmult_equal(const InjMult& base, const InjMult& restarted)
+{
+    BOOST_CHECK_CLOSE(restarted.fracture_pressure, base.fracture_pressure, 1.0e-5);
+    BOOST_CHECK_CLOSE(restarted.multiplier_gradient, base.multiplier_gradient, 1.0e-5);
+}
+
+void check_injmult_equal(const Well& base, const Well& restarted)
+{
+    BOOST_CHECK(restarted.getInjMultMode() == base.getInjMultMode());
+
+    BOOST_REQUIRE_EQUAL(restarted.aciveWellInjMult(), base.aciveWellInjMult());
+    if (base.aciveWellInjMult()) {
+        check_injmult_equal(base.getWellInjMult(), restarted.getWellInjMult());
+    }
+
+    const auto& base_conns = base.getConnections();
+    const auto& rst_conns = restarted.getConnections();
+    BOOST_REQUIRE_EQUAL(rst_conns.size(), base_conns.size());
+    for (auto i = 0*base_conns.size(); i < base_conns.size(); ++i) {
+        BOOST_REQUIRE_EQUAL(rst_conns[i].activeInjMult(), base_conns[i].activeInjMult());
+        if (base_conns[i].activeInjMult()) {
+            check_injmult_equal(base_conns[i].injmult(), rst_conns[i].injmult());
+        }
+    }
+}
+
+} // Anonymous namespace
+
+BOOST_AUTO_TEST_CASE(RestartWINJMULTModeSwitch)
+{
+    WorkArea work {};
+
+    write_file("BASE.DATA", winjmult_deck("", winjmult_mode_switch_schedule));
+
+    // Report step 2: WREV with retained connection level data.
+    // Report step 3: CIRR with retained well level data.
+    for (const auto report_step : { 2, 3 }) {
+        BOOST_TEST_CONTEXT("Restart at report step " << report_step) {
+            write_winjmult_restart_file("BASE", report_step);
+            write_file("RESTART.DATA",
+                       winjmult_deck(fmt::format("RESTART\n  'BASE' {} /\n", report_step),
+                                     "SKIPREST\n" + winjmult_mode_switch_schedule));
+
+            const auto& [sched, restart_sched, rst_state] =
+                load_schedule_pair("BASE.DATA", "RESTART.DATA",
+                                   fmt::format("BASE.X{:04d}", report_step), report_step);
+
+            for (auto step = static_cast<std::size_t>(report_step); step < sched.size(); ++step) {
+                BOOST_TEST_CONTEXT("Report step " << step) {
+                    check_injmult_equal(sched.getWell("WI1", step),
+                                        restart_sched.getWell("WI1", step));
+                }
+            }
+
+            // Connection (5,5,2) keeps its CREV data in the CIRR period.
+            const auto& wi1 = restart_sched.getWell("WI1", 3);
+            BOOST_CHECK(wi1.getInjMultMode() == Well::InjMultMode::CIRR);
+            BOOST_CHECK_CLOSE(wi1.getConnections()[0].injmult().fracture_pressure, 340.0e5, 1.0e-5);
+            BOOST_CHECK_CLOSE(wi1.getConnections()[1].injmult().fracture_pressure, 300.0e5, 1.0e-5);
+            BOOST_CHECK(! wi1.getConnections()[2].activeInjMult());
+            BOOST_CHECK_CLOSE(wi1.getWellInjMult().fracture_pressure, 360.0e5, 1.0e-5);
+
+            BOOST_CHECK_EQUAL(rst_state.get_well("WI1").inj_mult_mode, (report_step == 2) ? 0 : 2);
         }
     }
 }
