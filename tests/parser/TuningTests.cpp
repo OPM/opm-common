@@ -560,3 +560,184 @@ BOOST_AUTO_TEST_CASE(TuningDpTest)
         BOOST_CHECK_CLOSE(tuning_dp.TRGDDRV, 45.0 * Metric::OilDissolutionFactor, tol);
     }
 }
+
+namespace {
+
+Schedule makeSchedule(const std::string& input)
+{
+    const auto deck = createDeck(input);
+    EclipseGrid grid(10, 10, 10);
+    TableManager table (deck);
+    FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
+    Runspec runspec (deck);
+    return Schedule {
+        deck, grid, fp, NumericalAquifers{},
+        runspec, std::make_shared<Python>()
+    };
+}
+
+} // Anonymous namespace
+
+BOOST_AUTO_TEST_CASE(CvcritTest)
+{
+    const auto schedule = makeSchedule(R"(
+START
+    1 JAN 2026 /
+
+SCHEDULE
+TSTEP
+    1 /
+
+CVCRIT
+/
+
+TSTEP
+    1 /
+
+CVCRIT
+    0.5 30 1e-8 50 1e-4 3 0.02 5.0 2 1* 1e-3 1e-8 0.3 4.0 20.0 7*
+    30 0.02 60 70 5 3* 900 1e10 4* 200 50 150 /
+
+TSTEP
+    1 /
+
+CVCRIT
+    1* 25 /
+
+TSTEP
+    1 /
+
+CVCRIT
+    40* 0.1 1e-5 /
+
+TSTEP
+    1 /
+)");
+
+    for (std::size_t step = 0; step < schedule.size(); ++step) {
+        BOOST_CHECK_MESSAGE(schedule[step].events().hasEvent(ScheduleEvents::CVCRIT_CHANGE)
+                            == (step >= 1 && step <= 4),
+                            "Unexpected CVCRIT_CHANGE event at report step " << step);
+    }
+
+    BOOST_CHECK(!schedule[0].cvcrit().has_value());
+
+    const double tol = 1e-8;
+    const double kgMole = 1000.0 * unit::mol;
+    const double m3 = unit::cubic(unit::meter);
+
+    // Defaulted items take the keyword's defaults, and the items whose
+    // default depends on the solution method have no value.
+    {
+        const auto& cvcrit = schedule[1].cvcrit();
+        BOOST_REQUIRE(cvcrit.has_value());
+        BOOST_CHECK_CLOSE(cvcrit->pressure_change_tolerance, 0.1 * unit::atm, tol);
+        BOOST_CHECK(!cvcrit->max_nonlinear_iterations.has_value());
+        BOOST_CHECK_CLOSE(cvcrit->linear_residual_reduction, 1e-10, tol);
+        BOOST_CHECK(!cvcrit->max_linear_iterations.has_value());
+        BOOST_CHECK_CLOSE(cvcrit->fugacity_error_tolerance, 1e-3, tol);
+        BOOST_CHECK(!cvcrit->min_linear_iterations.has_value());
+        BOOST_CHECK(!cvcrit->specific_volume_change_tolerance.has_value());
+        BOOST_CHECK_CLOSE(cvcrit->temperature_change_tolerance, 10.0, tol);
+        BOOST_CHECK(!cvcrit->min_nonlinear_iterations.has_value());
+        BOOST_CHECK_CLOSE(cvcrit->residual_max_norm_tolerance, 1e-4, tol);
+        BOOST_CHECK_CLOSE(cvcrit->residual_sum_tolerance, 1e-20, tol);
+        BOOST_CHECK(!cvcrit->max_molar_density_change.has_value());
+        BOOST_CHECK(!cvcrit->max_temperature_change.has_value());
+        BOOST_CHECK(!cvcrit->max_pressure_change.has_value());
+        BOOST_CHECK_EQUAL(cvcrit->msw_max_iterations, 40);
+        BOOST_CHECK_CLOSE(cvcrit->msw_molar_density_tolerance, 0.015 * kgMole / m3, tol);
+        BOOST_CHECK_CLOSE(cvcrit->msw_molar_rate_tolerance, 50.0 * kgMole / unit::day, tol);
+        BOOST_CHECK_CLOSE(cvcrit->msw_energy_density_tolerance, 50.0e3 / m3, tol);
+        BOOST_CHECK_CLOSE(cvcrit->msw_velocity_tolerance, 10.0 * unit::meter / unit::second, tol);
+        BOOST_CHECK_CLOSE(cvcrit->msw_molar_residual_tolerance, 1000.0 * kgMole / unit::day, tol);
+        BOOST_CHECK_CLOSE(cvcrit->msw_energy_residual_tolerance, 1e23 / unit::day, tol);
+        BOOST_CHECK_CLOSE(cvcrit->msw_max_pressure_change, 250.0 * unit::atm, tol);
+        BOOST_CHECK_CLOSE(cvcrit->msw_max_specific_volume_change, 100.0, tol);
+        BOOST_CHECK_CLOSE(cvcrit->msw_max_temperature_change, 200.0, tol);
+        BOOST_CHECK_CLOSE(cvcrit->additional_residual_max_norm_tolerance, 1e20, tol);
+        BOOST_CHECK_CLOSE(cvcrit->additional_residual_sum_tolerance, 1e20, tol);
+    }
+
+    {
+        const auto& cvcrit = schedule[2].cvcrit();
+        BOOST_REQUIRE(cvcrit.has_value());
+        BOOST_CHECK_CLOSE(cvcrit->pressure_change_tolerance, 0.5 * unit::barsa, tol);
+        BOOST_CHECK_EQUAL(cvcrit->max_nonlinear_iterations.value_or(-1), 30);
+        BOOST_CHECK_CLOSE(cvcrit->linear_residual_reduction, 1e-8, tol);
+        BOOST_CHECK_EQUAL(cvcrit->max_linear_iterations.value_or(-1), 50);
+        BOOST_CHECK_CLOSE(cvcrit->fugacity_error_tolerance, 1e-4, tol);
+        BOOST_CHECK_EQUAL(cvcrit->min_linear_iterations.value_or(-1), 3);
+        BOOST_CHECK_CLOSE(cvcrit->specific_volume_change_tolerance.value_or(-1.0), 0.02, tol);
+        BOOST_CHECK_CLOSE(cvcrit->temperature_change_tolerance, 5.0, tol);
+        BOOST_CHECK_EQUAL(cvcrit->min_nonlinear_iterations.value_or(-1), 2);
+        BOOST_CHECK_CLOSE(cvcrit->residual_max_norm_tolerance, 1e-3, tol);
+        BOOST_CHECK_CLOSE(cvcrit->residual_sum_tolerance, 1e-8, tol);
+        BOOST_CHECK_CLOSE(cvcrit->max_molar_density_change.value_or(-1.0), 0.3, tol);
+        BOOST_CHECK_CLOSE(cvcrit->max_temperature_change.value_or(-1.0), 4.0, tol);
+        BOOST_CHECK_CLOSE(cvcrit->max_pressure_change.value_or(-1.0), 20.0 * unit::barsa, tol);
+        BOOST_CHECK_EQUAL(cvcrit->msw_max_iterations, 30);
+        BOOST_CHECK_CLOSE(cvcrit->msw_molar_density_tolerance, 0.02 * kgMole / m3, tol);
+        BOOST_CHECK_CLOSE(cvcrit->msw_molar_rate_tolerance, 60.0 * kgMole / unit::day, tol);
+        BOOST_CHECK_CLOSE(cvcrit->msw_energy_density_tolerance, 70.0e3 / m3, tol);
+        BOOST_CHECK_CLOSE(cvcrit->msw_velocity_tolerance, 5.0 * unit::meter / unit::second, tol);
+        BOOST_CHECK_CLOSE(cvcrit->msw_molar_residual_tolerance, 900.0 * kgMole / unit::day, tol);
+        BOOST_CHECK_CLOSE(cvcrit->msw_energy_residual_tolerance, 1e13 / unit::day, tol);
+        BOOST_CHECK_CLOSE(cvcrit->msw_max_pressure_change, 200.0 * unit::barsa, tol);
+        BOOST_CHECK_CLOSE(cvcrit->msw_max_specific_volume_change, 50.0, tol);
+        BOOST_CHECK_CLOSE(cvcrit->msw_max_temperature_change, 150.0, tol);
+        BOOST_CHECK_CLOSE(cvcrit->additional_residual_max_norm_tolerance, 1e20, tol);
+        BOOST_CHECK_CLOSE(cvcrit->additional_residual_sum_tolerance, 1e20, tol);
+    }
+
+    // Items defaulted in a later CVCRIT take the keyword's defaults again,
+    // not their values from the earlier CVCRIT.
+    {
+        auto expected = *schedule[1].cvcrit();
+        expected.max_nonlinear_iterations = 25;
+        BOOST_CHECK(schedule[3].cvcrit() == expected);
+
+        expected = *schedule[1].cvcrit();
+        expected.additional_residual_max_norm_tolerance = 0.1;
+        expected.additional_residual_sum_tolerance = 1e-5;
+        BOOST_CHECK(schedule[4].cvcrit() == expected);
+
+        // No CVCRIT in the last step, so the state carries over unchanged
+        BOOST_CHECK(schedule[5].cvcrit() == expected);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(CvcritFieldUnits)
+{
+    const auto schedule = makeSchedule(R"(
+RUNSPEC
+FIELD
+
+START
+    1 JAN 2026 /
+
+SCHEDULE
+TSTEP
+    1 /
+
+CVCRIT
+/
+
+TSTEP
+    1 /
+
+CVCRIT
+    2.0 22* 0.5 /
+)");
+
+    const double tol = 1e-8;
+
+    // The defaults do not depend on the unit system.
+    BOOST_CHECK_CLOSE(schedule[1].cvcrit()->pressure_change_tolerance, 0.1 * unit::atm, tol);
+    BOOST_CHECK_CLOSE(schedule[1].cvcrit()->msw_max_pressure_change, 250.0 * unit::atm, tol);
+
+    BOOST_CHECK_CLOSE(schedule[2].cvcrit()->pressure_change_tolerance,
+                      2.0 * Field::Pressure, tol);
+    BOOST_CHECK_CLOSE(schedule[2].cvcrit()->msw_molar_density_tolerance,
+                      0.5 * Field::Moles / Field::ReservoirVolume, tol);
+}
