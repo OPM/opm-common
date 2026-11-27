@@ -25,7 +25,10 @@
 #include <opm/input/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/input/eclipse/Schedule/ScheduleGrid.hpp>
 
+#include <array>
 #include <cstddef>
+#include <optional>
+#include <vector>
 
 namespace Opm {
 class EclipseGrid;
@@ -43,15 +46,22 @@ namespace cvf
 class BoundingBox;
 }
 
+// Data of a grid that is expensive to compute, and can be shared by the
+// extractors for the same grid.
+struct RigEclipseGridSearchData
+{
+    cvf::ref<cvf::BoundingBoxTree> cellSearchTree;
+    std::optional<double>          lengthThreshold;
+};
+
 //==================================================================================================
 ///
 //==================================================================================================
 class RigEclipseWellLogExtractor : public RigWellLogExtractor
 {
 public:
-    RigEclipseWellLogExtractor( const RigWellPath* wellpath, const Opm::EclipseGrid& grid, cvf::ref<cvf::BoundingBoxTree>& cellSearchTree);
+    RigEclipseWellLogExtractor( const RigWellPath* wellpath, const Opm::EclipseGrid& grid, RigEclipseGridSearchData& gridSearchData);
 
-    cvf::ref<cvf::BoundingBoxTree> getCellSearchTree();
 private:
     void                calculateIntersection();
     std::vector<std::size_t> findCloseCellIndices( const cvf::BoundingBox& bb );
@@ -62,18 +72,19 @@ private:
                                       const cvf::Vec3d&                startPoint,
                                       const cvf::Vec3d&                endPoint ) const;
 
-    void hexCornersOpmToResinsight( cvf::Vec3d    hexCorners[8],
-                                    std::size_t        cellIndex ) const;
+    std::array<cvf::Vec3d, 8> hexCornersOpmToResinsight( std::size_t cellIndex ) const;
+    cvf::BoundingBox cellBoundingBox( std::size_t cellIndex ) const;
 
     void findCellLocalXYZ( const std::array<cvf::Vec3d, 8>& hexCorners,
                            cvf::Vec3d&                      localXdirection,
                            cvf::Vec3d&                      localYdirection,
                            cvf::Vec3d&                      localZdirection ) const;
     void buildCellSearchTree();
-    void findIntersectingCells( const cvf::BoundingBox& inputBB, std::vector<std::size_t>* cellIndices ) const;
+    std::vector<std::size_t> findIntersectingCells( const cvf::BoundingBox& inputBB ) const;
+    double computeLengthThreshold() const;
     void computeCachedData();
 
     const Opm::EclipseGrid& m_grid;
-    cvf::ref<cvf::BoundingBoxTree> m_cellSearchTree;
+    RigEclipseGridSearchData& m_gridSearchData;
 };
 } //namespace external

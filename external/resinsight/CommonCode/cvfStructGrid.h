@@ -38,9 +38,12 @@
 
 #include "../LibCore/cvfObject.h"
 #include "../LibCore/cvfVector3.h"
-#include <cstddef>
 
 // #include "../cafPdmCore/cafAppEnum.h"
+
+#include <array>
+#include <cstddef>
+#include <vector>
 
 namespace external 
 {
@@ -79,19 +82,18 @@ public:
 public:
     StructGridInterface();
 
-    virtual size_t gridPointCountI() const = 0;
-    virtual size_t gridPointCountJ() const = 0;
-    virtual size_t gridPointCountK() const = 0;
-
-    size_t cellCountI() const;
-    size_t cellCountJ() const;
-    size_t cellCountK() const;
+    virtual size_t cellCountI() const = 0;
+    virtual size_t cellCountJ() const = 0;
+    virtual size_t cellCountK() const = 0;
 
     virtual bool isCellValid( size_t i, size_t j, size_t k ) const = 0;
 
     virtual cvf::Vec3d minCoordinate() const = 0;
     virtual cvf::Vec3d maxCoordinate() const = 0;
-    void               characteristicCellSizes( double* iSize, double* jSize, double* kSize ) const;
+    virtual cvf::Vec3d characteristicCellSizes() const;
+
+    bool hasValidCharacteristicCellSizes() const;
+    void computeCharacteristicCellSize( const std::vector<size_t>& globalCellIndices ) const;
 
     virtual cvf::Vec3d displayModelOffset() const;
 
@@ -102,8 +104,8 @@ public:
 
     virtual bool cellIJKFromCoordinate( const cvf::Vec3d& coord, size_t* i, size_t* j, size_t* k ) const = 0;
 
-    virtual void       cellCornerVertices( size_t cellIndex, cvf::Vec3d vertices[8] ) const = 0;
-    virtual cvf::Vec3d cellCentroid( size_t cellIndex ) const                               = 0;
+    [[nodiscard]] virtual std::array<cvf::Vec3d, 8> cellCornerVertices( size_t cellIndex ) const = 0;
+    [[nodiscard]] virtual cvf::Vec3d                cellCentroid( size_t cellIndex ) const       = 0;
     virtual void cellMinMaxCordinates( size_t cellIndex, cvf::Vec3d* minCoordinate, cvf::Vec3d* maxCoordinate ) const = 0;
 
     virtual size_t     gridPointIndexFromIJK( size_t i, size_t j, size_t k ) const = 0;
@@ -124,11 +126,10 @@ public:
 
     static std::pair<ubyte, ubyte> edgeVertexIndices( cvf::StructGridInterface::FaceType face1,
                                                       cvf::StructGridInterface::FaceType face2 );
+    static std::vector<FaceType>   validFaceTypes();
 
-private:
-    mutable double m_characteristicCellSizeI;
-    mutable double m_characteristicCellSizeJ;
-    mutable double m_characteristicCellSizeK;
+protected:
+    mutable cvf::Vec3d m_characteristicCellSize;
 };
 
 } // namespace cvf

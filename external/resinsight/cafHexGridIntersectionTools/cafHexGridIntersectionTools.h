@@ -45,7 +45,7 @@ public:
         size_t clippedEdgeVx2Id;
 
         bool isVxIdsNative; //< Pointing to real vertices, or indices to ClipVx's in the supplied triangle vertices array
-        int derivedVxLevel; //< Helper data to make it possible to track what set of ClipVx's the indices is reffering
+        int derivedVxLevel; //< Helper data to make it possible to track what set of ClipVx's the indices is referring
                             // to in case of consecutive clips
     };
 
@@ -87,24 +87,24 @@ public:
                                                   const cvf::Vec3d& p2,
                                                   double*           normalizedDistFromP1 );
 
-    static int planeHexIntersectionMC( const cvf::Plane&    plane,
-                                       const cvf::Vec3d     cell[8],
-                                       const size_t         hexCornersIds[8],
-                                       std::vector<ClipVx>* triangleVxes,
-                                       std::vector<int>*    cellFaceForEachTriangleEdge );
+    static int planeHexIntersectionMC( const cvf::Plane&                plane,
+                                       const std::array<cvf::Vec3d, 8>& cell,
+                                       const std::array<size_t, 8>&     hexCornersIds,
+                                       std::vector<ClipVx>*             triangleVxes,
+                                       std::vector<int>*                cellFaceForEachTriangleEdge );
 
-    static int       planeHexIntersectionMCTet( const cvf::Plane&    plane,
-                                                const cvf::Vec3d     cell[8],
-                                                const size_t         hexCornersIds[8],
-                                                std::vector<ClipVx>* triangleVxes,
-                                                std::vector<int>*    cellFaceForEachTriangleEdge );
-    static cvf::uint planeMcTetIntersection( const cvf::Plane&         plane,
-                                             const cvf::Vec3d          hexCell[8],
-                                             const size_t              hexCornersIds[8],
-                                             const double              cornerDistToPlane[8],
-                                             const std::array<int, 4>& tetCell,
-                                             std::vector<ClipVx>*      triangleVxes,
-                                             std::vector<int>*         cellFaceForEachTriangleEdge );
+    static int       planeHexIntersectionMCTet( const cvf::Plane&                plane,
+                                                const std::array<cvf::Vec3d, 8>& cell,
+                                                const std::array<size_t, 8>&     hexCornersIds,
+                                                std::vector<ClipVx>*             triangleVxes,
+                                                std::vector<int>*                cellFaceForEachTriangleEdge );
+    static cvf::uint planeMcTetIntersection( const cvf::Plane&                plane,
+                                             const std::array<cvf::Vec3d, 8>& cell,
+                                             const std::array<size_t, 8>&     hexCornersIds,
+                                             const double                     cornerDistToPlane[8],
+                                             const std::array<int, 4>&        tetCell,
+                                             std::vector<ClipVx>*             triangleVxes,
+                                             std::vector<int>*                cellFaceForEachTriangleEdge );
 };
 
 } // namespace caf
