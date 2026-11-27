@@ -35,11 +35,13 @@
 #include <stdexcept>
 
 
-// The static_assert does not compile with gcc 12 and earlier (or nvcc) when placed in the multiplexer calls below.
-#if (defined(__GNUC__) && (__GNUC__ < 13)) || defined(__CUDACC__)
-    #define STATIC_ASSERT_SATCURVE_MULTIPLEXER_UNLESS_GCC_LT_13 throw std::logic_error("Unhandled SatCurveMultiplexerApproach")
+// static_assert(false) in the fallback branches below needs gcc >= 13. Older gcc,
+// clang (which reports __GNUC__ 4) and nvcc get a runtime OPM_THROW instead,
+// which is also safe in device code.
+#if defined(__CUDACC__) || (defined(__GNUC__) && (__GNUC__ < 13))
+    #define SATCURVE_MULTIPLEXER_UNHANDLED_APPROACH OPM_THROW(std::logic_error, "Unhandled SatCurveMultiplexerApproach")
 #else
-    #define STATIC_ASSERT_SATCURVE_MULTIPLEXER_UNLESS_GCC_LT_13 static_assert(false, "Unhandled SatCurveMultiplexerApproach")
+    #define SATCURVE_MULTIPLEXER_UNHANDLED_APPROACH static_assert(false, "Unhandled SatCurveMultiplexerApproach")
 #endif
 
 namespace Opm {
@@ -224,7 +226,7 @@ public:
             return PLTwoPhaseLaw::twoPhaseSatPcnw(params.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinear>(),
                                                   Sw);
         } else {
-            STATIC_ASSERT_SATCURVE_MULTIPLEXER_UNLESS_GCC_LT_13;
+            SATCURVE_MULTIPLEXER_UNHANDLED_APPROACH;
         }
     }
 
@@ -362,7 +364,7 @@ public:
             return PLTwoPhaseLaw::twoPhaseSatKrw(params.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinear>(),
                                                  Sw);
         } else {
-            STATIC_ASSERT_SATCURVE_MULTIPLEXER_UNLESS_GCC_LT_13;
+            SATCURVE_MULTIPLEXER_UNHANDLED_APPROACH;
         }
     }
 
@@ -443,7 +445,7 @@ public:
             return PLTwoPhaseLaw::twoPhaseSatKrn(params.template getRealParams<SatCurveMultiplexerApproach::PiecewiseLinear>(),
                                                  Sw);
         } else {
-            STATIC_ASSERT_SATCURVE_MULTIPLEXER_UNLESS_GCC_LT_13;
+            SATCURVE_MULTIPLEXER_UNHANDLED_APPROACH;
         }
     }
 
