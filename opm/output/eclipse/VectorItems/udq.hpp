@@ -46,6 +46,8 @@ namespace Opm::RestartIO::Helpers::VectorItems {
                                 // production (GCONPROD keyword)
                 GrpInj = 3,     // UDA applies to group or FIELD level
                                 // injection (GCONINJE keyword)
+                WellConn = 4,   // UDA applies to a well connection
+                                // (OPM extension).  IUAP is [well, I, J, K].
             };
         } // namespace Value
     } // namespace IUad

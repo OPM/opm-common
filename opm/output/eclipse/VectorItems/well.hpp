@@ -160,6 +160,11 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
                                        //   2 => YES1,
                                        //   3 => YES2.
 
+            InjMultMode = 97, // Injectivity multiplier mode (WINJMULT(4)).
+                              // See Value::InjMultMode.  WREV is not
+                              // distinguishable from "no WINJMULT" here;
+                              // use SWEL InjMultGradient/InjMultFracPress.
+
             CompOrd = 98, // Well's completion ordering scheme.
 
             LiftOptAllocExtra = 144,
@@ -213,6 +218,12 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
                 Input = 2, // Connections listed in order of
                            // appearance in simulation model's
                            // COMPDAT keyword.
+            };
+
+            enum InjMultMode : int {
+                WREV = 0, // Well level, reversible (also "no WINJMULT")
+                CREV = 1, // Connection level, reversible
+                CIRR = 2, // Connection level, irreversible
             };
 
             enum Preferred_Phase : int {
@@ -350,6 +361,8 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
 
             LOmaxRate         = 56, // Well's maximum lift gas rate
             LOweightFac       = 57, // Well's wighting factor for preferential allocation of lift gas
+            InjMultGradient   = 58, // WINJMULT(3) multiplier gradient in WREV mode
+            InjMultFracPress  = 59, // WINJMULT(2) fracture pressure in WREV mode
             LOminRate         = 67, // Well's mimimum lift gas rate
 
             EconLimitMaxWct_2 = 71, // Well's secondary maximum water cut economic limit (WECON(11)).

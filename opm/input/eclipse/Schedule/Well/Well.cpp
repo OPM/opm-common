@@ -526,6 +526,8 @@ Well::Well(const RestartIO::RstWell& rst_well,
             this->updateTracer(std::move(tracerProps));
         }
     }
+
+    this->restoreInjMultFromRestart(rst_well);
 }
 
 
@@ -1968,7 +1970,7 @@ bool Well::handleWINJMULT(const Opm::DeckRecord& record, const KeywordLocation& 
     }
 
     const InjMult inj_mult {
-        record.getItem<Kw::FRACTURING_PRESSURE>().getSIDouble(0),
+        record.getItem<Kw::FRACTURING_PRESSURE>().get<UDAValue>(0),
         record.getItem<Kw::MULTIPLIER_GRADIENT>().getSIDouble(0)
     };
 
@@ -2563,4 +2565,134 @@ bool Opm::Well::replaceConnections(std::shared_ptr<WellConnections> connections_
     }
 
     return false;
+}
+
+void Opm::Well::restoreInjMultFromRestart(const RestartIO::RstWell& rst_well)
+{
+    using IMVal = RestartIO::Helpers::VectorItems::IWell::Value::InjMultMode;
+
+    // Well level data is retained also when the connection level modes
+    // (CREV/CIRR) are active.
+    const auto has_well_inj_mult = (rst_well.inj_mult_gradient != 0.0)
+        || (rst_well.inj_mult_frac_press != 0.0);
+
+    if (has_well_inj_mult) {
+        // Restart values are in SI units.
+        this->well_inj_mult = InjMult {
+            UDAValue { rst_well.inj_mult_frac_press },
+            rst_well.inj_mult_gradient
+        };
+    }
+
+    switch (rst_well.inj_mult_mode) {
+    case IMVal::CREV:
+        this->inj_mult_mode = InjMultMode::CREV;
+        break;
+
+    case IMVal::CIRR:
+        this->inj_mult_mode = InjMultMode::CIRR;
+        break;
+
+    default:
+        // WREV and "no WINJMULT" share the same mode value.
+        if (has_well_inj_mult) {
+            this->inj_mult_mode = InjMultMode::WREV;
+        }
+        break;
+    }
+}
+
+void Opm::Well::updateWINJMULTUDA(const Opm::UDQConfig& udq_config,
+                                  Opm::UDQActive&       udq_active,
+                                  const Opm::UDAValue&  value,
+                                  const std::optional<std::array<int, 3>>& conn_ijk)
+{
+    if (! conn_ijk.has_value()) {
+        auto inj_mult = this->well_inj_mult.value_or(InjMult{});
+        inj_mult.fracture_pressure = value;
+        this->well_inj_mult = inj_mult;
+
+        if (this->inj_mult_mode == InjMultMode::NONE) {
+            this->inj_mult_mode = InjMultMode::WREV;
+        }
+
+        udq_active.update(udq_config, value, this->name(),
+                          UDAControl::WINJMULT_FRACTURE_PRESSURE);
+        return;
+    }
+
+    const auto& ijk = *conn_ijk;
+    auto is_conn = [&ijk](const Connection& connection)
+    {
+        return (connection.getI() == ijk[0])
+            && (connection.getJ() == ijk[1])
+            && (connection.getK() == ijk[2]);
+    };
+
+    if (std::ranges::none_of(*this->connections, is_conn)) {
+        throw std::logic_error {
+            fmt::format("WINJMULT UDA for well {} refers to unknown "
+                        "connection ({},{},{})", this->name(),
+                        ijk[0] + 1, ijk[1] + 1, ijk[2] + 1)
+        };
+    }
+
+    auto new_connections = std::make_shared<WellConnections>
+        (this->connections->ordering(), this->headI, this->headJ);
+
+    for (const auto& connection : *this->connections) {
+        auto connection_copy = connection;
+
+        if (is_conn(connection)) {
+            auto inj_mult = connection.activeInjMult()
+                ? connection.injmult() : InjMult{};
+
+            inj_mult.fracture_pressure = value;
+            connection_copy.setInjMult(inj_mult);
+        }
+
+        new_connections->add(connection_copy);
+    }
+
+    this->updateConnections(std::move(new_connections), false);
+
+    udq_active.update(udq_config, value, this->name(),
+                      UDAControl::WINJMULT_CONN_FRACTURE_PRESSURE, conn_ijk);
+}
+
+bool Opm::Well::updateUDQActive(const Opm::UDQConfig& udq_config, Opm::UDQActive& active) const
+{
+    // A numeric value removes any stale UDA record for the same well,
+    // control, and connection.
+    const auto inactive = UDAValue { 0.0 };
+
+    auto uda = [&inactive](const InjMult& inj_mult) -> const UDAValue&
+    {
+        return inj_mult.fracture_pressure.is_defined()
+            ? inj_mult.fracture_pressure : inactive;
+    };
+
+    // Well and connection level data are retained across mode switches,
+    // so record the UDAs of both irrespective of the current mode.  This
+    // ensures that restarted runs see the same data as uninterrupted runs.
+    auto update_count = 0;
+
+    update_count += active.update(udq_config,
+                                  this->well_inj_mult.has_value()
+                                      ? uda(*this->well_inj_mult) : inactive,
+                                  this->name(),
+                                  UDAControl::WINJMULT_FRACTURE_PRESSURE);
+
+    for (const auto& connection : *this->connections) {
+        const auto& value = connection.activeInjMult()
+            ? uda(connection.injmult()) : inactive;
+
+        update_count += active.update(udq_config, value, this->name(),
+                                      UDAControl::WINJMULT_CONN_FRACTURE_PRESSURE,
+                                      std::array { connection.getI(),
+                                                   connection.getJ(),
+                                                   connection.getK() });
+    }
+
+    return update_count > 0;
 }

@@ -244,6 +244,10 @@ namespace {
                 // Group level production UDA
                 return n + 2;
 
+            case Opm::UDAKeyword::WINJMULT:
+                // Well or well connection level UDA.
+                return n + (Opm::UDQ::connection_control(rec.control) ? 4 : 1);
+
             default:
                 // Well level UDA.
                 return n + 1;

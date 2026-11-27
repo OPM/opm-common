@@ -549,6 +549,10 @@ namespace Opm { namespace data {
         /// Connection level fracturing statistics.
         ConnectionFracturing fract{};
 
+        /// Injectivity multiplier from WINJMULT.  For CIRR this is the
+        /// retained (maximum attained) multiplier.
+        double inj_mult{1.0};
+
         bool operator==(const Connection& conn2) const
         {
             return (index == conn2.index)
@@ -566,6 +570,7 @@ namespace Opm { namespace data {
                 && (filtrate == conn2.filtrate)
                 && (fracture == conn2.fracture)
                 && (this->fract == conn2.fract)
+                && (inj_mult == conn2.inj_mult)
                 ;
         }
 
@@ -592,6 +597,7 @@ namespace Opm { namespace data {
             serializer(filtrate);
             serializer(fracture);
             serializer(this->fract);
+            serializer(inj_mult);
         }
 
         static Connection serializationTestObject()
@@ -603,7 +609,8 @@ namespace Opm { namespace data {
                 3, // lgr_grid
                 ConnectionFiltrate::serializationTestObject(),
                 ConnectionFracture::serializationTestObject(),
-                ConnectionFracturing::serializationTestObject()
+                ConnectionFracturing::serializationTestObject(),
+                1.25 // inj_mult
             };
         }
     };
@@ -1669,6 +1676,7 @@ namespace Opm { namespace data {
             this->filtrate.write(buffer);
             this->fracture.write(buffer);
             this->fract.write(buffer);
+            buffer.write(this->inj_mult);
     }
 
     template <class MessageBufferType>
@@ -1855,6 +1863,7 @@ namespace Opm { namespace data {
             this->filtrate.read(buffer);
             this->fracture.read(buffer);
             this->fract.read(buffer);
+            buffer.read(this->inj_mult);
    }
 
     template <class MessageBufferType>

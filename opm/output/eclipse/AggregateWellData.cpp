@@ -42,6 +42,7 @@
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
 #include <opm/input/eclipse/Schedule/VFPProdTable.hpp>
+#include <opm/input/eclipse/Schedule/eval_uda.hpp>
 #include <opm/input/eclipse/Schedule/Well/Connection.hpp>
 #include <opm/input/eclipse/Schedule/Well/WDFAC.hpp>
 #include <opm/input/eclipse/Schedule/Well/WELDRAW.hpp>
@@ -50,6 +51,7 @@
 #include <opm/input/eclipse/Schedule/Well/WellEconProductionLimits.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellTestConfig.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellTestState.hpp>
+#include <opm/input/eclipse/Schedule/Well/WINJMULT.hpp>
 #include <opm/input/eclipse/Schedule/Well/WVFPDP.hpp>
 #include <opm/input/eclipse/Schedule/Well/WVFPEXP.hpp>
 
@@ -270,6 +272,22 @@ namespace {
             }
 
             return 0;
+        }
+
+        int injMultMode(const Opm::Well& well)
+        {
+            using IMM   = ::Opm::Well::InjMultMode;
+            using IMVal = ::Opm::RestartIO::Helpers::
+                VectorItems::IWell::Value::InjMultMode;
+
+            switch (well.getInjMultMode()) {
+            case IMM::CREV: return IMVal::CREV;
+            case IMM::CIRR: return IMVal::CIRR;
+            case IMM::WREV:
+            case IMM::NONE: return IMVal::WREV;
+            }
+
+            return IMVal::WREV;
         }
 
         int PLossMod(const Opm::Well& well)
@@ -721,6 +739,7 @@ namespace {
             setHistoryControlMode(well, Opm::Well::eclipseControlMode(well, st), iWell);
 
             iWell[Ix::CompOrd] = compOrder(well);
+            iWell[Ix::InjMultMode] = injMultMode(well);
 
             assignGasliftOpt(well.name(), glo, iWell);
             assignMSWInfo(well, msWellID, iWell);
@@ -1281,6 +1300,35 @@ namespace {
             sWell[Ix::DFacCorrCoeffA] = units.from_si(dimension, corr.coeff_a);
         }
 
+        template <class SWellArray>
+        void assignInjMult(const Opm::Well&         well,
+                           const Opm::SummaryState& smry,
+                           const Opm::UnitSystem&   units,
+                           SWellArray&              sWell)
+        {
+            using Ix = VI::SWell::index;
+            using M = ::Opm::UnitSystem::measure;
+
+            // Well level data is retained also when the connection level
+            // modes (CREV/CIRR) are active.
+            if (! well.aciveWellInjMult()) {
+                return;
+            }
+
+            const auto& injmult = well.getWellInjMult();
+
+            // Gradient has units of 1/pressure.
+            sWell[Ix::InjMultGradient] = static_cast<float>
+                (injmult.multiplier_gradient / units.from_si(M::pressure, 1.0));
+
+            if (injmult.fracture_pressure.is_defined()) {
+                sWell[Ix::InjMultFracPress] = static_cast<float>
+                    (units.from_si(M::pressure,
+                                   Opm::UDA::eval_well_uda_pressure(injmult.fracture_pressure,
+                                                                    well.name(), smry)));
+            }
+        }
+
         template <class SWProp, class SWellArray>
         void assignBhpVfpAdjustment(const Opm::Well& well,
                                     SWProp&&         swprop,
@@ -1380,6 +1428,7 @@ namespace {
 
             assignTracerData(tracers, smry, well.name(), sWell, sched.runspec().temp());
             assignBhpVfpAdjustment(well, swprop, sWell);
+            assignInjMult(well, smry, units, sWell);
         }
     } // SWell
 
