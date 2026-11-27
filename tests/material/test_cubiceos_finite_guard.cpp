@@ -94,13 +94,13 @@ public:
     using ViscosityModel = ViscosityModels<Scalar, N2C1TestFluidSystem<Scalar>>;
     using CubicEOS = ::Opm::CubicEOS<Scalar, N2C1TestFluidSystem<Scalar>>;
 
-    static CompositionalConfig::EOSType eosType(unsigned /*eosRegionIdx*/ = 0)
+    static CompositionalConfig::EOSType eosType()
     { return CompositionalConfig::EOSType::PR; }
 
     static bool phaseIsActive(unsigned phaseIdx)
     { return phaseIdx == oilPhaseIdx || phaseIdx == gasPhaseIdx; }
 
-    static Scalar acentricFactor(unsigned compIdx, unsigned /*eosRegionIdx*/ = 0)
+    static Scalar acentricFactor(unsigned compIdx)
     {
         switch (compIdx) {
         case Comp0Idx: return Comp0::acentricFactor();
@@ -109,7 +109,7 @@ public:
         }
     }
 
-    static Scalar criticalTemperature(unsigned compIdx, unsigned /*eosRegionIdx*/ = 0)
+    static Scalar criticalTemperature(unsigned compIdx)
     {
         switch (compIdx) {
         case Comp0Idx: return Comp0::criticalTemperature();
@@ -118,7 +118,7 @@ public:
         }
     }
 
-    static Scalar criticalPressure(unsigned compIdx, unsigned /*eosRegionIdx*/ = 0)
+    static Scalar criticalPressure(unsigned compIdx)
     {
         switch (compIdx) {
         case Comp0Idx: return Comp0::criticalPressure();
@@ -127,7 +127,7 @@ public:
         }
     }
 
-    static Scalar criticalVolume(unsigned compIdx, unsigned /*eosRegionIdx*/ = 0)
+    static Scalar criticalVolume(unsigned compIdx)
     {
         switch (compIdx) {
         case Comp0Idx: return Comp0::criticalVolume();
@@ -146,8 +146,7 @@ public:
     }
 
     //! standard PR literature value for the N2/methane pair
-    static Scalar interactionCoefficient(unsigned comp1Idx, unsigned comp2Idx,
-                                         unsigned /*eosRegionIdx*/ = 0)
+    static Scalar interactionCoefficient(unsigned comp1Idx, unsigned comp2Idx)
     { return (comp1Idx != comp2Idx) ? 0.0291 : 0.0; }
 
     static std::string_view phaseName(unsigned phaseIdx)
@@ -179,7 +178,7 @@ public:
                              unsigned phaseIdx)
     {
         return decay<LhsEval>(
-            ViscosityModel::LBC(fluidState, phaseIdx, paramCache.eosRegionIndex()));
+            ViscosityModel::LBC(fluidState, paramCache, phaseIdx));
     }
 
     template <class FluidState, class LhsEval = typename FluidState::ValueType, class ParamCacheEval = LhsEval>
@@ -223,7 +222,7 @@ FluidState makeState(const Scalar p, const Scalar t)
     fs.setMoleFraction(0, 0.5);
     fs.setMoleFraction(1, 0.5);
     for (int compIdx = 0; compIdx < 2; ++compIdx)
-        fs.setKvalue(compIdx, fs.wilsonK_(compIdx, /*eosRegionIdx=*/0));
+        fs.setKvalue(compIdx, fs.wilsonK_(compIdx));
     fs.setLvalue(-1.0);
     return fs;
 }
@@ -599,7 +598,7 @@ BOOST_AUTO_TEST_CASE(SupercriticalStateIsSingleVapour)
             // Check rather than require, so that every method reports.
             bool singlePhase = false;
             BOOST_CHECK_NO_THROW(
-                singlePhase = PtFlash::solve(fs, method, 1e-8, /*eosRegionIdx=*/0));
+                singlePhase = PtFlash::solve(fs, method, 1e-8));
             BOOST_CHECK(singlePhase);
             if (singlePhase) {
                 BOOST_CHECK_SMALL(Opm::getValue(fs.L()), 1e-8);
@@ -614,6 +613,6 @@ BOOST_AUTO_TEST_CASE(BenignStateUnaffected)
 {
     for (const auto method : {PTFlashMethod::Ssi, PTFlashMethod::SsiNewton}) {
         auto fs = makeState(100e5, 300.0);
-        BOOST_CHECK_NO_THROW(PtFlash::solve(fs, method, 1e-8, /*eosRegionIdx=*/0));
+        BOOST_CHECK_NO_THROW(PtFlash::solve(fs, method, 1e-8));
     }
 }

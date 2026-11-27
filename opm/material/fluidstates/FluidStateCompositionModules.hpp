@@ -169,6 +169,9 @@ public:
                 sumMoleFractions_[phaseIdx] += moleFraction_[phaseIdx][compIdx];
             }
         }
+        if constexpr (requires { fs.eosRegionIndex(); }) {
+            eosRegionIdx_ = fs.eosRegionIndex();
+        }
     }
 
     /*!
@@ -218,16 +221,29 @@ public:
     }
 
     /*!
+     * \brief The reservoir EOS region whose component properties and
+     *        equation of state describe the fluid.
+     */
+    unsigned eosRegionIndex() const
+    { return eosRegionIdx_; }
+
+    /*!
+     * \brief Set the reservoir EOS region of the fluid.
+     */
+    void setEosRegionIndex(unsigned eosRegionIdx)
+    { eosRegionIdx_ = eosRegionIdx; }
+
+    /*!
     * \brief Wilson formula to calculate K
     *
-    * \param eosRegionIdx The reservoir EOS region of the component properties.
     */
-    ValueType wilsonK_(unsigned compIdx, unsigned eosRegionIdx) const
+    ValueType wilsonK_(unsigned compIdx) const
     {
-        const auto& acf = FluidSystem::acentricFactor(compIdx, eosRegionIdx);
-        const auto& T_crit = FluidSystem::criticalTemperature(compIdx, eosRegionIdx);
+        const auto& eosRegion = FluidSystem::eosRegion(eosRegionIdx_);
+        const auto& acf = eosRegion.acentricFactor(compIdx);
+        const auto& T_crit = eosRegion.criticalTemperature(compIdx);
         const auto& T = asImp_().temperature(0);
-        const auto& p_crit = FluidSystem::criticalPressure(compIdx, eosRegionIdx);
+        const auto& p_crit = eosRegion.criticalPressure(compIdx);
         const auto& p = asImp_().pressure(0); //for now assume no capillary pressure
 
         const auto tmp = exp(5.37 * (1+acf) * (1-T_crit/T)) * (p_crit/p);
@@ -247,6 +263,7 @@ protected:
     std::array<ValueType,numPhases> Z_{};
     std::array<ValueType,numComponents> K_{};
     ValueType L_{};
+    unsigned eosRegionIdx_{0};
 };
 
 /*!

@@ -329,11 +329,10 @@ compositionalRegionParams(const CompositionalConfig& config, const std::size_t e
                     };
                 }
                 auto params = compositionalRegionParams<Scalar>(comp_config, region);
-                eos_regions.push_back({
-                    .components = std::move(params.components),
-                    .interaction_coefficients = std::move(params.interaction_coefficients),
-                    .eos_type = comp_config.eosType(region),
-                });
+                auto& eos_region = eos_regions.emplace_back();
+                eos_region.components = std::move(params.components);
+                eos_region.interaction_coefficients = std::move(params.interaction_coefficients);
+                eos_region.eos_type = comp_config.eosType(region);
             }
 
             FluidSystem::init();
@@ -368,14 +367,125 @@ compositionalRegionParams(const CompositionalConfig& config, const std::size_t e
         { return eos_regions_.size(); }
 
         /*!
-         * \brief The equation of state of a reservoir EOS region.
+         * \brief The component properties and equation of state of a
+         *        reservoir EOS region.
+         */
+        class EosRegion
+        {
+        public:
+            //! The equation of state of the region.
+            EOSType eosType() const
+            { return eos_type; }
+
+            /*!
+             * \brief The acentric factor of a component [].
+             *
+             * \copydetails Doxygen::compIdxParam
+             */
+            Scalar acentricFactor(unsigned compIdx) const
+            { return component_(compIdx).acentric_factor; }
+
+            /*!
+             * \brief Dimensionless volume-translation coefficient (SSHIFT).
+             *
+             * The component volume correction is s_c b_c, where b_c is the
+             * equation-of-state covolume.
+             *
+             * \copydetails Doxygen::compIdxParam
+             */
+            Scalar volumeShift(unsigned compIdx) const
+            { return component_(compIdx).volume_shift; }
+
+            /*!
+             * \brief The \f$\Omega_a\f$ of a component from OMEGAA, or nothing
+             *        when the constant of the equation of state applies.
+             *
+             * \copydetails Doxygen::compIdxParam
+             */
+            std::optional<Scalar> omegaA(unsigned compIdx) const
+            { return component_(compIdx).omega_a; }
+
+            /*!
+             * \brief The \f$\Omega_b\f$ of a component from OMEGAB, or nothing
+             *        when the constant of the equation of state applies.
+             *
+             * \copydetails Doxygen::compIdxParam
+             */
+            std::optional<Scalar> omegaB(unsigned compIdx) const
+            { return component_(compIdx).omega_b; }
+
+            /*!
+             * \brief Critical temperature of a component [K].
+             *
+             * \copydetails Doxygen::compIdxParam
+             */
+            Scalar criticalTemperature(unsigned compIdx) const
+            { return component_(compIdx).critic_temp; }
+
+            /*!
+             * \brief Critical pressure of a component [Pa].
+             *
+             * \copydetails Doxygen::compIdxParam
+             */
+            Scalar criticalPressure(unsigned compIdx) const
+            { return component_(compIdx).critic_pres; }
+
+            /*!
+             * \brief Critical volume of a component [m3].
+             *
+             * \copydetails Doxygen::compIdxParam
+             */
+            Scalar criticalVolume(unsigned compIdx) const
+            { return component_(compIdx).critic_vol; }
+
+            /*!
+             * \brief Returns the interaction coefficient for two components.
+             */
+            Scalar interactionCoefficient(unsigned comp1Idx, unsigned comp2Idx) const
+            {
+                assert(isConsistent());
+                assert(comp1Idx < numComponents);
+                assert(comp2Idx < numComponents);
+                if (interaction_coefficients.empty() || comp2Idx == comp1Idx) {
+                    return 0.0;
+                }
+                // make sure row is the bigger value compared to column number
+                const auto [column, row] = std::minmax(comp1Idx, comp2Idx);
+                const unsigned index = (row * (row - 1) / 2 + column); // it is the current understanding
+                return interaction_coefficients[index];
+            }
+
+        private:
+            friend GenericOilGasWaterFluidSystem;
+
+            const ComponentParam& component_(unsigned compIdx) const
+            {
+                assert(isConsistent());
+                assert(compIdx < numComponents);
+                return components[compIdx];
+            }
+
+            std::vector<ComponentParam> components;
+            std::vector<Scalar> interaction_coefficients;
+            EOSType eos_type = EOSType::PR;
+        };
+
+        /*!
+         * \brief The component properties and equation of state of a
+         *        reservoir EOS region.
          *
          * \param eosRegionIdx The reservoir EOS region.
+         * \throw std::out_of_range if the fluid system does not have the region
          */
-        static EOSType eosType(unsigned eosRegionIdx)
+        static const EosRegion& eosRegion(unsigned eosRegionIdx)
         {
-            checkEosRegion_(eosRegionIdx);
-            return eos_regions_[eosRegionIdx].eos_type;
+            if (eosRegionIdx >= numEosRegions()) {
+                throw std::out_of_range {
+                    fmt::format("EOS region {} is selected, but the fluid system has {}.",
+                                eosRegionIdx + 1, numEosRegions())
+                };
+            }
+            return eos_regions_[eosRegionIdx];
         }
 
         /*!
@@ -395,107 +505,6 @@ compositionalRegionParams(const CompositionalConfig& config, const std::size_t e
             eos_regions_.front().eos_type = type;
         }
 
-        /*!
-         * \brief The acentric factor of a component [].
-         *
-         * \copydetails Doxygen::compIdxParam
-         * \param eosRegionIdx The reservoir EOS region.
-         */
-        static Scalar acentricFactor(unsigned compIdx, unsigned eosRegionIdx)
-        {
-            assert(isConsistent());
-            assert(compIdx < numComponents);
-
-            return regionComponents_(eosRegionIdx)[compIdx].acentric_factor;
-        }
-
-        /*!
-         * \brief Dimensionless volume-translation coefficient (SSHIFT).
-         *
-         * The component volume correction is s_c b_c, where b_c is the
-         * equation-of-state covolume.
-         *
-         * \copydetails Doxygen::compIdxParam
-         * \param eosRegionIdx The reservoir EOS region.
-         */
-        static Scalar volumeShift(unsigned compIdx, unsigned eosRegionIdx)
-        {
-            assert(isConsistent());
-            assert(compIdx < numComponents);
-
-            return regionComponents_(eosRegionIdx)[compIdx].volume_shift;
-        }
-
-        /*!
-         * \brief The \f$\Omega_a\f$ of a component from OMEGAA, or nothing
-         *        when the constant of the equation of state applies.
-         *
-         * \copydetails Doxygen::compIdxParam
-         * \param eosRegionIdx The reservoir EOS region.
-         */
-        static std::optional<Scalar> omegaA(unsigned compIdx, unsigned eosRegionIdx)
-        {
-            assert(isConsistent());
-            assert(compIdx < numComponents);
-
-            return regionComponents_(eosRegionIdx)[compIdx].omega_a;
-        }
-
-        /*!
-         * \brief The \f$\Omega_b\f$ of a component from OMEGAB, or nothing
-         *        when the constant of the equation of state applies.
-         *
-         * \copydetails Doxygen::compIdxParam
-         * \param eosRegionIdx The reservoir EOS region.
-         */
-        static std::optional<Scalar> omegaB(unsigned compIdx, unsigned eosRegionIdx)
-        {
-            assert(isConsistent());
-            assert(compIdx < numComponents);
-
-            return regionComponents_(eosRegionIdx)[compIdx].omega_b;
-        }
-
-        /*!
-         * \brief Critical temperature of a component [K].
-         *
-         * \copydetails Doxygen::compIdxParam
-         * \param eosRegionIdx The reservoir EOS region.
-         */
-        static Scalar criticalTemperature(unsigned compIdx, unsigned eosRegionIdx)
-        {
-            assert(isConsistent());
-            assert(compIdx < numComponents);
-
-            return regionComponents_(eosRegionIdx)[compIdx].critic_temp;
-        }
-        /*!
-         * \brief Critical pressure of a component [Pa].
-         *
-         * \copydetails Doxygen::compIdxParam
-         * \param eosRegionIdx The reservoir EOS region.
-         */
-        static Scalar criticalPressure(unsigned compIdx, unsigned eosRegionIdx)
-        {
-            assert(isConsistent());
-            assert(compIdx < numComponents);
-
-            return regionComponents_(eosRegionIdx)[compIdx].critic_pres;
-        }
-        /*!
-        * \brief Critical volume of a component [m3].
-        *
-        * \copydetails Doxygen::compIdxParam
-        * \param eosRegionIdx The reservoir EOS region.
-        */
-        static Scalar criticalVolume(unsigned compIdx, unsigned eosRegionIdx)
-        {
-            assert(isConsistent());
-            assert(compIdx < numComponents);
-
-            return regionComponents_(eosRegionIdx)[compIdx].critic_vol;
-        }
-
         //! \copydoc BaseFluidSystem::molarMass
         static Scalar molarMass(unsigned compIdx)
         {
@@ -513,27 +522,6 @@ compositionalRegionParams(const CompositionalConfig& config, const std::size_t e
          */
         static const std::array<Scalar, 5>& lbcCoefficients()
         { return lbc_coefficients_; }
-
-        /*!
-         * \brief Returns the interaction coefficient for two components.
-         *
-         * \param eosRegionIdx The reservoir EOS region.
-         */
-        static Scalar interactionCoefficient(unsigned comp1Idx, unsigned comp2Idx,
-                                             unsigned eosRegionIdx)
-        {
-            assert(isConsistent());
-            assert(comp1Idx < numComponents);
-            assert(comp2Idx < numComponents);
-            const auto& coefficients = regionInteractionCoefficients_(eosRegionIdx);
-            if (coefficients.empty() || comp2Idx == comp1Idx) {
-                return 0.0;
-            }
-            // make sure row is the bigger value compared to column number
-            const auto [column, row] = std::minmax(comp1Idx, comp2Idx);
-            const unsigned index = (row * (row - 1) / 2 + column); // it is the current understanding
-            return coefficients[index];
-        }
 
         //! \copydoc BaseFluidSystem::phaseName
         static std::string_view phaseName(unsigned phaseIdx)
@@ -600,7 +588,7 @@ compositionalRegionParams(const CompositionalConfig& config, const std::size_t e
                 const auto molarDensity = rho / fluidState.averageMolarMass(phaseIdx);
                 return decay<LhsEval>(
                     ViscosityModel::LBCWithMolarDensity(fluidState, molarDensity, phaseIdx,
-                                                        paramCache.eosRegionIndex()));
+                                                        paramCache.eosRegion()));
             }
             else {
                 const LhsEval& p = decay<LhsEval>(fluidState.pressure(phaseIdx));
@@ -635,7 +623,7 @@ compositionalRegionParams(const CompositionalConfig& config, const std::size_t e
             const auto fugCoeff =
                 CubicEOS::computeFugacityCoefficient(fluidState, paramCache, phaseIdx, compIdx);
             const auto translation =
-                exp(-volumeShift(compIdx, paramCache.eosRegionIndex())
+                exp(-paramCache.eosRegion().volumeShift(compIdx)
                     * paramCache.Bi(phaseIdx, compIdx));
 
             return decay<LhsEval>(fugCoeff * translation);
@@ -747,38 +735,6 @@ compositionalRegionParams(const CompositionalConfig& config, const std::size_t e
         static bool isConsistent() {
             return eos_regions_.front().components.size() == NumComp;
         }
-
-        // Rejects a region the fluid system does not hold.
-        static void checkEosRegion_(const unsigned eosRegionIdx)
-        {
-            if (eosRegionIdx >= numEosRegions()) {
-                throw std::out_of_range {
-                    fmt::format("EOS region {} is selected, but the fluid system has {}.",
-                                eosRegionIdx + 1, numEosRegions())
-                };
-            }
-        }
-
-        static const std::vector<ComponentParam>&
-        regionComponents_(const unsigned eosRegionIdx)
-        {
-            checkEosRegion_(eosRegionIdx);
-            return eos_regions_[eosRegionIdx].components;
-        }
-
-        static const std::vector<Scalar>&
-        regionInteractionCoefficients_(const unsigned eosRegionIdx)
-        {
-            checkEosRegion_(eosRegionIdx);
-            return eos_regions_[eosRegionIdx].interaction_coefficients;
-        }
-
-        // The component properties and equation of state of a reservoir EOS region.
-        struct EosRegion {
-            std::vector<ComponentParam> components;
-            std::vector<Scalar> interaction_coefficients;
-            EOSType eos_type = EOSType::PR;
-        };
 
         // Every reservoir EOS region; a fluid system set up without a deck has one.
         static std::vector<EosRegion> eos_regions_;

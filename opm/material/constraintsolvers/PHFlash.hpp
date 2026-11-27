@@ -138,7 +138,7 @@ struct PHFlashConfig {
  *        the mixture-enthalpy model selected in the configuration.
  *
  * EnthalpyCalc provides the enthalpy. A replacement needs a static
- * mixtureEnthalpy(fluidState, cpTable, eosRegionIdx, model) returning the molar
+ * mixtureEnthalpy(fluidState, cpTable, model) returning the molar
  * enthalpy [J/mol] of a flashed state, as MixtureEnthalpy does. A replacement
  * is always evaluated on a state flashed at the trial temperature.
  */
@@ -157,13 +157,12 @@ struct PHFlash {
      *        fractions. Out, on success: the solution temperature, and the
      *        liquid fraction and phase compositions of the state flashed
      *        there. On failure the state is left at the last trial and is not
-     *        valid.
+     *        valid. Its EOS region gives the equation of state of the
+     *        isothermal flash and of the eos_departure enthalpy.
      * \param hSpec specified molar mixture enthalpy [J/mol]
      * \param cfg the enthalpy model and the temperature search
      * \param twoPhaseMethod iteration scheme of the isothermal flash
      * \param ptTolerance convergence tolerance of the isothermal flash
-     * \param eosRegionIdx reservoir EOS region of the isothermal flash and of
-     *        the eos_departure enthalpy
      * \param verbosity verbosity of the isothermal flash; at 1 or more a
      *        bracket found next to a temperature that cannot be evaluated is
      *        logged
@@ -184,7 +183,6 @@ struct PHFlash {
                       const Config& cfg,
                       const PTFlashMethod twoPhaseMethod,
                       const Scalar ptTolerance,
-                      const unsigned eosRegionIdx,
                       const int verbosity = 0)
     {
         // An all-zero table makes H(T) identically zero, which would let
@@ -213,7 +211,7 @@ struct PHFlash {
 
         auto residualAt = [&](const Scalar T) {
             return flashedResidual(fluidState, T, hSpec, cfg, warmStart,
-                                   twoPhaseMethod, ptTolerance, eosRegionIdx, verbosity);
+                                   twoPhaseMethod, ptTolerance, verbosity);
         };
 
         // With the caloric model of the built-in provider, H = sum_i z_i h_i(T)
@@ -373,7 +371,6 @@ private:
                                                  WarmStart& warmStart,
                                                  const PTFlashMethod twoPhaseMethod,
                                                  const Scalar ptTolerance,
-                                                 const unsigned eosRegionIdx,
                                                  const int verbosity)
     {
         using Flash = PTFlash<Scalar, FluidSystem, true>;
@@ -384,7 +381,7 @@ private:
         bool solved = false;
         if (warmStart.seed(fluidState, T)) {
             try {
-                Flash::solve(fluidState, twoPhaseMethod, ptTolerance, eosRegionIdx, verbosity);
+                Flash::solve(fluidState, twoPhaseMethod, ptTolerance, verbosity);
                 solved = true;
             }
             catch (const std::runtime_error&) {
@@ -398,15 +395,15 @@ private:
         try {
             if (!solved) {
                 for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
-                    fluidState.setKvalue(compIdx, fluidState.wilsonK_(compIdx, eosRegionIdx));
+                    fluidState.setKvalue(compIdx, fluidState.wilsonK_(compIdx));
                 }
                 fluidState.setLvalue(ValueType(-1.0));
-                Flash::solve(fluidState, twoPhaseMethod, ptTolerance, eosRegionIdx, verbosity);
+                Flash::solve(fluidState, twoPhaseMethod, ptTolerance, verbosity);
             }
             warmStart.store(fluidState, T);
 
             const Scalar r = getValue(EnthalpyCalc::mixtureEnthalpy(
-                fluidState, cfg.cpTable, eosRegionIdx, cfg.model)) - hSpec;
+                fluidState, cfg.cpTable, cfg.model)) - hSpec;
             if (std::isfinite(r)) {
                 return r;
             }

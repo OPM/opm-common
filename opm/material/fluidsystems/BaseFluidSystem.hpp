@@ -32,6 +32,7 @@
 #include <cstddef>
 #include <optional>
 #include <stdexcept>
+#include <string>
 #include <string_view>
 
 namespace Opm {
@@ -161,8 +162,8 @@ public:
         throw std::runtime_error(not_implemented("acentricFactor"));
     }
 
-    // Defaults for fluid systems without these EOS inputs. A fluid system's own
-    // version hides them, so calls fail to compile if its arguments differ.
+    // Defaults for a fluid system with a single reservoir EOS region. A fluid
+    // system with several, or with more EOS inputs, provides its own.
 
     /*!
      * \brief The number of reservoir EOS regions.
@@ -171,33 +172,66 @@ public:
     { return 1; }
 
     /*!
-     * \brief Dimensionless volume-translation coefficient of a component.
-     *
-     * \copydoc Doxygen::compIdxParam
-     * \param eosRegionIdx The reservoir EOS region.
+     * \brief The single reservoir EOS region: the fluid system's component
+     *        properties, without volume translation or OMEGAA/OMEGAB.
      */
-    static constexpr Scalar volumeShift(unsigned /*compIdx*/, unsigned /*eosRegionIdx*/)
-    { return 0; }
+    class EosRegion
+    {
+    public:
+        //! The equation of state.
+        auto eosType() const
+        { return Implementation::eosType(); }
+
+        //! \copydoc BaseFluidSystem::acentricFactor
+        Scalar acentricFactor(unsigned compIdx) const
+        { return Implementation::acentricFactor(compIdx); }
+
+        //! The critical temperature of a component [K].
+        Scalar criticalTemperature(unsigned compIdx) const
+        { return Implementation::criticalTemperature(compIdx); }
+
+        //! The critical pressure of a component [Pa].
+        Scalar criticalPressure(unsigned compIdx) const
+        { return Implementation::criticalPressure(compIdx); }
+
+        //! The critical volume of a component [m^3/kmol].
+        Scalar criticalVolume(unsigned compIdx) const
+        { return Implementation::criticalVolume(compIdx); }
+
+        //! The binary interaction coefficient of two components.
+        Scalar interactionCoefficient(unsigned comp1Idx, unsigned comp2Idx) const
+        { return Implementation::interactionCoefficient(comp1Idx, comp2Idx); }
+
+        //! The dimensionless volume-translation coefficient of a component: none.
+        constexpr Scalar volumeShift(unsigned /*compIdx*/) const
+        { return 0; }
+
+        //! The \f$\Omega_a\f$ of a component: the constant of the equation of state.
+        constexpr std::optional<Scalar> omegaA(unsigned /*compIdx*/) const
+        { return std::nullopt; }
+
+        //! The \f$\Omega_b\f$ of a component: the constant of the equation of state.
+        constexpr std::optional<Scalar> omegaB(unsigned /*compIdx*/) const
+        { return std::nullopt; }
+    };
 
     /*!
-     * \brief The \f$\Omega_a\f$ of a component, or nothing when the
-     *        constant of the equation of state applies.
+     * \brief The component properties and equation of state of a reservoir
+     *        EOS region.
      *
-     * \copydoc Doxygen::compIdxParam
      * \param eosRegionIdx The reservoir EOS region.
+     * \throw std::out_of_range if the fluid system does not have the region
      */
-    static constexpr std::optional<Scalar> omegaA(unsigned /*compIdx*/, unsigned /*eosRegionIdx*/)
-    { return std::nullopt; }
-
-    /*!
-     * \brief The \f$\Omega_b\f$ of a component, or nothing when the
-     *        constant of the equation of state applies.
-     *
-     * \copydoc Doxygen::compIdxParam
-     * \param eosRegionIdx The reservoir EOS region.
-     */
-    static constexpr std::optional<Scalar> omegaB(unsigned /*compIdx*/, unsigned /*eosRegionIdx*/)
-    { return std::nullopt; }
+    static EosRegion eosRegion(unsigned eosRegionIdx)
+    {
+        if (eosRegionIdx >= numEosRegions()) {
+            throw std::out_of_range {
+                "EOS region " + std::to_string(eosRegionIdx + 1)
+                + " is selected, but the fluid system has 1."
+            };
+        }
+        return {};
+    }
 
     /*!
      * \brief Initialize the fluid system's static parameters

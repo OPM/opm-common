@@ -37,7 +37,10 @@
 #define BOOST_TEST_MODULE EosRegions
 #include <boost/test/unit_test.hpp>
 
+#include <opm/material/constraintsolvers/MixtureEnthalpy.hpp>
 #include <opm/material/constraintsolvers/PTFlash.hpp>
+#include <opm/material/constraintsolvers/SaturationPressure.hpp>
+#include <opm/material/densead/Evaluation.hpp>
 #include <opm/material/fluidstates/CompositionalFluidState.hpp>
 #include <opm/material/fluidsystems/GenericOilGasWaterFluidSystem.hpp>
 
@@ -71,6 +74,8 @@ using FluidSystem = Opm::GenericOilGasWaterFluidSystem<Scalar, numComponents, fa
 using ReferenceSystem = Opm::GenericOilGasWaterFluidSystem<Scalar, numComponents, true>;
 using EOSType = Opm::CompositionalConfig::EOSType;
 using CompVec = std::array<Scalar, numComponents>;
+// The pressure, then the overall mole fractions.
+using Evaluation = Opm::DenseAd::Evaluation<Scalar, numComponents + 1>;
 
 // The records of one EOS region for CO2, C1 and C10.
 struct Region
@@ -191,12 +196,13 @@ struct Fixture
     }
 };
 
-/// Gas density and fugacity coefficients of one composition at 150 bar and 350 K.
+/// One gas composition at 150 bar and 350 K in an EOS region.
 template <class System>
-std::pair<Scalar, CompVec>
-gasProperties(const unsigned eosRegionIdx)
+Opm::CompositionalFluidState<Scalar, System>
+gasState(const unsigned eosRegionIdx)
 {
     Opm::CompositionalFluidState<Scalar, System> fs;
+    fs.setEosRegionIndex(eosRegionIdx);
     fs.setTemperature(350.0);
     fs.setPressure(System::oilPhaseIdx, 150.0e5);
     fs.setPressure(System::gasPhaseIdx, 150.0e5);
@@ -205,7 +211,15 @@ gasProperties(const unsigned eosRegionIdx)
         fs.setMoleFraction(System::oilPhaseIdx, c, y[c]);
         fs.setMoleFraction(System::gasPhaseIdx, c, y[c]);
     }
+    return fs;
+}
 
+/// Gas density and fugacity coefficients of the gasState().
+template <class System>
+std::pair<Scalar, CompVec>
+gasProperties(const unsigned eosRegionIdx)
+{
+    const auto fs = gasState<System>(eosRegionIdx);
     typename System::template ParameterCache<Scalar> paramCache(eosRegionIdx);
     paramCache.updatePhase(fs, System::gasPhaseIdx);
 
@@ -229,18 +243,18 @@ FlashResult
 flash(const unsigned eosRegionIdx)
 {
     Opm::CompositionalFluidState<Scalar, System> fs;
+    fs.setEosRegionIndex(eosRegionIdx);
     fs.setTemperature(320.0);
     fs.setPressure(System::oilPhaseIdx, 60.0e5);
     fs.setPressure(System::gasPhaseIdx, 60.0e5);
     const CompVec z {0.2, 0.4, 0.4};
     for (int c = 0; c < numComponents; ++c) {
         fs.setMoleFraction(c, z[c]);
-        fs.setKvalue(c, fs.wilsonK_(c, eosRegionIdx));
+        fs.setKvalue(c, fs.wilsonK_(c));
     }
     fs.setLvalue(-1.0);
 
-    Opm::PTFlash<Scalar, System>::flash_solve_scalar(fs, Opm::PTFlashMethod::SsiNewton, 1.0e-10,
-                                                     eosRegionIdx);
+    Opm::PTFlash<Scalar, System>::flash_solve_scalar(fs, Opm::PTFlashMethod::SsiNewton, 1.0e-10);
 
     FlashResult result {fs.L(), {}, {}};
     for (int c = 0; c < numComponents; ++c) {
@@ -248,6 +262,40 @@ flash(const unsigned eosRegionIdx)
         result.y[c] = fs.moleFraction(System::gasPhaseIdx, c);
     }
     return result;
+}
+
+/// The flash() feed with derivatives in the pressure and the overall composition.
+template <class System>
+Opm::CompositionalFluidState<Evaluation, System>
+flashWithDerivatives(const unsigned eosRegionIdx)
+{
+    Opm::CompositionalFluidState<Evaluation, System> fs;
+    fs.setEosRegionIndex(eosRegionIdx);
+    fs.setTemperature(320.0);
+    const auto p = Evaluation::createVariable(60.0e5, 0);
+    fs.setPressure(System::oilPhaseIdx, p);
+    fs.setPressure(System::gasPhaseIdx, p);
+    const CompVec z {0.2, 0.4, 0.4};
+    for (int c = 0; c < numComponents; ++c) {
+        fs.setMoleFraction(c, Evaluation::createVariable(z[c], c + 1));
+        fs.setKvalue(c, fs.wilsonK_(c));
+    }
+    fs.setLvalue(-1.0);
+
+    Opm::PTFlash<Scalar, System>::solve(fs, Opm::PTFlashMethod::SsiNewton, 1.0e-10);
+    return fs;
+}
+
+void
+checkSameEvaluation(const Evaluation& value, const Evaluation& expected)
+{
+    BOOST_CHECK_CLOSE(value.value(), expected.value(), 1.0e-8);
+    for (int d = 0; d < value.size(); ++d) {
+        BOOST_TEST_CONTEXT("derivative " << d)
+        {
+            BOOST_CHECK_CLOSE(value.derivative(d), expected.derivative(d), 1.0e-8);
+        }
+    }
 }
 
 } // Anonymous namespace
@@ -260,38 +308,35 @@ BOOST_FIXTURE_TEST_CASE(CountsTheRegionsOfTheDeck, Fixture)
 
 BOOST_FIXTURE_TEST_CASE(EachRegionHasItsEquationOfState, Fixture)
 {
-    BOOST_CHECK(FluidSystem::eosType(0) == EOSType::PR);
-    BOOST_CHECK(FluidSystem::eosType(1) == EOSType::SRK);
-    BOOST_CHECK(ReferenceSystem::eosType(0) == EOSType::SRK);
+    BOOST_CHECK(FluidSystem::eosRegion(0).eosType() == EOSType::PR);
+    BOOST_CHECK(FluidSystem::eosRegion(1).eosType() == EOSType::SRK);
+    BOOST_CHECK(ReferenceSystem::eosRegion(0).eosType() == EOSType::SRK);
 
     // The OMEGAA and OMEGAB defaults of a deck belong to its equations of state.
     BOOST_CHECK_THROW(FluidSystem::setEosType(EOSType::RK), std::logic_error);
     BOOST_CHECK_THROW(ReferenceSystem::setEosType(EOSType::RK), std::logic_error);
-    BOOST_CHECK(FluidSystem::eosType(0) == EOSType::PR);
-    BOOST_CHECK(ReferenceSystem::eosType(0) == EOSType::SRK);
+    BOOST_CHECK(FluidSystem::eosRegion(0).eosType() == EOSType::PR);
+    BOOST_CHECK(ReferenceSystem::eosRegion(0).eosType() == EOSType::SRK);
 }
 
 BOOST_FIXTURE_TEST_CASE(RegionMatchesADeckOfThatRegionAlone, Fixture)
 {
+    const auto& region = FluidSystem::eosRegion(1);
+    const auto& referenceRegion = ReferenceSystem::eosRegion(0);
     for (unsigned c = 0; c < numComponents; ++c) {
         BOOST_TEST_CONTEXT("component " << c)
         {
-            BOOST_CHECK_EQUAL(FluidSystem::criticalTemperature(c, 1),
-                              ReferenceSystem::criticalTemperature(c, 0));
-            BOOST_CHECK_EQUAL(FluidSystem::criticalPressure(c, 1),
-                              ReferenceSystem::criticalPressure(c, 0));
-            BOOST_CHECK_EQUAL(FluidSystem::criticalVolume(c, 1),
-                              ReferenceSystem::criticalVolume(c, 0));
-            BOOST_CHECK_EQUAL(FluidSystem::acentricFactor(c, 1),
-                              ReferenceSystem::acentricFactor(c, 0));
-            BOOST_CHECK_EQUAL(FluidSystem::volumeShift(c, 1), ReferenceSystem::volumeShift(c, 0));
-            BOOST_CHECK_EQUAL(FluidSystem::omegaA(c, 1).value(),
-                              ReferenceSystem::omegaA(c, 0).value());
-            BOOST_CHECK_EQUAL(FluidSystem::omegaB(c, 1).value(),
-                              ReferenceSystem::omegaB(c, 0).value());
+            BOOST_CHECK_EQUAL(region.criticalTemperature(c),
+                              referenceRegion.criticalTemperature(c));
+            BOOST_CHECK_EQUAL(region.criticalPressure(c), referenceRegion.criticalPressure(c));
+            BOOST_CHECK_EQUAL(region.criticalVolume(c), referenceRegion.criticalVolume(c));
+            BOOST_CHECK_EQUAL(region.acentricFactor(c), referenceRegion.acentricFactor(c));
+            BOOST_CHECK_EQUAL(region.volumeShift(c), referenceRegion.volumeShift(c));
+            BOOST_CHECK_EQUAL(region.omegaA(c).value(), referenceRegion.omegaA(c).value());
+            BOOST_CHECK_EQUAL(region.omegaB(c).value(), referenceRegion.omegaB(c).value());
             for (unsigned other = 0; other < numComponents; ++other) {
-                BOOST_CHECK_EQUAL(FluidSystem::interactionCoefficient(c, other, 1),
-                                  ReferenceSystem::interactionCoefficient(c, other, 0));
+                BOOST_CHECK_EQUAL(region.interactionCoefficient(c, other),
+                                  referenceRegion.interactionCoefficient(c, other));
             }
         }
     }
@@ -308,13 +353,13 @@ BOOST_FIXTURE_TEST_CASE(RegionsKeepTheirOwnProperties, Fixture)
 {
     // Region one differs from region two in every critical temperature.
     for (unsigned c = 0; c < numComponents; ++c) {
-        BOOST_CHECK_NE(FluidSystem::criticalTemperature(c, 0),
-                       FluidSystem::criticalTemperature(c, 1));
+        BOOST_CHECK_NE(FluidSystem::eosRegion(0).criticalTemperature(c),
+                       FluidSystem::eosRegion(1).criticalTemperature(c));
     }
-    BOOST_CHECK_EQUAL(FluidSystem::interactionCoefficient(0, 1, 0), 0.10);
-    BOOST_CHECK_EQUAL(FluidSystem::volumeShift(0, 0), 0.0);
-    BOOST_CHECK_EQUAL(FluidSystem::omegaA(0, 0).value(), 0.4570);
-    BOOST_CHECK_EQUAL(FluidSystem::omegaB(0, 0).value(), 0.0777);
+    BOOST_CHECK_EQUAL(FluidSystem::eosRegion(0).interactionCoefficient(0, 1), 0.10);
+    BOOST_CHECK_EQUAL(FluidSystem::eosRegion(0).volumeShift(0), 0.0);
+    BOOST_CHECK_EQUAL(FluidSystem::eosRegion(0).omegaA(0).value(), 0.4570);
+    BOOST_CHECK_EQUAL(FluidSystem::eosRegion(0).omegaB(0).value(), 0.0777);
 
     const auto densityOne = gasProperties<FluidSystem>(0).first;
     const auto densityTwo = gasProperties<FluidSystem>(1).first;
@@ -326,6 +371,24 @@ BOOST_FIXTURE_TEST_CASE(CacheKeepsItsRegion, Fixture)
     const FluidSystem::ParameterCache<Scalar> paramCache(1);
     BOOST_CHECK_EQUAL(paramCache.eosRegionIndex(), 1u);
     BOOST_CHECK_EQUAL(paramCache.pvtRegionIndex(), 0u);
+}
+
+BOOST_FIXTURE_TEST_CASE(StateKeepsItsRegion, Fixture)
+{
+    BOOST_CHECK_EQUAL((Opm::CompositionalFluidState<Scalar, FluidSystem> {}.eosRegionIndex()), 0u);
+
+    const auto fs = gasState<FluidSystem>(1);
+    const auto reference = gasState<ReferenceSystem>(0);
+    for (unsigned c = 0; c < numComponents; ++c) {
+        BOOST_CHECK_CLOSE(fs.wilsonK_(c), reference.wilsonK_(c), 1.0e-12);
+    }
+
+    // A copy of another value type takes the region with the composition.
+    Opm::CompositionalFluidState<Evaluation, FluidSystem> source;
+    source.setEosRegionIndex(1);
+    Opm::CompositionalFluidState<Scalar, FluidSystem> copy;
+    copy.assign(source);
+    BOOST_CHECK_EQUAL(copy.eosRegionIndex(), 1u);
 }
 
 BOOST_FIXTURE_TEST_CASE(FlashUsesTheRegionItIsGiven, Fixture)
@@ -347,6 +410,63 @@ BOOST_FIXTURE_TEST_CASE(FlashUsesTheRegionItIsGiven, Fixture)
     BOOST_CHECK_GT(std::abs(regionOneResult.L - result.L), 1.0e-3);
 }
 
+BOOST_FIXTURE_TEST_CASE(FlashDerivativesUseTheRegionOfTheState, Fixture)
+{
+    const auto fs = flashWithDerivatives<FluidSystem>(1);
+    const auto reference = flashWithDerivatives<ReferenceSystem>(0);
+    BOOST_REQUIRE(fs.L().value() > 0.0 && fs.L().value() < 1.0);
+    checkSameEvaluation(fs.L(), reference.L());
+    for (int c = 0; c < numComponents; ++c) {
+        BOOST_TEST_CONTEXT("component " << c)
+        {
+            checkSameEvaluation(fs.moleFraction(FluidSystem::oilPhaseIdx, c),
+                                reference.moleFraction(ReferenceSystem::oilPhaseIdx, c));
+            checkSameEvaluation(fs.moleFraction(FluidSystem::gasPhaseIdx, c),
+                                reference.moleFraction(ReferenceSystem::gasPhaseIdx, c));
+        }
+    }
+}
+
+BOOST_FIXTURE_TEST_CASE(ResidualEnthalpyUsesTheRegionOfTheState, Fixture)
+{
+    using Enthalpy = Opm::MixtureEnthalpy<Scalar, FluidSystem>;
+    using ReferenceEnthalpy = Opm::MixtureEnthalpy<Scalar, ReferenceSystem>;
+    const auto residual
+        = Enthalpy::phaseResidualEnthalpy(gasState<FluidSystem>(1), FluidSystem::gasPhaseIdx);
+    BOOST_CHECK_CLOSE(residual,
+                      ReferenceEnthalpy::phaseResidualEnthalpy(gasState<ReferenceSystem>(0),
+                                                               ReferenceSystem::gasPhaseIdx),
+                      1.0e-8);
+    BOOST_CHECK_GT(std::abs(residual
+                            - Enthalpy::phaseResidualEnthalpy(gasState<FluidSystem>(0),
+                                                              FluidSystem::gasPhaseIdx)),
+                   1.0);
+}
+
+BOOST_FIXTURE_TEST_CASE(BubblePressureUsesTheRegionItIsGiven, Fixture)
+{
+    using Solver = Opm::SaturationPressure<Scalar, FluidSystem>;
+    using ReferenceSolver = Opm::SaturationPressure<Scalar, ReferenceSystem>;
+    const CompVec liquid {0.1, 0.3, 0.6};
+    constexpr Scalar temperature = 320.0;
+
+    Scalar pressure {};
+    CompVec vapour {};
+    BOOST_REQUIRE(Solver::bubblePressure(liquid, temperature, 1, pressure, vapour));
+    Scalar referencePressure {};
+    CompVec referenceVapour {};
+    BOOST_REQUIRE(ReferenceSolver::bubblePressure(liquid, temperature, 0, referencePressure,
+                                                  referenceVapour));
+    BOOST_CHECK_CLOSE(pressure, referencePressure, 1.0e-8);
+    for (int c = 0; c < numComponents; ++c) {
+        BOOST_CHECK_CLOSE(vapour[c], referenceVapour[c], 1.0e-8);
+    }
+
+    Scalar regionOnePressure {};
+    BOOST_REQUIRE(Solver::bubblePressure(liquid, temperature, 0, regionOnePressure, vapour));
+    BOOST_CHECK_GT(std::abs(regionOnePressure - pressure), 1.0e3);
+}
+
 BOOST_FIXTURE_TEST_CASE(UnknownRegionIsRejected, Fixture)
 {
     using Cache = FluidSystem::ParameterCache<Scalar>;
@@ -355,12 +475,10 @@ BOOST_FIXTURE_TEST_CASE(UnknownRegionIsRejected, Fixture)
     BOOST_CHECK_THROW(ReferenceCache(1), std::out_of_range);
     BOOST_CHECK_NO_THROW(ReferenceCache(0));
 
-    // The fluid system's own accessors reject it too.
-    BOOST_CHECK_THROW(FluidSystem::criticalTemperature(0, 2), std::out_of_range);
-    BOOST_CHECK_THROW(FluidSystem::interactionCoefficient(0, 1, 2), std::out_of_range);
-    BOOST_CHECK_THROW(FluidSystem::eosType(2), std::out_of_range);
-    BOOST_CHECK_THROW(ReferenceSystem::criticalTemperature(0, 1), std::out_of_range);
-    BOOST_CHECK_NO_THROW(FluidSystem::criticalTemperature(0, 1));
+    // The fluid system rejects it too.
+    BOOST_CHECK_THROW(FluidSystem::eosRegion(2), std::out_of_range);
+    BOOST_CHECK_THROW(ReferenceSystem::eosRegion(1), std::out_of_range);
+    BOOST_CHECK_NO_THROW(FluidSystem::eosRegion(1));
 }
 
 BOOST_AUTO_TEST_CASE(RegionsMustShareTheMolecularWeights)
@@ -372,5 +490,5 @@ BOOST_AUTO_TEST_CASE(RegionsMustShareTheMolecularWeights)
 
     // The rejected deck leaves the fluid system as the previous deck set it up.
     BOOST_CHECK_EQUAL(FluidSystem::numEosRegions(), std::size_t {2});
-    BOOST_CHECK_CLOSE(FluidSystem::criticalTemperature(2, 1), 600.0, 1.0e-12);
+    BOOST_CHECK_CLOSE(FluidSystem::eosRegion(1).criticalTemperature(2), 600.0, 1.0e-12);
 }

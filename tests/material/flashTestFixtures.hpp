@@ -106,7 +106,7 @@ public:
     using EOSType = CompositionalConfig::EOSType;
 
     //! The equation of state, Peng-Robinson unless set.
-    static EOSType eosType(unsigned /*eosRegionIdx*/ = 0)
+    static EOSType eosType()
     { return eos_type_; }
 
     //! Set the equation of state.
@@ -119,7 +119,7 @@ public:
     }
 
     //! \copydoc BaseFluidSystem::acentricFactor
-    static Scalar acentricFactor(unsigned compIdx, unsigned /*eosRegionIdx*/ = 0)
+    static Scalar acentricFactor(unsigned compIdx)
     {
         switch (compIdx) {
         case Comp0Idx: return Comp0::acentricFactor();
@@ -129,7 +129,7 @@ public:
     }
 
     //! \copydoc BaseFluidSystem::criticalTemperature
-    static Scalar criticalTemperature(unsigned compIdx, unsigned /*eosRegionIdx*/ = 0)
+    static Scalar criticalTemperature(unsigned compIdx)
     {
         switch (compIdx) {
         case Comp0Idx: return Comp0::criticalTemperature();
@@ -139,7 +139,7 @@ public:
     }
 
     //! \copydoc BaseFluidSystem::criticalPressure
-    static Scalar criticalPressure(unsigned compIdx, unsigned /*eosRegionIdx*/ = 0)
+    static Scalar criticalPressure(unsigned compIdx)
     {
         switch (compIdx) {
         case Comp0Idx: return Comp0::criticalPressure();
@@ -149,7 +149,7 @@ public:
     }
 
     //! \copydoc BaseFluidSystem::criticalVolume
-    static Scalar criticalVolume(unsigned compIdx, unsigned /*eosRegionIdx*/ = 0)
+    static Scalar criticalVolume(unsigned compIdx)
     {
         switch (compIdx) {
         case Comp0Idx: return Comp0::criticalVolume();
@@ -169,8 +169,7 @@ public:
     }
 
     //! \copydoc BaseFluidSystem::interactionCoefficient
-    static Scalar interactionCoefficient(unsigned comp1Idx, unsigned comp2Idx,
-                                         unsigned /*eosRegionIdx*/ = 0)
+    static Scalar interactionCoefficient(unsigned comp1Idx, unsigned comp2Idx)
     {
         if (comp1Idx != comp2Idx)
             return bipC1nC10;
@@ -216,8 +215,7 @@ public:
                              unsigned phaseIdx)
     {
         // Use LBC method to calculate viscosity
-        return decay<LhsEval>(ViscosityModel::LBC(fluidState, phaseIdx,
-                                                  paramCache.eosRegionIndex()));
+        return decay<LhsEval>(ViscosityModel::LBC(fluidState, paramCache, phaseIdx));
     }
 
     //! \copydoc BaseFluidSystem::fugacityCoefficient
@@ -449,7 +447,7 @@ makeInitialState(double pressure, double temperature,
     // PTFlash input contract: the caller seeds the initial K-values (Wilson)
     // and the liquid fraction L before calling solve.
     for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
-        const Evaluation Ktmp = fluid_state.wilsonK_(compIdx, /*eosRegionIdx=*/0);
+        const Evaluation Ktmp = fluid_state.wilsonK_(compIdx);
         fluid_state.setKvalue(compIdx, Ktmp);
     }
     const Evaluation Ltmp = 1.;
@@ -528,7 +526,7 @@ runFlash(const FlashCase<FluidSystem::numComponents>& testCase)
     // The case's equation of state stays set for checks on the outcome.
     FluidSystem::setEosType(testCase.eos_type);
     outcome.summary.single_phase = Flash::solve(outcome.state, testCase.method,
-                                                testCase.tolerance, /*eosRegionIdx=*/0,
+                                                testCase.tolerance,
                                                 testCase.verbosity);
 
     outcome.summary.L = Opm::getValue(outcome.state.L());

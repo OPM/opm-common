@@ -86,7 +86,7 @@ FluidState makeColdState(const Scalar pressure, const Scalar temperature, const 
         fs.setMoleFraction(compIdx, z[compIdx]);
     }
     for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
-        fs.setKvalue(compIdx, fs.wilsonK_(compIdx, /*eosRegionIdx=*/0));
+        fs.setKvalue(compIdx, fs.wilsonK_(compIdx));
     }
     // No previous split, as at initialisation: the flash starts with stability analysis.
     fs.setLvalue(-1.0);
@@ -107,8 +107,7 @@ BOOST_AUTO_TEST_CASE(ColdFlashOfALeanGasConverges)
                 auto fs = makeColdState(pBar * 1.0e5, sweep.temperature, sweep.z);
                 bool singlePhase = true;
                 BOOST_REQUIRE_NO_THROW(singlePhase
-                                       = PtFlash::solve(fs, Opm::PTFlashMethod::SsiNewton, 1e-8,
-                                                        /*eosRegionIdx=*/0));
+                                       = PtFlash::solve(fs, Opm::PTFlashMethod::SsiNewton, 1e-8));
                 BOOST_CHECK(!singlePhase);
                 const Scalar L = Opm::getValue(fs.L());
                 BOOST_CHECK(L > 0.0 && L < 2.0e-3);
@@ -122,8 +121,7 @@ BOOST_AUTO_TEST_CASE(SplitIsInEquilibrium)
     // Plain substitution does not converge here within its iteration budget
     // either, so check the split against the equations it solves.
     auto fs = makeColdState(160.0e5, 323.15, gas);
-    BOOST_REQUIRE_NO_THROW(PtFlash::solve(fs, Opm::PTFlashMethod::SsiNewton, 1e-8,
-                                          /*eosRegionIdx=*/0));
+    BOOST_REQUIRE_NO_THROW(PtFlash::solve(fs, Opm::PTFlashMethod::SsiNewton, 1e-8));
 
     typename FluidSystem::template ParameterCache<Evaluation> paramCache(/*eosRegionIdx=*/0);
     paramCache.updatePhase(fs, FluidSystem::oilPhaseIdx);

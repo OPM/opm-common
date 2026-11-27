@@ -322,16 +322,14 @@ private:
      * the roots at the known and incipient compositions instead lets a small
      * composition difference pass as a second root at float precision.
      *
-     * \param[in] fs Fluid state supplying the temperature and pressure.
+     * \param[in] fs Fluid state supplying the temperature, pressure and EOS region.
      * \param[in] composition Composition at which both roots are evaluated.
-     * \param[in] eosRegionIdx Reservoir EOS region of the equation of state.
      * \return whether both roots are physical and their molar volumes differ
      *         by more than \c rootVolumeTolerance_.
      */
     static bool rootsDistinctAtComposition_(
         const CompositionalFluidState<Scalar, FluidSystem>& fs,
-        const CompVec& composition,
-        const unsigned eosRegionIdx)
+        const CompVec& composition)
     {
         auto rootState = fs;
         for (int c = 0; c < numComponents; ++c) {
@@ -339,7 +337,7 @@ private:
             rootState.setMoleFraction(gasPhaseIdx, c, composition[c]);
         }
 
-        ParameterCache rootCache(eosRegionIdx);
+        ParameterCache rootCache(fs.eosRegionIndex());
         rootCache.updatePhase(rootState, oilPhaseIdx);
         rootCache.updatePhase(rootState, gasPhaseIdx);
         const Scalar vmL = rootCache.molarVolume(oilPhaseIdx);
@@ -418,15 +416,15 @@ private:
      * values initialise phase-composition iterations and the pressure scan.
      *
      * \param[in] temp Absolute temperature \f$T\f$.
-     * \param[in] eosRegionIdx Reservoir EOS region of the component properties.
+     * \param[in] eosRegion Reservoir EOS region of the component properties.
      */
-    static CompVec wilsonKp_(const Scalar temp, const unsigned eosRegionIdx)
+    static CompVec wilsonKp_(const Scalar temp, const typename FluidSystem::EosRegion& eosRegion)
     {
         CompVec Kp;
         for (int c = 0; c < numComponents; ++c) {
-            Kp[c] = FluidSystem::criticalPressure(c, eosRegionIdx) *
-                    std::exp(5.373 * (1.0 + FluidSystem::acentricFactor(c, eosRegionIdx)) *
-                             (1.0 - FluidSystem::criticalTemperature(c, eosRegionIdx) / temp));
+            Kp[c] = eosRegion.criticalPressure(c) *
+                    std::exp(5.373 * (1.0 + eosRegion.acentricFactor(c)) *
+                             (1.0 - eosRegion.criticalTemperature(c) / temp));
         }
         return Kp;
     }
@@ -448,23 +446,21 @@ private:
      * Slowly contracting trials are completed by stationaryTrial_(); numerical
      * failure produces Stability::Indeterminate rather than a stability claim.
      *
-     * \param[in] fs Fluid state containing \f$T\f$, \f$p\f$, and \f$z\f$.
+     * \param[in] fs Fluid state containing \f$T\f$, \f$p\f$, \f$z\f$, and the EOS region.
      * \param[in] z Composition of the phase being tested.
      * \param[in] knownPhaseIdx EOS phase/root used by the known phase and trial.
      * \param[in] wilsonK Wilson equilibrium-ratio estimate at the trial pressure.
      * \param[in] knownIsLiquid Selects the heavy or light Wilson trial direction.
-     * \param[in] eosRegionIdx Reservoir EOS region of the equation of state.
      */
     static Stability knownPhaseStability_(const CompositionalFluidState<Scalar, FluidSystem>& fs,
                                           const CompVec& z,
                                           const unsigned knownPhaseIdx,
                                           const CompVec& wilsonK,
-                                          const bool knownIsLiquid,
-                                          const unsigned eosRegionIdx)
+                                          const bool knownIsLiquid)
     {
         // The known phase keeps its own state; the trial takes its root type
         // through the same phase index in a second state.
-        ParameterCache knownCache(eosRegionIdx);
+        ParameterCache knownCache(fs.eosRegionIndex());
         knownCache.updatePhase(fs, knownPhaseIdx);
         CompVec lnPhiZ;
         for (int c = 0; c < numComponents; ++c) {
@@ -483,7 +479,7 @@ private:
         }
 
         auto trial = fs;
-        ParameterCache trialCache(eosRegionIdx);
+        ParameterCache trialCache(fs.eosRegionIndex());
         // Dominant-eigenvalue extrapolation, as in the saturation search.
         CompVec dPrev{};
         Scalar sumPrev = std::numeric_limits<Scalar>::quiet_NaN();
@@ -538,7 +534,7 @@ private:
                     CompVec candidate = Y;
                     Scalar total{};
                     if (stationaryTrial_(fs, z, knownPhaseIdx, knownPhaseIdx,
-                                         eosRegionIdx, candidate, total)) {
+                                         candidate, total)) {
                         return verdict(total);
                     }
                 }
@@ -553,7 +549,7 @@ private:
             dPrev = d;
         }
         Scalar total{};
-        if (stationaryTrial_(fs, z, knownPhaseIdx, knownPhaseIdx, eosRegionIdx, Y, total)) {
+        if (stationaryTrial_(fs, z, knownPhaseIdx, knownPhaseIdx, Y, total)) {
             return total > 1.0 + stabilityTolerance_
                 ? Stability::Unstable : Stability::Stable;
         }
@@ -578,11 +574,10 @@ private:
      * \f$u\f$ and accepts damped Newton steps only when they reduce
      * \f$\lVert R\rVert_\infty\f$.
      *
-     * \param[in] fs Fluid state containing the fixed \f$T\f$ and \f$p\f$.
+     * \param[in] fs Fluid state containing the fixed \f$T\f$ and \f$p\f$, and the EOS region.
      * \param[in] z Composition and reference fugacity of the known phase.
      * \param[in] knownPhase EOS root used to evaluate \f$\phi_i(T,p,z)\f$.
      * \param[in] trialPhase EOS root used to evaluate \f$\phi_i(T,p,w)\f$.
-     * \param[in] eosRegionIdx Reservoir EOS region of the equation of state.
      * \param[in,out] Y Initial and converged unnormalised trial amounts.
      * \param[out] sum Converged value of \f$S_Y=\sum_iY_i\f$.
      * \return true only when the stationary residual converges.
@@ -591,13 +586,12 @@ private:
                                  const CompVec& z,
                                  const unsigned knownPhase,
                                  const unsigned trialPhase,
-                                 const unsigned eosRegionIdx,
                                  CompVec& Y,
                                  Scalar& sum)
     {
         using Vector = Dune::FieldVector<Scalar, numComponents>;
         using Matrix = Dune::FieldMatrix<Scalar, numComponents, numComponents>;
-        ParameterCache cache(eosRegionIdx);
+        ParameterCache cache(fs.eosRegionIndex());
         cache.updatePhase(fs, knownPhase);
         CompVec target{};
         Vector u(0.0);
@@ -780,21 +774,21 @@ private:
     {
         const Scalar dir = fromBubble ? Scalar{-1} : Scalar{1};
         CompositionalFluidState<Scalar, FluidSystem> fs;
+        fs.setEosRegionIndex(eosRegionIdx);
         fs.setTemperature(temp);
         for (int c = 0; c < numComponents; ++c) {
             fs.setMoleFraction(gasPhaseIdx, c, z[c]);
             fs.setMoleFraction(oilPhaseIdx, c, z[c]);
         }
-        const auto Kp = wilsonKp_(temp, eosRegionIdx);
-        const auto evaluate = [&fs, &z, eosRegionIdx, &Kp](const Scalar lnp,
-                                                      CompVec& Y, Scalar& f) {
+        const auto Kp = wilsonKp_(temp, FluidSystem::eosRegion(eosRegionIdx));
+        const auto evaluate = [&fs, &z, &Kp](const Scalar lnp, CompVec& Y, Scalar& f) {
             const Scalar p = std::exp(lnp);
             if (!positiveFinite_(p)) {
                 return false;
             }
             fs.setPressure(oilPhaseIdx, p);
             fs.setPressure(gasPhaseIdx, p);
-            ParameterCache cache(eosRegionIdx);
+            ParameterCache cache(fs.eosRegionIndex());
             cache.updatePhase(fs, oilPhaseIdx);
             cache.updatePhase(fs, gasPhaseIdx);
             Scalar gibbsDifference = 0.0;
@@ -824,7 +818,7 @@ private:
                     }
                     Scalar sum{};
                     if (!stationaryTrial_(fs, z, knownPhase, trialPhase,
-                                          eosRegionIdx, candidate, sum)) {
+                                          candidate, sum)) {
                         continue;
                     }
                     converged = true;
@@ -848,7 +842,7 @@ private:
             return true;
         };
 
-        const auto certifyBoundary = [&fs, &z, eosRegionIdx, &Kp, fromBubble, pSeed,
+        const auto certifyBoundary = [&fs, &z, &Kp, fromBubble, pSeed,
                                       &seedTrial, &press, &liquid](
                                          const Scalar lnp, CompVec Y, const Scalar f) {
             const Scalar p = std::exp(lnp);
@@ -874,7 +868,7 @@ private:
                 fs.setMoleFraction(knownPhase, c, z[c]);
                 fs.setMoleFraction(trialPhase, c, Y[c]);
             }
-            ParameterCache cache(eosRegionIdx);
+            ParameterCache cache(fs.eosRegionIndex());
             cache.updatePhase(fs, oilPhaseIdx);
             cache.updatePhase(fs, gasPhaseIdx);
             const Scalar vmL = cache.molarVolume(oilPhaseIdx);
@@ -895,7 +889,7 @@ private:
                     }
                 }
             }
-            if (knownPhaseStability_(fs, z, knownPhase, K, bubble, eosRegionIdx)
+            if (knownPhaseStability_(fs, z, knownPhase, K, bubble)
                 != Stability::Stable) {
                 return false;
             }
@@ -1139,7 +1133,7 @@ private:
         if (!positiveFinite_(temp)) {
             return Outcome::GaveUp;
         }
-        const CompVec wilsonKp = wilsonKp_(temp, eosRegionIdx);
+        const CompVec wilsonKp = wilsonKp_(temp, FluidSystem::eosRegion(eosRegionIdx));
         const bool bubble = (mode == Mode::Bubble);
         // The bubble point and the retrograde dew point are approached from
         // the high-pressure side, the lower dew point from the low-pressure side.
@@ -1174,6 +1168,7 @@ private:
         const auto incipientPhaseIdx = bubble ? gasPhaseIdx : oilPhaseIdx;
 
         CompositionalFluidState<Scalar, FluidSystem> fs;
+        fs.setEosRegionIndex(eosRegionIdx);
         fs.setTemperature(temp);
         for (int c = 0; c < numComponents; ++c) {
             fs.setMoleFraction(knownPhaseIdx, c, z[c]);
@@ -1229,7 +1224,7 @@ private:
             fs.setPressure(oilPhaseIdx, p);
             fs.setPressure(gasPhaseIdx, p);
 
-            ParameterCache paramCache(eosRegionIdx);
+            ParameterCache paramCache(fs.eosRegionIndex());
             CompVec phiKnown;
 
             // Fugacity equality at fixed pressure: K_c = phi_liquid / phi_vapour.
@@ -1309,7 +1304,7 @@ private:
                 }
                 Scalar candidateSum{};
                 if (stationaryTrial_(fs, z, knownPhaseIdx, incipientPhaseIdx,
-                                     eosRegionIdx, candidate, candidateSum)) {
+                                     candidate, candidateSum)) {
                     for (int c = 0; c < numComponents; ++c) {
                         fs.setMoleFraction(incipientPhaseIdx, c,
                                            candidate[c] / candidateSum);
@@ -1332,7 +1327,7 @@ private:
             }
 
             const bool rootsDistinct = substitutionConverged
-                && rootsDistinctAtComposition_(fs, z, eosRegionIdx);
+                && rootsDistinctAtComposition_(fs, z);
 
             const auto markOutside = [&pOut, &haveOut, &haveFOut, &fOut, &p = std::as_const(p)](
                                          const bool withValue, const Scalar value) {
@@ -1399,7 +1394,7 @@ private:
                     && directionMatches) {
                     const auto stability =
                         knownPhaseStability_(fs, z, knownPhaseIdx,
-                                             candidateWilsonK, bubble, eosRegionIdx);
+                                             candidateWilsonK, bubble);
                     if (stability == Stability::Indeterminate) {
                         return Outcome::GaveUp;
                     }

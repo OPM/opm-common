@@ -62,10 +62,10 @@ public:
 
     // Standard LBC model. (Lohrenz, Bray & Clark: "Calculating Viscosities of Reservoir
     //                      fluids from Their Compositions", JPT 16.10 (1964).
-    template <class FluidState, class LhsEval = typename FluidState::ValueType>
+    template <class FluidState, class Params, class LhsEval = typename FluidState::ValueType>
     static LhsEval LBC(const FluidState& fluidState,
-                      unsigned phaseIdx,
-                      unsigned eosRegionIdx)
+                      const Params& paramCache,
+                      unsigned phaseIdx)
     {
         const Scalar R = Opm::Constants<Scalar>::R;
         const auto& T = Opm::decay<LhsEval>(fluidState.temperature(phaseIdx));
@@ -74,7 +74,7 @@ public:
         const LhsEval molarDensity = P / (R * T * Z);
 
         return LBCWithMolarDensity<FluidState, LhsEval, LhsEval>(fluidState, molarDensity, phaseIdx,
-                                                                 eosRegionIdx);
+                                                                 paramCache.eosRegion());
     }
 
     // LBC correlation at the supplied physical molar density [mol/m^3], with
@@ -84,7 +84,7 @@ public:
     static LhsEval LBCWithMolarDensity(const FluidState& fluidState,
                                        const MolarDensity& molarDensity,
                                        unsigned phaseIdx,
-                                       unsigned eosRegionIdx)
+                                       const typename FluidSystem::EosRegion& eosRegion)
     {
         const auto& T = Opm::decay<LhsEval>(fluidState.temperature(phaseIdx));
 
@@ -96,13 +96,12 @@ public:
         LhsEval sumxrM = 0.0;
         for (unsigned compIdx = 0; compIdx < FluidSystem::numComponents; ++compIdx) {
             const auto& x = Opm::decay<LhsEval>(fluidState.moleFraction(phaseIdx, compIdx));
-            const Scalar& T_c = FluidSystem::criticalTemperature(compIdx, eosRegionIdx);
+            const Scalar& T_c = eosRegion.criticalTemperature(compIdx);
             // Convert kg/mol to kg/kmol (numerically equal to g/mol for the correlations).
             const Scalar Mm = FluidSystem::molarMass(compIdx) * prefix::kilo;
-            const Scalar p_ca
-                = FluidSystem::criticalPressure(compIdx, eosRegionIdx) / unit::atm; // Pa -> atm
+            const Scalar p_ca = eosRegion.criticalPressure(compIdx) / unit::atm; // Pa -> atm
             // FluidSystem provides m3/kmol; convert to m3/mol to match molarDensity.
-            const Scalar v_c = FluidSystem::criticalVolume(compIdx, eosRegionIdx) / prefix::kilo;
+            const Scalar v_c = eosRegion.criticalVolume(compIdx) / prefix::kilo;
 
             sumVolume += x * v_c;
             xsum_T_c += x * T_c;
@@ -134,11 +133,12 @@ public:
     }
 
     // Improved LBC model for CO2 rich mixtures. (Lansangan, Taylor, Smith & Kovarik - 1993)
-    template <class FluidState, class LhsEval = typename FluidState::ValueType>
+    template <class FluidState, class Params, class LhsEval = typename FluidState::ValueType>
     static LhsEval LBCco2rich(const FluidState& fluidState,
-                              unsigned phaseIdx,
-                              unsigned eosRegionIdx)
+                              const Params& paramCache,
+                              unsigned phaseIdx)
     {
+        const auto& eosRegion = paramCache.eosRegion();
         const auto& T = Opm::decay<LhsEval>(fluidState.temperature(phaseIdx));
         const auto& rho = Opm::decay<LhsEval>(fluidState.density(phaseIdx));
 
@@ -150,10 +150,9 @@ public:
             // Convert kg/mol to kg/kmol (numerically equal to g/mol for the correlations).
             const Scalar Mm = FluidSystem::molarMass(compIdx) * prefix::kilo;
             const auto& x = Opm::decay<LhsEval>(fluidState.moleFraction(phaseIdx, compIdx));
-            const Scalar v_c = FluidSystem::criticalVolume(compIdx, eosRegionIdx); // m3/kmol
-            const Scalar& T_c = FluidSystem::criticalTemperature(compIdx, eosRegionIdx);
-            const Scalar p_ca
-                = FluidSystem::criticalPressure(compIdx, eosRegionIdx) / unit::atm; // Pa -> atm
+            const Scalar v_c = eosRegion.criticalVolume(compIdx); // m3/kmol
+            const Scalar& T_c = eosRegion.criticalTemperature(compIdx);
+            const Scalar p_ca = eosRegion.criticalPressure(compIdx) / unit::atm; // Pa -> atm
 
             sumMm += x * Mm;
             sumVolume += x * v_c;
@@ -172,15 +171,13 @@ public:
         LhsEval xxT2_p = 0.0; // x*x*T_c^2/p_c
         // Use atm throughout the mixing rule, as required by the viscosity correlation.
         for (unsigned i_compIdx = 0; i_compIdx < FluidSystem::numComponents; ++i_compIdx) {
-            const Scalar& T_c_i = FluidSystem::criticalTemperature(i_compIdx, eosRegionIdx);
-            const Scalar p_c_i
-                = FluidSystem::criticalPressure(i_compIdx, eosRegionIdx) / unit::atm; // Pa -> atm
+            const Scalar& T_c_i = eosRegion.criticalTemperature(i_compIdx);
+            const Scalar p_c_i = eosRegion.criticalPressure(i_compIdx) / unit::atm; // Pa -> atm
             const auto& x_i = Opm::decay<LhsEval>(fluidState.moleFraction(phaseIdx, i_compIdx));
             for (unsigned j_compIdx = 0; j_compIdx < FluidSystem::numComponents; ++j_compIdx) {
-                const Scalar& T_c_j = FluidSystem::criticalTemperature(j_compIdx, eosRegionIdx);
+                const Scalar& T_c_j = eosRegion.criticalTemperature(j_compIdx);
                 const Scalar p_c_j
-                    = FluidSystem::criticalPressure(j_compIdx, eosRegionIdx)
-                      / unit::atm; // Pa -> atm
+                    = eosRegion.criticalPressure(j_compIdx) / unit::atm; // Pa -> atm
                 const auto& x_j = Opm::decay<LhsEval>(fluidState.moleFraction(phaseIdx, j_compIdx));
 
                 const Scalar T_c_ij = std::sqrt(T_c_i * T_c_j);

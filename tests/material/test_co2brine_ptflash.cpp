@@ -113,7 +113,7 @@ for (const auto& sample : test_methods) {
     // TODO: should we set these?
     // Set initial K and L
     for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
-        const Evaluation Ktmp = fluid_state.wilsonK_(compIdx, /*eosRegionIdx=*/0);
+        const Evaluation Ktmp = fluid_state.wilsonK_(compIdx);
         fluid_state.setKvalue(compIdx, Ktmp);
     }
     const Evaluation Ltmp = 1.;
@@ -121,7 +121,7 @@ for (const auto& sample : test_methods) {
 
     using Flash = Opm::PTFlash<double, FluidSystem>;
     FluidSystem::setEosType(EOSType::PRCORR);
-    Flash::solve(fluid_state, sample, flash_tolerance, /*eosRegionIdx=*/0, flash_verbosity);
+    Flash::solve(fluid_state, sample, flash_tolerance, flash_verbosity);
 
     ComponentVector x, y;
     const Evaluation L = fluid_state.L();
@@ -200,7 +200,7 @@ for (const auto& sample : test_methods) {
     // TODO: should we set these?
     // Set initial K and L
     for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
-        const Evaluation Ktmp = fluid_state.wilsonK_(compIdx, /*eosRegionIdx=*/0);
+        const Evaluation Ktmp = fluid_state.wilsonK_(compIdx);
         fluid_state.setKvalue(compIdx, Ktmp);
     }
     const Evaluation Ltmp = 1.;
@@ -208,7 +208,7 @@ for (const auto& sample : test_methods) {
 
     using Flash = Opm::PTFlash<double, FluidSystem>;
     FluidSystem::setEosType(EOSType::PRCORR);
-    Flash::solve(fluid_state, sample, flash_tolerance, /*eosRegionIdx=*/0, flash_verbosity);
+    Flash::solve(fluid_state, sample, flash_tolerance, flash_verbosity);
 
     ComponentVector x, y;
     const Evaluation L = fluid_state.L();
@@ -236,4 +236,27 @@ for (const auto& sample : test_methods) {
 #if BOOST_VERSION / 100000 == 1 && BOOST_VERSION / 100 % 1000 < 67
 }
 #endif
+}
+
+// A fluid system with a single reservoir EOS region describes it with its own
+// component properties.
+BOOST_AUTO_TEST_CASE(SingleEosRegion)
+{
+    BOOST_CHECK_EQUAL(FluidSystem::numEosRegions(), 1u);
+
+    const auto eosRegion = FluidSystem::eosRegion(0);
+    BOOST_CHECK(eosRegion.eosType() == FluidSystem::eosType());
+    for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
+        BOOST_CHECK_EQUAL(eosRegion.criticalTemperature(compIdx),
+                          FluidSystem::criticalTemperature(compIdx));
+        BOOST_CHECK_EQUAL(eosRegion.criticalPressure(compIdx),
+                          FluidSystem::criticalPressure(compIdx));
+        BOOST_CHECK_EQUAL(eosRegion.acentricFactor(compIdx), FluidSystem::acentricFactor(compIdx));
+        BOOST_CHECK_EQUAL(eosRegion.volumeShift(compIdx), 0.0);
+        BOOST_CHECK(!eosRegion.omegaA(compIdx).has_value());
+        BOOST_CHECK(!eosRegion.omegaB(compIdx).has_value());
+    }
+
+    BOOST_CHECK_THROW(FluidSystem::eosRegion(1), std::out_of_range);
+    BOOST_CHECK_THROW(FluidSystem::ParameterCache<Scalar>(1), std::out_of_range);
 }
