@@ -27,7 +27,9 @@
 #include <opm/input/eclipse/Units/Units.hpp>
 
 #include <algorithm>
+#include <functional>
 #include <memory>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
@@ -473,24 +475,29 @@ void Opm::GuideRate::updateGuideRateExpiration(const double      sim_time,
         return;
     }
 
-    if (this->values.empty()) {
+    const auto last_update = this->lastUpdateTime();
+    if (! last_update.has_value()) {
         this->guide_rates_expired = true;
         return;
     }
 
-    auto curr_sim_time = [](const auto& grMapElem)
-    {
-        return grMapElem.second->curr.sim_time;
-    };
-
-    // Get previous general update time--earliest 'curr.sim_time' in
-    // existing collection.
-    const auto last_update =
-        std::ranges::min_element(this->values,
-                                 [&curr_sim_time](const auto& gr1, const auto& gr2)
-                                 { return curr_sim_time(gr1) < curr_sim_time(gr2); });
-
     const auto update_delay = config.model().update_delay();
     this->guide_rates_expired =
-        ! (sim_time < curr_sim_time(*last_update) + update_delay);
+        ! (sim_time < *last_update + update_delay);
+}
+
+std::optional<double> Opm::GuideRate::lastUpdateTime() const
+{
+    if (this->values.empty()) {
+        return std::nullopt;
+    }
+
+    // Previous general update time--earliest 'curr.sim_time' in existing
+    // collection.
+    const auto last_update =
+        std::ranges::min_element(this->values, std::less<>{},
+                                 [](const auto& grMapElem)
+                                 { return grMapElem.second->curr.sim_time; });
+
+    return last_update->second->curr.sim_time;
 }

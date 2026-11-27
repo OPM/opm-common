@@ -40,6 +40,7 @@
 #include <cstddef>
 #include <memory>
 #include <string>
+#include <vector>
 #include <utility>
 
 namespace {
@@ -233,6 +234,49 @@ BOOST_AUTO_TEST_CASE(P1_First)
         const auto expect = (wrat / orat) * expect_gr_oil;
         BOOST_CHECK_CLOSE(grval, expect, 1.0e-5);
     }
+}
+
+BOOST_AUTO_TEST_CASE(Last_Update_Time)
+{
+    auto cse = case_10x10x10_model4();
+
+    // No guide rate values yet.
+    BOOST_CHECK_MESSAGE(! cse.gr.lastUpdateTime().has_value(),
+                        "There must be no last update time "
+                        "before any guide rate is computed");
+
+    const auto rpt = std::size_t{1};
+    const auto compute = [&cse, rpt](const double stm,
+                                     const std::vector<std::string>& wells,
+                                     const double wopp)
+    {
+        cse.gr.updateGuideRateExpiration(stm, rpt);
+        for (const auto& well : wells) {
+            cse.gr.compute(well, rpt, stm, wopp, 5.0, 0.1);
+        }
+    };
+
+    compute(0.0, { "P1" }, 1.0);
+    BOOST_REQUIRE_MESSAGE(cse.gr.lastUpdateTime().has_value(),
+                          "There must be a last update time "
+                          "once the guide rates are computed");
+    BOOST_CHECK_EQUAL(*cse.gr.lastUpdateTime(), 0.0);
+
+    // Before the end of the update interval (1 day): the value of P1 is
+    // kept, and P2 gets its first value.  The last update time is the
+    // earliest of the two.
+    const auto stm1 = 10.0*Opm::unit::second;
+    compute(stm1, { "P1", "P2" }, 10.0);
+    BOOST_CHECK_EQUAL(*cse.gr.lastUpdateTime(), 0.0);
+
+    // Without P1, only the value of P2 is left.
+    cse.gr.erase("P1");
+    BOOST_CHECK_CLOSE(*cse.gr.lastUpdateTime(), stm1, 1.0e-8);
+
+    // After the end of the update interval: the values are recomputed.
+    const auto stm2 = 2.0*Opm::unit::day;
+    compute(stm2, { "P1", "P2" }, 10.0);
+    BOOST_CHECK_CLOSE(*cse.gr.lastUpdateTime(), stm2, 1.0e-8);
 }
 
 BOOST_AUTO_TEST_CASE(Erase)

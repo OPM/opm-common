@@ -181,7 +181,8 @@ createDoubHead(const EclipseState& es,
                const std::size_t   lookup_step,
                const std::size_t   report_step,
                const double        simTime,
-               const double        nextTimeStep)
+               const double        nextTimeStep,
+               const std::optional<double>& guideRateLastUpdate)
 {
     const auto& usys  = es.getDeckUnitSystem();
     const auto& rspec = es.runspec();
@@ -204,6 +205,12 @@ createDoubHead(const EclipseState& es,
         using M = ::Opm::UnitSystem::measure;
 
         dh.nextStep(usys.from_si(M::time, nextTimeStep));
+    }
+
+    if (guideRateLastUpdate.has_value()) {
+        using M = ::Opm::UnitSystem::measure;
+
+        dh.guideRateLastUpdate(usys.from_si(M::time, *guideRateLastUpdate));
     }
 
     return dh.data();

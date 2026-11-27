@@ -104,6 +104,11 @@ namespace Opm { namespace RestartIO {
 
         DoubHEAD& udq_param(const UDQParams& udqPar);
         DoubHEAD& guide_rate_param(const guideRate& guide_rp);
+
+        /// Time of the last guide rate calculation, in the output unit of
+        /// time, since the start of the simulation.
+        DoubHEAD& guideRateLastUpdate(const double lastUpdate);
+
         DoubHEAD& lift_opt_param(const liftOptPar& lo_par);
         DoubHEAD& netBalParams(const NetBalanceParams& net_bal_par);
 

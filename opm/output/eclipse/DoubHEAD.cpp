@@ -161,7 +161,7 @@ enum Index : std::vector<double>::size_type {
     dh_095  =  95,
     LOmineg  =  VI::doubhead::LOminEcGrad,
     grpar_int =  VI::doubhead::GRpar_int,
-    dh_098  =  98,
+    grlastupd = VI::doubhead::GRlastUpd,
     ThrUPT  =  VI::doubhead::ThrUPT,
 
     // 100..109
@@ -667,6 +667,14 @@ Opm::RestartIO::DoubHEAD::guide_rate_param(const guideRate& guide_rp)
     this->data_[grpar_f] = guide_rp.F;
     this->data_[grpar_int] = guide_rp.delay;
     this->data_[grpar_dmp] = guide_rp.damping_fact;
+
+    return *this;
+}
+
+Opm::RestartIO::DoubHEAD&
+Opm::RestartIO::DoubHEAD::guideRateLastUpdate(const double lastUpdate)
+{
+    this->data_[grlastupd] = lastUpdate;
 
     return *this;
 }

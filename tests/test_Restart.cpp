@@ -28,6 +28,7 @@
 #include <opm/output/eclipse/EclipseIO.hpp>
 #include <opm/output/eclipse/RestartIO.hpp>
 #include <opm/output/eclipse/RestartValue.hpp>
+#include <opm/output/eclipse/VectorItems/doubhead.hpp>
 
 #include <opm/io/eclipse/ERst.hpp>
 #include <opm/io/eclipse/EclIOdata.hpp>
@@ -819,6 +820,92 @@ BOOST_AUTO_TEST_CASE(ExtraData_content)
     }
 }
 
+BOOST_AUTO_TEST_CASE(Guide_Rate_Last_Update_Time)
+{
+    namespace OS = ::Opm::EclIO::OutputStream;
+    namespace VI = ::Opm::RestartIO::Helpers::VectorItems;
+
+    WorkArea test_area("test_Restart");
+    test_area.copyIn("BASE_SIM.DATA");
+    Setup setup("BASE_SIM.DATA");
+
+    const auto outputDir = test_area.currentWorkingDirectory();
+
+    // Writes report step 1 of a restart file with the given time of the
+    // last guide rate update, and returns the restart file name.
+    const auto writeRestart = [&setup, &outputDir]
+        (const std::string& baseName, const std::optional<double>& lastUpdate)
+    {
+        Action::State action_state;
+        WellTestState wtest_state;
+        UDQState udq_state(10);
+        auto aquiferData = std::optional<Opm::RestartIO::Helpers::AggregateAquiferData>{};
+
+        auto groups = mkGroups();
+        groups.guideRateLastUpdate = lastUpdate;
+
+        const auto restart_value = RestartValue {
+            mkSolution(setup.grid.getNumActive()), mkWells(), groups, {}
+        };
+
+        const auto seqnum = 1;
+        auto rstFile = OS::Restart {
+            OS::ResultSet { outputDir, baseName }, seqnum,
+            OS::Formatted { false }, OS::Unified { true }
+        };
+
+        RestartIO::save(rstFile, seqnum, 20.0*unit::day, restart_value,
+                        setup.es, setup.grid, setup.schedule,
+                        action_state, wtest_state, sim_state(setup.schedule),
+                        udq_state, aquiferData);
+
+        return OS::outputFileName({ outputDir, baseName }, "UNRST");
+    };
+
+    const auto loadGroups = [&setup](const std::string& rstFile)
+    {
+        Action::State action_state;
+        SummaryState st(TimeService::now(), 0.0);
+
+        return RestartIO::load(rstFile, 1, action_state, st,
+                               { RestartKey("SWAT", UnitSystem::measure::identity) },
+                               setup.es, setup.grid, setup.schedule).grp_nwrk;
+    };
+
+    // The time is written in the output unit of time (days in METRIC),
+    // and read back in seconds.
+    {
+        const auto lastUpdate = 12.5*unit::day;
+        const auto rstFile = writeRestart("GR_LAST_UPDATE", lastUpdate);
+
+        EclIO::ERst rst{ rstFile };
+        const auto& doubhead = rst.getRestartData<double>("DOUBHEAD", 1, 0);
+        BOOST_CHECK_CLOSE(doubhead[VI::doubhead::GRlastUpd], 12.5, 1.0e-8);
+
+        const auto groups = loadGroups(rstFile);
+        BOOST_REQUIRE_MESSAGE(groups.guideRateLastUpdate.has_value(),
+                              "Restored group data must have a "
+                              "time of the last guide rate update");
+        BOOST_CHECK_CLOSE(*groups.guideRateLastUpdate, lastUpdate, 1.0e-8);
+    }
+
+    // Without a known time, the item keeps OPM's default value of zero,
+    // which is read back as the time zero.
+    {
+        const auto rstFile = writeRestart("GR_LAST_UPDATE_UNKNOWN", std::nullopt);
+
+        EclIO::ERst rst{ rstFile };
+        const auto& doubhead = rst.getRestartData<double>("DOUBHEAD", 1, 0);
+        BOOST_CHECK_EQUAL(doubhead[VI::doubhead::GRlastUpd], 0.0);
+
+        const auto groups = loadGroups(rstFile);
+        BOOST_REQUIRE_MESSAGE(groups.guideRateLastUpdate.has_value(),
+                              "Restored group data must have a "
+                              "time of the last guide rate update");
+        BOOST_CHECK_EQUAL(*groups.guideRateLastUpdate, 0.0);
+    }
+}
+
 BOOST_AUTO_TEST_CASE(STORE_THPRES)
 {
     namespace OS = ::Opm::EclIO::OutputStream;
@@ -1351,6 +1438,63 @@ BOOST_AUTO_TEST_CASE(ReadWrite_NumericalAquifer_Data)
     dest.read(buffer);
 
     BOOST_CHECK_MESSAGE(src == dest, "Serialised/deserialised Numerical aquifer object must be equal to source object");
+}
+
+BOOST_AUTO_TEST_CASE(ReadWrite_Guide_Rate_Last_Update)
+{
+    const auto withTime = [](const std::optional<double>& lastUpdate)
+    {
+        auto values = Opm::data::GroupAndNetworkValues{};
+        values.guideRateLastUpdate = lastUpdate;
+        return values;
+    };
+
+    // Merging the data of several processes keeps the earliest time.  A
+    // process without a time does not clear a time read from another.
+    {
+        MessageBuffer buffer;
+        withTime(std::nullopt).write(buffer);
+        withTime(20.0*Opm::unit::day).write(buffer);
+        withTime(10.0*Opm::unit::day).write(buffer);
+        withTime(std::nullopt).write(buffer);
+
+        auto dest = Opm::data::GroupAndNetworkValues{};
+        for (auto i = 0; i < 4; ++i) {
+            dest.read(buffer);
+        }
+
+        BOOST_REQUIRE_MESSAGE(dest.guideRateLastUpdate.has_value(),
+                              "Merged data must have a time of "
+                              "the last guide rate update");
+        BOOST_CHECK_EQUAL(*dest.guideRateLastUpdate, 10.0*Opm::unit::day);
+    }
+
+    // The time zero is a known time.
+    {
+        MessageBuffer buffer;
+        withTime(0.0).write(buffer);
+
+        auto dest = Opm::data::GroupAndNetworkValues{};
+        dest.read(buffer);
+
+        BOOST_REQUIRE_MESSAGE(dest.guideRateLastUpdate.has_value(),
+                              "The time zero must be read back");
+        BOOST_CHECK_EQUAL(*dest.guideRateLastUpdate, 0.0);
+    }
+
+    // No time anywhere: none after merging, and none after clear().
+    {
+        MessageBuffer buffer;
+        withTime(std::nullopt).write(buffer);
+
+        auto dest = withTime(5.0*Opm::unit::day);
+        dest.clear();
+        dest.read(buffer);
+
+        BOOST_CHECK_MESSAGE(! dest.guideRateLastUpdate.has_value(),
+                            "There must be no time of the last "
+                            "guide rate update");
+    }
 }
 
 namespace {
