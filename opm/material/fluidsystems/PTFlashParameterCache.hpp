@@ -87,13 +87,11 @@ public:
     explicit PTFlashParameterCache(const unsigned eosRegionIdx)
         : eosRegionIdx_(eosRegionIdx)
     {
-        if constexpr (requires { FluidSystem::numEosRegions(); }) {
-            if (eosRegionIdx >= FluidSystem::numEosRegions()) {
-                throw std::out_of_range {
-                    fmt::format("EOS region {} is selected, but the fluid system has {}.",
-                                eosRegionIdx + 1, FluidSystem::numEosRegions())
-                };
-            }
+        if (eosRegionIdx >= FluidSystem::numEosRegions()) {
+            throw std::out_of_range {
+                fmt::format("EOS region {} is selected, but the fluid system has {}.",
+                            eosRegionIdx + 1, FluidSystem::numEosRegions())
+            };
         }
 
         VmUpToDate_[oilPhaseIdx] = false;
@@ -428,18 +426,15 @@ protected:
     Scalar computeVolumeShift_(const FluidState& fluidState, unsigned phaseIdx) const
     {
         Scalar shift = 0;
-        // Fluid systems without SSHIFT support use a zero translation.
-        if constexpr (requires { FluidSystem::volumeShift(0u, 0u); }) {
-            // b_c from the dimensionless B_c = b_c p / (R T).
-            const Scalar T = decay<Scalar>(fluidState.temperature(phaseIdx));
-            const Scalar p = decay<Scalar>(fluidState.pressure(phaseIdx));
-            const Scalar RT_p = Constants<Scalar>::R * T / p;
+        // b_c from the dimensionless B_c = b_c p / (R T).
+        const Scalar T = decay<Scalar>(fluidState.temperature(phaseIdx));
+        const Scalar p = decay<Scalar>(fluidState.pressure(phaseIdx));
+        const Scalar RT_p = Constants<Scalar>::R * T / p;
 
-            for (unsigned compIdx = 0; compIdx < FluidSystem::numComponents; ++compIdx) {
-                const Scalar b = decay<Scalar>(Bi(phaseIdx, compIdx)) * RT_p;
-                shift += decay<Scalar>(fluidState.moleFraction(phaseIdx, compIdx))
-                       * FluidSystem::volumeShift(compIdx, eosRegionIdx_) * b;
-            }
+        for (unsigned compIdx = 0; compIdx < FluidSystem::numComponents; ++compIdx) {
+            const Scalar b = decay<Scalar>(Bi(phaseIdx, compIdx)) * RT_p;
+            shift += decay<Scalar>(fluidState.moleFraction(phaseIdx, compIdx))
+                   * FluidSystem::volumeShift(compIdx, eosRegionIdx_) * b;
         }
         return shift;
     }

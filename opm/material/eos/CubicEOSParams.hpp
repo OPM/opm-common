@@ -81,15 +81,11 @@ public:
             Scalar OmegaB = OmegaB_();
             // OMEGAA and OMEGAB replace the constants of the equation per component.
             // Fluid systems without support for them keep the constants.
-            if constexpr (requires { FluidSystem::omegaA(0u, 0u); }) {
-                if (const auto omegaA = FluidSystem::omegaA(compIdx, eosRegionIdx_)) {
-                    OmegaA *= *omegaA / constantOmegaA_();
-                }
+            if (const auto omegaA = FluidSystem::omegaA(compIdx, eosRegionIdx_)) {
+                OmegaA *= *omegaA / constantOmegaA_();
             }
-            if constexpr (requires { FluidSystem::omegaB(0u, 0u); }) {
-                if (const auto omegaB = FluidSystem::omegaB(compIdx, eosRegionIdx_)) {
-                    OmegaB = *omegaB;
-                }
+            if (const auto omegaB = FluidSystem::omegaB(compIdx, eosRegionIdx_)) {
+                OmegaB = *omegaB;
             }
 
             Scalar newA = OmegaA * pr / (Tr * Tr);

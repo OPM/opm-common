@@ -29,6 +29,8 @@
 
 #include <opm/common/utility/DemangledType.hpp>
 
+#include <cstddef>
+#include <optional>
 #include <stdexcept>
 #include <string_view>
 
@@ -158,6 +160,44 @@ public:
     {
         throw std::runtime_error(not_implemented("acentricFactor"));
     }
+
+    // Defaults for fluid systems without these EOS inputs. A fluid system's own
+    // version hides them, so calls fail to compile if its arguments differ.
+
+    /*!
+     * \brief The number of reservoir EOS regions.
+     */
+    static constexpr std::size_t numEosRegions()
+    { return 1; }
+
+    /*!
+     * \brief Dimensionless volume-translation coefficient of a component.
+     *
+     * \copydoc Doxygen::compIdxParam
+     * \param eosRegionIdx The reservoir EOS region.
+     */
+    static constexpr Scalar volumeShift(unsigned /*compIdx*/, unsigned /*eosRegionIdx*/)
+    { return 0; }
+
+    /*!
+     * \brief The \f$\Omega_a\f$ of a component, or nothing when the
+     *        constant of the equation of state applies.
+     *
+     * \copydoc Doxygen::compIdxParam
+     * \param eosRegionIdx The reservoir EOS region.
+     */
+    static constexpr std::optional<Scalar> omegaA(unsigned /*compIdx*/, unsigned /*eosRegionIdx*/)
+    { return std::nullopt; }
+
+    /*!
+     * \brief The \f$\Omega_b\f$ of a component, or nothing when the
+     *        constant of the equation of state applies.
+     *
+     * \copydoc Doxygen::compIdxParam
+     * \param eosRegionIdx The reservoir EOS region.
+     */
+    static constexpr std::optional<Scalar> omegaB(unsigned /*compIdx*/, unsigned /*eosRegionIdx*/)
+    { return std::nullopt; }
 
     /*!
      * \brief Initialize the fluid system's static parameters
